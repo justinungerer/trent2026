@@ -28,7 +28,7 @@ const questions=[
  win:'Trent cracks the label. Quinn feeds enchanted ribbon through the brass rollers. A test shot wraps a chair, adds a bow, and thanks it for its service. “One hit per guard,” says Quinn. “Chair has volunteered for a second tour.”',
  lose:'Trent reads the label upside down and activates the musical gift tag. It plays one aggressive note for eleven seconds. Quinn unplugs it and loads ordinary ribbon. “Two hits per guard. Think of it as double wrapping.”',
  explain:'The Bombe helped codebreakers narrow down possible Enigma machine settings.',
- effectGood:'A single direct hit defeats a guard. Misses and shots into shelves still consume ammunition.',effectBad:'Each guard takes two direct hits. The first hit briefly marks the guard so you can finish wrapping him.'}
+ effectGood:'A single direct hit defeats a guard. Every shot, including a miss, consumes ammunition.',effectBad:'Each guard takes two direct hits. The first hit briefly stuns the guard so you can finish wrapping him.'}
 ];
 let state={index:0,answers:[],screen:'intro'},activeRun=null;
 const strikes=()=>state.answers.filter(v=>v===false).length;
@@ -61,11 +61,11 @@ function failed(){
 }
 function loadout(){
  state.screen='loadout';save();
- display(picture('workshop','cover','Q BRANCH · QUINN WOULD LIKE YOU TO STOP CALLING IT THAT')+'<section class="result"><span class="eyebrow">Equipment earned through your answers</span><h2 tabindex="-1">Operation Ribbonfall</h2><p>Trent opens Sprout’s case with the fruitcake. The fruitcake remains undamaged. You now play as Sprout. Retrieve the orders, cut the depot’s alarm relays, transmit the evidence, and escape.</p><div class="loadout"><div><strong>'+(state.answers[0]?24:12)+'</strong><span>Ribbon shots</span></div><div><strong>'+(state.answers[1]?'0.27s':'0.57s')+'</strong><span>Between shots</span></div><div><strong>'+(state.answers[2]?'1 hit':'2 hits')+'</strong><span>To wrap a guard</span></div></div><div class="brief"><p><strong>Left thumb moves. Right thumb aims and fires.</strong> Hold the right pad for continuous fire. Tap its center to aim at the nearest guard.</p><p>Shelves stop bullets. Wrapped guards stay defeated for the attempt. Retry the mission with the equipment you earned.</p></div><button class="primary" id="launch">Enter the depot</button></section>');click('launch',launch);
+ display(picture('workshop','cover','Q BRANCH · QUINN WOULD LIKE YOU TO STOP CALLING IT THAT')+'<section class="result"><span class="eyebrow">Equipment earned through your answers</span><h2 tabindex="-1">Operation Ribbonfall</h2><p>Trent opens Sprout’s case with the fruitcake. The fruitcake remains undamaged. You now play as Sprout. Retrieve the orders, cut the depot’s alarm relays, transmit the evidence, and escape.</p><div class="loadout"><div><strong>'+(state.answers[0]?24:12)+'</strong><span>Ribbon shots</span></div><div><strong>'+(state.answers[1]?'0.27s':'0.57s')+'</strong><span>Between shots</span></div><div><strong>'+(state.answers[2]?'1 hit':'2 hits')+'</strong><span>To wrap a guard</span></div></div><div class="brief"><p><strong>Left thumb moves. Right thumb aims and fires.</strong> Hold the right pad for continuous fire. Tap its center to aim at the nearest guard.</p><p>Wrapped guards stay defeated for the attempt. Retry the mission with the equipment you earned.</p></div><button class="primary" id="launch">Enter the depot</button></section>');click('launch',launch);
 }
 function launch(){
  const frame=document.getElementById('game'),url=new URL('./shelf-escape/',location.href);
- for(const [key,value] of Object.entries({build:'illustrated1',charges:state.answers[0]?'4':'2',reload:state.answers[1]?'fast':'slow',ribbon:state.answers[2]?'enchanted':'plain',parentOrigin:location.origin}))url.searchParams.set(key,value);
+ for(const [key,value] of Object.entries({build:'side6',charges:state.answers[0]?'4':'2',reload:state.answers[1]?'fast':'slow',ribbon:state.answers[2]?'enchanted':'plain',parentOrigin:location.origin}))url.searchParams.set(key,value);
  activeRun=String(Date.now())+'-'+Math.random().toString(36).slice(2);
  document.getElementById('mission').hidden=false;document.body.classList.add('playing');frame.src=url.href;
 }
