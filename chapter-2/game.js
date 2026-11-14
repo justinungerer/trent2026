@@ -15,6 +15,7 @@ const patrols=[
  [[655,110],[655,411],[890,411],[890,110]],
  [[415,610],[960,610],[960,370],[672,370],[672,610]]
 ];
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
 const art=Object.fromEntries(['yard','elf','guard','shelf','mail'].map(name=>{
  const image=new Image();image.src='./art/'+name+'.webp';return [name,image];
@@ -25,9 +26,9 @@ const radius=14;
 let mode='intro',run,drag,last=0;
 function reset(){
  keys.clear();drag=null;
- run={player:{...spawn,dirX:1,dirY:0,hull:3,shield:0,moving:false},
+ run={player:{...spawn,dirX:1,dirY:0,hull:3,shield:0,moving:false,stride:0},
   guards:patrols.map(route=>({x:route[0][0],y:route[0][1],route,index:1,angle:0})),
-  mail:caches.map(p=>({...p,taken:false})),count:0,charges:3,toy:null,time:0,notice:'Find Sprout’s three dispatches',noticeUntil:5};
+  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3,toy:null,time:0,notice:'Find Sprout’s three dispatches',noticeUntil:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
 }
 function sync(){
@@ -88,7 +89,19 @@ function update(dt){
  if(drag&&Math.hypot(drag.dx,drag.dy)>6){dx=drag.dx;dy=drag.dy;}
  const magnitude=Math.hypot(dx,dy);
  p.moving=magnitude>0;
- if(p.moving){p.dirX=dx/magnitude;p.dirY=dy/magnitude;walk(p,p.dirX*178*dt,p.dirY*178*dt,radius);}
+ if(p.moving){
+  const before={x:p.x,y:p.y};
+  p.dirX=dx/magnitude;p.dirY=dy/magnitude;
+  walk(p,p.dirX*178*dt,p.dirY*178*dt,radius);
+  const traveled=distance(before,p);
+  p.moving=traveled>.01;
+  p.stride+=traveled;
+  if(Math.floor(p.stride/16)!==Math.floor((p.stride-traveled)/16)){
+   const side=Math.floor(p.stride/16)%2?1:-1;
+   run.prints.push({x:p.x-p.dirY*side*5,y:p.y+p.dirX*side*5,angle:Math.atan2(p.dirY,p.dirX),until:run.time+3});
+  }
+ }
+ run.prints=run.prints.filter(print=>print.until>run.time);
  if(run.toy&&run.toy.until<=run.time)run.toy=null;
  for(const guard of run.guards){
   const [x,y]=guard.route[guard.index];
@@ -158,17 +171,28 @@ function render(){
   ctx.fillStyle='#2b3447';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y,10,15,0,0,7);ctx.fill();
   ctx.fillStyle='#ffe8bf';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y+3,6,9,0,0,7);ctx.fill();
  }
+ for(const print of run.prints){
+  ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';
+  ctx.beginPath();ctx.ellipse(print.x,print.y,5,2.8,print.angle,0,7);ctx.fill();
+ }
  for(const g of run.guards){
-  const bob=Math.sin(run.time*12+g.x*.03)*2.5;
+  const bob=reducedMotion.matches?0:Math.sin(run.time*12+g.x*.03)*1.4;
   glow(g.x+Math.cos(g.angle)*21,g.y+Math.sin(g.angle)*21,43,'#ffc16b80');
   sprite('guard',g.x,g.y-11+bob,49,55,Math.cos(g.angle)<0);
  }
  const p=run.player;
- if(p.shield<=run.time||Math.floor(run.time*12)%2===0){
+ if(p.shield<=run.time||reducedMotion.matches||Math.floor(run.time*12)%2===0){
   ctx.fillStyle='#13192791';ctx.beginPath();ctx.ellipse(p.x,p.y+10,18,7,0,0,7);ctx.fill();
-  sprite('elf',p.x,p.y-14+(p.moving?Math.sin(run.time*21)*3:0),68,45,p.dirX<0);
+  const step=p.moving&&!reducedMotion.matches?Math.sin(p.stride/16*Math.PI):0;
+  ctx.save();ctx.translate(p.x,p.y+8);ctx.rotate(step*.07);
+  sprite('elf',0,-22+step*2,68,45,p.dirX<0);
+  ctx.restore();
+  if(reducedMotion.matches&&p.shield>run.time){
+   ctx.strokeStyle='#ffce8b';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+10,20,9,0,0,7);ctx.stroke();
+  }
  }
  for(const [x0,y0,r] of snow){
+  if(reducedMotion.matches&&r>1)continue;
   const x=(x0+run.time*r*15)%world.w,y=(y0+run.time*r*24)%world.h;
   ctx.fillStyle='rgba(235,246,255,'+(.14+r*.13)+')';ctx.beginPath();ctx.arc(x,y,r*.65,0,7);ctx.fill();
  }

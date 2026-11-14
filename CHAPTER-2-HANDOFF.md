@@ -34,3 +34,11 @@ future integration work. Use project-relative paths for GitHub Pages.
 
 Mobile Safari needs device testing. Playtest navigation, patrolling, decoy
 placement, and map readability before tuning the final chapter length.
+
+## Art-direction pass
+
+Movement animation now uses actual distance traveled, including when sliding
+along a shelf, and stops when a wall blocks motion. Alternating footprints
+fade in the snow. Reduced motion suppresses body sway, reduces snow density,
+and replaces damage blinking with a steady outline. This pass uses the
+existing project-generated assets and adds no external art to the branch.
