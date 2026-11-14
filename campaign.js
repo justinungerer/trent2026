@@ -2,8 +2,8 @@
 
 /* Campaign router. Continue codes live in this file. They are bookmarks, not security.
    The latest code is stored under trent-campaign-pin. Campaign resume does not read trent-quiz-cinema2.
-   Chapter 6 questions stay in quiz.js. Other chapters skip the question step until a supplied
-   question file has real question text and answers. This script does not invent questions. */
+   The prologue has no quiz. Chapters 1–10 each draw 10 questions from WWII-TRIVIA-BANK.md
+   in trivia.js. Chapter 6 then launches Ribbonfall with the score mapped in quiz.js. */
 
 var PIN_KEY = 'trent-campaign-pin';
 var INTRO_MS = 20000;
@@ -322,6 +322,7 @@ function stopEndingVideo() {
 
 function showStart() {
   var stored = readStoredPin();
+  if (window.TrentTrivia) window.TrentTrivia.abort();
   var section;
   var title;
   var lead;
@@ -570,58 +571,6 @@ function playIntro(chapter, done) {
   introRaf = requestAnimationFrame(tick);
 }
 
-function readSuppliedQuestions(number) {
-  var bank = window.TRENT_QUIZ_PLACEHOLDERS;
-  var slot = null;
-  var ready = [];
-  var i;
-  var q;
-  if (!bank || !bank.length) return null;
-  for (i = 0; i < bank.length; i++) {
-    if (bank[i].chapter === number) slot = bank[i];
-  }
-  if (!slot || !Array.isArray(slot.questions) || !slot.questions.length) return null;
-  for (i = 0; i < slot.questions.length; i++) {
-    q = slot.questions[i];
-    if (!q || typeof q.question !== 'string' || !q.question.trim()) return null;
-    if (!Array.isArray(q.answers) || !q.answers.length) return null;
-    ready.push(q);
-  }
-  return ready;
-}
-
-function askSupplied(questions, index, done) {
-  var q = questions[index];
-  var section = document.createElement('section');
-  var kicker = document.createElement('p');
-  var title = document.createElement('h1');
-  var box = document.createElement('div');
-  campaignRoot.hidden = false;
-  campaignRoot.innerHTML = '';
-  section.className = 'campaign-start';
-  kicker.className = 'eyebrow';
-  kicker.textContent = 'Question ' + (index + 1) + ' of ' + questions.length;
-  title.tabIndex = -1;
-  title.textContent = q.question.trim();
-  box.className = 'choices';
-  q.answers.forEach(function (answer) {
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'choice';
-    button.textContent = String(answer);
-    button.onclick = function () {
-      if (index + 1 < questions.length) askSupplied(questions, index + 1, done);
-      else done();
-    };
-    box.appendChild(button);
-  });
-  section.appendChild(kicker);
-  section.appendChild(title);
-  section.appendChild(box);
-  campaignRoot.appendChild(section);
-  title.focus({ preventScroll: true });
-}
-
 function launchGame(chapter) {
   var frame = document.getElementById('game');
   var runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
@@ -638,24 +587,22 @@ function launchGame(chapter) {
 }
 
 function afterIntro(chapter) {
-  var supplied;
   if (!chapter.number) {
     launchGame(chapter);
     return;
   }
-  if (chapter.number === 6) {
-    active = null;
-    shelfOpen = true;
-    campaignRoot.hidden = false;
-    window.TrentChapter6.start();
-    return;
-  }
-  supplied = readSuppliedQuestions(chapter.number);
-  if (!supplied) {
-    launchGame(chapter);
-    return;
-  }
-  askSupplied(supplied, 0, function () { launchGame(chapter); });
+  window.TrentTrivia.start(chapter, {
+    onClear: function (correct) {
+      if (chapter.number === 6) {
+        active = null;
+        shelfOpen = true;
+        window.TrentChapter6.startMission(correct);
+        return;
+      }
+      launchGame(chapter);
+    },
+    onHome: showStart
+  });
 }
 
 function openChapter(id) {

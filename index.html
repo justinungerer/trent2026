@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#111b22">
 <title>Trent Saves Christmas</title>
 <link rel="stylesheet" href="./quiz.css?v=campaign1">
-<link rel="stylesheet" href="./campaign.css?v=campaign1">
+<link rel="stylesheet" href="./campaign.css?v=campaign4">
 </head>
 <body>
 <header>
   <a class="brand" href="./">TRENT SAVES CHRISTMAS</a>
-  <button id="music" type="button" aria-pressed="false">Music off</button>
+  <button id="music" type="button" aria-pressed="true">Music on</button>
 </header>
 <main id="app"></main>
 <div id="cinema" hidden>
@@ -37,9 +37,10 @@
   <video id="ending-video" hidden playsinline webkit-playsinline muted preload="none" disablepictureinpicture></video>
   <button type="button" id="ending-skip" class="overlay-skip" hidden>Skip</button>
 </div>
-<audio id="soundtrack" src="./assets/ribbonfall.mp3" loop preload="none"></audio>
-<script src="./quiz.js?v=campaign1"></script>
-<script src="./campaign.js?v=campaign2"></script>
-<script src="./music.js?v=cinema2"></script>
+<audio id="soundtrack" src="./assets/audio/campaign.wav" loop preload="auto"></audio>
+<script src="./quiz.js?v=campaign4"></script>
+<script src="./trivia.js?v=score1"></script>
+<script src="./campaign.js?v=campaign4"></script>
+<script src="./music.js?v=metal1"></script>
 </body>
 </html>

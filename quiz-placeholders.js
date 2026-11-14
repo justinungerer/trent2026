@@ -1,7 +1,7 @@
 'use strict';
 
-// Empty slots for later questions. They are not loaded by the page yet.
-// Chapter 6 stays in quiz.js. The prologue has no quiz.
+// Unused slots. The live quiz is WWII-TRIVIA-BANK.md via trivia.js.
+// The prologue has no quiz. These placeholders are not loaded.
 
 window.TRENT_QUIZ_PLACEHOLDERS = [
   {
