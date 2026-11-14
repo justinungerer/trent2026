@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#24384e">
+  <title>Prologue — The Seawall</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="beach" width="844" height="390" aria-label="Trent crossing the beach from the landing craft to the seawall"></canvas>
+
+    <p id="hint" class="hint">Drag to walk</p>
+
+    <div class="hud">
+      <div class="hud-block">
+        <span class="label">To the seawall</span>
+        <strong id="distance">80 m</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Stumbles</span>
+        <div id="marks" class="marks" aria-label="0 of 3 stumbles">
+          <i></i><i></i><i></i>
+        </div>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <button type="button" id="brace" aria-pressed="false">Brace</button>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">6 June 1944</p>
+        <h1>The seawall</h1>
+        <p>Trent steps off the landing craft. The seawall is to the right.</p>
+        <p>Drag the left side to walk. Hold Brace when the foam runs up the sand. Go around the wire, the hedgehogs, and the craters.</p>
+        <p>Three stumbles, and he starts again at the ramp.</p>
+        <button type="button" id="start">Step off the ramp</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The beach waits.</p>
+        <button type="button" id="resume">Resume</button>
+      </div>
+    </div>
+
+    <div id="lose-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Back on the ramp</h1>
+        <p>Three stumbles. Trent gets up at the landing craft and can try the beach again.</p>
+        <button type="button" id="retry">Try again</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The seawall</p>
+        <h1>He makes the wall</h1>
+        <p id="win-time">Time on the sand: 0:00</p>
+        <p id="win-hold" hidden>Holding at the seawall.</p>
+        <button type="button" id="continue">Continue</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This beach is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

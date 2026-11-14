@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071422">
+  <title>The Night Broadcast</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night, looking for the station about Santa"></canvas>
+
+    <p id="hint" class="hint">Drag the knob</p>
+
+    <div class="hud">
+      <div class="hud-block grow">
+        <span class="label">Hearing</span>
+        <strong id="hearing">Static. Snow on the aerial.</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Signal</span>
+        <strong id="signal">Quiet</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Lock</span>
+        <strong id="lock">0.0 / 3s</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <div class="tune-pad">
+      <button type="button" id="tune-down" aria-label="Tune lower">◀</button>
+      <button type="button" id="tune-up" aria-label="Tune higher">▶</button>
+    </div>
+    <button type="button" id="lock-btn" aria-pressed="false">Lock</button>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">A few months after D-Day</p>
+        <h1>The night broadcast</h1>
+        <p>Near Christmas, Trent warms a field radio and turns the dial.</p>
+        <p>A canteen, a weather desk, and a music box are only noise. The station that says Santa has been captured is a narrow band.</p>
+        <p>Drag the knob, or use the arrows. Hold the needle in that band for three seconds. It locks on its own. Slipping off only unwinds the lock. Lock keeps the dial still.</p>
+        <button type="button" id="start">Switch on the lamp</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The lamp stays warm. The dial waits where you left it.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="give-up" class="ghost">Give up</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The night broadcast</p>
+        <h1>Santa has been taken</h1>
+        <p>The station locks. A field voice says Santa has been captured.</p>
+        <p id="win-time">Tuned in 0 seconds.</p>
+        <button type="button" id="retry">Tune again</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This radio is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
