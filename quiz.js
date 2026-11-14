@@ -65,7 +65,7 @@ function loadout(){
 }
 function launch(){
  const frame=document.getElementById('game'),url=new URL('./shelf-escape/',location.href);
- for(const [key,value] of Object.entries({build:'cinema2',charges:state.answers[0]?'4':'2',reload:state.answers[1]?'fast':'slow',ribbon:state.answers[2]?'enchanted':'plain',parentOrigin:location.origin}))url.searchParams.set(key,value);
+ for(const [key,value] of Object.entries({build:'illustrated1',charges:state.answers[0]?'4':'2',reload:state.answers[1]?'fast':'slow',ribbon:state.answers[2]?'enchanted':'plain',parentOrigin:location.origin}))url.searchParams.set(key,value);
  activeRun=String(Date.now())+'-'+Math.random().toString(36).slice(2);
  document.getElementById('mission').hidden=false;document.body.classList.add('playing');frame.src=url.href;
 }

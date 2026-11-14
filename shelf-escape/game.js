@@ -44,33 +44,53 @@ window.onkeydown=e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].inc
 window.onkeyup=e=>keys.delete(e.key.toLowerCase());
 const distance=(a,b)=>Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
 class Depot extends Phaser.Scene{
+ preload(){
+  for(const key of ['elf','guard','shelf'])this.load.image(key,'./art/'+key+'.webp');
+ }
+ glow(x,y,radius,color){
+  const light=this.add.image(x,y,'depot-glow').setTint(color).setDisplaySize(radius*2,radius*2).setAlpha(.65);
+  return light;
+ }
  create(){
   mission=this;complete=false;this.active=false;this.ammo=startingAmmo;this.nextShot=0;this.health=3;this.invulnerable=0;this.intel=false;this.timePlayed=0;this.relayCount=0;this.transmit=0;this.transmitRequired=65;this.transmitting=false;this.nextWave=0;
   this.physics.world.setBounds(0,0,1000,1600);
   const g=this.add.graphics();
-  g.fillStyle(0x19323b).fillRect(0,0,1000,1600);
-  for(let y=0;y<1600;y+=48)for(let x=0;x<1000;x+=80){
-   g.fillStyle((x+y)%3?0x263f46:0x2d464d).fillRect(x+1,y+1,78,46);
-   g.lineStyle(1,0x53666a,.2).lineBetween(x+5,y+4,x+72,y+4);
+  g.fillStyle(0x182833).fillRect(0,0,1000,1600);
+  for(let y=0;y<1600;y+=40)for(let x=0;x<1000;x+=100){
+   const variation=(x*31+y*71)%13;
+   g.fillStyle(0x26373e+variation*0x010101).fillRect(x+1,y+1,98,38);
+   g.lineStyle(1,0xa8b3ac,.08).lineBetween(x+8,y+4,x+85,y+4);
+   g.lineStyle(1,0x0f181a,.25).lineBetween(x+20,y+29,x+69,y+30);
+  }
+  for(const x of [28,70,930,972]){
+   g.lineStyle(9,0x14222a).lineBetween(x,0,x,1600);
+   g.lineStyle(2,0x879698,.55).lineBetween(x,0,x,1600);
+  }
+  if(!this.textures.exists('depot-glow')){
+   const light=this.textures.createCanvas('depot-glow',160,160),ctx=light.context;
+   const gradient=ctx.createRadialGradient(80,80,0,80,80,80);
+   gradient.addColorStop(0,'rgba(255,255,255,.8)');
+   gradient.addColorStop(.28,'rgba(255,255,255,.22)');
+   gradient.addColorStop(1,'rgba(255,255,255,0)');
+   ctx.fillStyle=gradient;ctx.fillRect(0,0,160,160);light.refresh();
+  }
+  for(let y=170;y<1500;y+=300){
+   for(const x of [45,955]){
+    this.glow(x,y,136,0xffab57);
+    this.add.circle(x,y,7,0xffdaa3);
+   }
+   this.glow(500,y+122,155,0x6594ab).setAlpha(.35);
   }
   const maker=this.make.graphics({x:0,y:0,add:false});
   const texture=(name,draw)=>{if(this.textures.exists(name))return;maker.clear();draw(maker);maker.generateTexture(name,64,72)};
-  texture('elf',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,42,17);p.fillStyle(0x1d3841).fillRoundedRect(15,43,13,22,5).fillRoundedRect(36,43,13,22,5);p.fillStyle(0xc64c58).fillRoundedRect(13,25,38,27,9);p.fillStyle(0xeee3bb).fillRect(15,28,34,5);p.fillStyle(0xf0ba8f).fillCircle(32,22,15);p.fillStyle(0xcd4f55).fillTriangle(13,13,41,0,51,14);p.fillStyle(0xffe8c2).fillCircle(42,3,5);p.fillStyle(0x253843).fillCircle(27,21,2).fillCircle(38,21,2);p.fillStyle(0xeac274).fillRoundedRect(42,30,19,9,3)});
-  texture('guard',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,44,17);p.fillStyle(0x182b32).fillRoundedRect(15,44,13,21,4).fillRoundedRect(36,44,13,21,4);p.fillStyle(0x79867b).fillRoundedRect(11,26,42,26,8);p.fillStyle(0xd7ae88).fillCircle(32,20,14);p.fillStyle(0x56696a).fillRoundedRect(13,4,38,14,6);p.fillStyle(0x253c43).fillRect(10,14,44,6);p.fillStyle(0xdeb875).fillCircle(48,40,7)});
   texture('gift',p=>{p.fillStyle(0x081b23,.5).fillEllipse(32,62,49,14);p.fillStyle(0xb84a55).fillRoundedRect(8,17,48,44,5);p.fillStyle(0xf4cd7d).fillRect(27,17,10,44).fillRect(8,31,48,9);p.lineStyle(5,0xf4cd7d).strokeEllipse(23,13,19,13).strokeEllipse(41,13,19,13)});
   texture('ribbon',p=>{p.fillStyle(0xffe8a4).fillCircle(32,32,7);p.fillStyle(0xef6580).fillRect(4,29,25,6)});
   this.walls=this.physics.add.staticGroup();
   for(const [x,y,w,h] of [[110,240,230,90],[520,260,300,90],[100,520,320,95],[610,550,270,100],[180,830,240,100],[550,850,300,80],[100,1120,270,90],[590,1150,270,110]]){
-   const wall=this.add.rectangle(x+w/2,y+h/2,w,h,0x523f36);this.physics.add.existing(wall,true);this.walls.add(wall);
-   g.fillStyle(0x071b24,.5).fillRoundedRect(x+10,y+14,w,h,7);
-   this.add.rectangle(x+w/2,y+7,w-4,12,0xa5845e);
-   for(let offset=18;offset<w-35;offset+=54){
-    this.add.rectangle(x+offset+18,y+45,35,37,offset%3?0x41635d:0xa94f50).setStrokeStyle(2,0xbc9665);
-    this.add.rectangle(x+offset+18,y+45,5,37,0xd6b775);
-   }
-  }
-  for(let y=170;y<1500;y+=300)for(const x of [45,955]){
-   this.add.circle(x,y,95,0xffc878,.025);this.add.circle(x,y,55,0xffc878,.04);this.add.circle(x,y,9,0xffd391);
+   const wall=this.add.rectangle(x+w/2,y+h/2,w,h).setVisible(false);
+   this.physics.add.existing(wall,true);this.walls.add(wall);
+   this.add.ellipse(x+w/2+5,y+h*.82,w+12,h*.48,0x071219,.6);
+   this.add.image(x+w/2,y+h/2,'shelf').setDisplaySize(w+10,h+14).setDepth(y+h*.75);
   }
   this.add.text(500,1380,'FREIGHT INTAKE',{fontSize:'24px',color:'#84999a'}).setOrigin(.5);
   this.add.text(500,680,'MINISTRY OF FESTIVE CONFISCATION',{fontSize:'16px',color:'#9ea7a0'}).setOrigin(.5);
@@ -86,17 +106,20 @@ class Depot extends Phaser.Scene{
   this.medkits=[{x:55,y:1080},{x:945,y:750},{x:55,y:390}].map(point=>({
    ...point,used:false,node:this.add.rectangle(point.x,point.y,24,24,0x95c9a5).setStrokeStyle(2,0xffffff)
   }));
+  this.glow(815,410,93,0xffbe69).setAlpha(.48);
+  this.glow(480,710,105,0x73d6ca).setAlpha(.46);
+  for(const relay of this.relays)this.glow(relay.x,relay.y,62,0x77d1f0).setAlpha(.38);
   this.orders=this.add.rectangle(815,410,34,28,0xffdc8a).setStrokeStyle(3,0xffffff);
   this.tweens.add({targets:this.orders,y:400,duration:850,yoyo:true,repeat:-1});
   this.add.text(815,370,'TRANSPORT ORDERS',{fontSize:'13px',color:'#ffe4a4'}).setOrigin(.5);
   this.exit=this.add.rectangle(500,100,130,40,0x438c83).setStrokeStyle(3,0xb3e7c6);
   this.add.text(500,63,'MAIL HATCH',{fontSize:'15px',color:'#b3e7c6'}).setOrigin(.5);
-  this.player=this.physics.add.sprite(500,1460,'elf').setScale(.72).setCollideWorldBounds(true);
-  this.player.body.setSize(32,30).setOffset(16,30);this.physics.add.collider(this.player,this.walls);
+  this.player=this.physics.add.sprite(500,1460,'elf').setScale(.36).setCollideWorldBounds(true);
+  this.player.body.setSize(64,60).setOffset(80,60);this.physics.add.collider(this.player,this.walls);
   this.guards=this.physics.add.group();
   for(const [x,y] of [[480,1200],[440,960],[520,740],[490,470],[270,170]]){
-   const enemy=this.guards.create(x,y,'guard').setScale(.8);
-   enemy.body.setSize(36,36).setOffset(14,25);enemy.home={x,y};enemy.hp=2;enemy.direction=1;
+   const enemy=this.guards.create(x,y,'guard').setScale(.4);
+   enemy.body.setSize(72,72).setOffset(28,50);enemy.home={x,y};enemy.hp=2;enemy.direction=1;
   }
   this.physics.add.collider(this.guards,this.walls);
   this.bullets=this.physics.add.group();
@@ -104,8 +127,11 @@ class Depot extends Phaser.Scene{
   this.physics.add.overlap(this.bullets,this.guards,(bullet,guard)=>{
    if(!bullet.active||!guard.active)return;
    bullet.destroy();guard.hp-=damage;
+   const flash=this.glow(guard.x,guard.y,42,0xffcd7d).setDepth(2000);
+   this.tweens.add({targets:flash,alpha:0,scaleX:1,scaleY:1,duration:240,onComplete:()=>flash.destroy()});
    if(guard.hp<=0){
-    const present=this.add.image(guard.x,guard.y,'gift').setScale(.8);guard.destroy();
+    const present=this.add.image(guard.x,guard.y,'gift').setScale(.35).setDepth(guard.y);guard.destroy();
+    this.tweens.add({targets:present,scale:.8,duration:260,ease:'Back.Out'});
     this.tweens.add({targets:present,angle:6,duration:100,yoyo:true,repeat:3});
    }else{guard.setTint(0xffb0b0);this.time.delayedCall(180,()=>{if(guard.active)guard.clearTint()})}
   });
@@ -117,7 +143,9 @@ class Depot extends Phaser.Scene{
    if(!this.health)this.finish(false);
   });
   this.cameras.main.setBounds(0,0,1000,1600).startFollow(this.player,true,.1,.1).setZoom(Math.max(.65,Math.min(1.1,this.scale.width/620)));
-  this.scale.on('resize',size=>this.cameras.main.setZoom(Math.max(.65,Math.min(1.1,size.width/620))));
+  const resize=size=>this.cameras.main.setZoom(Math.max(.65,Math.min(1.1,size.width/620)));
+  this.scale.on('resize',resize);
+  this.events.once('shutdown',()=>this.scale.off('resize',resize));
   panel('Operation Ribbonfall','Trent cracked the case. You are Sprout. Steal Santa’s transport orders, cut three alarm relays, transmit the evidence from the radio terminal, and escape through the mail hatch. The colonel has labeled the elf “ornamental.” This is about to become a personnel issue.<br><br><b>Left thumb</b> moves. <b>Right thumb</b> aims and fires while held. Tap the right pad to fire at the nearest guard. Stand beside each blue relay for seven seconds to cut it. Green boxes restore health. After collecting the orders and cutting the relays, defend the terminal while it transmits.<br><br>'+startingAmmo+' ribbon shots · '+(damage===2?'enchanted':'plain')+' ribbon.','Begin escape',resume);
  }
  finish(won){
@@ -148,6 +176,8 @@ class Depot extends Phaser.Scene{
     const target=this.guards.getChildren().sort((a,b)=>distance(a,this.player)-distance(b,this.player))[0];
     angle=target?Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y):-Math.PI/2;
    }
+   const flare=this.glow(this.player.x+Math.cos(angle)*19,this.player.y+Math.sin(angle)*19,25,0xffc673).setDepth(2000);
+   this.tweens.add({targets:flare,alpha:0,duration:125,onComplete:()=>flare.destroy()});
    const bullet=this.bullets.create(this.player.x,this.player.y,'ribbon').setScale(.5).setRotation(angle);
    bullet.body.setCircle(7,25,25);this.physics.velocityFromRotation(angle,520,bullet.body.velocity);
    this.time.delayedCall(1000,()=>{if(bullet.active)bullet.destroy()});
@@ -177,8 +207,8 @@ class Depot extends Phaser.Scene{
    if(distance(this.player,this.terminal)<145)this.transmit+=Math.min(delta,50)/1000;
    this.terminal.setFillStyle(0x87b59b);
    if(this.timePlayed>=this.nextWave&&this.guards.countActive()<5){
-    const enemy=this.guards.create(Math.floor(this.timePlayed)%2?55:945,710,'guard').setScale(.8);
-    enemy.body.setSize(36,36).setOffset(14,25);enemy.home={x:enemy.x,y:enemy.y};enemy.hp=2;enemy.direction=1;
+    const enemy=this.guards.create(Math.floor(this.timePlayed)%2?55:945,710,'guard').setScale(.4);
+    enemy.body.setSize(72,72).setOffset(28,50);enemy.home={x:enemy.x,y:enemy.y};enemy.hp=2;enemy.direction=1;
     this.nextWave=this.timePlayed+14;
    }
    if(this.transmit>=this.transmitRequired){
