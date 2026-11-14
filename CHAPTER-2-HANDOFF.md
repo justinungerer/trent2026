@@ -14,9 +14,12 @@ Santa's broadcast and collects Sprout's coded postcards to find the entrance
 to the depot from Operation Ribbonfall. Three postcards and surviving to the
 end wins. Three hits end the attempt. The obstacle layout is deterministic.
 
-The style is a limited-ink newspaper comic: flat colors, halftone margins,
-heavy outlines, animated handcar lever and comic impact captions. All artwork
-is drawn in Canvas. There are no external assets or paid services.
+The painted edition replaces the newspaper-comic visuals with original,
+locally bundled WebP art: a twilight forest railway, two pumping poses, wooden
+crates, and wax-sealed postcards. The handcar banks between lanes and its
+shadow changes as it hops. Snow moves in layers and pickups and impacts
+throw particles. The two poses are blended at runtime. Barriers and feedback
+remain Canvas shapes for readability. Keep chapter-2/art with the game.
 
 Tap Left, Hop, and Right, or use the arrow keys and Space. A hop clears striped
 barriers. Change lanes to dodge crates, and stay in lane to collect mint mail.
