@@ -92,7 +92,9 @@
   var pauseAccum = 0;
   var pauseBegan = 0;
   var victorySent = false;
-  var portraitDismissed = false;
+  var stick = document.getElementById('stick');
+  var stickKnob = document.getElementById('stick-knob');
+  var rotateHold = false;
 
   var keys = new Set();
   var keyBrace = false;
@@ -791,10 +793,15 @@
   }
 
   function syncPortrait() {
-    var show = portraitWanted() && !portraitDismissed;
-    var wasShowing = !portraitEl.hidden;
+    var show = portraitWanted();
     portraitEl.hidden = !show;
-    if (show && !wasShowing && (state === 'play' || state === 'stumble')) openPause();
+    if (show && (state === 'play' || state === 'stumble')) {
+      rotateHold = true;
+      openPause();
+    } else if (!show && rotateHold && state === 'pause') {
+      rotateHold = false;
+      closePause();
+    }
   }
 
   function loop(now) {
@@ -821,24 +828,31 @@
     return (event.clientX - rect.left) <= rect.width * 0.5;
   }
 
-  canvas.addEventListener('pointerdown', function (event) {
+  stick.addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     if (state !== 'play') return;
-    if (!leftHalf(event)) return;
     dragging = true;
     dragId = event.pointerId;
-    originX = event.clientX;
-    originY = event.clientY;
-    dragX = 0;
-    dragY = 0;
     hintEl.hidden = true;
-    if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
+    moveStick(event);
+    if (stick.setPointerCapture) stick.setPointerCapture(event.pointerId);
   });
+
+  function moveStick(event) {
+    var rect = stick.getBoundingClientRect();
+    var x = event.clientX - (rect.left + rect.width / 2);
+    var y = event.clientY - (rect.top + rect.height / 2);
+    var max = rect.width * 0.33;
+    var reach = Math.hypot(x, y) || 1;
+    var limit = Math.min(1, max / reach);
+    dragX = x * limit;
+    dragY = y * limit;
+    stickKnob.style.transform = 'translate(' + dragX + 'px,' + dragY + 'px)';
+  }
 
   window.addEventListener('pointermove', function (event) {
     if (!dragging || event.pointerId !== dragId) return;
-    dragX = event.clientX - originX;
-    dragY = event.clientY - originY;
+    moveStick(event);
   });
 
   function endDrag(event) {
@@ -847,6 +861,7 @@
     dragId = null;
     dragX = 0;
     dragY = 0;
+    stickKnob.style.transform = '';
   }
 
   window.addEventListener('pointerup', endDrag);
@@ -908,11 +923,6 @@
     if (state === 'play' || state === 'stumble') openPause();
     else if (state === 'pause') closePause();
   });
-  document.getElementById('dismiss-portrait').addEventListener('click', function () {
-    portraitDismissed = true;
-    syncPortrait();
-  });
-
   portraitQuery.addEventListener('change', syncPortrait);
   window.addEventListener('resize', function () {
     resize();

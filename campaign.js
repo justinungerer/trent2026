@@ -23,7 +23,15 @@ var creditTimer = 0;
 
 var CREDITS = [
   'Trent Saves Christmas',
-  'Game design and production',
+  'Designer',
+  'Justin Ungerer',
+  'Producer',
+  'Justin Ungerer',
+  'Developer',
+  'Justin Ungerer',
+  'Tester',
+  'Justin Ungerer',
+  'Marketing',
   'Justin Ungerer'
 ];
 
@@ -33,18 +41,24 @@ var CHAPTERS = [
     number: 0,
     title: 'The seawall',
     kicker: 'Prologue · 6 June 1944',
-    line: 'From the landing craft to the seawall.',
+    line: 'June 1944. Trent leaves the landing craft and crosses the sand. Surf shoves him back. Wire and hedgehogs block the way. The seawall is the only finish.',
+    lines: [
+      'June 1944. Trent steps off the landing craft onto the sand.',
+      'The surf runs in. Brace, or it shoves him back toward the boat.',
+      'Wire and metal hedgehogs block the beach. Walk around them.',
+      'The seawall is ahead. Reach it and the landing is done.'
+    ],
     event: 'prologue:complete',
     path: './prologue/',
-    pin: 'NIGHT',
+    pin: 'BEACH',
     nextId: 'night',
     intro: {
       pan: 'x',
       bg: 'prologue/art/beach.webp',
       layers: [
-        { src: 'prologue/art/craft.webp', h: 0.3, x: 0.16, y: 0.8 },
-        { src: 'prologue/art/seawall.webp', h: 0.46, x: 0.86, y: 0.78 },
-        { src: 'prologue/art/trent.webp', h: 0.48, x: 0.42, y: 0.82, sheet: { fw: 539, start: 2, count: 6, ms: 125, still: 0 } }
+        { src: 'prologue/art/craft.webp', h: 0.3, x: 0.22, toX: 0.02, y: 0.8 },
+        { src: 'prologue/art/seawall.webp', h: 0.46, x: 0.98, toX: 0.78, y: 0.78 },
+        { src: 'prologue/art/trent.webp', h: 0.48, x: 0.18, toX: 0.62, y: 0.82, sheet: { fw: 539, start: 2, count: 6, ms: 125, still: 0 } }
       ]
     }
   },
@@ -53,17 +67,23 @@ var CHAPTERS = [
     number: 1,
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
-    line: 'A radio in the snow. Somewhere, Santa is calling.',
+    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Most stations are noise. One narrow band says Santa has been captured. Hold that band until it locks.',
+    lines: [
+      'Months after the landing, Christmas is close and Santa is missing.',
+      'Trent opens a field radio. The canteen, the weather, and a music box are the wrong stations.',
+      'The field report is a narrow band. Hold the dial still until the lock fills.',
+      'When it locks, he knows Santa has been taken. The search can start.'
+    ],
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
-    pin: 'SKY',
+    pin: 'NIGHT',
     nextId: 'frost',
     intro: {
       pan: 'x',
       bg: 'night-broadcast/art/scene.webp',
       layers: [
-        { src: 'night-broadcast/art/radio.webp', h: 0.28, x: 0.34, y: 0.78 },
-        { src: 'night-broadcast/art/trent.webp', h: 0.58, x: 0.64, y: 0.84, sheet: { fw: 235, start: 2, count: 4, ms: 160, still: 0 } }
+        { src: 'night-broadcast/art/radio.webp', h: 0.28, x: 0.22, toX: 0.4, y: 0.78 },
+        { src: 'night-broadcast/art/trent.webp', h: 0.58, x: 0.78, toX: 0.58, y: 0.84, sheet: { fw: 235, start: 2, count: 4, ms: 160, still: 0 } }
       ]
     }
   },
@@ -72,17 +92,23 @@ var CHAPTERS = [
     number: 2,
     title: 'Frosted Skies',
     kicker: 'Chapter 2',
-    line: 'The sleigh takes the winter sky.',
+    line: 'The broadcast gives a heading. Trent takes the ribbon sleigh into the winter valley, dodges the convoy, and recovers Santa’s last signal from the sky.',
+    lines: [
+      'The captured signal points into the winter sky.',
+      'Trent flies the ribbon sleigh over the valley. The cannons fire on their own.',
+      'Scout craft and amber fire cross his path. Repair parcels keep the hull together.',
+      'The flagship arrives. Recover the broadcast and the heading is his.'
+    ],
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
-    pin: 'RAIL',
+    pin: 'SKY',
     nextId: 'rail',
     intro: {
       pan: 'y',
       bg: 'frosted-skies/art/valley.webp',
       layers: [
-        { src: 'frosted-skies/art/drone.webp', h: 0.1, x: 0.74, y: 0.34 },
-        { src: 'frosted-skies/art/sleigh.webp', h: 0.16, x: 0.46, y: 0.52, bob: true }
+        { src: 'frosted-skies/art/drone.webp', h: 0.1, x: 0.9, toX: 0.2, y: 0.34 },
+        { src: 'frosted-skies/art/sleigh.webp', h: 0.16, x: 0.2, toX: 0.62, y: 0.52, bob: true }
       ]
     }
   },
@@ -91,17 +117,23 @@ var CHAPTERS = [
     number: 3,
     title: 'White Rail',
     kicker: 'Chapter 3',
-    line: 'A handcar on the white rails.',
+    line: 'The rails run through the snow. Trent pumps a handcar and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the end of the line.',
+    lines: [
+      'A handcar sits on the snowy rails. Pumping is the only engine.',
+      'Crates, gaps, and a signal arm block the straight line.',
+      'The left thumb picks the track. The right thumb keeps the speed up.',
+      'Reach the yard mouth before three slips send him back to the start.'
+    ],
     event: 'white-rail:complete',
     path: './white-rail/',
-    pin: 'YARD',
+    pin: 'RAIL',
     nextId: 'yard',
     intro: {
       pan: 'x',
       bg: 'white-rail/art/rails.webp',
       layers: [
-        { src: 'white-rail/art/handcar.webp', h: 0.26, x: 0.5, y: 0.8 },
-        { src: 'white-rail/art/trent.webp', h: 0.4, x: 0.5, y: 0.64, sheet: { fw: 459, start: 0, count: 6, ms: 53, still: 0 } }
+        { src: 'white-rail/art/handcar.webp', h: 0.26, x: 0.2, toX: 0.72, y: 0.8 },
+        { src: 'white-rail/art/trent.webp', h: 0.4, x: 0.2, toX: 0.72, y: 0.64, sheet: { fw: 459, start: 0, count: 6, ms: 53, still: 0 } }
       ]
     }
   },
@@ -110,17 +142,23 @@ var CHAPTERS = [
     number: 4,
     title: 'Special Delivery',
     kicker: 'Chapter 4',
-    line: 'Three dispatches are hidden in the yard.',
+    line: 'The freight yard hides three dispatches. Trent moves in the open, avoids the inspectors, and uses a wind-up penguin when a patrol gets close. The mail hatch is the way out.',
+    lines: [
+      'Three dispatches are hidden among the shelves of the freight yard.',
+      'Inspectors walk fixed routes. Stay out of their sight.',
+      'A wind-up penguin draws them away for a few seconds.',
+      'Collect every dispatch, then reach the mail hatch.'
+    ],
     event: 'special-delivery:complete',
     path: './chapter-2/',
-    pin: 'SWITCH',
+    pin: 'YARD',
     nextId: 'tower',
     intro: {
       pan: 'x',
       bg: 'chapter-2/art/yard.webp',
       layers: [
-        { src: 'chapter-2/art/guard.webp', h: 0.16, x: 0.68, y: 0.66 },
-        { src: 'chapter-2/art/elf.webp', h: 0.14, x: 0.36, y: 0.62 }
+        { src: 'chapter-2/art/guard.webp', h: 0.16, x: 0.8, toX: 0.55, y: 0.66 },
+        { src: 'chapter-2/art/elf.webp', h: 0.14, x: 0.18, toX: 0.46, y: 0.62 }
       ]
     }
   },
@@ -129,16 +167,22 @@ var CHAPTERS = [
     number: 5,
     title: 'The Switch Tower',
     kicker: 'Chapter 5',
-    line: 'The right train has to leave.',
+    line: 'A train is coming. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
+    lines: [
+      'The destination board shows the lever order as pictures, not a speech.',
+      'Trent throws each lever left or right before the train arrives.',
+      'A wrong pattern sends the train back and costs a try.',
+      'The matching pattern lets the right train leave the yard.'
+    ],
     event: 'switch-tower:complete',
     path: './switch-tower/',
-    pin: 'DEPOT',
+    pin: 'SWITCH',
     nextId: 'shelf',
     intro: {
       pan: 'x',
       bg: 'switch-tower/art/scene.webp',
       layers: [
-        { src: 'switch-tower/art/train.webp', h: 0.18, x: 0.58, y: 0.74 },
+        { src: 'switch-tower/art/train.webp', h: 0.18, x: 0.15, toX: 0.78, y: 0.74 },
         { src: 'switch-tower/art/trent.webp', h: 0.52, x: 0.28, y: 0.86, sheet: { fw: 360, start: 2, count: 4, ms: 120, still: 0 } }
       ]
     }
@@ -148,16 +192,22 @@ var CHAPTERS = [
     number: 6,
     title: 'The shelf operative',
     kicker: 'Chapter 6',
-    line: 'Sprout is still inside the depot.',
+    line: 'Sprout is inside the depot with Santa’s transport orders. The quiz builds his ribbon gun. Then Trent plays as Sprout: wrap the guards, disable the relays, and leave through the mail hatch.',
+    lines: [
+      'Sprout is trapped in the colonel’s depot with the transport orders.',
+      'The questions decide his ammunition, his reload, and his ribbon.',
+      'Inside, shelves block shots. Guards can be wrapped into parcels.',
+      'Disable the alarms, send the orders, and escape with the route to Santa.'
+    ],
     event: null,
     path: './shelf-escape/',
-    pin: 'WIRE',
+    pin: 'DEPOT',
     nextId: 'wire',
     intro: {
       pan: 'x',
       bg: 'assets/depot.webp',
       layers: [
-        { src: 'shelf-escape/art/animated/elf-walk.png', h: 0.46, x: 0.48, y: 0.84, sheet: { fw: 192, fh: 160, start: 0, count: 5, ms: 140, still: 0 } }
+        { src: 'shelf-escape/art/animated/elf-walk.png', h: 0.46, x: 0.2, toX: 0.7, y: 0.84, sheet: { fw: 192, fh: 160, start: 0, count: 5, ms: 140, still: 0 } }
       ]
     }
   },
@@ -166,16 +216,22 @@ var CHAPTERS = [
     number: 7,
     title: 'The Listening Wire',
     kicker: 'Chapter 7',
-    line: 'A message, between the searchlights.',
+    line: 'A short Morse pattern has to go out while a searchlight sweeps the yard. Trent sends only when the light is in the safe gap. Three slips restart the message.',
+    lines: [
+      'A message has to leave before the next patrol.',
+      'The searchlight sweeps the yard. The safe gap is brief.',
+      'Hold Send only while the lamp is in that gap.',
+      'Dot, dash, dot, dot. Three slips and the pattern starts over.'
+    ],
     event: 'listening-wire:complete',
     path: './listening-wire/',
-    pin: 'CAMP',
+    pin: 'WIRE',
     nextId: 'camp',
     intro: {
       pan: 'x',
       bg: 'listening-wire/art/scene.webp',
       layers: [
-        { src: 'listening-wire/art/lamp.webp', h: 0.36, x: 0.18, y: 0.8 },
+        { src: 'listening-wire/art/lamp.webp', h: 0.36, x: 0.08, toX: 0.78, y: 0.8 },
         { src: 'listening-wire/art/trent.webp', h: 0.62, x: 0.58, y: 0.86, sheet: { fw: 278, start: 2, count: 3, ms: 180, still: 0 } }
       ]
     }
@@ -185,17 +241,23 @@ var CHAPTERS = [
     number: 8,
     title: 'The Holding Camp',
     kicker: 'Chapter 8',
-    line: 'Santa is walking out.',
+    line: 'Santa walks the cabin shadow toward the gate. Trent has to stay near him. Falling behind or stepping into a searchlight costs a slip. Three slips restart the walk.',
+    lines: [
+      'Santa is walking out. He will not wait in the open.',
+      'Stay close. The searchlights punish a wander.',
+      'A slip is a setback, not the end, until the third one.',
+      'Reach the gate together and the camp is behind them.'
+    ],
     event: 'holding-camp:complete',
     path: './holding-camp/',
-    pin: 'BOW',
+    pin: 'CAMP',
     nextId: 'wrap',
     intro: {
       pan: 'x',
       bg: 'holding-camp/art/scene.webp',
       layers: [
-        { src: 'holding-camp/art/trent.webp', h: 0.5, x: 0.36, y: 0.84, sheet: { fw: 412, start: 0, count: 4, ms: 150, still: 0 } },
-        { src: 'holding-camp/art/santa.webp', h: 0.38, x: 0.62, y: 0.84, sheet: { fw: 348, start: 0, count: 4, ms: 150, still: 0 } }
+        { src: 'holding-camp/art/trent.webp', h: 0.5, x: 0.22, toX: 0.48, y: 0.84, sheet: { fw: 412, start: 0, count: 4, ms: 150, still: 0 } },
+        { src: 'holding-camp/art/santa.webp', h: 0.38, x: 0.4, toX: 0.7, y: 0.84, sheet: { fw: 348, start: 0, count: 4, ms: 150, still: 0 } }
       ]
     }
   },
@@ -204,16 +266,22 @@ var CHAPTERS = [
     number: 9,
     title: 'The Wrapping Line',
     kicker: 'Chapter 9',
-    line: 'The bows have to land on time.',
+    line: 'Parcels ride a belt through Quinn’s workshop. Trent taps on the beat to drop a bow. Early or late resets the run. Eight bows in a row clear the line.',
+    lines: [
+      'The workshop belt brings one parcel after another.',
+      'A bow has to land as the parcel meets the mark.',
+      'Early and late both reset the count.',
+      'Eight bows in time finish the line.'
+    ],
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
-    pin: 'HOME',
+    pin: 'BOW',
     nextId: 'chimney',
     intro: {
       pan: 'x',
       bg: 'wrapping-line/art/scene.webp',
       layers: [
-        { src: 'wrapping-line/art/parcel.webp', h: 0.18, x: 0.62, y: 0.72 },
+        { src: 'wrapping-line/art/parcel.webp', h: 0.18, x: 0.15, toX: 0.82, y: 0.72 },
         { src: 'wrapping-line/art/trent.webp', h: 0.58, x: 0.4, y: 0.86, sheet: { fw: 302, start: 2, count: 3, ms: 120, still: 0 } }
       ]
     }
@@ -223,24 +291,31 @@ var CHAPTERS = [
     number: 10,
     title: 'The Chimney Road',
     kicker: 'Chapter 10',
-    line: 'The sleigh is on the last roof.',
+    line: 'Snowy roofs lead to the waiting sleigh. Trent runs and jumps the gaps, gets past a sliding crate, and reaches the chimney. Three falls restart the road. The flight home comes after.',
+    lines: [
+      'The sleigh is parked on the last roof.',
+      'The road is a run of snowy rooftops and open gaps.',
+      'A crate slides across one roof. Jump it.',
+      'Three falls send him back. The sleigh is the end of the road.'
+    ],
     event: 'chimney-road:complete',
     path: './chimney-road/',
-    pin: null,
+    pin: 'HOME',
     nextId: null,
     intro: {
       pan: 'x',
       bg: 'chimney-road/art/panorama.webp',
       layers: [
-        { src: 'chimney-road/art/roof.webp', h: 0.14, x: 0.48, y: 0.74 },
-        { src: 'chimney-road/art/sleigh.webp', h: 0.16, x: 0.8, y: 0.62 },
-        { src: 'chimney-road/art/trent.webp', h: 0.42, x: 0.32, y: 0.72, sheet: { fw: 558, start: 2, count: 4, ms: 90, still: 0 } }
+        { src: 'chimney-road/art/roof.webp', h: 0.14, x: 0.2, toX: 0.7, y: 0.74 },
+        { src: 'chimney-road/art/sleigh.webp', h: 0.16, x: 0.92, y: 0.62 },
+        { src: 'chimney-road/art/trent.webp', h: 0.42, x: 0.16, toX: 0.7, y: 0.72, sheet: { fw: 558, start: 2, count: 4, ms: 90, still: 0 } }
       ]
     }
   }
 ];
 
 var PIN_TO_ID = {
+  BEACH: 'prologue',
   NIGHT: 'night',
   SKY: 'frost',
   RAIL: 'rail',
@@ -252,6 +327,9 @@ var PIN_TO_ID = {
   BOW: 'wrap',
   HOME: 'chimney'
 };
+var TEST_PIN = '19820424';
+var pinTimer = 0;
+var pendingTest = null;
 
 function byId(id) {
   var i;
@@ -320,6 +398,82 @@ function stopEndingVideo() {
   endingVideo.load();
 }
 
+function showTester() {
+  var section = document.createElement('section');
+  var title = document.createElement('h1');
+  var bonusLabel = document.createElement('label');
+  var bonus = document.createElement('select');
+  var list = document.createElement('div');
+  var videos = document.createElement('div');
+  var home = document.createElement('button');
+  var scores = [10, 9, 8, 7];
+  var i;
+  clearTimeout(pinTimer);
+  clearCredits();
+  stopIntro();
+  closeMission();
+  stopEndingVideo();
+  ending.hidden = true;
+  campaignRoot.hidden = false;
+  campaignRoot.innerHTML = '';
+  section.className = 'campaign-start';
+  title.tabIndex = -1;
+  title.textContent = 'Test gate';
+  bonusLabel.textContent = 'Bonus';
+  bonusLabel.htmlFor = 'test-bonus';
+  bonus.id = 'test-bonus';
+  for (i = 0; i < scores.length; i++) {
+    var option = document.createElement('option');
+    option.value = String(scores[i]);
+    option.textContent = scores[i] + ' of 10';
+    bonus.appendChild(option);
+  }
+  list.className = 'choices';
+  for (i = 0; i < CHAPTERS.length; i++) {
+    (function (chapter) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'choice';
+      button.textContent = chapter.kicker + ' · ' + chapter.title;
+      button.onclick = function () {
+        openChapter(chapter.id, { bonus: Number(bonus.value) });
+      };
+      list.appendChild(button);
+    })(CHAPTERS[i]);
+  }
+  videos.className = 'choices';
+  for (i = 0; i < CHAPTERS.length; i++) {
+    (function (chapter) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'secondary';
+      button.textContent = 'Intro · ' + chapter.title;
+      button.onclick = function () {
+        playIntro(chapter, showTester);
+      };
+      videos.appendChild(button);
+    })(CHAPTERS[i]);
+  }
+  var endingButton = document.createElement('button');
+  endingButton.type = 'button';
+  endingButton.className = 'secondary';
+  endingButton.textContent = 'Ending video';
+  endingButton.onclick = showEnding;
+  videos.appendChild(endingButton);
+  home.type = 'button';
+  home.className = 'primary';
+  home.textContent = 'Start screen';
+  home.onclick = showStart;
+  section.appendChild(title);
+  section.appendChild(bonusLabel);
+  section.appendChild(bonus);
+  section.appendChild(list);
+  section.appendChild(videos);
+  section.appendChild(home);
+  campaignRoot.appendChild(section);
+  title.focus({ preventScroll: true });
+}
+
 function showStart() {
   var stored = readStoredPin();
   if (window.TrentTrivia) window.TrentTrivia.abort();
@@ -333,6 +487,7 @@ function showStart() {
   var open;
   var status;
   clearCredits();
+  clearTimeout(pinTimer);
   stopIntro();
   active = null;
   shelfOpen = false;
@@ -384,8 +539,12 @@ function showStart() {
   form.appendChild(status);
   form.onsubmit = function (event) {
     var pin = normalizePin(input.value);
-    var id = PIN_TO_ID[pin];
     event.preventDefault();
+    if (pin === TEST_PIN) {
+      showTester();
+      return;
+    }
+    var id = PIN_TO_ID[pin];
     if (!id) {
       status.textContent = 'That code is not on the list.';
       return;
@@ -401,54 +560,66 @@ function showStart() {
 }
 
 function showCredits(done) {
-  var index = 0;
   var generation = ++introToken;
-  function finish() {
+  var section = document.createElement('section');
+  var reel = document.createElement('div');
+  var i;
+  clearCredits();
+  campaignRoot.hidden = false;
+  campaignRoot.innerHTML = '';
+  section.className = 'campaign-start credit-scroll';
+  reel.className = 'credit-reel';
+  for (i = 0; i < CREDITS.length; i++) {
+    var line = document.createElement(i % 2 ? 'p' : 'h1');
+    line.textContent = CREDITS[i];
+    reel.appendChild(line);
+  }
+  section.appendChild(reel);
+  campaignRoot.appendChild(section);
+  creditTimer = setTimeout(function () {
     if (generation !== introToken) return;
     introToken += 1;
     clearCredits();
     done();
-  }
-  function paint() {
-    var section = document.createElement('section');
-    var title = document.createElement('h1');
-    var row = document.createElement('div');
-    var next = document.createElement('button');
-    var skip = document.createElement('button');
-    campaignRoot.innerHTML = '';
-    section.className = 'campaign-start credit-card';
-    title.tabIndex = -1;
-    title.textContent = CREDITS[index];
-    row.className = 'button-row';
-    next.type = 'button';
-    next.className = 'primary';
-    next.textContent = 'Next';
-    next.onclick = advance;
-    skip.type = 'button';
-    skip.className = 'secondary';
-    skip.textContent = 'Skip';
-    skip.onclick = finish;
-    row.appendChild(next);
-    row.appendChild(skip);
-    section.appendChild(title);
-    section.appendChild(row);
-    campaignRoot.appendChild(section);
-    title.focus({ preventScroll: true });
-  }
-  function advance() {
-    clearCredits();
-    if (generation !== introToken) return;
-    index += 1;
-    if (index >= CREDITS.length) {
-      finish();
-      return;
-    }
-    paint();
-    creditTimer = setTimeout(advance, 2400);
-  }
-  campaignRoot.hidden = false;
-  paint();
-  creditTimer = setTimeout(advance, 2400);
+  }, 14000);
+}
+
+function handheld() {
+  return window.matchMedia('(pointer: coarse)').matches;
+}
+
+function isPortrait() {
+  return window.innerHeight > window.innerWidth + 20;
+}
+
+function wantsLandscape() {
+  var mission = document.getElementById('mission');
+  var playing = mission && !mission.hidden;
+  var introducing = cinema && !cinema.hidden;
+  var endingOpen = ending && !ending.hidden;
+  return playing || introducing || endingOpen;
+}
+
+function turnNeeded() {
+  if (!handheld()) return false;
+  return wantsLandscape() ? isPortrait() : !isPortrait();
+}
+
+function syncTurn() {
+  var gate = document.getElementById('turn-gate');
+  var heading = document.getElementById('turn-heading');
+  var note = document.getElementById('turn-note');
+  var mark = document.getElementById('turn-mark');
+  var needed = turnNeeded();
+  var toLandscape = wantsLandscape() && isPortrait();
+  if (!gate) return;
+  gate.hidden = !needed;
+  if (!needed || !heading) return;
+  heading.textContent = toLandscape ? 'Turn the screen sideways' : 'Turn the screen upright';
+  note.textContent = toLandscape
+    ? 'This part stays paused until the phone is landscape.'
+    : 'This part stays paused until the phone is portrait.';
+  mark.classList.toggle('upright', !toLandscape);
 }
 
 function fitCanvas(canvas) {
@@ -514,7 +685,9 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   }
   destH = ctx.canvas.height * actor.h;
   destW = destH * (fw / fh);
-  dx = ctx.canvas.width * actor.x - destW / 2;
+  var travel = reduced ? 0 : Math.min(1, elapsed / 20000);
+  var xPos = typeof actor.toX === 'number' ? actor.x + (actor.toX - actor.x) * travel : actor.x;
+  dx = ctx.canvas.width * xPos - destW / 2;
   dy = ctx.canvas.height * actor.y - destH;
   if (actor.bob && !reduced) dy += Math.sin(elapsed / 380) * ctx.canvas.height * 0.015;
   ctx.drawImage(image, sx, 0, fw, fh, dx, dy, destW, destH);
@@ -555,6 +728,12 @@ function playIntro(chapter, done) {
     var reduced;
     var i;
     if (introToken !== token) return;
+    syncTurn();
+    if (turnNeeded()) {
+      last = now;
+      introRaf = requestAnimationFrame(tick);
+      return;
+    }
     elapsed += Math.min(80, now - last);
     last = now;
     reduced = reduceMotion.matches;
@@ -562,6 +741,10 @@ function playIntro(chapter, done) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     drawBackground(ctx, images[0], spec, elapsed, reduced);
     for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, reduced);
+    if (chapter.lines && chapter.lines.length) {
+      var step = Math.min(chapter.lines.length - 1, Math.floor(elapsed / (INTRO_MS / chapter.lines.length)));
+      document.getElementById('intro-line').textContent = chapter.lines[step];
+    }
     if (elapsed >= INTRO_MS) {
       introDone();
       return;
@@ -584,9 +767,26 @@ function launchGame(chapter) {
   document.getElementById('mission').hidden = false;
   document.body.classList.add('playing');
   frame.src = url.href;
+  syncTurn();
 }
 
 function afterIntro(chapter) {
+  if (pendingTest) {
+    var bonus = pendingTest.bonus;
+    pendingTest = null;
+    if (!chapter.number) {
+      launchGame(chapter);
+      return;
+    }
+    if (chapter.number === 6) {
+      active = null;
+      shelfOpen = true;
+      window.TrentChapter6.startMission(bonus);
+      return;
+    }
+    launchGame(chapter);
+    return;
+  }
   if (!chapter.number) {
     launchGame(chapter);
     return;
@@ -605,13 +805,15 @@ function afterIntro(chapter) {
   });
 }
 
-function openChapter(id) {
+function openChapter(id, test) {
   var chapter = byId(id);
   if (!chapter) {
     showStart();
     return;
   }
+  clearTimeout(pinTimer);
   clearCredits();
+  pendingTest = test || null;
   active = null;
   shelfOpen = false;
   closeMission();
@@ -621,15 +823,13 @@ function openChapter(id) {
 }
 
 function showPin(chapter) {
-  var next = byId(chapter.nextId);
   var section = document.createElement('section');
   var kicker = document.createElement('p');
   var title = document.createElement('h1');
   var code = document.createElement('p');
   var copy = document.createElement('p');
-  var row = document.createElement('div');
-  var cont = document.createElement('button');
   var home = document.createElement('button');
+  var nextId = chapter.nextId;
   storePin(chapter.pin);
   closeMission();
   ending.hidden = true;
@@ -638,32 +838,33 @@ function showPin(chapter) {
   campaignRoot.innerHTML = '';
   section.className = 'campaign-start pin-card';
   kicker.className = 'eyebrow';
-  kicker.textContent = next ? 'Continue code' : 'Chapter complete';
+  kicker.textContent = 'Remember this code';
   title.tabIndex = -1;
-  title.textContent = next ? next.title : chapter.title;
+  title.textContent = chapter.title;
   code.className = 'pin-code';
   code.textContent = chapter.pin;
   code.setAttribute('aria-label', 'Continue code ' + chapter.pin);
   copy.className = 'lead';
-  copy.textContent = 'Type ' + chapter.pin + ' on the start screen to open ' + (next ? next.title : 'the next chapter') + '.';
-  row.className = 'button-row';
-  cont.type = 'button';
-  cont.className = 'primary';
-  cont.textContent = 'Continue';
-  cont.onclick = function () { openChapter(chapter.nextId); };
+  copy.textContent = 'Remember ' + chapter.pin + ' to return to ' + chapter.title + ' from the start screen.';
   home.type = 'button';
   home.className = 'secondary';
   home.textContent = 'Start screen';
-  home.onclick = showStart;
-  row.appendChild(cont);
-  row.appendChild(home);
+  home.onclick = function () {
+    clearTimeout(pinTimer);
+    showStart();
+  };
   section.appendChild(kicker);
   section.appendChild(title);
   section.appendChild(code);
   section.appendChild(copy);
-  section.appendChild(row);
+  section.appendChild(home);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
+  clearTimeout(pinTimer);
+  pinTimer = setTimeout(function () {
+    if (nextId) openChapter(nextId);
+    else showEnding();
+  }, 4500);
 }
 
 function showRestored() {
@@ -741,6 +942,8 @@ window.addEventListener('message', function (event) {
 document.getElementById('intro-skip').onclick = function () {
   if (introDone) introDone();
 };
+window.addEventListener('resize', syncTurn);
+window.addEventListener('orientationchange', syncTurn);
 document.getElementById('ending-play').onclick = playEnding;
 document.getElementById('ending-skip').onclick = showRestored;
 document.getElementById('ending-home').onclick = showStart;

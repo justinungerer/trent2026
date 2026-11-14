@@ -376,19 +376,30 @@
       onClear(correctCount);
     }
 
-    function paintElf(button, sourceUrl) {
+    function paintElf(button, question) {
+      if (question.tier === 'Easy') {
+        button.textContent = 'Elves skip the easy ones';
+        button.disabled = true;
+        return;
+      }
       button.textContent = elves > 0 ? 'Phone an Elf · ' + elves + ' left' : 'Phone an Elf · 0 left';
-      button.disabled = elves < 1 || !sourceUrl;
+      button.disabled = elves < 1 || !question.sourceUrl;
     }
 
-    function showWrong(choice, then) {
+    function showWrong(choice, question, then) {
       var modal = document.createElement('div');
       var card = document.createElement('div');
       var kicker = document.createElement('p');
       var title = document.createElement('h2');
       var picked = document.createElement('p');
       var why = document.createElement('p');
+      var answer = document.createElement('p');
       var next = document.createElement('button');
+      var correct = null;
+      var n;
+      for (n = 0; n < question.choices.length; n++) {
+        if (question.choices[n].correct) correct = question.choices[n];
+      }
       modal.className = 'quiz-modal';
       modal.setAttribute('role', 'dialog');
       modal.setAttribute('aria-modal', 'true');
@@ -403,6 +414,8 @@
       picked.textContent = choice.text;
       why.className = 'quiz-why';
       why.textContent = choice.explanation;
+      answer.className = 'lead';
+      answer.textContent = 'Correct answer: ' + (correct ? correct.text : '');
       next.type = 'button';
       next.className = 'primary';
       next.textContent = 'Continue';
@@ -414,6 +427,7 @@
       card.appendChild(title);
       card.appendChild(picked);
       card.appendChild(why);
+      card.appendChild(answer);
       card.appendChild(next);
       modal.appendChild(card);
       document.body.appendChild(modal);
@@ -452,11 +466,11 @@
       }
       elf.type = 'button';
       elf.className = 'secondary elf-button';
-      paintElf(elf, question.sourceUrl);
+      paintElf(elf, question);
       elf.onclick = function () {
-        if (!stillHere() || locked || elves < 1 || !question.sourceUrl) return;
+        if (!stillHere() || locked || question.tier === 'Easy' || elves < 1 || !question.sourceUrl) return;
         elves -= 1;
-        paintElf(elf, question.sourceUrl);
+        paintElf(elf, question);
         if (window.TrentSfx) window.TrentSfx.play('elf');
         elfTicket += 1;
         elfAllow = true;
@@ -508,7 +522,7 @@
         }
         misses += 1;
         if (window.TrentSfx) window.TrentSfx.play('wrong');
-        showWrong(choice, function () {
+        showWrong(choice, question, function () {
           if (!stillHere()) return;
           if (misses >= 5) {
             gameOver();

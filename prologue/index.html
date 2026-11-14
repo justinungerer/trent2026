@@ -27,6 +27,7 @@
       <button type="button" id="pause">Pause</button>
     </div>
 
+    <div id="stick" class="stick" aria-label="Move"><div id="stick-knob"></div></div>
     <button type="button" id="brace" aria-pressed="false">Brace</button>
 
     <div id="start-sheet" class="sheet">
@@ -67,11 +68,9 @@
     </div>
 
     <div id="portrait" class="sheet portrait" hidden>
-      <div class="card">
-        <h1>Turn sideways</h1>
-        <p>This beach is played in landscape.</p>
-        <button type="button" id="dismiss-portrait">Dismiss</button>
-      </div>
+      <div class="rotate-mark" aria-hidden="true"></div>
+      <h1>Turn the screen sideways</h1>
+      <p>The beach stays paused until the phone is landscape.</p>
     </div>
 
     <p id="status" class="sr" role="status"></p>

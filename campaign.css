@@ -252,6 +252,56 @@ body {
   }
 }
 
+.credit-scroll {
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.credit-reel {
+  width: 100%;
+  animation: credit-rise 14s linear forwards;
+}
+
+.credit-reel h1,
+.credit-reel p {
+  text-align: center;
+  margin: 0.4em 0;
+}
+
+@keyframes credit-rise {
+  from { transform: translateY(70vh); }
+  to { transform: translateY(-120vh); }
+}
+
+#turn-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: #0c171e;
+  color: #f8ecd4;
+  text-align: center;
+}
+
+#turn-gate[hidden] { display: none !important; }
+
+#turn-gate .rotate-mark {
+  width: 92px;
+  height: 148px;
+  border: 8px solid #f8ecd4;
+  border-radius: 16px;
+  transform: rotate(90deg);
+}
+
+#turn-gate .rotate-mark.upright {
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .intro-copy,
   .pin-code,

@@ -52,7 +52,7 @@
   var view = { s: 1, ox: 0, oy: 0 };
   var played = 0;
   var victorySent = false;
-  var portraitDismissed = false;
+  var rotateHold = false;
   var visualTime = 0;
   var lastFrame = 0;
   var shake = 0;
@@ -415,10 +415,15 @@
   }
 
   function syncPortrait() {
-    var show = portraitWanted() && !portraitDismissed;
-    var was = !portraitEl.hidden;
+    var show = portraitWanted();
     portraitEl.hidden = !show;
-    if (show && !was && state === 'play') openPause();
+    if (show && state === 'play') {
+      rotateHold = true;
+      openPause();
+    } else if (!show && rotateHold && state === 'pause') {
+      rotateHold = false;
+      closePause();
+    }
   }
 
   function bindHold(button, key) {
@@ -498,11 +503,6 @@
     if (state === 'play') openPause();
     else if (state === 'pause') closePause();
   });
-  document.getElementById('dismiss-portrait').addEventListener('click', function () {
-    portraitDismissed = true;
-    syncPortrait();
-  });
-
   portraitQuery.addEventListener('change', syncPortrait);
   window.addEventListener('resize', function () {
     resize();

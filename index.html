@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111b22">
 <title>Trent Saves Christmas</title>
 <link rel="stylesheet" href="./quiz.css?v=campaign1">
-<link rel="stylesheet" href="./campaign.css?v=campaign4">
+<link rel="stylesheet" href="./campaign.css?v=flow1">
 </head>
 <body>
 <header>
@@ -37,10 +37,15 @@
   <video id="ending-video" hidden playsinline webkit-playsinline muted preload="none" disablepictureinpicture></video>
   <button type="button" id="ending-skip" class="overlay-skip" hidden>Skip</button>
 </div>
+<div id="turn-gate" hidden>
+  <div id="turn-mark" class="rotate-mark" aria-hidden="true"></div>
+  <h1 id="turn-heading">Turn the screen sideways</h1>
+  <p id="turn-note">This part stays paused until the phone is landscape.</p>
+</div>
 <audio id="soundtrack" src="./assets/audio/campaign.wav" loop preload="auto"></audio>
 <script src="./quiz.js?v=campaign4"></script>
 <script src="./trivia.js?v=score1"></script>
-<script src="./campaign.js?v=campaign4"></script>
+<script src="./campaign.js?v=flow1"></script>
 <script src="./music.js?v=metal1"></script>
 </body>
 </html>

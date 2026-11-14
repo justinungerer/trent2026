@@ -284,3 +284,5 @@ button:focus-visible {
     transition: none !important;
   }
 }
+
+.rotate-mark{width:120px;height:180px;margin:0 auto 16px;border:8px solid #f7f4ec;border-radius:18px;transform:rotate(90deg)}

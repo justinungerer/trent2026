@@ -100,7 +100,7 @@
   var pauseAccum = 0;
   var pauseBegan = 0;
   var victorySent = false;
-  var portraitDismissed = false;
+  var rotateHold = false;
   var lastFrame = 0;
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -517,10 +517,15 @@
   }
 
   function syncPortrait() {
-    var show = portraitWanted() && !portraitDismissed;
-    var wasShowing = !portraitEl.hidden;
+    var show = portraitWanted();
     portraitEl.hidden = !show;
-    if (show && !wasShowing && playingMotion()) openPause();
+    if (show && playingMotion()) {
+      rotateHold = true;
+      openPause();
+    } else if (!show && rotateHold && state === 'pause') {
+      rotateHold = false;
+      closePause();
+    }
   }
 
   function bindLever(button, index) {
@@ -586,11 +591,6 @@
     if (playingMotion()) openPause();
     else if (state === 'pause') closePause();
   });
-  document.getElementById('dismiss-portrait').addEventListener('click', function () {
-    portraitDismissed = true;
-    syncPortrait();
-  });
-
   if (portraitQuery.addEventListener) portraitQuery.addEventListener('change', syncPortrait);
   else if (portraitQuery.addListener) portraitQuery.addListener(syncPortrait);
   window.addEventListener('resize', function () {
