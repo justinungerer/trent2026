@@ -98,7 +98,7 @@ function update(dt){
     ui.phase.textContent='CONVOY FLAGSHIP / DESTROY THE SIGNAL JAMMER';
   }
   for(const enemy of enemies){
-    enemy.age+=dt;enemy.fire-=dt;
+    enemy.age+=dt;enemy.impact=Math.max(0,(enemy.impact||0)-dt);enemy.fire-=dt;
     if(enemy.kind==='boss'){enemy.y=Math.min(144,enemy.y+65*dt);enemy.x=240+Math.sin(enemy.age*1.1)*113;}
     else{
       enemy.y+=(enemy.mode===2?110:78)*dt;
@@ -114,7 +114,7 @@ function update(dt){
     shot.y-=590*dt;
     for(const enemy of enemies){
       if(enemy.hp<=0||Math.abs(shot.x-enemy.x)>(enemy.kind==='boss'?48:23)||Math.abs(shot.y-enemy.y)>(enemy.kind==='boss'?34:16))continue;
-      shot.y=-100;enemy.hp--;burst(shot.x,enemy.y,colors.ice,3);
+      shot.y=-100;enemy.hp--;enemy.impact=.12;burst(shot.x,enemy.y,colors.ice,3);
       if(!enemy.hp){
         const boss=enemy.kind==='boss';wraps.push({x:enemy.x,y:enemy.y,age:0,kind:enemy.kind});score+=boss?2500:180;burst(enemy.x,enemy.y,colors.gold,boss?60:22);
         if(!boss&&score%720===0)parcels.push({x:enemy.x,y:enemy.y});
@@ -161,6 +161,7 @@ function render(){
   fog.addColorStop(0,'#06132780');fog.addColorStop(.46,'#3faec91a');fog.addColorStop(1,'#060d20aa');
   g.fillStyle=fog;g.fillRect(0,0,W,H);
   for(const st of stars){
+    if(reduceMotion.matches&&st.s>1)continue;
     const y=(st.y+scroll*(.6+st.s*.32))%H;
     const x=st.x+Math.sin(y*.012+st.x)*13;
     g.fillStyle='rgba(220,248,255,'+(.12+st.s*.12)+')';
@@ -170,19 +171,30 @@ function render(){
   if(shake>0&&!reduceMotion.matches)g.translate(Math.sin(time*115)*shake*16,Math.cos(time*120)*shake*12);
   for(const enemy of enemies){
     if(enemy.hp<=0)continue;
-    ship(enemy.kind,enemy.x,enemy.y,enemy.kind==='boss'?125:57,Math.sin(enemy.age*2)*.18);
+    const size=enemy.kind==='boss'?125:57;
+    const bank=Math.cos(enemy.age*(enemy.kind==='boss'?1.1:2))*.13;
+    ship(enemy.kind,enemy.x,enemy.y,size,bank);
+    if(enemy.impact>0){
+      g.globalAlpha=enemy.impact*4;
+      g.strokeStyle='#fff1b1';g.lineWidth=2;
+      g.beginPath();g.arc(enemy.x,enemy.y,10+(.12-enemy.impact)*140,0,Math.PI*2);g.stroke();
+      g.globalAlpha=1;
+    }
     if(enemy.kind==='boss'){g.fillStyle='#061629';g.fillRect(enemy.x-49,enemy.y-45,98,5);g.fillStyle=colors.gold;g.fillRect(enemy.x-49,enemy.y-45,98*enemy.hp/55,5);}
   }
   for(const s of shots){g.fillStyle='#3eaec7';g.fillRect(s.x-3,s.y,6,15);g.fillStyle='#c9ffff';g.fillRect(s.x-1,s.y,2,11);}
   for(const b of bolts){g.fillStyle='#ffad52';g.beginPath();g.arc(b.x,b.y,5,0,7);g.fill();g.fillStyle='#fff4c0';g.fillRect(b.x-1,b.y-2,2,4);}
   for(const p of parcels){g.fillStyle='#68dbea';g.fillRect(p.x-9,p.y-9,18,18);g.fillStyle='#fff';g.fillRect(p.x-5,p.y-1,10,2);g.fillRect(p.x-1,p.y-5,2,10);}
   const {x,y,bank,shield}=player;
-  if(shield<=0||Math.floor(shield*11)%2===0){
+  if(shield<=0||reduceMotion.matches||Math.floor(shield*11)%2===0){
     for(const dx of [-16,16]){
       const flame=g.createLinearGradient(0,y+38,0,y+72);flame.addColorStop(0,'#d5fdff');flame.addColorStop(.38,'#6ad7ff');flame.addColorStop(1,'#49abff00');
       polygon(flame,[[x+dx-5,y+39],[x+dx+5,y+39],[x+dx-bank*15,y+70+Math.sin(time*45)*8]]);
     }
     ship('sleigh',x,y+recoil*30,62,bank*.52);
+    if(shield>0&&reduceMotion.matches){
+      g.strokeStyle='#ffe3a6';g.lineWidth=2;g.beginPath();g.ellipse(x,y,33,46,0,0,Math.PI*2);g.stroke();
+    }
     if(recoil>.045)for(const dx of [-16,16]){
       const flare=g.createRadialGradient(x+dx,y-23,0,x+dx,y-23,15);
       flare.addColorStop(0,'#fff');flare.addColorStop(.25,'#84ffff');flare.addColorStop(1,'#42e3ff00');
@@ -190,7 +202,17 @@ function render(){
     }
   }
   for(const w of wraps){
-    const t=w.age/.8, size=w.kind==='boss'?49:23;
+    const t=w.age/.8;
+    if(t<.42){
+      const span=(w.kind==='boss'?60:28)*(1-t);
+      ship(w.kind,w.x,w.y,span*2,0);
+      g.strokeStyle='#ffd788';g.lineWidth=3;
+      for(let i=0;i<3;i++){
+        g.beginPath();g.ellipse(w.x,w.y+(i-1)*7,span,8+i*2,t*2+i*.35,0,Math.PI*(.5+t*3.5));g.stroke();
+      }
+      continue;
+    }
+    const size=w.kind==='boss'?49:23;
     g.save();g.translate(w.x,w.y+w.age*39);g.rotate(t*.75);g.globalAlpha=1-t;
     g.fillStyle='#cc294e';g.beginPath();g.roundRect(-size*.5,-size*.44,size,size*.88,5);g.fill();
     g.strokeStyle='#ffe193';g.lineWidth=size*.15;g.beginPath();g.moveTo(-size*.5,0);g.lineTo(size*.5,0);g.moveTo(0,-size*.44);g.lineTo(0,size*.44);g.stroke();

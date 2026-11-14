@@ -29,3 +29,8 @@ scout, flagship, and winter valley. Keep it beside index.html when copying the
 prototype. Flight poses use transforms on painted sprites paired with animated
 exhaust, muzzle flares, hit effects and gift wrap effects. The valley scrolls
 beneath independent snow layers. Camera shake respects reduced-motion settings.
+
+The art-direction pass adds aircraft hit rings and a ribbon lasso sequence
+before defeated craft resolve into parcels. Reduced motion suppresses shake,
+reduces snowfall density, and replaces hit blinking with a steady hull ring.
+The aircraft still use the original generated sprites with runtime transforms.
