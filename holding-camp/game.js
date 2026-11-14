@@ -216,6 +216,14 @@
       window.dispatchEvent(new CustomEvent('holding-camp:complete', {
         detail: { seconds: seconds }
       }));
+      if (window.parent !== window) {
+        var relay = { type: 'holding-camp:complete', detail: { seconds: seconds } };
+        try {
+          var relayRun = new URLSearchParams(location.search).get('runId');
+          if (relayRun) relay.runId = relayRun;
+        } catch (ignoreRelay) {}
+        window.parent.postMessage(relay, (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '*');
+      }
     }
   }
 

@@ -77,79 +77,79 @@ The ten chapters each have a question step in the router. Until the later questi
 
 ### Prologue — D-Day, 6 June 1944
 
-Status: not started. Playstyle: beach advance from the landing craft to the seawall.
+Status: in the campaign, `prologue/`. Playstyle: beach advance from the landing craft to the seawall.
 
 No questions. Winning issues the Chapter 1 pin. The Chapter 1 intro then opens a few months later, near Christmas.
 
 ### 1. The Night Broadcast
 
-Status: not started. Playstyle: radio tuning.
+Status: in the campaign, `night-broadcast/`. Playstyle: radio tuning.
 
 Trent catches word that Santa has been captured.
 
 ### 2. Frosted Skies
 
-Status: already on main in `frosted-skies/`. Playstyle: scrolling flight shooter. Not yet wired to the campaign.
+Status: in the campaign, `frosted-skies/`. Playstyle: scrolling flight shooter.
 
-On victory the mission emits `frosted-skies:complete` in its own window. Wiring adds a relay and accepts the result only after origin, source, and run id checks.
+On victory the mission emits `frosted-skies:complete` in its own window and posts the same payload to the parent. The campaign accepts it once, after origin, source, and run id checks.
 
 ### 3. White Rail
 
-Status: not started. Playstyle: rail chase on a handcar.
+Status: in the campaign, `white-rail/`. Playstyle: rail chase on a handcar.
 
 This is the handcar chase. The freight-yard stealth game is Chapter 4.
 
 ### 4. Special Delivery
 
-Status: already on main in `chapter-2/`. Playstyle: overhead stealth. Not yet wired to the campaign.
+Status: in the campaign, `chapter-2/`. Playstyle: overhead stealth.
 
-On victory the mission emits `special-delivery:complete`. Wiring accepts it only after the same origin, source, and run id checks.
+On victory the mission emits `special-delivery:complete` and posts the same payload to the parent. The campaign accepts it once, after the same origin, source, and run id checks.
 
 ### 5. The Switch Tower
 
-Status: not started. Playstyle: route puzzle.
+Status: in the campaign, `switch-tower/`. Playstyle: route puzzle.
 
 Throw switches so the right train leaves.
 
 ### 6. The shelf operative, Operation Ribbonfall
 
-Status: already on main in `shelf-escape/`. Playstyle: side-scrolling aim and wrap.
+Status: in the campaign, `shelf-escape/`, after the current quiz. Playstyle: side-scrolling aim and wrap.
 
-This is the only chapter with real questions today. Those questions are the current SOS, convoy, and Bombe items, and they still set the mission loadout. Three wrong answers fail the quiz. The action mission keeps its own retries. The on-screen label currently says Chapter 3. That label will change to Chapter 6.
+This is the only chapter with real questions today. Those questions are the current SOS, convoy, and Bombe items, and they still set the mission loadout. Three wrong answers fail the quiz. The action mission keeps its own retries. The on-screen label says Chapter 6.
 
 ### 7. The Listening Wire
 
-Status: not started. Playstyle: one-screen timing.
+Status: in the campaign, `listening-wire/`. Playstyle: one-screen timing.
 
 Send a Morse message while lights sweep.
 
 ### 8. The Holding Camp
 
-Status: not started. Playstyle: escort.
+Status: in the campaign, `holding-camp/`. Playstyle: escort.
 
 Stay with Santa and walk him out.
 
 ### 9. The Wrapping Line
 
-Status: not started. Playstyle: rhythm.
+Status: in the campaign, `wrapping-line/`. Playstyle: rhythm.
 
 Time the bows on a moving belt.
 
 ### 10. The Chimney Road
 
-Status: not started. Playstyle: rooftop platformer to the sleigh.
+Status: in the campaign, `chimney-road/`. Playstyle: rooftop platformer to the sleigh.
 
 Winning starts the ending video. No pin after Chapter 10.
 
 ## Ending video
 
-A real video of the flight home and Christmas restored. It plays after Chapter 10 is won. It is not one of the ten minigames, and it is not a chapter intro.
+A real video of the flight home and Christmas restored, `assets/ending.mp4`. It plays after Chapter 10 is won, and only after a tap. It is not one of the ten minigames, and it is not a chapter intro. See `ENDING.md`.
 
 ## Twenty-second intros
 
 The prologue and each of the ten chapters get a 20-second intro with the characters actually moving. Opening credits stay short cards.
 
-Use sprite or canvas motion, as plain files, with no build step. Each intro is a short script and a WebP sprite sheet in that chapter's folder. The character performs a few actions while the background moves. About 24 to 48 frames is enough, because the frames can loop and the camera carries the rest of the 20 seconds. The page loads that sheet only when the player reaches that chapter. It does not preload the other intros.
+Use sprite or canvas motion, as plain files, with no build step. Each intro is a short script and a WebP sprite sheet in that chapter's folder. The character performs a few actions while the background moves. About 24 to 48 frames is enough, because the frames can loop and the camera carries the rest of the 20 seconds. The campaign player reuses each chapter's existing paintings and frame strips. It does not add another sprite sheet. It loads only the chapter being played, and it does not preload the other intros.
 
 Size budget: about 500 KB of images per intro, and under 1 MB including the script.
 
@@ -163,26 +163,26 @@ Work from the current main checkout, top to bottom. The quiz presentation, Frost
 
 - [ ] Owner reviews this file. Push it to main only after the owner says so.
 - [x] Owner confirmed the seven new playstyles, the three credit lines, and the D-Day goal (landing craft to the seawall).
-- [ ] Use `trent2026-integration-64c5683287f6` as the base. Leave the older `trent2026` folder at b957a7f alone.
+- [x] Use `trent2026-integration-64c5683287f6` as the base. Leave the older `trent2026` folder at b957a7f alone.
 - [x] Empty quiz slots added in quiz-placeholders.js, not wired into the live page.
-- [ ] Add the start screen: Start, or type a pin. Touch first, no hover-only controls. Portrait stays usable. Use relative paths and safe-area insets.
-- [ ] Put the continue codes in the page, store the latest in localStorage under a new key, and check a typed pin on the start screen. Do not use `trent-quiz-cinema2` for campaign resume. The stored pin has to survive a new Safari tab on the same phone.
-- [ ] Add one chapter router. Each of the ten chapters has a question step. Until the later question bank exists, only Chapter 6 asks the SOS, convoy, and Bombe questions. The other chapters go from their intro to their minigame. The prologue has no question step.
-- [ ] Add the short opening-credit cards, using the three accepted lines.
-- [ ] Add the 20-second sprite or canvas intro player. Load only the intro for the chapter being played. Stay inside the size budget above. Do not use inline video autoplay for these intros. If an intro has sound, start it only after the Start tap or the pin confirmation.
-- [ ] Build the prologue: beach advance from the landing craft to the seawall. No questions. Winning issues the Chapter 1 pin.
-- [ ] Build Chapter 1, The Night Broadcast, as radio tuning.
-- [ ] Wire Frosted Skies (`frosted-skies/`) as Chapter 2. Accept `frosted-skies:complete` only after origin, source, and run id checks.
-- [ ] Build Chapter 3, White Rail, as a handcar chase.
-- [ ] Wire Special Delivery (`chapter-2/`) as Chapter 4. Accept `special-delivery:complete` only after the same checks.
-- [ ] Build Chapter 5, The Switch Tower, as a route puzzle.
-- [ ] Place Operation Ribbonfall (`shelf-escape/`) as Chapter 6. Keep the current three questions, the three-strike fail, and the loadout handoff. Change the on-screen label from Chapter 3 to Chapter 6.
-- [ ] Build Chapter 7, The Listening Wire, as one-screen Morse timing.
-- [ ] Build Chapter 8, The Holding Camp, as an escort.
-- [ ] Build Chapter 9, The Wrapping Line, as a rhythm game.
-- [ ] Build Chapter 10, The Chimney Road, as a rooftop platformer to the sleigh. Winning starts the ending video. No pin after Chapter 10.
-- [ ] Add the ending video of the flight home and Christmas restored. Start it only after a tap. Use `playsinline`. Do not send it fullscreen by itself.
-- [ ] Issue the next pin only after that chapter's minigame is won. A failed minigame retries the chapter and does not issue a pin.
+- [x] Add the start screen: Start, or type a pin. Touch first, no hover-only controls. Portrait stays usable. Use relative paths and safe-area insets.
+- [x] Put the continue codes in the page, store the latest in localStorage under a new key, and check a typed pin on the start screen. Do not use `trent-quiz-cinema2` for campaign resume. The stored pin has to survive a new Safari tab on the same phone.
+- [x] Add one chapter router. Each of the ten chapters has a question step. Until the later question bank exists, only Chapter 6 asks the SOS, convoy, and Bombe questions. The other chapters go from their intro to their minigame. The prologue has no question step.
+- [x] Add the short opening-credit cards, using the three accepted lines.
+- [x] Add the 20-second sprite or canvas intro player. Load only the intro for the chapter being played. Stay inside the size budget above. Do not use inline video autoplay for these intros. If an intro has sound, start it only after the Start tap or the pin confirmation.
+- [x] Build the prologue: beach advance from the landing craft to the seawall. No questions. Winning issues the Chapter 1 pin.
+- [x] Build Chapter 1, The Night Broadcast, as radio tuning.
+- [x] Wire Frosted Skies (`frosted-skies/`) as Chapter 2. Accept `frosted-skies:complete` only after origin, source, and run id checks.
+- [x] Build Chapter 3, White Rail, as a handcar chase.
+- [x] Wire Special Delivery (`chapter-2/`) as Chapter 4. Accept `special-delivery:complete` only after the same checks.
+- [x] Build Chapter 5, The Switch Tower, as a route puzzle.
+- [x] Place Operation Ribbonfall (`shelf-escape/`) as Chapter 6. Keep the current three questions, the three-strike fail, and the loadout handoff. Change the on-screen label from Chapter 3 to Chapter 6.
+- [x] Build Chapter 7, The Listening Wire, as one-screen Morse timing.
+- [x] Build Chapter 8, The Holding Camp, as an escort.
+- [x] Build Chapter 9, The Wrapping Line, as a rhythm game.
+- [x] Build Chapter 10, The Chimney Road, as a rooftop platformer to the sleigh. Winning starts the ending video. No pin after Chapter 10.
+- [x] Add the ending video of the flight home and Christmas restored. Start it only after a tap. Use `playsinline`. Do not send it fullscreen by itself.
+- [x] Issue the next pin only after that chapter's minigame is won. A failed minigame retries the chapter and does not issue a pin.
 - [ ] Test on iPhone Safari, not as a leftover pass: landscape action, portrait quiz and start screen, rotation, safe areas, a typed pin, reduced motion, the ending video after a tap, and a GitHub Pages subpath.
 
 ## Later: harder questions

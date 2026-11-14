@@ -123,7 +123,13 @@ function update(dt){
  }
  if(distance(p,depot)<40&&run.count===3){
   show('won','Signed, sealed, escaped','Sprout’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
-  window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:{postcards:run.count,hull:p.hull,seconds:Math.round(run.time)}}));
+  const deliveryDetail={postcards:run.count,hull:p.hull,seconds:Math.round(run.time)};
+  window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:deliveryDetail}));
+  if(window.parent!==window){
+    const deliveryRelay={type:'special-delivery:complete',detail:deliveryDetail};
+    try{const deliveryRun=new URLSearchParams(location.search).get('runId');if(deliveryRun)deliveryRelay.runId=deliveryRun;}catch(ignore){}
+    window.parent.postMessage(deliveryRelay,(location.protocol==='http:'||location.protocol==='https:')?location.origin:'*');
+  }
  }
 }
 function sprite(name,x,y,w,h,flip=false){

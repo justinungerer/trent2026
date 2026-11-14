@@ -1,1 +1,45 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111b22"><title>Trent Saves Christmas</title><link rel="stylesheet" href="./quiz.css?v=quizui1"></head><body><header><a class="brand" href="./">TRENT SAVES CHRISTMAS</a><button id="music" aria-pressed="false">Music off</button></header><main id="app"></main><div id="mission" hidden><iframe id="game" title="Operation Ribbonfall" allow="autoplay"></iframe></div><audio id="soundtrack" src="./assets/ribbonfall.mp3" loop preload="none"></audio><script src="./quiz.js?v=quizui1"></script><script src="./music.js?v=cinema2"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111b22">
+<title>Trent Saves Christmas</title>
+<link rel="stylesheet" href="./quiz.css?v=campaign1">
+<link rel="stylesheet" href="./campaign.css?v=campaign1">
+</head>
+<body>
+<header>
+  <a class="brand" href="./">TRENT SAVES CHRISTMAS</a>
+  <button id="music" type="button" aria-pressed="false">Music off</button>
+</header>
+<main id="app"></main>
+<div id="cinema" hidden>
+  <canvas id="intro-canvas" aria-hidden="true"></canvas>
+  <div class="intro-copy">
+    <p class="eyebrow" id="intro-kicker"></p>
+    <h1 id="intro-title" tabindex="-1"></h1>
+    <p id="intro-line"></p>
+  </div>
+  <button type="button" id="intro-skip" class="overlay-skip">Skip</button>
+</div>
+<div id="mission" hidden>
+  <iframe id="game" title="Mission" allow="autoplay"></iframe>
+</div>
+<div id="ending" hidden>
+  <div class="ending-gate" id="ending-gate">
+    <p class="eyebrow">Ending</p>
+    <h1 tabindex="-1">Flight home</h1>
+    <p class="lead" id="ending-copy">The flight home, and Christmas restored.</p>
+    <button type="button" class="primary" id="ending-play">Play the ending</button>
+    <button type="button" class="secondary" id="ending-home" hidden>Start screen</button>
+  </div>
+  <video id="ending-video" hidden playsinline webkit-playsinline muted preload="none" disablepictureinpicture></video>
+  <button type="button" id="ending-skip" class="overlay-skip" hidden>Skip</button>
+</div>
+<audio id="soundtrack" src="./assets/ribbonfall.mp3" loop preload="none"></audio>
+<script src="./quiz.js?v=campaign1"></script>
+<script src="./campaign.js?v=campaign2"></script>
+<script src="./music.js?v=cinema2"></script>
+</body>
+</html>

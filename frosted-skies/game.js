@@ -118,7 +118,7 @@ function update(dt){
       if(!enemy.hp){
         const boss=enemy.kind==='boss';wraps.push({x:enemy.x,y:enemy.y,age:0,kind:enemy.kind});score+=boss?2500:180;burst(enemy.x,enemy.y,colors.gold,boss?60:22);
         if(!boss&&score%720===0)parcels.push({x:enemy.x,y:enemy.y});
-        if(boss){overlay('won','SIGNAL RECOVERED','Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: '+score+'.','Fly again');window.dispatchEvent(new CustomEvent('frosted-skies:complete',{detail:{score,hull:player.hull}}));}
+        if(boss){overlay('won','SIGNAL RECOVERED','Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: '+score+'.','Fly again');const skyDetail={score,hull:player.hull};window.dispatchEvent(new CustomEvent('frosted-skies:complete',{detail:skyDetail}));if(window.parent!==window){const skyRelay={type:'frosted-skies:complete',detail:skyDetail};try{const skyRun=new URLSearchParams(location.search).get('runId');if(skyRun)skyRelay.runId=skyRun;}catch(ignore){}window.parent.postMessage(skyRelay,(location.protocol==='http:'||location.protocol==='https:')?location.origin:'*');}}
         ui.score.textContent=String(score).padStart(6,'0');
       }
       break;
