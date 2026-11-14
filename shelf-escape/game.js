@@ -1,331 +1,154 @@
-let ctx, art, scene;
-const $ = id => document.getElementById(id);
-const world = { w: 620, h: 1260 };
-const start = { x: 315, y: 1160 };
-const cage = { x: 449, y: 564 };
-const hatch = { x: 310, y: 112 };
-const cover = [
- [84,1025,180,85],[357,1000,188,104],[119,839,164,70],
- [349,810,186,81],[75,671,129,105],[265,639,263,38],
- [83,486,167,71],[293,426,240,62],[92,305,163,70],
- [361,264,177,81],[111,145,130,55],[384,131,157,48]
-];
-const routes = [
- [[66,953],[312,953],[312,1119],[72,1119]],
- [[553,747],[238,747],[238,594],[553,594]],
- [[63,414],[278,414],[278,237],[63,237]],
- [[566,217],[313,217],[313,72],[566,72]]
-];
-const params = new URLSearchParams(location.search);
-const unlocked = params.get('weapon') !== 'locked';
-const initialCharges = unlocked ? (params.get('charges') === '2' ? 2 : 4) : 0;
-const fastReload = params.get('reload') !== 'slow';
-const hitsToWrap = params.get('ribbon') === 'plain' ? 2 : 1;
-let shot, cooldown, boxed;
-const reinforced = params.get('patrol') === 'close';
-const controller = { x:0, y:0 };
-const keys = new Set();
-const view = { w:0,h:0,x:0,y:0,scale:1 };
-let drag = null, audio, sound = false;
-let state = 'brief', player, guards, carried, alert, ammo, clock, particles;
-let session = null;
-
-function reset(){
- player = { ...start, facing:-Math.PI/2, stride:0 };
- guards = routes.map((route,i)=>({x:route[0][0],y:route[0][1],route,next:1,face:0,speed:(reinforced?83:70)+i*7}));
- shot=null;cooldown=0;boxed=0;carried=false;alert=0;ammo=initialCharges;clock=0;particles=[];
- view.x=0;view.y=world.h;
-}
+'use strict';
+const $=id=>document.getElementById(id);
+const parameters=new URLSearchParams(location.search);
+const startingAmmo=parameters.get('weapon')==='locked'?0:parameters.get('charges')==='2'?12:24;
+const damage=parameters.get('ribbon')==='plain'?1:2;
+const reload=parameters.get('reload')==='slow'?570:270;
+const input={move:{x:0,y:0,id:null},fire:{x:0,y:0,id:null}};
+const keys=new Set();
+let mission,session,complete=false;
 function stopInput(){
- drag=null;controller.x=0;controller.y=0;keys.clear();$('knob').style.transform='';
-}
-function show(title, body, label, action){
- $('overlay').hidden=false;
- $('overlay').innerHTML='<div class="card"><h2>'+title+'</h2>'+body+'<button id="overlay-action">'+label+'</button></div>';
- $('overlay-action').onclick=action;
- $('overlay-action').focus({preventScroll:true});
-}
-function begin(){
- state='play';$('overlay').hidden=true;$('pause').disabled=false;
- if(sound) initAudio();
-}
-function pause(){
- if(state!=='play')return;
- stopInput();state='paused';$('pause').disabled=true;
- show('Paused','<p>Sprout says he can hold this pose all day. He’s had practice.</p>','Resume',begin);
-}
-function briefing(){
- show('Get Sprout out','<p>The colonel has entered Sprout in the depot’s annual decoration contest. Sprout is winning in three categories, including Best Use of Interrogation Time. Free him before judging.</p><ul><li><strong>Move</strong> with the thumbstick, arrow keys, or WASD.</li><li><strong>Hide</strong> behind shelves until the flashlight passes. The alert meter fills while you’re exposed.</li><li><strong>Wrap</strong> or Space fires the Gift-Wrap Gun after Sprout takes over. Get a clear line to a guard and look for the gold targeting ring.</li></ul><p>'+ (unlocked ? initialCharges+' shots · '+hitsToWrap+' hit'+(hitsToWrap===1?'':'s')+' to wrap a guard.' : 'Gift-Wrap Gun locked. Sprout can slip past the patrols.')+'</p>','Infiltrate the depot',begin);
-}
-function end(won){
- state=won?'won':'caught';stopInput();$('pause').disabled=true;playTone(won?660:155,.25);
- if(won&&session){
-  window.parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(clock),chargesUsed:initialCharges-ammo,guardsWrapped:boxed},session.origin);
+ for(const name of ['move','fire']){
+  Object.assign(input[name],{x:0,y:0,id:null});
+  $(name).querySelector('span').style.transform='';
  }
- show(won?'Sprout is out':'Caught in the light',won?'<p>“I found Santa’s transport order. The colonel filed it under Seasonal Plumbing.” Sprout holds up a stapler. “I brought his second-in-command in for questioning.”</p><p>Escape time: '+Math.round(clock)+' seconds.</p>':'<p>The guard files Sprout under <em>Seasonal Equipment</em>. Try another route through the shelves.</p>',won?'Play again':'Retry Shelf Escape',()=>{reset();begin()});
+ keys.clear();
 }
-
-const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
-const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
-function blocked(x,y,r=0){
- return x<34+r||y<35+r||x>world.w-34-r||y>world.h-35-r||
-  cover.some(([left,top,w,h])=>x>left-r&&x<left+w+r&&y>top-r&&y<top+h+r);
-}
-function visible(a,b){
- const count=Math.ceil(distance(a,b)/11);
- for(let i=1;i<count;i++)if(blocked(a.x+(b.x-a.x)*i/count,a.y+(b.y-a.y)*i/count))return false;
- return true;
-}
-function targetGuard(){
- return guards.filter(guard=>!guard.wrapped&&distance(player,guard)<234&&visible(player,guard))
-  .sort((a,b)=>distance(player,a)-distance(player,b))[0];
-}
-function deploy(){
- if(state!=='play'||!carried||ammo===0||cooldown>0)return;
- const guard=targetGuard();
- if(!guard)return;
- ammo--;
- cooldown=fastReload?.42:.97;
- shot={x:player.x,y:player.y,target:guard,time:0};
- playTone(430,.16);
-}
-function step(dt){
- clock+=dt;
- cooldown=Math.max(0,cooldown-dt);
- if(shot){
-  shot.time+=dt;
-  if(shot.time>=.14){
-   const guard=shot.target;
-   if(visible(shot,guard)){
-    guard.hits=(guard.hits??0)+1;
-    guard.wrapped=guard.hits>=hitsToWrap;
-    guard.tangled=clock+2;
-    if(guard.wrapped)boxed++;
-    burst(guard);playTone(guard.wrapped?620:260,.2);
-   }
-   shot=null;
-  }
+for(const name of ['move','fire']){
+ const pad=$(name),stick=input[name];
+ function position(event){
+  if(stick.id!==event.pointerId)return;
+  const r=pad.getBoundingClientRect(),x=event.clientX-r.left-r.width/2,y=event.clientY-r.top-r.height/2;
+  const scale=Math.max(r.width*.36,Math.hypot(x,y));
+  stick.x=x/scale;stick.y=y/scale;
+  pad.querySelector('span').style.transform='translate('+stick.x*30+'px,'+stick.y*30+'px)';
  }
- const horizontal=Number(keys.has('arrowright')||keys.has('d'))-Number(keys.has('arrowleft')||keys.has('a'));
- const vertical=Number(keys.has('arrowdown')||keys.has('s'))-Number(keys.has('arrowup')||keys.has('w'));
- const x=horizontal||controller.x,y=vertical||controller.y;
- const magnitude=Math.hypot(x,y);
- if(magnitude>.08){
-  player.facing=Math.atan2(y,x);player.stride+=dt*12;
-  const speed=(carried?143:165)*dt/Math.max(1,magnitude);
-  if(!blocked(player.x+x*speed,player.y,12))player.x+=x*speed;
-  if(!blocked(player.x,player.y+y*speed,12))player.y+=y*speed;
- }
- let exposed=false;
- for(const g of guards){
-  if(g.wrapped||g.tangled>clock)continue;
-  const [tx,ty]=g.route[g.next];
-  const target={x:tx,y:ty};
-  const gap=distance(g,target);
-  if(gap<6)g.next=(g.next+1)%g.route.length;
-  const look=target;
-  const desired=Math.atan2(look.y-g.y,look.x-g.x);
-  g.face+=angleDiff(desired,g.face)*Math.min(1,dt*7);
-  if(gap>=6){g.x+=(tx-g.x)/gap*g.speed*dt;g.y+=(ty-g.y)/gap*g.speed*dt}
-  const range=distance(player,g), heading=Math.atan2(player.y-g.y,player.x-g.x);
-  if((range<28||range<180&&Math.abs(angleDiff(heading,g.face))<.45)&&visible(g,player))exposed=true;
- }
- alert=clamp(alert+(exposed?1.06:-.58)*dt,0,1);
- if(alert>=1){end(false);return}
- if(!carried&&distance(player,cage)<43){carried=true;burst(cage);playTone(525,.16);state='brief';stopInput();show('Sprout takes over','<p>“Trent, hold my trophy. The mail hatch is upstairs. If anyone asks, I’m the centerpiece.”</p><p>'+(unlocked?'The Gift-Wrap Gun is ready. Aim for the gold ring.':'Time your moves between the patrols.')+'</p>','Play as Sprout',begin)}
- if(carried&&distance(player,hatch)<36)end(true);
- for(const p of particles){p.life-=dt;p.x+=p.dx*dt;p.y+=p.dy*dt;p.dy+=100*dt}
- particles=particles.filter(p=>p.life>0);
-}
-function burst(at){
- for(let i=0;i<24;i++)particles.push({...at,life:.4+Math.random()*.6,dx:(Math.random()-.5)*190,dy:-Math.random()*130});
-}
-function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
-function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
-function poly(points,color){
- ctx.fillStyle=color;ctx.beginPath();
- points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();
-}
-function text(x,y,value,color='#e6ca8f'){
- ctx.fillStyle=color;ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText(value,x,y);
-}
-function glow(x,y,r,color){
- const g=ctx.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');circle(x,y,r,g);
-}
-function actor(x,y,face,body,stride,hat){
- ctx.save();ctx.translate(x,y);ctx.rotate(face);
- const bob=Math.sin(stride)*5;
- circle(-5,4,14,'#10151488');
- rect(-10+bob,-10,14,6,'#192221');rect(-10-bob,4,14,6,'#192221');
- circle(-1,0,12,body);circle(8,0,8,hat);rect(12,-6,4,12,'#ae9d72');
- ctx.restore();
-}
-function cone(g){
- const points=[[g.x,g.y]];
- for(let i=0;i<=22;i++){
-  const angle=g.face-.45+i*.9/22;
-  let reach=180;
-  for(let test=8;test<=180;test+=6)if(blocked(g.x+Math.cos(angle)*test,g.y+Math.sin(angle)*test)){reach=test;break}
-  points.push([g.x+Math.cos(angle)*reach,g.y+Math.sin(angle)*reach]);
- }
- const light=ctx.createRadialGradient(g.x,g.y,2,g.x,g.y,185);
- light.addColorStop(0,'#fff0a370');light.addColorStop(1,'#eec77f16');poly(points,light);
-}
-function draw(){
- const desiredScale=Math.min(view.w/560,view.h/440);
- view.scale=desiredScale;
- const maxX=Math.max(0,world.w-view.w/desiredScale),maxY=Math.max(0,world.h-view.h/desiredScale);
- view.x=clamp(player.x-view.w/(2*desiredScale),0,maxX);
- view.y=clamp(player.y-view.h/(2*desiredScale),0,maxY);
- const centered=Math.max(0,(view.w-world.w*desiredScale)/2);
- ctx.save();rect(0,0,view.w,view.h,'#10191a');
- ctx.translate(centered-view.x*desiredScale,-view.y*desiredScale);ctx.scale(desiredScale,desiredScale);
- rect(0,0,world.w,world.h,'#232d2a');
- for(let y=26;y<world.h;y+=32){rect(25,y,570,30,y%64===26?'#3c4540':'#38443e');for(let x=38+(y%64);x<590;x+=92)rect(x,y+2,2,26,'#293834')}
- for(let i=0;i<290;i++){
-  const x=33+(i*191)%551,y=35+(i*137)%1180;
-  rect(x,y,6+i%19,1,i%2?'#c0ad802b':'#131c1b48');
- }
- for(const [y,name] of [[1131,'FREIGHT INTAKE'],[781,'CONTEST STAGING'],[612,'EXHIBITION FLOOR'],[176,'OUTGOING MAIL']]){
-  ctx.save();ctx.translate(310,y);ctx.rotate(-.04);text(0,0,name,'#bfb5969c');ctx.restore();
- }
- rect(22,30,10,1190,'#75604a');rect(589,30,10,1190,'#75604a');
- for(let i=0;i<7;i++){const y=102+i*177;glow(i%2?560:58,y,124,'#d7a45f58');circle(i%2?579:39,y,6,'#ffce84')}
- for(const [x,y,w,h] of cover){
-  rect(x+5,y+8,w,h,'#1019188c');rect(x,y,w,h,'#302c25');rect(x+3,y+3,w-6,h-6,'#67543b');rect(x+4,y+4,w-8,4,'#9c7850');
-  for(let offset=12;offset<w-17;offset+=39){rect(x+offset,y+14,27,h-23,'#494137');rect(x+offset+2,y+16,23,3,'#8c7657')}
-  rect(x,y+h-6,w,6,'#221e1a');
-  for(let offset=17;offset<w-20;offset+=48){
-   const color=offset%3===2?'#943d3b':'#3b6760';
-   rect(x+offset,y+21,20,16,color);rect(x+offset+8,y+21,4,16,'#d3a85c');
-   rect(x+offset,y+27,20,3,'#dcba77');
-  }
- }
- rect(hatch.x-25,hatch.y-18,50,36,'#527c71');rect(hatch.x-21,hatch.y-14,42,5,'#94c4a6');text(hatch.x,hatch.y+35,'MAIL HATCH','#acf3c4');
- if(!carried){
-  glow(cage.x,cage.y,65,'#ecc36769');rect(cage.x-19,cage.y-21,38,42,'#ad8954');rect(cage.x-16,cage.y-18,32,36,'#526259');circle(cage.x,cage.y,9,'#b94145');
-  text(cage.x,cage.y+37,'FIRST PRIZE','#f4d183');
-  rect(cage.x-12,cage.y-18,2,35,'#dbc595');rect(cage.x+10,cage.y-18,2,35,'#dbc595');text(cage.x,cage.y-28,'SPROUT');
- }
- for(const guard of guards){
-  if(guard.wrapped){
-   rect(guard.x-15,guard.y-14,30,30,'#ad4443');rect(guard.x-3,guard.y-14,6,30,'#e9b260');rect(guard.x-15,guard.y-3,30,6,'#ffe09a');
-   circle(guard.x-5,guard.y-15,5,'#e8aa59');circle(guard.x+5,guard.y-15,5,'#e8aa59');
-   continue;
-  }
-  if(!(guard.tangled>clock))cone(guard);
-  actor(guard.x,guard.y,guard.face,'#686c59',clock*12,'#9d8864');
- }
- const target=carried&&ammo>0&&targetGuard();
- if(target){
-  ctx.strokeStyle='#ffca73';ctx.lineWidth=2;ctx.beginPath();ctx.arc(target.x,target.y,21+Math.sin(clock*8)*2,0,Math.PI*2);ctx.stroke();
- }
- if(shot){
-  const k=Math.min(1,shot.time/.14);
-  const x=Phaser.Math.Linear(shot.x,shot.target.x,k),y=Phaser.Math.Linear(shot.y,shot.target.y,k);
-  glow(x,y,29,'#ffb344ac');circle(x,y,5,'#fff0a7');
- }
- actor(player.x,player.y,player.facing,carried?'#be434d':'#507968',player.stride,carried?'#e87056':'#a0ac85');
- for(const p of particles)circle(p.x,p.y,2,'rgba(255,203,111,'+p.life+')');
- if(alert){ctx.strokeStyle='#fb8068';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y,22,-Math.PI/2,-Math.PI/2+Math.PI*2*alert);ctx.stroke()}
- ctx.restore();
- const vignette=ctx.createRadialGradient(view.w/2,view.h/2,view.w*.25,view.w/2,view.h/2,Math.hypot(view.w,view.h)*.58);
- vignette.addColorStop(0,'#07131700');vignette.addColorStop(1,'#081113ba');rect(0,0,view.w,view.h,vignette);
-}
-function frame(time,delta){
- const dt=Math.min(.045,delta/1000);
- if(state==='play')step(dt);
- if(!view.w||!view.h)return;
- draw();
- art.refresh();
- const status=alert>.65?'ABOUT TO BE CAUGHT':alert>.05?'SPOTTED':'HIDDEN';
- $('danger').textContent=status;
- $('danger').style.color=alert>.05?'#ff9e84':'#a9e2b4';
- $('objective').textContent=carried?'Sprout • Reach the mail hatch':'Find Sprout’s display case';
- $('ammo').textContent=ammo;
- $('decoy').disabled=state!=='play'||!carried||!ammo||cooldown>0||!targetGuard();
-
-}
-function resize(){
- if(!scene)return;
- const bounds=$('field').getBoundingClientRect();
- view.w=Math.max(1,Math.round(bounds.width));view.h=Math.max(1,Math.round(bounds.height));
- scene.scale.resize(view.w,view.h);
- const ratio=Math.min(2,devicePixelRatio||1);
- art.setSize(Math.round(view.w*ratio),Math.round(view.h*ratio));
- ctx.setTransform(ratio,0,0,ratio,0,0);
- scene.children.getByName('depot').setDisplaySize(view.w,view.h);
-}
-function initAudio(){
- const Audio=window.AudioContext||window.webkitAudioContext;
- if(!Audio)return;
- try{audio ||= new Audio();audio.resume().catch(()=>{})}catch{}
-}
-function playTone(hz,length){
- if(!audio||!sound||audio.state!=='running')return;
- const oscillator=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;
- oscillator.type='triangle';oscillator.frequency.setValueAtTime(hz,now);oscillator.frequency.exponentialRampToValueAtTime(hz*.7,now+length);
- gain.gain.setValueAtTime(.075,now);gain.gain.exponentialRampToValueAtTime(.001,now+length);oscillator.connect(gain).connect(audio.destination);
- oscillator.start(now);oscillator.stop(now+length);
-}
-const pad=$('pad');
-function dragPad(event){
- if(drag!==event.pointerId)return;
- const bounds=pad.getBoundingClientRect(), radius=bounds.width*.38;
- const x=event.clientX-bounds.left-bounds.width/2,y=event.clientY-bounds.top-bounds.height/2;
- const reach=Math.max(radius,Math.hypot(x,y));
- controller.x=x/reach;controller.y=y/reach;
- $('knob').style.transform='translate('+controller.x*radius+'px,'+controller.y*radius+'px)';
-}
-pad.addEventListener('pointerdown',event=>{if(state==='play'&&drag===null){drag=event.pointerId;pad.setPointerCapture(drag);dragPad(event)}});
-pad.addEventListener('pointermove',dragPad);
-for(const action of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(action,event=>{if(event.pointerId===drag)stopInput()});
-window.addEventListener('keydown',event=>{
- if(state!=='play')return;
- const key=event.key.toLowerCase();
- if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)){
-  event.preventDefault();if(key===' '){if(!event.repeat)deploy()}else keys.add(key);
- }
- if(key==='escape')pause();
-});
-window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
-window.addEventListener('blur',stopInput);
-$('decoy').onclick=deploy;
-$('pause').onclick=pause;
-$('sound').onclick=()=>{sound=!sound;if(sound){initAudio();playTone(400,.15)}$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(sound))};
-new ResizeObserver(resize).observe($('field'));
-
-const originParam=params.get('parentOrigin');
-if(window.parent!==window&&originParam){
- try{
-  const parentOrigin=new URL(originParam);
-  if(parentOrigin.protocol==='https:'&&parentOrigin.origin===originParam){
-   window.addEventListener('message',event=>{
-    if(event.source!==window.parent||event.origin!==parentOrigin.origin||event.data?.type!=='trent:init'||event.data.version!==1||typeof event.data.runId!=='string'||session)return;
-    session={runId:event.data.runId,origin:event.origin};
-   });
-   window.parent.postMessage({type:'trent:ready',version:1,mission:'shelf-escape'},parentOrigin.origin);
-  }
- }catch{}
-}
-reset();
-if(!window.Phaser){
- show('Game engine unavailable','<p>Reload to retry loading the game.</p>','Reload',()=>location.reload());
-}else{
- new Phaser.Game({
-  type:Phaser.AUTO,parent:'field',width:640,height:640,backgroundColor:'#10191a',
-  scene:{
-   create(){
-    scene=this;
-    art=this.textures.createCanvas('depot-frame',640,640);
-    ctx=art.getContext();
-    this.add.image(0,0,'depot-frame').setOrigin(0).setName('depot');
-    resize();
-    briefing();
-   },
-   update:frame
-  }
+ pad.onpointerdown=event=>{if(stick.id===null){stick.id=event.pointerId;pad.setPointerCapture(event.pointerId);position(event)}};
+ pad.onpointermove=position;
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(type,event=>{
+  if(stick.id===event.pointerId){Object.assign(stick,{x:0,y:0,id:null});pad.querySelector('span').style.transform=''}
  });
 }
+function panel(title,body,label,action){
+ stopInput();$('modal').hidden=false;
+ $('modal').innerHTML='<div class="card"><small>THE SHELF OPERATIVE</small><h1>'+title+'</h1><p>'+body+'</p><button id="continue">'+label+'</button></div>';
+ $('continue').onclick=action;
+}
+function resume(){stopInput();$('modal').hidden=true;mission.active=true}
+function pause(){if(!mission?.active)return;mission.active=false;panel('Strategic stillness','Sprout insists this counts as reconnaissance.','Resume',resume)}
+$('pause').onclick=pause;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+window.addEventListener('blur',pause);
+window.onkeydown=e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys.add(e.key.toLowerCase())};
+window.onkeyup=e=>keys.delete(e.key.toLowerCase());
+const distance=(a,b)=>Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
+class Depot extends Phaser.Scene{
+ create(){
+  mission=this;complete=false;this.active=false;this.ammo=startingAmmo;this.nextShot=0;this.health=3;this.invulnerable=0;this.intel=false;this.timePlayed=0;
+  this.physics.world.setBounds(0,0,1000,1600);
+  const g=this.add.graphics();
+  g.fillStyle(0x19323b).fillRect(0,0,1000,1600);
+  for(let y=0;y<1600;y+=48)for(let x=0;x<1000;x+=80){
+   g.fillStyle((x+y)%3?0x263f46:0x2d464d).fillRect(x+1,y+1,78,46);
+   g.lineStyle(1,0x53666a,.2).lineBetween(x+5,y+4,x+72,y+4);
+  }
+  const maker=this.make.graphics({x:0,y:0,add:false});
+  const texture=(name,draw)=>{maker.clear();draw(maker);maker.generateTexture(name,64,72)};
+  texture('elf',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,42,17);p.fillStyle(0x1d3841).fillRoundedRect(15,43,13,22,5).fillRoundedRect(36,43,13,22,5);p.fillStyle(0xc64c58).fillRoundedRect(13,25,38,27,9);p.fillStyle(0xeee3bb).fillRect(15,28,34,5);p.fillStyle(0xf0ba8f).fillCircle(32,22,15);p.fillStyle(0xcd4f55).fillTriangle(13,13,41,0,51,14);p.fillStyle(0xffe8c2).fillCircle(42,3,5);p.fillStyle(0x253843).fillCircle(27,21,2).fillCircle(38,21,2);p.fillStyle(0xeac274).fillRoundedRect(42,30,19,9,3)});
+  texture('guard',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,44,17);p.fillStyle(0x182b32).fillRoundedRect(15,44,13,21,4).fillRoundedRect(36,44,13,21,4);p.fillStyle(0x79867b).fillRoundedRect(11,26,42,26,8);p.fillStyle(0xd7ae88).fillCircle(32,20,14);p.fillStyle(0x56696a).fillRoundedRect(13,4,38,14,6);p.fillStyle(0x253c43).fillRect(10,14,44,6);p.fillStyle(0xdeb875).fillCircle(48,40,7)});
+  texture('gift',p=>{p.fillStyle(0x081b23,.5).fillEllipse(32,62,49,14);p.fillStyle(0xb84a55).fillRoundedRect(8,17,48,44,5);p.fillStyle(0xf4cd7d).fillRect(27,17,10,44).fillRect(8,31,48,9);p.lineStyle(5,0xf4cd7d).strokeEllipse(23,13,19,13).strokeEllipse(41,13,19,13)});
+  texture('ribbon',p=>{p.fillStyle(0xffe8a4).fillCircle(32,32,7);p.fillStyle(0xef6580).fillRect(4,29,25,6)});
+  this.walls=this.physics.add.staticGroup();
+  for(const [x,y,w,h] of [[110,240,230,90],[520,260,300,90],[100,520,320,95],[610,550,270,100],[180,830,240,100],[550,850,300,80],[100,1120,270,90],[590,1150,270,110]]){
+   const wall=this.add.rectangle(x+w/2,y+h/2,w,h,0x523f36);this.physics.add.existing(wall,true);this.walls.add(wall);
+   g.fillStyle(0x071b24,.5).fillRoundedRect(x+10,y+14,w,h,7);
+   this.add.rectangle(x+w/2,y+7,w-4,12,0xa5845e);
+   for(let offset=18;offset<w-35;offset+=54){
+    this.add.rectangle(x+offset+18,y+45,35,37,offset%3?0x41635d:0xa94f50).setStrokeStyle(2,0xbc9665);
+    this.add.rectangle(x+offset+18,y+45,5,37,0xd6b775);
+   }
+  }
+  for(let y=170;y<1500;y+=300)for(const x of [45,955]){
+   this.add.circle(x,y,95,0xffc878,.025);this.add.circle(x,y,55,0xffc878,.04);this.add.circle(x,y,9,0xffd391);
+  }
+  this.add.text(500,1380,'FREIGHT INTAKE',{fontSize:'24px',color:'#84999a'}).setOrigin(.5);
+  this.add.text(500,680,'MINISTRY OF FESTIVE CONFISCATION',{fontSize:'16px',color:'#9ea7a0'}).setOrigin(.5);
+  this.orders=this.add.rectangle(815,410,34,28,0xffdc8a).setStrokeStyle(3,0xffffff);
+  this.tweens.add({targets:this.orders,y:400,duration:850,yoyo:true,repeat:-1});
+  this.add.text(815,370,'TRANSPORT ORDERS',{fontSize:'13px',color:'#ffe4a4'}).setOrigin(.5);
+  this.exit=this.add.rectangle(500,100,130,40,0x438c83).setStrokeStyle(3,0xb3e7c6);
+  this.add.text(500,63,'MAIL HATCH',{fontSize:'15px',color:'#b3e7c6'}).setOrigin(.5);
+  this.player=this.physics.add.sprite(500,1460,'elf').setScale(.72).setCollideWorldBounds(true);
+  this.player.body.setSize(32,30).setOffset(16,30);this.physics.add.collider(this.player,this.walls);
+  this.guards=this.physics.add.group();
+  for(const [x,y] of [[480,1200],[440,960],[520,740],[490,470],[270,170]]){
+   const enemy=this.guards.create(x,y,'guard').setScale(.8);
+   enemy.body.setSize(36,36).setOffset(14,25);enemy.home={x,y};enemy.hp=2;enemy.direction=1;
+  }
+  this.physics.add.collider(this.guards,this.walls);
+  this.bullets=this.physics.add.group();
+  this.physics.add.collider(this.bullets,this.walls,bullet=>bullet.destroy());
+  this.physics.add.overlap(this.bullets,this.guards,(bullet,guard)=>{
+   if(!bullet.active||!guard.active)return;
+   bullet.destroy();guard.hp-=damage;
+   if(guard.hp<=0){
+    const present=this.add.image(guard.x,guard.y,'gift').setScale(.8);guard.destroy();
+    this.tweens.add({targets:present,angle:6,duration:100,yoyo:true,repeat:3});
+   }else{guard.setTint(0xffb0b0);this.time.delayedCall(180,()=>{if(guard.active)guard.clearTint()})}
+  });
+  this.physics.add.overlap(this.player,this.guards,()=>{
+   if(this.time.now<this.invulnerable||!this.active)return;
+   this.health--;this.invulnerable=this.time.now+1800;
+   this.cameras.main.shake(120,.004);
+   if(!this.health)this.finish(false);
+  });
+  this.cameras.main.setBounds(0,0,1000,1600).startFollow(this.player,true,.1,.1).setZoom(Math.max(.65,Math.min(1.1,this.scale.width/620)));
+  this.scale.on('resize',size=>this.cameras.main.setZoom(Math.max(.65,Math.min(1.1,size.width/620))));
+  panel('Operation Ribbonfall','Trent cracked the case. You are Sprout. Steal Santa’s transport orders and escape through the mail hatch. The colonel has labeled the elf “ornamental.” This is about to become a personnel issue.<br><br><b>Left thumb</b> moves. <b>Right thumb</b> aims and fires while held. Tap the right pad to fire at the nearest guard. Collect the glowing orders before heading upstairs.<br><br>'+startingAmmo+' ribbon shots · '+(damage===2?'enchanted':'plain')+' ribbon.','Begin escape',resume);
+ }
+ finish(won){
+  this.active=false;this.physics.pause();stopInput();
+  if(won&&session&&!complete){complete=true;parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(this.timePlayed),chargesUsed:startingAmmo-this.ammo},session.origin)}
+  panel(won?'Return to sender':'Seasonal setback',won?'Sprout escapes with the orders. Behind him, a neatly wrapped guard requests a transfer. “Gift receipt’s in the box,” Sprout calls. Santa’s destination is finally in your hands.':'A guard puts Sprout back on display. His new label reads “Interactive. Batteries confiscated.” Sprout begins drafting a strongly worded letter to the toy shop.', 'Play again',()=>this.scene.restart());
+ }
+ update(time,delta){
+  if(!this.player)return;
+  if(!this.active){this.physics.pause();return}
+  this.physics.resume();this.timePlayed+=Math.min(delta,50)/1000;
+  const x=input.move.x+Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft'));
+  const y=input.move.y+Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup'));
+  const length=Math.max(1,Math.hypot(x,y));
+  this.player.setVelocity(x/length*185,y/length*185).setDepth(this.player.y);
+  this.player.setAngle(Math.hypot(x,y)>.1?Math.sin(time*.016)*4:0);
+  this.player.setAlpha(time<this.invulnerable?(Math.sin(time*.03)>.0?.35:1):1);
+  this.guards.children.iterate(guard=>{
+   if(!guard)return;
+   const near=distance(guard,this.player)<230;
+   if(near)this.physics.moveToObject(guard,this.player,98);
+   else{if(Math.abs(guard.x-guard.home.x)>90)guard.direction*=-1;guard.setVelocity(guard.direction*52,0)}
+   guard.setDepth(guard.y).setAngle(Math.sin(time*.012)*3);
+  });
+  if((input.fire.id!==null||keys.has(' '))&&time>=this.nextShot&&this.ammo>0){
+   let angle=Math.atan2(input.fire.y,input.fire.x);
+   if(Math.hypot(input.fire.x,input.fire.y)<.2){
+    const target=this.guards.getChildren().sort((a,b)=>distance(a,this.player)-distance(b,this.player))[0];
+    angle=target?Phaser.Math.Angle.Between(this.player.x,this.player.y,target.x,target.y):-Math.PI/2;
+   }
+   const bullet=this.bullets.create(this.player.x,this.player.y,'ribbon').setScale(.5).setRotation(angle);
+   bullet.body.setCircle(7,25,25);this.physics.velocityFromRotation(angle,520,bullet.body.velocity);
+   this.time.delayedCall(1000,()=>{if(bullet.active)bullet.destroy()});
+   this.ammo--;this.nextShot=time+reload;
+  }
+  if(!this.intel&&distance(this.player,this.orders)<48){this.intel=true;this.orders.destroy();this.active=false;panel('Filed under plumbing','“Santa’s transport order. Filed under Seasonal Plumbing. Of course.” Sprout pockets it. A nearby notice demands the return of seventeen missing rolls of ribbon.<br><br>Reach the green mail hatch at the north end.','Head for the hatch',resume)}
+  if(this.intel&&distance(this.player,this.exit)<55)this.finish(true);
+  $('objective').textContent=this.intel?'Escape through the mail hatch':'Steal Santa’s transport orders';
+  $('status').textContent='♥'.repeat(this.health)+' · '+this.ammo+' shots · '+this.guards.countActive()+' guards';
+ }
+}
+const origin=parameters.get('parentOrigin');
+if(parent!==window&&origin){try{if(new URL(origin).origin===origin&&origin.startsWith('https:')){
+ window.addEventListener('message',event=>{if(event.source===parent&&event.origin===origin&&event.data?.type==='trent:init'&&event.data.version===1&&typeof event.data.runId==='string')session={origin,runId:event.data.runId}});
+ parent.postMessage({type:'trent:ready',version:1,mission:'shelf-escape'},origin);
+}}catch{}}
+if(window.Phaser)new Phaser.Game({type:Phaser.AUTO,parent:'game',backgroundColor:'#071318',scale:{mode:Phaser.Scale.RESIZE,width:innerWidth,height:innerHeight},physics:{default:'arcade',arcade:{debug:false}},scene:Depot});
+else panel('Loading interrupted','Reload to fetch the game engine.','Reload',()=>location.reload());
