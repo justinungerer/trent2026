@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071422">
+  <title>The Holding Camp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="yard" width="844" height="390" aria-label="Trent walking Santa across a snowy camp yard to the gate"></canvas>
+
+    <p id="hint" class="hint">Stay with Santa</p>
+
+    <div class="hud">
+      <div class="hud-block grow">
+        <span class="label">Gate</span>
+        <strong id="gate">Walk the shadow</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Slips</span>
+        <strong id="slips">0 / 3</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <div class="pad" aria-label="Move">
+      <button type="button" id="up" aria-label="Move up the yard">▲</button>
+      <button type="button" id="left" aria-label="Move left">◀</button>
+      <button type="button" id="right" aria-label="Move right">▶</button>
+      <button type="button" id="down" aria-label="Move down the yard">▼</button>
+    </div>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">Chapter 8</p>
+        <h1>The holding camp</h1>
+        <p>Santa walks the yard to the gate. Stay near him. He keeps to the shadow and waits out the lamp.</p>
+        <p>Fall too far behind, or wander into a searchlight, and that is a slip. Three slips start the walk again. Reach the gate together.</p>
+        <button type="button" id="start">Follow him</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>Santa waits. The lamps hold still.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="give-up" class="ghost">Give up</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The holding camp</p>
+        <h1>Through the gate</h1>
+        <p>Santa is out, and Trent is with him.</p>
+        <p id="win-time">Out in 0 seconds.</p>
+        <button type="button" id="retry">Walk again</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This yard is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2a160e">
+  <title>The Wrapping Line</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="shop" width="844" height="390" aria-label="Trent dropping bows onto parcels on a workshop belt"></canvas>
+
+    <p id="hint" class="hint">Tap on the mark</p>
+
+    <div class="hud">
+      <div class="hud-block grow">
+        <span class="label">Bows</span>
+        <strong id="run">0 / 8</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Last</span>
+        <strong id="last">Wait</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <button type="button" id="bow" aria-label="Drop a bow">Bow</button>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">Chapter 9</p>
+        <h1>The wrapping line</h1>
+        <p>Parcels ride the belt. Tap Bow as each one reaches the mark.</p>
+        <p>Early or late is a miss, and the run of bows starts over. Eight in a row finishes the line.</p>
+        <button type="button" id="start">Start the belt</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The belt holds. The parcels wait on the mark you left them.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="give-up" class="ghost">Give up</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The wrapping line</p>
+        <h1>Eight bows</h1>
+        <p>The line has its run of bows.</p>
+        <p id="win-time">Wrapped in 0 seconds.</p>
+        <button type="button" id="retry">Run the line again</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This workshop is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071422">
+  <title>The Chimney Road</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="roofs" width="844" height="390" aria-label="Trent running across snowy roofs toward a waiting sleigh"></canvas>
+
+    <p id="hint" class="hint">Run and jump the gaps</p>
+
+    <div class="hud">
+      <div class="hud-block grow">
+        <span class="label">Road</span>
+        <strong id="road">The first roof</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Falls</span>
+        <strong id="falls">0 / 3</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <div class="move">
+      <button type="button" id="left" aria-label="Run left">◀</button>
+      <button type="button" id="right" aria-label="Run right">▶</button>
+    </div>
+    <button type="button" id="jump">Jump</button>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">Chapter 10</p>
+        <h1>The chimney road</h1>
+        <p>The sleigh waits on the last roof. Run the snowy roofs and jump the gaps.</p>
+        <p>A crate slides on the long roof. A fall puts you back on the roof you left. Three falls start the road over. Reach the sleigh.</p>
+        <button type="button" id="start">Step onto the roof</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The roofs hold still. The sleigh waits.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="give-up" class="ghost">Give up</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The chimney road</p>
+        <h1>The sleigh is waiting</h1>
+        <p>Trent made the last roof.</p>
+        <p id="win-time">Across in 0 seconds.</p>
+        <button type="button" id="retry">Run the roofs again</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>These roofs are played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
