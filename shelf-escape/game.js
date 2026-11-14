@@ -1,5 +1,4 @@
-const canvas = document.querySelector('#field');
-const ctx = canvas.getContext('2d');
+let ctx, art, scene;
 const $ = id => document.getElementById(id);
 const world = { w: 620, h: 1260 };
 const start = { x: 315, y: 1160 };
@@ -17,22 +16,24 @@ const routes = [
  [[63,414],[278,414],[278,237],[63,237]],
  [[566,217],[313,217],[313,72],[566,72]]
 ];
-const prefersStill = matchMedia('(prefers-reduced-motion: reduce)');
 const params = new URLSearchParams(location.search);
-const suppliedCharges = params.get('charges');
-const initialCharges = suppliedCharges === '1' ? 1 : 2;
+const unlocked = params.get('weapon') !== 'locked';
+const initialCharges = unlocked ? (params.get('charges') === '2' ? 2 : 4) : 0;
+const fastReload = params.get('reload') !== 'slow';
+const hitsToWrap = params.get('ribbon') === 'plain' ? 2 : 1;
+let shot, cooldown, boxed;
 const reinforced = params.get('patrol') === 'close';
 const controller = { x:0, y:0 };
 const keys = new Set();
 const view = { w:0,h:0,x:0,y:0,scale:1 };
-let drag = null, audio, sound = false, priorTime = 0;
-let state = 'brief', player, guards, distraction, carried, alert, ammo, clock, particles;
+let drag = null, audio, sound = false;
+let state = 'brief', player, guards, carried, alert, ammo, clock, particles;
 let session = null;
 
 function reset(){
  player = { ...start, facing:-Math.PI/2, stride:0 };
  guards = routes.map((route,i)=>({x:route[0][0],y:route[0][1],route,next:1,face:0,speed:(reinforced?83:70)+i*7}));
- distraction=null;carried=false;alert=0;ammo=initialCharges;clock=0;particles=[];
+ shot=null;cooldown=0;boxed=0;carried=false;alert=0;ammo=initialCharges;clock=0;particles=[];
  view.x=0;view.y=world.h;
 }
 function stopInput(){
@@ -54,14 +55,14 @@ function pause(){
  show('Paused','<p>Sprout says he can hold this pose all day. He’s had practice.</p>','Resume',begin);
 }
 function briefing(){
- show('Get Sprout out','<p>Sprout’s trapped halfway up the depot. Find his display case, then lead him to the mail hatch.</p><ul><li><strong>Move</strong> with the thumbstick, arrow keys, or WASD.</li><li><strong>Hide</strong> behind shelves until the flashlight passes. The alert meter fills while you’re exposed.</li><li><strong>Decoy</strong> throws a wind-up nutcracker ahead. Nearby guards turn toward the noise.</li></ul>','Infiltrate the depot',begin);
+ show('Get Sprout out','<p>The colonel has entered Sprout in the depot’s annual decoration contest. Sprout is winning in three categories, including Best Use of Interrogation Time. Free him before judging.</p><ul><li><strong>Move</strong> with the thumbstick, arrow keys, or WASD.</li><li><strong>Hide</strong> behind shelves until the flashlight passes. The alert meter fills while you’re exposed.</li><li><strong>Wrap</strong> or Space fires the Gift-Wrap Gun after Sprout takes over. Get a clear line to a guard and look for the gold targeting ring.</li></ul><p>'+ (unlocked ? initialCharges+' shots · '+hitsToWrap+' hit'+(hitsToWrap===1?'':'s')+' to wrap a guard.' : 'Gift-Wrap Gun locked. Sprout can slip past the patrols.')+'</p>','Infiltrate the depot',begin);
 }
 function end(won){
  state=won?'won':'caught';stopInput();$('pause').disabled=true;playTone(won?660:155,.25);
  if(won&&session){
-  window.parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(clock),chargesUsed:initialCharges-ammo},session.origin);
+  window.parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(clock),chargesUsed:initialCharges-ammo,guardsWrapped:boxed},session.origin);
  }
- show(won?'Sprout is out':'Caught in the light',won?'<p>“I know where Santa is. I also stole their stapler. Let’s discuss priorities on the way out.”</p><p>Escape time: '+Math.round(clock)+' seconds.</p>':'<p>The guard files Sprout under <em>Seasonal Equipment</em>. Try another route through the shelves.</p>',won?'Play again':'Retry Shelf Escape',()=>{reset();begin()});
+ show(won?'Sprout is out':'Caught in the light',won?'<p>“I found Santa’s transport order. The colonel filed it under Seasonal Plumbing.” Sprout holds up a stapler. “I brought his second-in-command in for questioning.”</p><p>Escape time: '+Math.round(clock)+' seconds.</p>':'<p>The guard files Sprout under <em>Seasonal Equipment</em>. Try another route through the shelves.</p>',won?'Play again':'Retry Shelf Escape',()=>{reset();begin()});
 }
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -76,18 +77,36 @@ function visible(a,b){
  for(let i=1;i<count;i++)if(blocked(a.x+(b.x-a.x)*i/count,a.y+(b.y-a.y)*i/count))return false;
  return true;
 }
+function targetGuard(){
+ return guards.filter(guard=>!guard.wrapped&&distance(player,guard)<234&&visible(player,guard))
+  .sort((a,b)=>distance(player,a)-distance(player,b))[0];
+}
 function deploy(){
- if(state!=='play'||ammo===0||distraction)return;
- let reach=148;
- for(let i=20;i<148;i+=12){
-  if(blocked(player.x+Math.cos(player.facing)*i,player.y+Math.sin(player.facing)*i,5)){reach=i-12;break}
- }
- const target={x:player.x+Math.cos(player.facing)*reach,y:player.y+Math.sin(player.facing)*reach};
- distraction={...target,fromX:player.x,fromY:player.y,time:0};
- ammo--;playTone(348,.1);
+ if(state!=='play'||!carried||ammo===0||cooldown>0)return;
+ const guard=targetGuard();
+ if(!guard)return;
+ ammo--;
+ cooldown=fastReload?.42:.97;
+ shot={x:player.x,y:player.y,target:guard,time:0};
+ playTone(430,.16);
 }
 function step(dt){
  clock+=dt;
+ cooldown=Math.max(0,cooldown-dt);
+ if(shot){
+  shot.time+=dt;
+  if(shot.time>=.14){
+   const guard=shot.target;
+   if(visible(shot,guard)){
+    guard.hits=(guard.hits??0)+1;
+    guard.wrapped=guard.hits>=hitsToWrap;
+    guard.tangled=clock+2;
+    if(guard.wrapped)boxed++;
+    burst(guard);playTone(guard.wrapped?620:260,.2);
+   }
+   shot=null;
+  }
+ }
  const horizontal=Number(keys.has('arrowright')||keys.has('d'))-Number(keys.has('arrowleft')||keys.has('a'));
  const vertical=Number(keys.has('arrowdown')||keys.has('s'))-Number(keys.has('arrowup')||keys.has('w'));
  const x=horizontal||controller.x,y=vertical||controller.y;
@@ -98,24 +117,23 @@ function step(dt){
   if(!blocked(player.x+x*speed,player.y,12))player.x+=x*speed;
   if(!blocked(player.x,player.y+y*speed,12))player.y+=y*speed;
  }
- if(distraction){distraction.time+=dt;if(distraction.time>4)distraction=null}
  let exposed=false;
  for(const g of guards){
+  if(g.wrapped||g.tangled>clock)continue;
   const [tx,ty]=g.route[g.next];
   const target={x:tx,y:ty};
   const gap=distance(g,target);
   if(gap<6)g.next=(g.next+1)%g.route.length;
-  const lulled=distraction&&distraction.time>.34&&distance(g,distraction)<250;
-  const look=lulled?distraction:target;
+  const look=target;
   const desired=Math.atan2(look.y-g.y,look.x-g.x);
   g.face+=angleDiff(desired,g.face)*Math.min(1,dt*7);
-  if(!lulled&&gap>=6){g.x+=(tx-g.x)/gap*g.speed*dt;g.y+=(ty-g.y)/gap*g.speed*dt}
+  if(gap>=6){g.x+=(tx-g.x)/gap*g.speed*dt;g.y+=(ty-g.y)/gap*g.speed*dt}
   const range=distance(player,g), heading=Math.atan2(player.y-g.y,player.x-g.x);
   if((range<28||range<180&&Math.abs(angleDiff(heading,g.face))<.45)&&visible(g,player))exposed=true;
  }
  alert=clamp(alert+(exposed?1.06:-.58)*dt,0,1);
  if(alert>=1){end(false);return}
- if(!carried&&distance(player,cage)<43){carried=true;burst(cage);playTone(525,.16)}
+ if(!carried&&distance(player,cage)<43){carried=true;burst(cage);playTone(525,.16);state='brief';stopInput();show('Sprout takes over','<p>“Trent, hold my trophy. The mail hatch is upstairs. If anyone asks, I’m the centerpiece.”</p><p>'+(unlocked?'The Gift-Wrap Gun is ready. Aim for the gold ring.':'Time your moves between the patrols.')+'</p>','Play as Sprout',begin)}
  if(carried&&distance(player,hatch)<36)end(true);
  for(const p of particles){p.life-=dt;p.x+=p.dx*dt;p.y+=p.dy*dt;p.dy+=100*dt}
  particles=particles.filter(p=>p.life>0);
@@ -165,49 +183,79 @@ function draw(){
  ctx.translate(centered-view.x*desiredScale,-view.y*desiredScale);ctx.scale(desiredScale,desiredScale);
  rect(0,0,world.w,world.h,'#232d2a');
  for(let y=26;y<world.h;y+=32){rect(25,y,570,30,y%64===26?'#3c4540':'#38443e');for(let x=38+(y%64);x<590;x+=92)rect(x,y+2,2,26,'#293834')}
+ for(let i=0;i<290;i++){
+  const x=33+(i*191)%551,y=35+(i*137)%1180;
+  rect(x,y,6+i%19,1,i%2?'#c0ad802b':'#131c1b48');
+ }
+ for(const [y,name] of [[1131,'FREIGHT INTAKE'],[781,'CONTEST STAGING'],[612,'EXHIBITION FLOOR'],[176,'OUTGOING MAIL']]){
+  ctx.save();ctx.translate(310,y);ctx.rotate(-.04);text(0,0,name,'#bfb5969c');ctx.restore();
+ }
  rect(22,30,10,1190,'#75604a');rect(589,30,10,1190,'#75604a');
  for(let i=0;i<7;i++){const y=102+i*177;glow(i%2?560:58,y,124,'#d7a45f58');circle(i%2?579:39,y,6,'#ffce84')}
  for(const [x,y,w,h] of cover){
   rect(x+5,y+8,w,h,'#1019188c');rect(x,y,w,h,'#302c25');rect(x+3,y+3,w-6,h-6,'#67543b');rect(x+4,y+4,w-8,4,'#9c7850');
   for(let offset=12;offset<w-17;offset+=39){rect(x+offset,y+14,27,h-23,'#494137');rect(x+offset+2,y+16,23,3,'#8c7657')}
   rect(x,y+h-6,w,6,'#221e1a');
+  for(let offset=17;offset<w-20;offset+=48){
+   const color=offset%3===2?'#943d3b':'#3b6760';
+   rect(x+offset,y+21,20,16,color);rect(x+offset+8,y+21,4,16,'#d3a85c');
+   rect(x+offset,y+27,20,3,'#dcba77');
+  }
  }
  rect(hatch.x-25,hatch.y-18,50,36,'#527c71');rect(hatch.x-21,hatch.y-14,42,5,'#94c4a6');text(hatch.x,hatch.y+35,'MAIL HATCH','#acf3c4');
  if(!carried){
   glow(cage.x,cage.y,65,'#ecc36769');rect(cage.x-19,cage.y-21,38,42,'#ad8954');rect(cage.x-16,cage.y-18,32,36,'#526259');circle(cage.x,cage.y,9,'#b94145');
+  text(cage.x,cage.y+37,'FIRST PRIZE','#f4d183');
   rect(cage.x-12,cage.y-18,2,35,'#dbc595');rect(cage.x+10,cage.y-18,2,35,'#dbc595');text(cage.x,cage.y-28,'SPROUT');
  }
- for(const g of guards){cone(g);actor(g.x,g.y,g.face,'#686c59',clock*12,'#9d8864')}
- if(distraction){
-  const time=distraction.time,k=Math.min(1,time/.34);
-  const x=distraction.fromX+(distraction.x-distraction.fromX)*k,y=distraction.fromY+(distraction.y-distraction.fromY)*k;
-  const hop=prefersStill.matches?0:Math.sin(k*Math.PI)*25;
-  circle(x,y,9,'#10191899');actor(x,y-hop,clock*7,'#bf5248',0,'#ffca76');
-  if(time>.34){ctx.strokeStyle='#f5bc7780';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,14+((time-.34)%1)*48,0,Math.PI*2);ctx.stroke()}
+ for(const guard of guards){
+  if(guard.wrapped){
+   rect(guard.x-15,guard.y-14,30,30,'#ad4443');rect(guard.x-3,guard.y-14,6,30,'#e9b260');rect(guard.x-15,guard.y-3,30,6,'#ffe09a');
+   circle(guard.x-5,guard.y-15,5,'#e8aa59');circle(guard.x+5,guard.y-15,5,'#e8aa59');
+   continue;
+  }
+  if(!(guard.tangled>clock))cone(guard);
+  actor(guard.x,guard.y,guard.face,'#686c59',clock*12,'#9d8864');
  }
- if(carried) actor(player.x-Math.cos(player.facing)*22,player.y-Math.sin(player.facing)*22,player.facing,'#b64047',player.stride,'#d85c55');
- actor(player.x,player.y,player.facing,'#507968',player.stride,'#a0ac85');
+ const target=carried&&ammo>0&&targetGuard();
+ if(target){
+  ctx.strokeStyle='#ffca73';ctx.lineWidth=2;ctx.beginPath();ctx.arc(target.x,target.y,21+Math.sin(clock*8)*2,0,Math.PI*2);ctx.stroke();
+ }
+ if(shot){
+  const k=Math.min(1,shot.time/.14);
+  const x=Phaser.Math.Linear(shot.x,shot.target.x,k),y=Phaser.Math.Linear(shot.y,shot.target.y,k);
+  glow(x,y,29,'#ffb344ac');circle(x,y,5,'#fff0a7');
+ }
+ actor(player.x,player.y,player.facing,carried?'#be434d':'#507968',player.stride,carried?'#e87056':'#a0ac85');
  for(const p of particles)circle(p.x,p.y,2,'rgba(255,203,111,'+p.life+')');
  if(alert){ctx.strokeStyle='#fb8068';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y,22,-Math.PI/2,-Math.PI/2+Math.PI*2*alert);ctx.stroke()}
  ctx.restore();
+ const vignette=ctx.createRadialGradient(view.w/2,view.h/2,view.w*.25,view.w/2,view.h/2,Math.hypot(view.w,view.h)*.58);
+ vignette.addColorStop(0,'#07131700');vignette.addColorStop(1,'#081113ba');rect(0,0,view.w,view.h,vignette);
 }
-function frame(time){
- const dt=Math.min(.045,(time-priorTime)/1000);priorTime=time;
+function frame(time,delta){
+ const dt=Math.min(.045,delta/1000);
  if(state==='play')step(dt);
+ if(!view.w||!view.h)return;
  draw();
+ art.refresh();
  const status=alert>.65?'ABOUT TO BE CAUGHT':alert>.05?'SPOTTED':'HIDDEN';
  $('danger').textContent=status;
  $('danger').style.color=alert>.05?'#ff9e84':'#a9e2b4';
- $('objective').textContent=carried?'Escort Sprout to the mail hatch':'Find Sprout’s display case';
+ $('objective').textContent=carried?'Sprout • Reach the mail hatch':'Find Sprout’s display case';
  $('ammo').textContent=ammo;
- $('decoy').disabled=state!=='play'||!ammo||Boolean(distraction);
- requestAnimationFrame(frame);
+ $('decoy').disabled=state!=='play'||!carried||!ammo||cooldown>0||!targetGuard();
+
 }
 function resize(){
- const bounds=canvas.getBoundingClientRect(), ratio=Math.min(2,devicePixelRatio||1);
- view.w=Math.max(1,bounds.width);view.h=Math.max(1,bounds.height);
- canvas.width=Math.round(view.w*ratio);canvas.height=Math.round(view.h*ratio);
+ if(!scene)return;
+ const bounds=$('field').getBoundingClientRect();
+ view.w=Math.max(1,Math.round(bounds.width));view.h=Math.max(1,Math.round(bounds.height));
+ scene.scale.resize(view.w,view.h);
+ const ratio=Math.min(2,devicePixelRatio||1);
+ art.setSize(Math.round(view.w*ratio),Math.round(view.h*ratio));
  ctx.setTransform(ratio,0,0,ratio,0,0);
+ scene.children.getByName('depot').setDisplaySize(view.w,view.h);
 }
 function initAudio(){
  const Audio=window.AudioContext||window.webkitAudioContext;
@@ -247,7 +295,7 @@ window.addEventListener('blur',stopInput);
 $('decoy').onclick=deploy;
 $('pause').onclick=pause;
 $('sound').onclick=()=>{sound=!sound;if(sound){initAudio();playTone(400,.15)}$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(sound))};
-new ResizeObserver(resize).observe(canvas);
+new ResizeObserver(resize).observe($('field'));
 
 const originParam=params.get('parentOrigin');
 if(window.parent!==window&&originParam){
@@ -262,4 +310,22 @@ if(window.parent!==window&&originParam){
   }
  }catch{}
 }
-reset();resize();briefing();requestAnimationFrame(frame);
+reset();
+if(!window.Phaser){
+ show('Game engine unavailable','<p>Reload to retry loading the game.</p>','Reload',()=>location.reload());
+}else{
+ new Phaser.Game({
+  type:Phaser.AUTO,parent:'field',width:640,height:640,backgroundColor:'#10191a',
+  scene:{
+   create(){
+    scene=this;
+    art=this.textures.createCanvas('depot-frame',640,640);
+    ctx=art.getContext();
+    this.add.image(0,0,'depot-frame').setOrigin(0).setName('depot');
+    resize();
+    briefing();
+   },
+   update:frame
+  }
+ });
+}
