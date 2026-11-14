@@ -1,47 +1,36 @@
-# Chapter 2 — Special Delivery
+# Chapter 2 — Special Delivery: Freight Yard
 
-Branch: chapter-2-special-delivery. Based on illustrated-missions, which carries
-Frosted Skies and the updated Shelf Escape mission.
+This version replaces the lane runner with a free-roaming overhead stealth
+prototype. From the repo root run `python -m http.server 8080` and open
+`http://localhost:8080/chapter-2/`. No build step or dependencies.
 
-From the repository root run `python -m http.server 8080`, then open
-`http://localhost:8080/chapter-2/`. Static files need no dependencies or build
-step. The route works under a GitHub Pages project subpath.
+Find all three dispatches, then reach the northeast mail hatch. Avoid the
+three clockwork inspectors. Three contacts end the attempt, with a short
+invulnerability window after each hit. You have three wind-up penguins.
+A penguin appears ahead of Trent and draws nearby inspectors for five seconds.
 
-## What changed
+- Phone: drag anywhere in the yard like a floating joystick. Release to stop.
+  Use the Decoy button with either thumb.
+- Keyboard: WASD or arrows, Space for Decoy, Escape to pause or resume.
 
-Chapter 2 is a 95-second, three-lane handcar chase. Trent follows the lead from
-Santa's broadcast and collects Sprout's coded postcards to find the entrance
-to the depot from Operation Ribbonfall. Three postcards and surviving to the
-end wins. Three hits end the attempt. The obstacle layout is deterministic.
+## Implementation and art
 
-The painted edition replaces the newspaper-comic visuals with original,
-locally bundled WebP art: a twilight forest railway, two pumping poses, wooden
-crates, and wax-sealed postcards. The handcar banks between lanes and its
-shadow changes as it hops. Snow moves in layers and pickups and impacts
-throw particles. The two poses are blended at runtime. Barriers and feedback
-remain Canvas shapes for readability. Keep chapter-2/art with the game.
+`chapter-2/game.js` owns free movement, collision, patrols, decoy behavior,
+and the tracking camera. It uses a new illustrated yard backdrop and reuses
+painted art from the existing prototypes for the character placeholder,
+patrols, shelving and dispatches. Movement uses sprite bob and facing changes.
+The fenced map limits and shelf rectangles are gameplay geometry. There is
+no timer to force a route. This is an exploration prototype.
 
-Tap Left, Hop, and Right, or use the arrow keys and Space. A hop clears striped
-barriers. Change lanes to dodge crates, and stay in lane to collect mint mail.
-Escape toggles pause. Switching away pauses the mission.
+## Copilot integration
 
-## Integration details
+The standalone game retains the `special-delivery:complete` window event and
+`{postcards, hull, seconds}` payload. It emits exactly once per victory and
+never on loss. Preserve that contract. In a campaign iframe, relay the event
+with postMessage to the expected parent origin. Check exact source, origin,
+and active run ID in the parent before recording success and entering
+Operation Ribbonfall. Quiz loadout mapping and chapter persistence are
+future integration work. Use project-relative paths for GitHub Pages.
 
-The prototype lives in chapter-2/index.html and chapter-2/game.js.
-It dispatches `special-delivery:complete` once per victory on its window.
-The event detail contains `{postcards, hull, seconds}`. Defeat does not emit
-this event. Retry resets all mission state.
-
-For a campaign iframe, bridge the victory event with postMessage and a fixed
-parent origin, following the Shelf Escape protocol for source, origin, and
-active run ID validation. The parent should persist the result before moving
-to Chapter 3. Decide which Chapter 2 quiz rewards should affect the handcar
-before adding loadout input. The standalone build has no quiz dependency.
-
-The rules were exercised in a simulated browser environment. Playtest tap
-latency, hop timing, lane readability, and pause on real iOS and Android.
-Chapter 2 is a short prototype. Expand its pacing before targeting five minutes.
-
-Suggested Copilot prompt: “Read CHAPTER-2-HANDOFF.md and COPILOT-HANDOFF.md.
-Launch Chapter 2 locally, then use the integration notes to connect it when
-the campaign's Chapter 2 quiz and rewards are defined.”
+Mobile Safari needs device testing. Playtest navigation, patrolling, decoy
+placement, and map readability before tuning the final chapter length.

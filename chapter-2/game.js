@@ -1,192 +1,188 @@
 'use strict';
 const canvas=document.querySelector('canvas');
 const ctx=canvas.getContext('2d');
-const ui=Object.fromEntries(['status','panel','title','copy','help','start','pause','left','jump','right'].map(id=>[id,document.getElementById(id)]));
-const ink='#21191e',paper='#f7e4b7',mint='#81d3b9',red='#e64c40';
-const runway=95;
-const art=Object.fromEntries(['rail','cart-a','cart-b','crate','mail'].map(name=>{
+const ui=Object.fromEntries(['status','panel','title','copy','start','pause','decoy'].map(id=>[id,document.getElementById(id)]));
+const world={w:1080,h:720};
+const depot={x:981,y:94};
+const shelves=[
+ {x:215,y:497,w:185,h:64},{x:450,y:465,w:180,h:64},{x:759,y:518,w:155,h:64},
+ {x:129,y:267,w:215,h:64},{x:451,y:233,w:161,h:64},{x:725,y:266,w:190,h:64}
+];
+const spawn={x:95,y:613};
+const caches=[{x:145,y:142},{x:534,y:359},{x:942,y:598}];
+const patrols=[
+ [[210,380],[410,380],[410,105],[210,105]],
+ [[655,110],[655,411],[890,411],[890,110]],
+ [[415,610],[960,610],[960,370],[672,370],[672,610]]
+];
+const keys=new Set(), camera={x:0,y:0};
+const art=Object.fromEntries(['yard','elf','guard','shelf','mail'].map(name=>{
  const image=new Image();image.src='./art/'+name+'.webp';return [name,image];
 }));
-const loaded=image=>image.complete&&image.naturalWidth;
-function sprite(name,x,y,width){
- const image=art[name];
- if(!loaded(image))return false;
- const height=width*image.naturalHeight/image.naturalWidth;
- ctx.drawImage(image,x-width/2,y-height/2,width,height);
- return true;
-}
-const snow=Array.from({length:56},(_,i)=>({x:i*71.51%360,y:i*107.1%560,r:.5+i%4*.46}));
-const particles=[];
-function scatter(x,y,color){
- for(let i=0;i<18;i++){
-  const a=Math.random()*Math.PI*2, speed=35+Math.random()*105;
-  particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:.45+Math.random()*.33,color});
- }
-}
-let mode='intro',run,last=0;
-const lanes=[80,180,280];
-const headlines=['THE COCOA EXPRESS','UNSCHEDULED BISCUIT STOP','DEPOT APPROACH'];
+const clamp=(n,low,high)=>Math.max(low,Math.min(high,n));
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const radius=14;
+let mode='intro',run,drag,last=0;
 function reset(){
- particles.length=0;
- run={time:0,lane:1,x:180,jump:0,hull:3,mail:0,invulnerable:0,objects:[],next:0,feedback:'',feedbackUntil:0};
+ keys.clear();drag=null;
+ run={player:{...spawn,dirX:1,dirY:0,hull:3,shield:0,moving:false},
+  guards:patrols.map(route=>({x:route[0][0],y:route[0][1],route,index:1,angle:0})),
+  mail:caches.map(p=>({...p,taken:false})),count:0,charges:3,toy:null,time:0,notice:'Find Sprout’s three dispatches',noticeUntil:5};
+ camera.x=spawn.x;camera.y=spawn.y;sync();
 }
-function show(next,title,copy,button){
- mode=next;ui.title.textContent=title;ui.copy.textContent=copy;ui.start.textContent=button;ui.panel.hidden=false;
+function sync(){
+ ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/3';
+ ui.decoy.textContent='DECOY · '+run.charges;
+ ui.decoy.disabled=mode!=='play'||run.charges===0;
 }
-function move(amount){if(mode==='play')run.lane=Math.max(0,Math.min(2,run.lane+amount));}
-function hop(){if(mode==='play'&&!run.jump)run.jump=.72;}
-ui.left.onclick=()=>move(-1);
-ui.right.onclick=()=>move(1);
-ui.jump.onclick=hop;
-function pause(){
- if(mode==='play')show('paused','Hold that edition','The handcar brake is a boot. Please respect the boot.','Resume');
+function announce(message){run.notice=message;run.noticeUntil=run.time+3.5;}
+function show(next,title,copy,label){
+ mode=next;keys.clear();drag=null;
+ ui.title.textContent=title;ui.copy.textContent=copy;ui.start.textContent=label;ui.panel.hidden=false;sync();
 }
+function pause(){if(mode==='play')show('paused','Hold the mail','Trent stops to check whether the stamps have diplomatic immunity.','Resume');}
+ui.start.onclick=()=>{if(mode!=='paused')reset();mode='play';ui.panel.hidden=true;sync();};
 ui.pause.onclick=pause;
-ui.start.onclick=()=>{
- if(mode!=='paused')reset();
- mode='play';ui.panel.hidden=true;
-};
-window.addEventListener('keydown',e=>{
- if(e.repeat)return;
- if(e.key==='Escape'){if(mode==='paused')ui.start.click();else pause();return;}
+function blocked(x,y,r){
+ if(x<r||y<r||x>world.w-r||y>world.h-r)return true;
+ return shelves.some(s=>Math.hypot(x-clamp(x,s.x,s.x+s.w),y-clamp(y,s.y,s.y+s.h))<r);
+}
+function walk(actor,dx,dy,r){
+ if(!blocked(actor.x+dx,actor.y,r))actor.x+=dx;
+ if(!blocked(actor.x,actor.y+dy,r))actor.y+=dy;
+}
+function decoy(){
+ if(mode!=='play'||!run.charges)return;
+ const p=run.player,toy={x:p.x,y:p.y,until:run.time+5};
+ for(let i=0;i<12;i++)walk(toy,p.dirX*9,p.dirY*9,7);
+ run.toy=toy;run.charges--;announce('Wind-up penguin deployed');sync();
+}
+ui.decoy.onclick=decoy;
+const movement=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
+window.addEventListener('keydown',event=>{
+ const key=event.key.toLowerCase();
+ if(key==='escape'&&!event.repeat){if(mode==='paused')ui.start.click();else pause();return;}
  if(mode!=='play')return;
- if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.code==='Space'){
-  e.preventDefault();
-  if(e.code==='Space')hop();else move(e.key==='ArrowLeft'?-1:1);
- }
+ if(movement.includes(key)){event.preventDefault();keys.add(key);}
+ if(event.code==='Space'&&!event.repeat){event.preventDefault();decoy();}
 });
+window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
 window.addEventListener('blur',pause);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-function announce(text){run.feedback=text;run.feedbackUntil=run.time+1.4;}
-function spawn(index){
- const lane=(index*7+Math.floor(index/4))%3;
- const arrival=3+index*2.05;
- const mail=index%4===1;
- run.objects.push({lane,arrival,type:mail?'mail':index%3===0?'barrier':'crate',checked:false});
- if(index%5===4){
-  run.objects.push({lane:(lane+1)%3,arrival,type:'crate',checked:false});
- }
-}
-function finish(){
- const won=run.hull>0&&run.mail>=3;
- if(won){
-  show('won','Signed, sealed, escaped','Sprout’s postcards spell out the depot entrance. The final card reads: “If captured, tell them I’m a decorative pepper mill.”','Ride again');
-  window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:{postcards:run.mail,hull:run.hull,seconds:Math.round(run.time)}}));
- }else{
-  show('lost','Return to sender',run.hull?'Trent reached the depot with too few postcards. The only address he can decode is the staff canteen.':'The handcar has filed for early retirement. Trent asks for a replacement with fewer opinions.','Try again');
- }
+canvas.addEventListener('pointerdown',event=>{
+ if(mode!=='play'||drag)return;
+ drag={id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dy:0};canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener('pointermove',event=>{
+ if(drag?.id!==event.pointerId)return;
+ drag.dx=event.clientX-drag.x;drag.dy=event.clientY-drag.y;
+});
+for(const name of ['pointerup','pointercancel','lostpointercapture']){
+ canvas.addEventListener(name,event=>{if(drag?.id===event.pointerId)drag=null;});
 }
 function update(dt){
  run.time+=dt;
- for(let i=particles.length-1;i>=0;i--){
-  const p=particles[i];p.life-=dt;
-  if(p.life<=0){particles.splice(i,1);continue;}
-  p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=70*dt;
- }
- run.jump=Math.max(0,run.jump-dt);
- run.x+=(lanes[run.lane]-run.x)*Math.min(1,dt*18);
- while(3+run.next*2.05<Math.min(runway,run.time+3.3))spawn(run.next++);
- for(const object of run.objects){
-  if(object.checked||object.arrival>run.time)continue;
-  object.checked=true;
-  if(Math.abs(lanes[object.lane]-run.x)>46)continue;
-  if(object.type==='mail'){
-   run.mail++;scatter(run.x,420,mint);announce('SPECIAL DELIVERY!');object.collected=true;
-  }else if(object.type==='barrier'&&run.jump>.12&&run.jump<.65)announce('HOP!');
-  else if(run.time>=run.invulnerable){
-   run.hull--;scatter(run.x,442,'#ffb86f');run.invulnerable=run.time+1.2;announce('CLANG!');
-   if(!run.hull){finish();break;}
+ const p=run.player;
+ const held=(a,b)=>Number(keys.has(a)||keys.has(b));
+ let dx=held('d','arrowright')-held('a','arrowleft'),dy=held('s','arrowdown')-held('w','arrowup');
+ if(drag&&Math.hypot(drag.dx,drag.dy)>6){dx=drag.dx;dy=drag.dy;}
+ const magnitude=Math.hypot(dx,dy);
+ p.moving=magnitude>0;
+ if(p.moving){p.dirX=dx/magnitude;p.dirY=dy/magnitude;walk(p,p.dirX*178*dt,p.dirY*178*dt,radius);}
+ if(run.toy&&run.toy.until<=run.time)run.toy=null;
+ for(const guard of run.guards){
+  const [x,y]=guard.route[guard.index];
+  const distracted=run.toy&&distance(guard,run.toy)<240;
+  const target=distracted?run.toy:{x,y};
+  const d=distance(guard,target);
+  if(d>5){
+   const step=Math.min(d,(distracted?96:69)*dt);
+   guard.angle=Math.atan2(target.y-guard.y,target.x-guard.x);
+   walk(guard,Math.cos(guard.angle)*step,Math.sin(guard.angle)*step,12);
+  }else if(!distracted)guard.index=(guard.index+1)%guard.route.length;
+  if(distance(guard,p)<29&&p.shield<=run.time){
+   p.hull--;p.shield=run.time+1.8;announce('Inspector citation!');sync();
+   if(!p.hull){show('lost','Return to sender','The inspectors impounded Trent for unauthorized festivity.','Try again');return;}
   }
  }
- run.objects=run.objects.filter(o=>o.arrival>run.time-.8&&!o.collected);
- ui.status.textContent='♥'.repeat(run.hull)+'♡'.repeat(3-run.hull)+' · '+Math.min(3,run.mail)+'/3';
- if(mode==='play'&&run.time>=runway)finish();
+ for(const item of run.mail){
+  if(!item.taken&&distance(p,item)<30){item.taken=true;run.count++;announce(run.count===3?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');sync();}
+ }
+ if(distance(p,depot)<40&&run.count===3){
+  show('won','Signed, sealed, escaped','Sprout’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
+  window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:{postcards:run.count,hull:p.hull,seconds:Math.round(run.time)}}));
+ }
 }
-function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
-function shape(points,color){
- ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();
- ctx.fillStyle=color;ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=3;ctx.stroke();
+function sprite(name,x,y,w,h,flip=false){
+ const image=art[name];
+ if(!image.complete||!image.naturalWidth)return false;
+ ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.drawImage(image,-w/2,-h/2,w,h);ctx.restore();return true;
 }
+function glow(x,y,r,color){
+ const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');
+ ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
+}
+function label(text,x,y){
+ ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#151c2c';ctx.strokeText(text,x,y);
+ ctx.fillStyle='#ffe8bf';ctx.fillText(text,x,y);
+}
+const snow=Array.from({length:60},(_,i)=>[i*137.7%1080,i*97.3%720,1+i%3]);
 function render(){
- const {width,height}=canvas;
- ctx.setTransform(width/360,0,0,height/560,0,0);
- rect(0,0,360,560,paper);
- const district=Math.min(2,Math.floor(run.time/32));
- rect(0,0,360,560,'#181e31');
- const terrain=art.rail;
- if(loaded(terrain)){
-  const height=360*terrain.naturalHeight/terrain.naturalWidth;
-  const distance=run.time*140, tile=Math.floor(distance/height);
-  for(let i=-2;i<=1;i++){
-   ctx.save();ctx.translate(0,distance%height+i*height);
-   if((tile-i)%2){ctx.translate(0,height);ctx.scale(1,-1);}
-   ctx.drawImage(terrain,0,0,360,height+.6);ctx.restore();
-  }
-  rect(0,0,360,560,['#171c300d','#26225325','#2015234a'][district]);
- }else for(const x of lanes){
-  rect(x-43,0,86,560,'#7c8193');
-  for(let y=(run.time*140)%35-35;y<560;y+=35)rect(x-37,y,74,7,'#422d36');
-  for(const offset of [-27,24])rect(x+offset,0,6,560,ink);
+ const width=canvas.width,height=canvas.height;
+ const zoom=Math.min(width/370,height/460);
+ const vw=width/zoom,vh=height/zoom;
+ camera.x=clamp(run.player.x-vw/2,0,Math.max(0,world.w-vw));
+ camera.y=clamp(run.player.y-vh/2,0,Math.max(0,world.h-vh));
+ const offsetX=Math.max(0,(vw-world.w)/2),offsetY=Math.max(0,(vh-world.h)/2);
+ ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#101624';ctx.fillRect(0,0,width,height);
+ ctx.setTransform(zoom,0,0,zoom,(offsetX-camera.x)*zoom,(offsetY-camera.y)*zoom);
+ const yard=art.yard;
+ if(yard.complete&&yard.naturalWidth)ctx.drawImage(yard,0,0,world.w,world.h);
+ else{ctx.fillStyle='#465365';ctx.fillRect(0,0,world.w,world.h);}
+ for(const s of shelves){
+  ctx.fillStyle='#10162475';ctx.fillRect(s.x+4,s.y+9,s.w,s.h);
+  if(!sprite('shelf',s.x+s.w/2,s.y+s.h/2,s.w,s.h)){ctx.fillStyle='#774b34';ctx.fillRect(s.x,s.y,s.w,s.h);}
  }
- for(const flake of snow){
-  const y=(flake.y+run.time*(125+flake.r*49))%560;
-  const x=flake.x+Math.sin(y*.03+flake.x)*7;
-  ctx.fillStyle='rgba(234,244,255,'+(.19+flake.r*.24)+')';
-  ctx.beginPath();ctx.ellipse(x,y,flake.r,flake.r*1.4,0,0,7);ctx.fill();
+ glow(depot.x,depot.y,52,run.count===3?'#72f7c8aa':'#cf903f84');
+ ctx.fillStyle=run.count===3?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);
+ label(run.count===3?'MAIL HATCH OPEN':'MAIL HATCH · LOCKED',depot.x,depot.y-24);
+ for(const item of run.mail){
+  if(item.taken)continue;
+  const lift=Math.sin(run.time*5+item.x)*4;
+  glow(item.x,item.y,41,'#69fbd18a');
+  if(!sprite('mail',item.x,item.y+lift,36,29)){ctx.fillStyle='#96feda';ctx.fillRect(item.x-15,item.y-10,30,20);}
  }
- for(const o of run.objects){
-  const y=442+(run.time-o.arrival)*140,x=lanes[o.lane];
-  if(y<-34||y>590)continue;
-  if(o.type==='mail'){
-   if(sprite('mail',x,y+Math.sin(run.time*7)*4,42))continue;
-   shape([[x-24,y-15],[x+24,y-15],[x+24,y+15],[x-24,y+15]],mint);
-   shape([[x-22,y-13],[x,y+4],[x+22,y-13]],paper);
-  }else if(o.type==='barrier'){
-   rect(x-39,y-9,78,18,ink);
-   for(let n=-35;n<33;n+=15)shape([[x+n,y+6],[x+n+7,y-6],[x+n+14,y-6],[x+n+7,y+6]],'#f4bd4e');
-  }else{
-   if(sprite('crate',x,y,61))continue;
-   shape([[x-29,y-24],[x+19,y-24],[x+29,y-13],[x+29,y+20],[x-29,y+20]],'#aa5851');
-   shape([[x-24,y-15],[x-15,y-15],[x+24,y+14],[x+15,y+14]],'#edb779');
-  }
+ if(run.toy){
+  glow(run.toy.x,run.toy.y,45,'#ffb96c96');
+  label('♫',run.toy.x,run.toy.y-17);
+  ctx.fillStyle='#2b3447';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y,10,15,0,0,7);ctx.fill();
+  ctx.fillStyle='#ffe8bf';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y+3,6,9,0,0,7);ctx.fill();
  }
- const jump=Math.sin(Math.PI*run.jump/.72)*47;
- const x=run.x,y=442-jump;
- ctx.fillStyle='rgba(9,13,25,'+(.44-jump*.005)+')';
- ctx.beginPath();ctx.ellipse(x,453,30+jump*.13,9,0,0,7);ctx.fill();
- if(run.time>=run.invulnerable||Math.floor(run.time*13)%2===0){
-  ctx.save();ctx.translate(x,y);
-  ctx.rotate((lanes[run.lane]-x)*.004);
-  const phase=run.time*2%1;
-  const blend=(1-Math.cos(phase*2*Math.PI))/2;
-  ctx.globalAlpha=1-blend;
-  const painted=sprite('cart-a',0,0,91+jump*.12);
-  ctx.globalAlpha=blend;
-  const alternate=sprite('cart-b',0,0,91+jump*.12);
-  ctx.globalAlpha=1;
-  if(!painted&&!alternate)shape([[-30,-25],[30,-25],[30,18],[-30,18]],red);
-  ctx.restore();
+ for(const g of run.guards){
+  const bob=Math.sin(run.time*12+g.x*.03)*2.5;
+  glow(g.x+Math.cos(g.angle)*21,g.y+Math.sin(g.angle)*21,43,'#ffc16b80');
+  sprite('guard',g.x,g.y-11+bob,49,55,Math.cos(g.angle)<0);
  }
- for(const p of particles){
-  ctx.globalAlpha=Math.min(1,p.life*2);
-  rect(p.x,p.y,3,3,p.color);
+ const p=run.player;
+ if(p.shield<=run.time||Math.floor(run.time*12)%2===0){
+  ctx.fillStyle='#13192791';ctx.beginPath();ctx.ellipse(p.x,p.y+10,18,7,0,0,7);ctx.fill();
+  sprite('elf',p.x,p.y-14+(p.moving?Math.sin(run.time*21)*3:0),68,45,p.dirX<0);
  }
- ctx.globalAlpha=1;
- rect(0,0,360,28,ink);rect(0,27,360*Math.min(1,run.time/runway),3,mint);
- ctx.font='900 13px system-ui';ctx.fillStyle=paper;ctx.textAlign='center';ctx.fillText(headlines[district],180,19);
- if(run.feedbackUntil>run.time){
-  shape([[72,344],[99,330],[260,330],[291,347],[263,372],[101,373]],paper);
-  ctx.font='1000 22px system-ui';ctx.fillStyle=ink;ctx.fillText(run.feedback,180,359);
+ for(const [x0,y0,r] of snow){
+  const x=(x0+run.time*r*15)%world.w,y=(y0+run.time*r*24)%world.h;
+  ctx.fillStyle='rgba(235,246,255,'+(.14+r*.13)+')';ctx.beginPath();ctx.arc(x,y,r*.65,0,7);ctx.fill();
+ }
+ if(run.noticeUntil>run.time){
+  ctx.setTransform(zoom,0,0,zoom,0,0);label(run.notice,vw/2,25);
  }
 }
 function resize(){
- const bounds=canvas.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2);
- canvas.width=Math.max(1,Math.round(bounds.width*dpr));
- canvas.height=Math.max(1,Math.round(bounds.height*dpr));
+ const b=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
+ canvas.width=Math.max(1,Math.round(b.width*dpr));canvas.height=Math.max(1,Math.round(b.height*dpr));
 }
 window.addEventListener('resize',resize);
 function frame(now){
- const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+ const dt=last?Math.min((now-last)/1000,.04):0;last=now;
  if(mode==='play')update(dt);
  render();requestAnimationFrame(frame);
 }
