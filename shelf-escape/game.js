@@ -45,7 +45,7 @@ window.onkeyup=e=>keys.delete(e.key.toLowerCase());
 const distance=(a,b)=>Phaser.Math.Distance.Between(a.x,a.y,b.x,b.y);
 class Depot extends Phaser.Scene{
  create(){
-  mission=this;complete=false;this.active=false;this.ammo=startingAmmo;this.nextShot=0;this.health=3;this.invulnerable=0;this.intel=false;this.timePlayed=0;
+  mission=this;complete=false;this.active=false;this.ammo=startingAmmo;this.nextShot=0;this.health=3;this.invulnerable=0;this.intel=false;this.timePlayed=0;this.relayCount=0;this.transmit=0;this.transmitRequired=65;this.transmitting=false;this.nextWave=0;
   this.physics.world.setBounds(0,0,1000,1600);
   const g=this.add.graphics();
   g.fillStyle(0x19323b).fillRect(0,0,1000,1600);
@@ -54,7 +54,7 @@ class Depot extends Phaser.Scene{
    g.lineStyle(1,0x53666a,.2).lineBetween(x+5,y+4,x+72,y+4);
   }
   const maker=this.make.graphics({x:0,y:0,add:false});
-  const texture=(name,draw)=>{maker.clear();draw(maker);maker.generateTexture(name,64,72)};
+  const texture=(name,draw)=>{if(this.textures.exists(name))return;maker.clear();draw(maker);maker.generateTexture(name,64,72)};
   texture('elf',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,42,17);p.fillStyle(0x1d3841).fillRoundedRect(15,43,13,22,5).fillRoundedRect(36,43,13,22,5);p.fillStyle(0xc64c58).fillRoundedRect(13,25,38,27,9);p.fillStyle(0xeee3bb).fillRect(15,28,34,5);p.fillStyle(0xf0ba8f).fillCircle(32,22,15);p.fillStyle(0xcd4f55).fillTriangle(13,13,41,0,51,14);p.fillStyle(0xffe8c2).fillCircle(42,3,5);p.fillStyle(0x253843).fillCircle(27,21,2).fillCircle(38,21,2);p.fillStyle(0xeac274).fillRoundedRect(42,30,19,9,3)});
   texture('guard',p=>{p.fillStyle(0x061a23,.4).fillEllipse(32,60,44,17);p.fillStyle(0x182b32).fillRoundedRect(15,44,13,21,4).fillRoundedRect(36,44,13,21,4);p.fillStyle(0x79867b).fillRoundedRect(11,26,42,26,8);p.fillStyle(0xd7ae88).fillCircle(32,20,14);p.fillStyle(0x56696a).fillRoundedRect(13,4,38,14,6);p.fillStyle(0x253c43).fillRect(10,14,44,6);p.fillStyle(0xdeb875).fillCircle(48,40,7)});
   texture('gift',p=>{p.fillStyle(0x081b23,.5).fillEllipse(32,62,49,14);p.fillStyle(0xb84a55).fillRoundedRect(8,17,48,44,5);p.fillStyle(0xf4cd7d).fillRect(27,17,10,44).fillRect(8,31,48,9);p.lineStyle(5,0xf4cd7d).strokeEllipse(23,13,19,13).strokeEllipse(41,13,19,13)});
@@ -74,6 +74,18 @@ class Depot extends Phaser.Scene{
   }
   this.add.text(500,1380,'FREIGHT INTAKE',{fontSize:'24px',color:'#84999a'}).setOrigin(.5);
   this.add.text(500,680,'MINISTRY OF FESTIVE CONFISCATION',{fontSize:'16px',color:'#9ea7a0'}).setOrigin(.5);
+  this.relays=[{x:880,y:1360,name:'FREIGHT RELAY'},{x:85,y:730,name:'OFFICE RELAY'},{x:870,y:160,name:'SIGNAL RELAY'}].map(point=>({
+   ...point,progress:0,done:false,
+   node:this.add.rectangle(point.x,point.y,32,38,0x65a6b0).setStrokeStyle(3,0xf7d99d),
+   label:this.add.text(point.x,point.y-34,point.name,{fontSize:'12px',color:'#b9e4e9'}).setOrigin(.5),
+   ring:this.add.graphics()
+  }));
+  this.terminal=this.add.rectangle(480,710,60,44,0x244c59).setStrokeStyle(3,0x8ac0c5);
+  this.add.circle(480,710,145,0x8cd9bc,.05).setStrokeStyle(2,0x8cd9bc,.3);
+  this.add.text(480,673,'RADIO TERMINAL',{fontSize:'12px',color:'#c6e7df'}).setOrigin(.5);
+  this.medkits=[{x:55,y:1080},{x:945,y:750},{x:55,y:390}].map(point=>({
+   ...point,used:false,node:this.add.rectangle(point.x,point.y,24,24,0x95c9a5).setStrokeStyle(2,0xffffff)
+  }));
   this.orders=this.add.rectangle(815,410,34,28,0xffdc8a).setStrokeStyle(3,0xffffff);
   this.tweens.add({targets:this.orders,y:400,duration:850,yoyo:true,repeat:-1});
   this.add.text(815,370,'TRANSPORT ORDERS',{fontSize:'13px',color:'#ffe4a4'}).setOrigin(.5);
@@ -97,6 +109,7 @@ class Depot extends Phaser.Scene{
     this.tweens.add({targets:present,angle:6,duration:100,yoyo:true,repeat:3});
    }else{guard.setTint(0xffb0b0);this.time.delayedCall(180,()=>{if(guard.active)guard.clearTint()})}
   });
+  this.physics.add.collider(this.guards,this.guards);
   this.physics.add.overlap(this.player,this.guards,()=>{
    if(this.time.now<this.invulnerable||!this.active)return;
    this.health--;this.invulnerable=this.time.now+1800;
@@ -105,12 +118,12 @@ class Depot extends Phaser.Scene{
   });
   this.cameras.main.setBounds(0,0,1000,1600).startFollow(this.player,true,.1,.1).setZoom(Math.max(.65,Math.min(1.1,this.scale.width/620)));
   this.scale.on('resize',size=>this.cameras.main.setZoom(Math.max(.65,Math.min(1.1,size.width/620))));
-  panel('Operation Ribbonfall','Trent cracked the case. You are Sprout. Steal Santa’s transport orders and escape through the mail hatch. The colonel has labeled the elf “ornamental.” This is about to become a personnel issue.<br><br><b>Left thumb</b> moves. <b>Right thumb</b> aims and fires while held. Tap the right pad to fire at the nearest guard. Collect the glowing orders before heading upstairs.<br><br>'+startingAmmo+' ribbon shots · '+(damage===2?'enchanted':'plain')+' ribbon.','Begin escape',resume);
+  panel('Operation Ribbonfall','Trent cracked the case. You are Sprout. Steal Santa’s transport orders, cut three alarm relays, transmit the evidence from the radio terminal, and escape through the mail hatch. The colonel has labeled the elf “ornamental.” This is about to become a personnel issue.<br><br><b>Left thumb</b> moves. <b>Right thumb</b> aims and fires while held. Tap the right pad to fire at the nearest guard. Stand beside each blue relay for seven seconds to cut it. Green boxes restore health. After collecting the orders and cutting the relays, defend the terminal while it transmits.<br><br>'+startingAmmo+' ribbon shots · '+(damage===2?'enchanted':'plain')+' ribbon.','Begin escape',resume);
  }
  finish(won){
   this.active=false;this.physics.pause();stopInput();
-  if(won&&session&&!complete){complete=true;parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(this.timePlayed),chargesUsed:startingAmmo-this.ammo},session.origin)}
-  panel(won?'Return to sender':'Seasonal setback',won?'Sprout escapes with the orders. Behind him, a neatly wrapped guard requests a transfer. “Gift receipt’s in the box,” Sprout calls. Santa’s destination is finally in your hands.':'A guard puts Sprout back on display. His new label reads “Interactive. Batteries confiscated.” Sprout begins drafting a strongly worded letter to the toy shop.', 'Play again',()=>this.scene.restart());
+  const reportCompletion=()=>{if(won&&session&&!complete){complete=true;parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(this.timePlayed),chargesUsed:startingAmmo-this.ammo},session.origin)}};
+  panel(won?'Return to sender':'Seasonal setback',won?'Sprout escapes with the orders. Behind him, a neatly wrapped guard requests a transfer. “Gift receipt’s in the box,” Sprout calls. Santa’s destination is finally in your hands.':'A guard puts Sprout back on display. His new label reads “Interactive. Batteries confiscated.” Sprout begins drafting a strongly worded letter to the toy shop.', won&&session?'Continue the story':'Play again',()=>{if(won&&session)reportCompletion();else this.scene.restart()});
  }
  update(time,delta){
   if(!this.player)return;
@@ -140,9 +153,40 @@ class Depot extends Phaser.Scene{
    this.time.delayedCall(1000,()=>{if(bullet.active)bullet.destroy()});
    fireQueued=false;this.ammo--;this.nextShot=time+reload;
   }
-  if(!this.intel&&distance(this.player,this.orders)<48){this.intel=true;this.orders.destroy();this.active=false;panel('Filed under plumbing','“Santa’s transport order. Filed under Seasonal Plumbing. Of course.” Sprout pockets it. A nearby notice demands the return of seventeen missing rolls of ribbon.<br><br>Reach the green mail hatch at the north end.','Head for the hatch',resume)}
-  if(this.intel&&distance(this.player,this.exit)<55)this.finish(true);
-  $('objective').textContent=this.intel?'Escape through the mail hatch':'Steal Santa’s transport orders';
+  if(!this.intel&&distance(this.player,this.orders)<48){this.intel=true;this.orders.destroy();this.active=false;panel('Filed under plumbing','“Santa’s transport order. Filed under Seasonal Plumbing. Of course.” Sprout pockets it. A nearby notice demands the return of seventeen missing rolls of ribbon.<br><br>Cut the three blue alarm relays, then reach the radio terminal. It is disguised as an ordinary radio. Quinn apologizes for the lack of imagination.','Find the relays',resume);return;}
+  for(const kit of this.medkits){
+   if(!kit.used&&this.health<3&&distance(this.player,kit)<38){kit.used=true;kit.node.destroy();this.health++}
+  }
+  for(const relay of this.relays){
+   if(relay.done||distance(this.player,relay)>=54)continue;
+   relay.progress+=Math.min(delta,50)/1000;
+   relay.ring.clear().lineStyle(3,0xffd68b).beginPath().arc(relay.x,relay.y,29,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,relay.progress/7)).strokePath();
+   if(relay.progress>=7){
+    relay.done=true;this.relayCount++;relay.node.setFillStyle(0x385d50);relay.label.setText('DISABLED');
+    if(this.relayCount===1){
+     this.active=false;panel('A quiet objection','The first alarm dies with a tiny squeak. Sprout finds a note inside: “Please do not sabotage. We have just had this serviced.” Two more relays to go.','Continue',resume);
+     return;
+    }
+   }
+  }
+  if(this.intel&&this.relayCount===3&&this.transmit<this.transmitRequired){
+   if(!this.transmitting){
+    this.transmitting=true;this.nextWave=this.timePlayed+15;this.active=false;
+    panel('The long-distance complaint','The radio operator asks whether Santa has tried turning Christmas off and on again.<br><br>Stay inside the terminal circle to send the orders. Transmission pauses when you leave. Guards will arrive.','Transmit the orders',resume);return;
+   }
+   if(distance(this.player,this.terminal)<145)this.transmit+=Math.min(delta,50)/1000;
+   this.terminal.setFillStyle(0x87b59b);
+   if(this.timePlayed>=this.nextWave&&this.guards.countActive()<5){
+    const enemy=this.guards.create(Math.floor(this.timePlayed)%2?55:945,710,'guard').setScale(.8);
+    enemy.body.setSize(36,36).setOffset(14,25);enemy.home={x:enemy.x,y:enemy.y};enemy.hp=2;enemy.direction=1;
+    this.nextWave=this.timePlayed+14;
+   }
+   if(this.transmit>=this.transmitRequired){
+    this.active=false;panel('Message received','Command confirms Santa’s location. They also ask why Sprout transmitted a purchase order for seventeen staplers. “Operational necessity.”<br><br>The hatch is open. Reach it to escape.','Escape',resume);return;
+   }
+  }
+  if(this.intel&&this.relayCount===3&&this.transmit>=this.transmitRequired&&distance(this.player,this.exit)<55){this.finish(true);return;}
+  $('objective').textContent=!this.intel?'Steal Santa’s transport orders':this.relayCount<3?'Cut alarm relays · '+this.relayCount+' / 3':this.transmit<this.transmitRequired?'Transmit orders · '+Math.floor(this.transmit/this.transmitRequired*100)+'%':'Escape through the mail hatch';
   $('status').textContent='♥'.repeat(this.health)+' · '+this.ammo+' shots · '+this.guards.countActive()+' guards';
  }
 }
