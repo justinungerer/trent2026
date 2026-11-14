@@ -2,7 +2,7 @@
 
 A few months after D-Day, near Christmas. Trent tunes a field radio and holds the narrow station that says Santa has been captured. The other stations are harmless noise: a canteen, a weather report, and a music box. A careful player who already knows the band can finish in well under two minutes.
 
-The pictures are original Canvas 2D drawing. There are no third-party assets, no downloaded images, and no build step.
+The pictures are original generated paintings in `art/`: a snowy night, a brass field radio, and Trent. The tuning needle and the signal meter are small canvas overlays. There are no third-party assets, no downloaded images, and no build step.
 
 ## Open it
 

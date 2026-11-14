@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102c40">
+  <title>The Switch Tower</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="yard" width="1280" height="720" aria-label="Trent throwing levers in a snowy switch yard"></canvas>
+
+    <div class="hud">
+      <div class="hud-block">
+        <span class="label">Misses</span>
+        <strong id="misses">0 / 3</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <div class="levers" id="levers">
+      <button type="button" id="lever-0" aria-pressed="true">1<span>Right</span></button>
+      <button type="button" id="lever-1" aria-pressed="true">2<span>Right</span></button>
+      <button type="button" id="lever-2" aria-pressed="true">3<span>Right</span></button>
+    </div>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">Chapter 5</p>
+        <h1>The Switch Tower</h1>
+        <p>A train is rolling into the yard. The board over the tracks shows the route with three pictures.</p>
+        <p>Throw the levers so each one matches its picture. A wrong route sends the train back.</p>
+        <button type="button" id="start">Open the tower</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The train waits on the snow.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="restart" class="ghost">Start the puzzle over</button>
+      </div>
+    </div>
+
+    <div id="lose-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Back to the first throw</h1>
+        <p>Three wrong routes. The puzzle starts over.</p>
+        <button type="button" id="retry-lose">Set the route again</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The Switch Tower</p>
+        <h1>The train is away</h1>
+        <p id="win-time">Away in 0 seconds.</p>
+        <button type="button" id="retry">Run another train</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This yard is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

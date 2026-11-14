@@ -2,7 +2,7 @@
 
 D-Day, 6 June 1944. Trent walks from the landing craft on the left to the seawall on the right. The beach scrolls. A careful crossing stays well under three minutes.
 
-The pictures are original Canvas 2D drawing. There are no third-party assets, no downloaded images, and no build step.
+The pictures are original generated paintings in `art/` (Trent, the dawn beach, the landing craft, the seawall, the hedgehogs, and the wire). They are not third-party assets. There is no build step.
 
 ## Open it
 

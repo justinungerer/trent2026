@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#16345c">
+  <title>White Rail</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="rail" width="844" height="390" aria-label="Trent pumping a handcar along a snowy rail toward the yard"></canvas>
+
+    <p id="hint" class="hint" hidden>Change track and pump</p>
+
+    <div class="hud">
+      <div class="hud-block">
+        <span class="label">Speed</span>
+        <strong id="speed">0 km/h</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Slips</span>
+        <strong id="slips">0 / 3</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Distance</span>
+        <strong id="distance">454 m</strong>
+      </div>
+      <button type="button" id="pause">Pause</button>
+    </div>
+
+    <div class="track-pad">
+      <button type="button" id="track-up" aria-label="Upper track">Up</button>
+      <button type="button" id="track-down" aria-label="Lower track">Down</button>
+    </div>
+    <button type="button" id="pump" aria-pressed="false">Pump</button>
+
+    <div id="start-sheet" class="sheet">
+      <div class="card">
+        <p class="kicker">Chapter 3</p>
+        <h1>White Rail</h1>
+        <p>Trent pumps a handcar along a snowy line. The yard mouth is ahead.</p>
+        <p>The left thumb picks a track. The right thumb pumps. A crate, a gap, or a lowered signal arm is a slip.</p>
+        <p>Three slips, and he starts the line again. A slip is a jolt.</p>
+        <button type="button" id="start">Roll out</button>
+      </div>
+    </div>
+
+    <div id="pause-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Paused</h1>
+        <p>The handcar waits on the rail.</p>
+        <button type="button" id="resume">Resume</button>
+        <button type="button" id="restart" class="ghost">Start the line over</button>
+      </div>
+    </div>
+
+    <div id="lose-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Back at the start</h1>
+        <p>Three slips. The handcar is at the start of the line again.</p>
+        <button type="button" id="retry-lose">Try the line again</button>
+      </div>
+    </div>
+
+    <div id="win-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">White Rail</p>
+        <h1>The yard mouth</h1>
+        <p id="win-time">On the line for 0 seconds.</p>
+        <p>Lanterns mark the open mouth of the yard.</p>
+        <button type="button" id="retry">Ride again</button>
+      </div>
+    </div>
+
+    <div id="portrait" class="sheet portrait" hidden>
+      <div class="card">
+        <h1>Turn sideways</h1>
+        <p>This line is played in landscape.</p>
+        <button type="button" id="dismiss-portrait">Dismiss</button>
+      </div>
+    </div>
+
+    <p id="status" class="sr" role="status"></p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

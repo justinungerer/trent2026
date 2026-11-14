@@ -1,5 +1,5 @@
 /* D-Day prologue. Walk Trent from the landing craft to the seawall.
-   Original Canvas 2D art. No assets and no network.
+   Painted sprites in art/. Layout is documented in art/ART-SOURCES.md.
 
    A straight walk is about a minute. Smoke, detours, and bracing
    keep a careful run near a minute and a half, under three minutes. */
@@ -71,7 +71,6 @@
     { x: 4760, w: 860 }
   ];
 
-  var specks = buildSpecks();
   var puffs = buildPuffs();
 
   var state = 'title';
@@ -109,6 +108,24 @@
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   var portraitQuery = window.matchMedia('(orientation: portrait)');
 
+  /* trent.webp: 14 equal frames, feet on one baseline.
+     idle 2, walk 6, brace 2, stumble 4. Anchor is the feet. */
+  var TRENT = { w: 539, h: 574, anchorX: 327, anchorY: 564 };
+  var trentImg = new Image();
+  var beachImg = new Image();
+  var craftImg = new Image();
+  var wallImg = new Image();
+  var hedgehogImg = new Image();
+  var wireImg = new Image();
+  trentImg.src = 'art/trent.webp';
+  beachImg.src = 'art/beach.webp';
+  craftImg.src = 'art/craft.webp';
+  wallImg.src = 'art/seawall.webp';
+  hedgehogImg.src = 'art/hedgehog.webp';
+  wireImg.src = 'art/wire.webp';
+
+  var moving = false;
+
   function reduceMotion() {
     return motionQuery.matches;
   }
@@ -121,20 +138,6 @@
 
   function unit() {
     return clamp(cssH / 390, 0.85, 1.25);
-  }
-
-  function buildSpecks() {
-    var list = [];
-    var i;
-    for (i = 0; i < 460; i++) {
-      list.push({
-        x: (i * 137) % 7400,
-        y: (i * 61) % BEACH_W,
-        r: 0.7 + (i % 5) * 0.35,
-        dark: i % 3 === 0
-      });
-    }
-    return list;
   }
 
   function buildPuffs() {
@@ -160,6 +163,7 @@
     player.stumbles = 0;
     player.step = 0;
     player.facing = 1;
+    moving = false;
     seaTime = 0;
     stumbleT = 0;
     lean = 0;
@@ -434,7 +438,8 @@
     if (stick.x !== 0 || stick.y !== 0) hintEl.hidden = true;
     tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
     moved = Math.hypot(player.x - beforeX, player.y - beforeY);
-    if (moved > 0.01) {
+    moving = moved > 0.01;
+    if (moving) {
       player.step += moved * 0.09;
       if (stick.x < -0.25) player.facing = -1;
       else if (stick.x > 0.25) player.facing = 1;
@@ -446,16 +451,6 @@
     }
     updateWaves();
   }
-
-  function stumbleBend(t) {
-    var u = t / STUMBLE_TIME;
-    if (u < 0.34) return easeOut(u / 0.34);
-    if (u < 0.52) return 1;
-    return 1 - easeIn((u - 0.52) / 0.48);
-  }
-
-  function easeOut(t) { return 1 - (1 - t) * (1 - t); }
-  function easeIn(t) { return t * t; }
 
   function updateStumble(dt) {
     stumbleT += dt;
@@ -502,177 +497,40 @@
     cameraX = cam;
   }
 
-  function drawSky() {
-    var sky = ctx.createLinearGradient(0, 0, 0, sandTop + 20);
-    var sunX = cssW * 0.7;
-    var sunY = sandTop * 0.42;
-    var sun;
-    sky.addColorStop(0, '#2a4668');
-    sky.addColorStop(0.55, '#7ea4bc');
-    sky.addColorStop(1, '#e7b08a');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, cssW, sandTop + 30);
-
-    sun = ctx.createRadialGradient(sunX, sunY, 6, sunX, sunY, 110);
-    sun.addColorStop(0, 'rgba(255, 236, 214, 0.95)');
-    sun.addColorStop(1, 'rgba(255, 236, 214, 0)');
-    ctx.fillStyle = sun;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, 110, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(244, 228, 214, 0.45)';
-    ctx.beginPath();
-    ctx.ellipse(cssW * 0.18, sandTop * 0.35, 70, 18, 0, 0, Math.PI * 2);
-    ctx.ellipse(cssW * 0.28, sandTop * 0.32, 46, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(cssW * 0.86, sandTop * 0.28, 54, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
+  function imageReady(img) {
+    return !!(img && img.complete && img.naturalWidth > 0);
   }
 
-  function drawRidge() {
-    ctx.fillStyle = '#7d6e64';
-    ctx.beginPath();
-    ctx.moveTo(0, sandTop + 10);
-    ctx.quadraticCurveTo(cssW * 0.22, sandTop - cssH * 0.07, cssW * 0.5, sandTop + 6);
-    ctx.quadraticCurveTo(cssW * 0.78, sandTop - cssH * 0.045, cssW, sandTop + 12);
-    ctx.lineTo(cssW, sandTop + 42);
-    ctx.lineTo(0, sandTop + 42);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = 'rgba(92, 78, 70, 0.35)';
-    ctx.beginPath();
-    ctx.moveTo(0, sandTop + 28);
-    ctx.quadraticCurveTo(cssW * 0.4, sandTop + 8, cssW, sandTop + 30);
-    ctx.lineTo(cssW, sandTop + 42);
-    ctx.lineTo(0, sandTop + 42);
-    ctx.fill();
-  }
-
-  function drawSand() {
-    var sand = ctx.createLinearGradient(0, sandTop, 0, sandTop + sandH);
-    var wetTop = worldToY(162);
-    var i;
-    var speck;
-    var sx;
-    var sy;
-    sand.addColorStop(0, '#d2cdc2');
-    sand.addColorStop(0.45, '#b7b3a8');
-    sand.addColorStop(1, '#8d918c');
-    ctx.fillStyle = sand;
-    ctx.fillRect(0, sandTop, cssW, sandH);
-
-    ctx.fillStyle = 'rgba(62, 70, 68, 0.28)';
-    ctx.fillRect(0, wetTop, cssW, sandTop + sandH - wetTop);
-
-    for (i = 0; i < specks.length; i++) {
-      speck = specks[i];
-      sx = worldToX(speck.x);
-      if (sx < -4 || sx > cssW + 4) continue;
-      sy = worldToY(speck.y);
-      ctx.fillStyle = speck.dark ? 'rgba(70, 68, 62, 0.28)' : 'rgba(236, 232, 224, 0.35)';
-      ctx.beginPath();
-      ctx.arc(sx, sy, speck.r * scale, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  function drawShallows() {
-    ctx.fillStyle = 'rgba(32, 96, 122, 0.5)';
-    ctx.beginPath();
-    ctx.moveTo(worldToX(-120), worldToY(30));
-    ctx.lineTo(worldToX(300), worldToY(78));
-    ctx.lineTo(worldToX(390), worldToY(BEACH_W));
-    ctx.lineTo(worldToX(-120), worldToY(BEACH_W));
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function drawForegroundSea() {
-    var seaTop = sandTop + sandH;
-    var sea = ctx.createLinearGradient(0, seaTop, 0, cssH);
-    var i;
+  function drawBeach() {
+    var iw;
+    var ih;
+    var destW;
+    var destH;
+    var span;
+    var t;
     var x;
-    var y;
-    var shift;
-    sea.addColorStop(0, '#4e90a8');
-    sea.addColorStop(1, '#1a455e');
-    ctx.fillStyle = sea;
-    ctx.fillRect(0, seaTop - 2, cssW, cssH - seaTop + 4);
-
-    ctx.strokeStyle = 'rgba(232, 244, 246, 0.6)';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    for (i = 0; i < 3; i++) {
-      shift = reduceMotion() ? 0 : visualTime * 1.3 + i;
-      y = seaTop + 12 + i * Math.max(12, cssH * 0.035);
-      ctx.beginPath();
-      for (x = 0; x <= cssW; x += 22) {
-        y = seaTop + 12 + i * Math.max(12, cssH * 0.035) + Math.sin(x * 0.02 + shift) * 3;
-        if (x === 0) ctx.moveTo(0, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
+    if (!imageReady(beachImg)) return;
+    iw = beachImg.naturalWidth;
+    ih = beachImg.naturalHeight;
+    destH = cssH;
+    destW = Math.max(cssW * 1.12, destH * (iw / ih));
+    span = Math.max(1, WALL_X + 180);
+    t = clamp((cameraX + 180) / span, 0, 1);
+    x = -(destW - cssW) * t;
+    ctx.drawImage(beachImg, x, 0, destW, destH);
   }
 
   function drawCraft() {
-    var s = unit();
-    ctx.save();
-    ctx.translate(worldToX(400), worldToY(156));
-    ctx.scale(s, s);
-
-    ctx.fillStyle = 'rgba(24, 36, 44, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(-78, 10, 96, 16, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#6d654c';
-    ctx.beginPath();
-    ctx.moveTo(18, 6);
-    ctx.lineTo(-86, -6);
-    ctx.lineTo(-86, -46);
-    ctx.lineTo(-6, -16);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#3e3a30';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#4c5a46';
-    ctx.beginPath();
-    ctx.moveTo(-78, -16);
-    ctx.lineTo(-176, -30);
-    ctx.quadraticCurveTo(-214, -78, -158, -112);
-    ctx.lineTo(-64, -104);
-    ctx.lineTo(-52, -36);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#3c4a38';
-    ctx.fillRect(-162, -96, 86, 40);
-    ctx.fillStyle = '#2f3b2e';
-    ctx.fillRect(-162, -96, 86, 8);
-
-    ctx.strokeStyle = '#8b987f';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-172, -48);
-    ctx.quadraticCurveTo(-120, -40, -70, -34);
-    ctx.stroke();
-
-    ctx.fillStyle = '#c5b8a2';
-    ctx.beginPath();
-    ctx.arc(-118, -78, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#4c5a46';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#9aa098';
-    ctx.fillRect(-138, -108, 7, 16);
-    ctx.restore();
+    var w;
+    var h;
+    var rampX;
+    var baseY;
+    if (!imageReady(craftImg)) return;
+    w = 260 * unit();
+    h = w * (craftImg.naturalHeight / craftImg.naturalWidth);
+    rampX = worldToX(500);
+    baseY = worldToY(214);
+    ctx.drawImage(craftImg, rampX - w, baseY - h, w, h);
   }
 
   function drawCrater(o, alpha) {
@@ -704,82 +562,28 @@
   }
 
   function drawWire(o, alpha) {
-    var posts = 5;
-    var pts = [];
-    var i;
-    var p;
-    var prev;
-    var strand;
+    var dh;
+    var dw;
+    var cx;
+    var top;
+    if (!imageReady(wireImg)) return;
+    dh = o.h * scale;
+    dw = dh * (wireImg.naturalWidth / wireImg.naturalHeight);
+    cx = worldToX(o.x + o.w / 2);
+    top = worldToY(o.y);
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.lineCap = 'round';
-    for (i = 0; i < posts; i++) {
-      pts.push({
-        x: worldToX(o.x + o.w * 0.55),
-        y: worldToY(o.y + o.h * (i / (posts - 1)))
-      });
-    }
-    ctx.strokeStyle = '#4a3c34';
-    ctx.lineWidth = Math.max(3, 4 * scale);
-    for (i = 0; i < pts.length; i++) {
-      p = pts[i];
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y - 12);
-      ctx.lineTo(p.x, p.y + 8);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = '#2e2622';
-    ctx.lineWidth = Math.max(1.5, 2 * scale);
-    for (strand = 0; strand < 3; strand++) {
-      ctx.beginPath();
-      for (i = 0; i < pts.length; i++) {
-        p = pts[i];
-        if (i === 0) ctx.moveTo(p.x, p.y - 8 + strand * 6);
-        else {
-          prev = pts[i - 1];
-          ctx.quadraticCurveTo(
-            (prev.x + p.x) / 2 + 5,
-            (prev.y + p.y) / 2 - 7 + strand * 6,
-            p.x,
-            p.y - 8 + strand * 6
-          );
-        }
-      }
-      ctx.stroke();
-    }
+    ctx.drawImage(wireImg, cx - dw / 2, top, dw, dh);
     ctx.restore();
   }
 
   function drawHedgehog(o, alpha) {
-    var x = worldToX(o.x);
-    var y = worldToY(o.y);
-    var r = o.r * scale;
-    var i;
+    var d;
+    if (!imageReady(hedgehogImg)) return;
+    d = o.r * scale * 3.1;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.translate(x, y);
-    ctx.fillStyle = 'rgba(36, 38, 40, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(0, r * 0.45, r * 0.95, r * 0.36, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineCap = 'round';
-    for (i = 0; i < 3; i++) {
-      ctx.save();
-      ctx.rotate((Math.PI / 3) * i);
-      ctx.strokeStyle = '#5e6468';
-      ctx.lineWidth = Math.max(4, r * 0.32);
-      ctx.beginPath();
-      ctx.moveTo(-r, 0);
-      ctx.lineTo(r, 0);
-      ctx.stroke();
-      ctx.strokeStyle = '#c5c8ca';
-      ctx.lineWidth = Math.max(1.5, r * 0.08);
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.8, -r * 0.08);
-      ctx.lineTo(r * 0.8, -r * 0.08);
-      ctx.stroke();
-      ctx.restore();
-    }
+    ctx.drawImage(hedgehogImg, worldToX(o.x) - d / 2, worldToY(o.y) - d / 2, d, d);
     ctx.restore();
   }
 
@@ -805,40 +609,17 @@
   }
 
   function drawWall() {
-    var x = worldToX(WALL_X);
-    var top = sandTop - cssH * 0.06;
-    var bottom = worldToY(BEACH_W) + 6;
-    var width = Math.max(160, cssW - x + 40);
-    var g = ctx.createLinearGradient(x, top, x + 40, bottom);
-    var seam;
-    if (x > cssW + 20) return;
-    g.addColorStop(0, '#dddcd4');
-    g.addColorStop(0.55, '#c2c1ba');
-    g.addColorStop(1, '#8f8f8a');
-    ctx.fillStyle = g;
-    ctx.fillRect(x, top, width, bottom - top);
-
-    ctx.strokeStyle = 'rgba(60, 62, 64, 0.35)';
-    ctx.lineWidth = 2;
-    for (seam = x + 22; seam < x + width; seam += 48) {
-      ctx.beginPath();
-      ctx.moveTo(seam, top + 14);
-      ctx.lineTo(seam, bottom - 8);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = '#e6e4dc';
-    ctx.fillRect(x - 8, top, Math.min(width + 8, cssW - x + 20), 14);
-    ctx.fillStyle = '#9a9a94';
-    ctx.fillRect(x, bottom - 28, Math.min(70, width), 28);
-
-    ctx.fillStyle = '#aea89c';
-    ctx.beginPath();
-    ctx.moveTo(x - 36, bottom - 4);
-    ctx.lineTo(x + 24, bottom - 30);
-    ctx.lineTo(x + 90, bottom - 4);
-    ctx.closePath();
-    ctx.fill();
+    var h;
+    var w;
+    var x;
+    var y;
+    if (!imageReady(wallImg)) return;
+    h = sandH * 1.08;
+    w = h * (wallImg.naturalWidth / wallImg.naturalHeight);
+    x = worldToX(WALL_X) - w * 0.06;
+    y = sandTop + sandH - h + 12;
+    if (x > cssW + 40) return;
+    ctx.drawImage(wallImg, x, y, w, h);
   }
 
   function drawSmoke() {
@@ -919,117 +700,46 @@
     }
   }
 
-  function drawTrent() {
-    var s = unit();
-    var bend = state === 'stumble' ? stumbleBend(stumbleT) : 0;
-    var bracing = isBracing() && state === 'play';
-    var step = Math.sin(player.step);
-    var bob = reduceMotion() ? 0 : step * 1.4 * (1 - bend);
-    var spread = bracing ? 8 : 5;
-    var leg = bracing ? 0.4 : step;
-    ctx.save();
-    ctx.translate(worldToX(player.x), worldToY(player.y) + bob);
-    ctx.scale(s, s);
-
-    ctx.fillStyle = 'rgba(40, 36, 32, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(0, 3, 16, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.rotate(-bend * 0.9);
-    if (player.facing < 0 && state !== 'stumble') ctx.scale(-1, 1);
-    if (bracing || lean > 0) ctx.translate(0, 5);
-
-    ctx.fillStyle = '#3a4148';
-    roundLeg(-spread, -30, leg * 7);
-    roundLeg(spread * 0.3, -30, -leg * 7);
-
-    ctx.fillStyle = '#241e1a';
-    ctx.beginPath();
-    ctx.ellipse(-spread + leg * 5, -4, 6, 4, 0, 0, Math.PI * 2);
-    ctx.ellipse(spread * 0.2 - leg * 5, -4, 6, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#5c5146';
-    ctx.fillRect(-16, -54, 12, 18);
-
-    ctx.fillStyle = '#4e3122';
-    ctx.beginPath();
-    ctx.moveTo(-7, -58);
-    ctx.lineTo(-16, -28);
-    ctx.lineTo(15, -28);
-    ctx.lineTo(8, -58);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#6e4630';
-    ctx.beginPath();
-    ctx.moveTo(-4, -58);
-    ctx.lineTo(-12, -30);
-    ctx.lineTo(8, -30);
-    ctx.lineTo(8, -58);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(78, 49, 34, 0.7)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-2, -52);
-    ctx.lineTo(-6, -32);
-    ctx.moveTo(3, -52);
-    ctx.lineTo(1, -32);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#31475c';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-4, -56);
-    ctx.quadraticCurveTo(0, -50, 6, -56);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#6e4630';
-    ctx.lineWidth = 5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    if (bracing) {
-      ctx.moveTo(-8, -50);
-      ctx.lineTo(-16, -36);
-      ctx.moveTo(8, -50);
-      ctx.lineTo(18, -40);
-    } else {
-      ctx.moveTo(-8, -50);
-      ctx.lineTo(-12, -34 + leg * 3);
-      ctx.moveTo(7, -50);
-      ctx.lineTo(11, -34 - leg * 3);
+  function trentIndex() {
+    var pose = state === 'pause' ? pausedState : state;
+    var n;
+    if (pose === 'stumble') {
+      n = Math.min(3, Math.floor((stumbleT / STUMBLE_TIME) * 4));
+      return 10 + n;
     }
-    ctx.stroke();
-
-    ctx.fillStyle = '#e0b08a';
-    ctx.beginPath();
-    ctx.arc(1, -66, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#2c241c';
-    ctx.beginPath();
-    ctx.arc(4, -67, 0.9, 0, Math.PI * 2);
-    ctx.arc(7.5, -67, 0.9, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#5e6849';
-    ctx.beginPath();
-    ctx.arc(1, -70, 9, Math.PI, 0);
-    ctx.fill();
-    ctx.fillStyle = '#7d8664';
-    ctx.beginPath();
-    ctx.ellipse(-1, -74, 4, 2.5, -0.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#3e3428';
-    ctx.beginPath();
-    ctx.ellipse(2, -64, 11, 3.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+    if (pose === 'play' && isBracing()) {
+      n = reduceMotion() ? 0 : Math.floor(visualTime / 0.18) % 2;
+      return 8 + n;
+    }
+    if (pose === 'play' && moving) {
+      n = reduceMotion() ? 0 : Math.floor(player.step / 1.35) % 6;
+      return 2 + n;
+    }
+    n = reduceMotion() ? 0 : Math.floor(visualTime / 0.48) % 2;
+    return n;
   }
 
-  function roundLeg(x, y, swing) {
-    ctx.fillRect(x + swing * 0.15, y, 7, 26);
+  function drawTrent() {
+    var index;
+    var destH;
+    var destW;
+    var s;
+    var face;
+    if (!imageReady(trentImg)) return;
+    index = trentIndex();
+    destH = 112 * unit();
+    destW = destH * (TRENT.w / TRENT.h);
+    s = destH / TRENT.h;
+    face = player.facing < 0 ? -1 : 1;
+    ctx.save();
+    ctx.translate(worldToX(player.x), worldToY(player.y));
+    ctx.scale(face, 1);
+    ctx.drawImage(
+      trentImg,
+      index * TRENT.w, 0, TRENT.w, TRENT.h,
+      -TRENT.anchorX * s, -TRENT.anchorY * s, destW, destH
+    );
+    ctx.restore();
   }
 
   function render() {
@@ -1047,11 +757,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
     ctx.translate(jx, jy);
-    drawSky();
-    drawRidge();
-    drawSand();
-    drawShallows();
-    drawForegroundSea();
+    drawBeach();
     drawObstacles();
     drawCraft();
     drawWall();
