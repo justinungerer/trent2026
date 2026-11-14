@@ -2,6 +2,6 @@
 <main>
 <header><div><small>TRENT SAVES CHRISTMAS</small><h1>Shelf Escape</h1></div><button id="pause" aria-label="Pause game" disabled>Ⅱ</button></header>
 <div id="hud"><span id="objective">Mission briefing</span><span id="danger">HIDDEN</span></div>
-<section id="stage"><canvas id="field" aria-label="Overhead map of the rail depot"></canvas><div id="overlay"></div></section>
-<div id="controls"><div id="pad" aria-label="Drag to move"><div id="knob"></div></div><div id="actions"><button id="sound" aria-pressed="false">Sound off</button><button id="decoy" disabled>Decoy <span id="ammo">2</span></button></div></div>
-</main><script type="module" src="./game.js"></script></html>
+<section id="stage"><div id="field" aria-label="Overhead map of the rail depot" style="position:absolute;inset:0"></div><div id="overlay"></div></section>
+<div id="controls"><div id="pad" aria-label="Drag to move"><div id="knob"></div></div><div id="actions"><button id="sound" aria-pressed="false">Sound off</button><button id="decoy" disabled>Wrap <span id="ammo">0</span></button></div></div>
+</main><script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script><script type="module" src="./game.js"></script></html>
