@@ -60,14 +60,15 @@ small{color:var(--muted)}
 </main>
 <script>
 const questions = [
- {level:'Easy',scene:'radio',caption:'Field radio',title:'What does SOS signal?',choices:['A request for emergency help','A change of radio frequency','A shipment has arrived','An order to turn off the radio'],answer:0,explain:'SOS is a distress signal.',win:'Sprout gets through. “I’m on the third shelf. Tell my family I died alphabetical.”',miss:'Trent calls the base canteen by accident. Someone puts him on hold to count potatoes.'},
- {level:'Medium',scene:'convoy',caption:'Atlantic crossing',title:'Why did Allied merchant ships sail in convoys?',choices:['To navigate by following the fastest ship','To get protection from attacks','To unload cargo while at sea','To save fuel by following the tide'],answer:1,explain:'Grouping ships allowed escorts to protect them.',win:'Sprout spots an opening while the guards bunch up at the tea trolley.',miss:'Trent cracks a floorboard. The guard starts his sweep one shelf closer.'},
- {level:'Hard',scene:'cipher',caption:'Codebreaking room',title:'Which wartime machine helped British codebreakers find Enigma settings?',choices:['Colossus','Lorenz','Bombe','ENIAC'],answer:2,explain:'The Bombe helped narrow down possible Enigma settings.',win:'Trent opens the case. Sprout has already packed an overnight bag.',miss:'The lock clicks open, but Trent drops a battery. The Shelf Shuffler gets one charge instead of two.'}
+ {level:'Easy',scene:'radio',caption:'Field radio',title:'What does SOS signal?',choices:['A request for emergency help','A change of radio frequency','A shipment has arrived','An order to turn off the radio'],answer:0,explain:'SOS is a distress signal.',win:'Sprout gets through. “I’m on the third shelf. They gave me a sash. Also, your four cartridges are in the mug.”',miss:'Trent calls the base canteen by accident. The canteen answers “Potato Desk.” Trent asks for four cartridges. They send two potatoes and a note asking him to stop calling. Sprout gets two cartridges.'},
+ {level:'Medium',scene:'convoy',caption:'Atlantic crossing',title:'Why did Allied merchant ships sail in convoys?',choices:['To navigate by following the fastest ship','To get protection from attacks','To unload cargo while at sea','To save fuel by following the tide'],answer:1,explain:'Grouping ships allowed escorts to protect them.',win:'Sprout distracts the guards by nominating the tea trolley for a medal. Trent fixes the gun’s feed while they stand at attention. Fast reload unlocked.',miss:'Trent cracks a floorboard. The guard puts it on report. The gun’s feed still jams between shots, and the patrol speeds up.'},
+ {level:'Hard',scene:'cipher',caption:'Codebreaking room',title:'Which wartime machine helped British codebreakers find Enigma settings?',choices:['Colossus','Lorenz','Bombe','ENIAC'],answer:2,explain:'The Bombe helped narrow down possible Enigma settings.',win:'Trent decodes the toy-shop label. The ribbon is enchanted. One shot wraps a guard, with a bow so neat the colonel will demand the name of the supplier.',miss:'Trent misreads the label and drops the enchantment battery. The plain ribbon takes two hits to wrap a guard. “Good,” says Sprout. “I hate doing anything once.”'}
 ];
 const panel=document.querySelector('#panel'), track=document.querySelector('#track'), caption=document.querySelector('#caption');
 const canvas=document.querySelector('#scene'), sceneContext=canvas.getContext('2d');
 let ctx=sceneContext;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let earned=[];
 let resultArt=null, resultSince=0;
 let mode='intro', current=0, strikes=0, position=0, lamp=2, phase=0, battery=2, closer=false, charges=2, armed=false;
 const shelfNames=['Display case','Toy shelf','File shelf','Mail hatch'];
@@ -78,7 +79,7 @@ function focusHeading(){panel.querySelector('h1,h2')?.focus({preventScroll:true}
 function bind(id,action){document.getElementById(id).onclick=action}
 function meter(){return '<span id="strikes">Strikes '+strikes+' / 3</span>'}
 function intro(){
- mode='intro'; current=0; strikes=0; closer=false; battery=2;
+ mode='intro'; earned=[]; current=0; strikes=0; closer=false; battery=2;
  track.textContent='Prototype'; caption.textContent='Occupied rail depot · Christmas Eve';
  show('<div class="eyebrow">Chapter 3</div><h1 tabindex="-1">Get Sprout<br>off the Shelf</h1><p>The Nazis caught the Elf on the Shelf spying. He’s locked in a display case between a medal and a mug that says <em>World’s Best Colonel</em>. He knows where they’re holding Santa.</p><button class="primary" id="start">Start the rescue</button>');
  bind('start',quiz);
@@ -94,6 +95,7 @@ function quiz(){
 }
 function answer(choice){
  const q=questions[current], correct=choice===q.answer;
+ earned[current]=correct;
  if(!correct){
   strikes++;
   if(current===1)closer=true;
@@ -105,7 +107,7 @@ function answer(choice){
   else if(i===choice)button.classList.add('wrong');
  });
  document.querySelector('#strikes').textContent='Strikes '+strikes+' / 3';
- const title = (correct?['Signal received','A gap in the patrol','The case is open']:['Wrong number','Flashlight closing in','One charge lost'])[current];
+ const title = (correct?['Signal received','A gap in the patrol','The case is open']:['Wrong number','Flashlight closing in','Enchantment lost'])[current];
  const feedback=document.querySelector('#feedback');
  feedback.innerHTML='<div class="result '+(correct?'':'wrong-result')+'"><div class="result-stage"><canvas width="700" height="200" aria-hidden="true"></canvas></div><div class="result-copy"><strong>'+(correct?'Correct · ':'Wrong answer · ')+title+'</strong><p>'+(correct?q.win:q.miss)+'</p><p class="explanation">'+q.explain+'</p></div></div>';
  resultArt={canvas:feedback.querySelector('canvas'),key:current*2+Number(!correct)};
@@ -125,7 +127,7 @@ function answer(choice){
 function instructions(){
  mode='guide';
  track.textContent='Shelf Escape'; caption.textContent='Guard room';
- show('<div class="eyebrow">How to play</div>'+heading('Shelf Escape')+'<p>Find Sprout’s display case, then escort him to the mail hatch.</p><ul class="guide"><li><strong>Move</strong> using the thumbstick or arrow keys.</li><li><strong>Hide</strong> behind shelves while the guards patrol. Exposure fills the alert meter.</li><li><strong>Shelf Shuffler</strong> throws a wind-up nutcracker ahead to distract nearby guards. You have '+battery+' '+(battery===1?'charge':'charges')+'.</li></ul><p><small>If you’re caught, you can retry Shelf Escape with the same quiz progress.</small></p><button class="primary" id="begin-escape">Start Shelf Escape</button>');
+ show('<div class="eyebrow">Depot briefing</div>'+heading('Operation Gift Receipt')+'<p>The colonel plans to unveil Sprout at midnight. The brass band has practiced exactly one note. Get to the display case before they discover a second.</p><ul class="guide"><li><strong>Trent</strong> sneaks through the depot and opens the case.</li><li><strong>Sprout</strong> takes over and heads for the mail hatch. Use Wrap to turn a targeted guard into a parcel.</li><li><strong>Gift-Wrap Gun</strong> · '+(earned[0]?4:2)+' shots · '+(earned[1]?'fast':'slow')+' reload · '+(earned[2]?'one hit':'two hits')+' per guard.</li></ul><button class="primary" id="begin-escape">Start Shelf Escape</button>');
  bind('begin-escape',launchStealth);focusHeading();window.scrollTo(0,0);
 }
 function launchStealth(){
@@ -135,7 +137,10 @@ function launchStealth(){
  show('<iframe id="stealth" title="Shelf Escape stealth game" style="width:100%;height:76vh;height:76dvh;border:0;display:block"></iframe>');
  const iframe=document.querySelector('#stealth');
  const mission=new URL('./shelf-escape/',location.href);
- mission.searchParams.set('charges',battery);
+ mission.searchParams.set('weapon',earned.some(Boolean)?'earned':'locked');
+ mission.searchParams.set('charges',earned[0]?'4':'2');
+ mission.searchParams.set('reload',earned[1]?'fast':'slow');
+ mission.searchParams.set('ribbon',earned[2]?'enchanted':'plain');
  if(closer)mission.searchParams.set('patrol','close');
  mission.searchParams.set('parentOrigin',location.origin);
  const runId=String(Date.now());
