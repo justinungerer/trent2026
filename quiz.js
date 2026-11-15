@@ -40,7 +40,7 @@ window.addEventListener('message', function (event) {
 });
 
 // Score out of 10 selects the existing Ribbonfall switches: charges, reload, ribbon.
-// A finished round has at most 4 misses, so the score is 6–10.
+// A finished round can earn a score from 0 to 10.
 // 0–3 correct: charges 2, slow, plain. 4–6: charges 4, slow, plain.
 // 7–8: charges 4, fast, plain. 9–10: charges 4, fast, enchanted.
 function loadoutFromScore(correct) {

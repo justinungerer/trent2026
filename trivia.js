@@ -341,24 +341,15 @@
     var token = session;
     var round = drawRound(questions);
     var index = 0;
-    var correctCount = 0;
-    var misses = 0;
+    var score = round.length;
     var elves = ELF_USES;
     var locked = false;
 
-    function bonusScore() {
-      return 10 - Math.min(misses, 3);
-    }
-
-    function gameOver() {
-      var goHome;
+    function advance() {
       if (!stillHere()) return;
-      disarm();
-      session += 1;
-      goHome = appRoot && appRoot.trentTriviaHome;
-      renderFail(function () {
-        if (typeof goHome === 'function') goHome();
-      });
+      index += 1;
+      if (index >= round.length) finish();
+      else showQuestion();
     }
 
     function stillHere() {
@@ -373,7 +364,7 @@
         appRoot.innerHTML = '';
         appRoot.hidden = true;
       }
-      onClear(correctCount);
+      onClear(score);
     }
 
     function paintElf(button, question) {
@@ -386,7 +377,7 @@
       button.disabled = elves < 1 || !question.sourceUrl;
     }
 
-    function showWrong(choice, question, then) {
+    function showWrong(choice, question) {
       var modal = document.createElement('div');
       var card = document.createElement('div');
       var kicker = document.createElement('p');
@@ -394,6 +385,7 @@
       var picked = document.createElement('p');
       var why = document.createElement('p');
       var answer = document.createElement('p');
+      var penalty = document.createElement('p');
       var next = document.createElement('button');
       var correct = null;
       var n;
@@ -415,23 +407,30 @@
       why.className = 'quiz-why';
       why.textContent = choice.explanation;
       answer.className = 'lead';
-      answer.textContent = 'Correct answer: ' + (correct ? correct.text : '');
+      answer.textContent = 'Correct answer: ' + correct.text;
+      penalty.className = 'eyebrow';
+      penalty.textContent = '−1 point · ' + scoreLabel();
       next.type = 'button';
       next.className = 'primary';
-      next.textContent = 'Continue';
-      next.onclick = function () {
+      next.textContent = index + 1 === round.length ? 'Finish quiz' : 'Next question';
+      next.addEventListener('click', function () {
         modal.remove();
-        then();
-      };
+        advance();
+      }, { once: true });
       card.appendChild(kicker);
       card.appendChild(title);
       card.appendChild(picked);
       card.appendChild(why);
       card.appendChild(answer);
+      card.appendChild(penalty);
       card.appendChild(next);
       modal.appendChild(card);
       document.body.appendChild(modal);
       focus(title);
+    }
+
+    function scoreLabel() {
+      return 'Bonus ' + score + ' of ' + round.length;
     }
 
     function showQuestion() {
@@ -454,7 +453,7 @@
       kicker.className = 'eyebrow';
       kicker.textContent = chapter.kicker || ('Chapter ' + chapter.number);
       count.className = 'eyebrow';
-      count.textContent = 'Bonus ' + bonusScore() + ' of 10 · Question ' + (index + 1) + ' of ' + round.length;
+      count.textContent = scoreLabel() + ' · Question ' + (index + 1) + ' of ' + round.length;
       topic.className = 'muted';
       topic.textContent = [question.tier, question.topic].filter(Boolean).join(' · ');
       prompt.className = 'quiz-question';
@@ -462,7 +461,7 @@
       prompt.textContent = question.prompt;
       choices.className = 'choices';
       for (n = 0; n < question.choices.length; n++) {
-        choices.appendChild(choiceButton(question.choices[n], n));
+        choices.appendChild(choiceButton(question, question.choices[n], n, count));
       }
       elf.type = 'button';
       elf.className = 'secondary elf-button';
@@ -494,7 +493,7 @@
       focus(prompt);
     }
 
-    function choiceButton(choice, choiceIndex) {
+    function choiceButton(question, choice, choiceIndex, count) {
       var button = document.createElement('button');
       var letter = document.createElement('span');
       var text = document.createElement('span');
@@ -513,25 +512,14 @@
         buttons = appRoot.querySelectorAll('.choice');
         for (var b = 0; b < buttons.length; b++) buttons[b].disabled = true;
         if (choice.correct) {
-          correctCount += 1;
           if (window.TrentSfx) window.TrentSfx.play('right');
-          index += 1;
-          if (index >= round.length) finish();
-          else showQuestion();
+          advance();
           return;
         }
-        misses += 1;
+        score -= 1;
+        count.textContent = scoreLabel() + ' · Question ' + (index + 1) + ' of ' + round.length;
         if (window.TrentSfx) window.TrentSfx.play('wrong');
-        showWrong(choice, question, function () {
-          if (!stillHere()) return;
-          if (misses >= 5) {
-            gameOver();
-            return;
-          }
-          index += 1;
-          if (index >= round.length) finish();
-          else showQuestion();
-        });
+        showWrong(choice, question);
       };
       return button;
     }
