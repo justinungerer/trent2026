@@ -229,3 +229,5 @@ button:focus-visible {
 }
 
 .rotate-mark{width:120px;height:180px;margin:0 auto 16px;border:8px solid #f7f4ec;border-radius:18px;transform:rotate(90deg)}
+
+#wrap-box { position:absolute; right:max(18px, env(safe-area-inset-right)); bottom:max(18px, env(safe-area-inset-bottom)); min-width:78px; min-height:54px; z-index:2; }

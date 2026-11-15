@@ -13,7 +13,7 @@ button{font:800 14px system-ui;border:1px solid #83c3d9;background:#122b3a;color
 .pad{position:relative;width:clamp(72px,15vh,112px);height:clamp(72px,15vh,112px);border:1px solid #c3dbd688;border-radius:50%;background:#102b3b99;display:grid;place-items:center;touch-action:none;pointer-events:auto;user-select:none;box-shadow:0 3px 22px #0005}
 .pad span{width:42%;height:42%;border-radius:50%;background:radial-gradient(at 35% 25%,#d1e5d6,#3b676b);pointer-events:none}
 .pad label{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.12em;color:#d4edf0;pointer-events:none;white-space:nowrap}
-.pad.fire{border-color:#f6cb8788}.pad.fire span{background:radial-gradient(at 35% 25%,#ffe4a0,#a34a3b)}
+.action-buttons{display:flex;align-items:end;gap:10px;pointer-events:auto}.action-buttons button{min-height:56px;min-width:58px;padding:8px 12px;touch-action:none}.action-buttons button:active{background:#28556b}
 .hint{position:absolute;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 52px);left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;letter-spacing:.14em;color:#d3e7e8;text-shadow:0 2px 6px #000;white-space:nowrap;pointer-events:none}.hint span{color:#f5ca7e;font-size:18px}
 .sheet{position:absolute;inset:0;display:grid;place-items:center;padding:12px;background:linear-gradient(90deg,#061320d9,#06132088);overflow:auto}
 .card{width:min(510px,90%);max-height:100%;overflow:auto;background:linear-gradient(150deg,#172d40f2,#071727fa);padding:clamp(16px,3vh,26px);border:1px solid #8fb5c263;box-shadow:0 20px 80px #0009;border-radius:12px}

@@ -10,27 +10,56 @@ const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate'
 const alertedFire=3.5/1.3,calmFire=5/1.3;
 const hurdles=[{x:1180,half:24,clear:52},{x:3920,half:24,clear:52},{x:5880,half:24,clear:52},{x:8360,half:24,clear:52}];
 const bellY=188;
-const keys=new Set(),sticks={move:{id:null,x:0,y:0},fire:{id:null,x:0,y:0}};
+const keys=new Set(),sticks={move:{id:null,x:0,y:0}};
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
 const worldEnd=14300, crates=[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
 const supplies=[300,2900,5700,8500,10300,11400,12500];
 const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
-let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,atSupply,medicalUsed,alarmNotice,fireQueued=false,spaceWasDown=false;
+let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,atSupply,medicalUsed,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const origin=params.get('parentOrigin');
 if(parent!==window&&origin){try{const u=new URL(origin);if(u.origin===origin&&(u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname)))){
  window.addEventListener('message',e=>{if(e.source===parent&&e.origin===origin&&e.data?.type==='trent:init'&&e.data.version===1&&typeof e.data.runId==='string')session={origin,runId:e.data.runId}});
  parent.postMessage({type:'trent:ready',version:1,mission:'shelf-escape'},origin);
 }}catch{}}
-function clearInput(){keys.clear();fireQueued=false;spaceWasDown=false;for(const name of ['move','fire']){Object.assign(sticks[name],{id:null,x:0,y:0});$(name).querySelector('span').style.transform=''}}
-for(const name of ['move','fire']){
- const pad=$(name),stick=sticks[name];
- function move(e){if(stick.id!==e.pointerId)return;const r=pad.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,scale=Math.max(r.width*.36,Math.hypot(x,y));stick.x=x/scale;stick.y=y/scale;pad.querySelector('span').style.transform=`translate(${stick.x*28}px,${stick.y*28}px)`}
- pad.addEventListener('pointerdown',e=>{if(state!=='playing'||stick.id!==null)return;stick.id=e.pointerId;if(name==='fire')fireQueued=ammo>0&&elapsed>=nextShot;pad.setPointerCapture(e.pointerId);move(e)});
- pad.addEventListener('pointermove',move);
- for(const type of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(type,e=>{if(stick.id===e.pointerId){if(type!=='pointerup'&&name==='fire')fireQueued=false;stick.id=null;stick.x=stick.y=0;pad.querySelector('span').style.transform=''}});
+function clearInput(){
+ keys.clear();fireQueued=false;spaceWasDown=false;jumpQueued=false;pendingFire=null;
+ Object.assign(sticks.move,{id:null,x:0,y:0});$('move').querySelector('span').style.transform='';
 }
+const movePad=$('move'),moveStick=sticks.move;
+function movePointer(e){
+ if(moveStick.id!==e.pointerId)return;
+ const r=movePad.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;
+ const scale=Math.max(r.width*.36,Math.hypot(x,y));
+ moveStick.x=x/scale;moveStick.y=y/scale;
+ movePad.querySelector('span').style.transform=`translate(${moveStick.x*28}px,${moveStick.y*28}px)`;
+}
+movePad.addEventListener('pointerdown',e=>{
+ if(state!=='playing'||moveStick.id!==null)return;
+ moveStick.id=e.pointerId;movePad.setPointerCapture(e.pointerId);movePointer(e);
+});
+movePad.addEventListener('pointermove',movePointer);
+for(const type of ['pointerup','pointercancel','lostpointercapture'])movePad.addEventListener(type,e=>{
+ if(moveStick.id!==e.pointerId)return;
+ Object.assign(moveStick,{id:null,x:0,y:0});movePad.querySelector('span').style.transform='';
+});
+function queueFire(){if(state==='playing'&&ammo>0&&elapsed>=nextShot)fireQueued=true;}
+$('fire').addEventListener('pointerdown',e=>{
+ if(state!=='playing'||pendingFire!==null||ammo<=0||elapsed<nextShot)return;
+ pendingFire=e.pointerId;$('fire').setPointerCapture(e.pointerId);
+});
+$('fire').addEventListener('pointerup',e=>{
+ if(pendingFire!==e.pointerId)return;
+ pendingFire=null;queueFire();
+});
+for(const type of ['pointercancel','lostpointercapture'])$('fire').addEventListener(type,e=>{
+ if(pendingFire===e.pointerId)pendingFire=null;
+});
+$('fire').addEventListener('click',e=>{if(e.detail===0)queueFire();});
+function queueJump(){if(state==='playing'&&player.y<=0)jumpQueued=true;}
+$('jump').addEventListener('pointerdown',queueJump);
+$('jump').addEventListener('click',e=>{if(e.detail===0)queueJump();});
 function reset(){
  player={x:100,y:0,vy:0,hp:3,shield:0,face:1,aim:0,fire:0,dying:0,moving:false};guards=[700,1450,2200,3200,4100,5000,6000,6900,7700,8650,9600,10350,11200,12150,13200,13800].map((x,i)=>({x,home:x,hp:2,dir:i%2?1:-1,stun:0,attack:0,cooldown:1.8+i%3*.4}));
  shots=[];guardShots=[];particles=[];wraps=[];
@@ -74,10 +103,9 @@ function update(dt){
  if(player.dying){player.dying+=dt;if(player.dying>.8){updateHud();overlay('lost','SEASONAL SETBACK','A guard puts Buddy back on display. The label reads: “Interactive. Batteries confiscated.”','Retry the mission')}return}
  const axis=sticks.move.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
  player.moving=Math.abs(axis)>.1;
- player.hidden=!player.moving&&player.y<=0&&!keys.has(' ')&&sticks.fire.id===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
+ player.hidden=!player.moving&&player.y<=0&&!keys.has(' ')&&pendingFire===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
  if(Math.abs(axis)>.1){const before=player.x;let next=clamp(player.x+clamp(axis,-1,1)*190*dt,35,worldEnd-30);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&next>=gates[i]-20)next=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&next>=barrier-20)next=barrier-20}for(const box of hurdles){const left=box.x-box.half-16,right=box.x+box.half+16;if(player.y<box.clear&&next>left&&next<right)next=before<box.x?Math.min(next,left):Math.max(next,right)}player.x=next;player.face=Math.sign(axis)}
- const stickJump=sticks.move.y<-(Math.abs(sticks.move.x)>.25?.25:.45);
- const up=stickJump||keys.has('w')||keys.has('arrowup');if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
+ const up=jumpQueued||keys.has('w')||keys.has('arrowup');jumpQueued=false;if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
  for(const box of hurdles){const reach=box.half+16;if(player.y<box.clear&&Math.abs(player.x-box.x)<reach)player.x=player.x<box.x?box.x-reach:box.x+reach}
  const count=relays.filter(r=>r.done).length;
  if(count<3){const doc=documents[count],r=relays[count];
@@ -95,7 +123,7 @@ function update(dt){
  for(const parcel of parcels)if(!parcel.found&&Math.abs(player.x-parcel.x)<36&&player.y>=parcel.need){parcel.found=true;if(player.hp<3)player.hp++;else if(startingAmmo)ammo=Math.min(startingAmmo+6,ammo+3);interact(parcel.x,parcel.y,'#f9d487',14)}
  const spaceDown=keys.has(' '),wantsShot=fireQueued||(spaceDown&&!spaceWasDown);spaceWasDown=spaceDown;fireQueued=false;
  if(wantsShot&&elapsed>=nextShot&&ammo>0){
-  let dx=sticks.fire.x,dy=sticks.fire.y;
+  let dx=moveStick.x,dy=moveStick.y;
   if(Math.hypot(dx,dy)<.2){const target=guards.filter(q=>q.hp>0&&Math.abs(q.x-player.x)<350).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0]||(transmit===4?locks.find(l=>!l.done&&Math.abs(l.x-player.x)<400):null);dx=target?Math.sign(target.x-player.x)||player.face:player.face;dy=0;player.face=dx}else{const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face=Math.sign(dx)||player.face}
   player.aim=Math.atan2(dy,Math.abs(dx));shots.push({x:player.x+player.face*24,y:394-player.y,vx:dx*560,vy:dy*560});ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;burst(player.x+player.face*25,394-player.y,'#ffd895',5);
  }
@@ -129,7 +157,7 @@ function glow(x,y,r,color){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addCo
 function sprite(name,x,y,frame,flip=false,scale=1){const img=art[name];if(!img.complete||!img.naturalWidth)return;const count=img.naturalWidth/192,width=name.startsWith('elf-')?123:192;g.save();g.translate(x,y);if(flip)g.scale(-1,1);g.drawImage(img,(Math.floor(frame)%count)*192,0,width,160,-96*scale,-155*scale,width*scale,160*scale);g.restore()}
 function launcher(){
  if(player.dying)return;
- let angle=player.aim;if(sticks.fire.id!==null&&Math.hypot(sticks.fire.x,sticks.fire.y)>.2)angle=Math.atan2(sticks.fire.y,Math.abs(sticks.fire.x));
+ let angle=player.aim;if(Math.hypot(moveStick.x,moveStick.y)>.2)angle=Math.atan2(moveStick.y,Math.abs(moveStick.x));
  g.save();g.translate(player.x+player.face*13,397-player.y);g.scale(player.face,1);g.rotate(angle);g.lineWidth=3;g.strokeStyle='#553e33';
  g.fillStyle='#885c3c';g.fillRect(-6,4,9,16);g.strokeRect(-6,4,9,16);
  g.fillStyle='#d9ad55';g.fillRect(-10,-8,40,17);g.strokeRect(-10,-8,40,17);
@@ -214,7 +242,7 @@ function render(){
  g.restore();
  const vignette=g.createRadialGradient(W/2,H/2,180,W/2,H/2,600);vignette.addColorStop(0,'#0000');vignette.addColorStop(1,'#06101caa');g.fillStyle=vignette;g.fillRect(0,0,W,H);
 }
-reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; push up or diagonally up, W, or Up to jump guards, ribbon parcels, tall crates, and the alarm bells. Right thumb or Space fires once per tap. Pull down behind a crate to hide. Green ribbon boxes refill ammo and restore one heart once.','Begin escape');
+reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Use the left stick to move and aim. Tap Jump for crates and alarm bells. Tap Fire for a single shot. On a keyboard, A and D move, W jumps, and Space fires. Pull down behind a crate to hide. Green ribbon boxes refill ammo and restore one heart once.','Begin escape');
 let last=0;
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

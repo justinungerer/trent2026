@@ -9,7 +9,7 @@ const source=fs.readFileSync(path.join(__dirname,'game.js'),'utf8');
 function game(query=''){
  const listeners={};
  const element=()=>({style:{},textContent:'',innerHTML:'',hidden:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn},querySelector(){return {style:{}}},setPointerCapture(){},getBoundingClientRect(){return {left:0,top:0,width:100,height:100}}});
- const elements={};for(const id of ['world','move','fire','title','brief','equipment','action','sheet','pause','objective','progress','health','ammo','hint'])elements[id]=element();
+ const elements={};for(const id of ['world','move','fire','jump','title','brief','equipment','action','sheet','pause','objective','progress','health','ammo','hint'])elements[id]=element();
  elements.world.getContext=()=>({});
  const host={messages:[],postMessage(message,origin){this.messages.push({message,origin})}};
  const sandbox={document:{getElementById:id=>elements[id],addEventListener(){},hidden:false},location:{search:query},parent:host,

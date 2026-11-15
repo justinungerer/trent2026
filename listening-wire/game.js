@@ -28,9 +28,9 @@
   var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
 
   var KINDS = [
-    { name: 'Soldier', move: 1.05, range: 6.4, wait: 1.55, shot: 4.6, hold: 2.5, h: 0.86, tint: [1, 1, 1] },
-    { name: 'Runner', move: 1.65, range: 4.8, wait: 1.05, shot: 5.5, hold: 1.15, h: 0.76, tint: [0.66, 0.9, 1.32] },
-    { name: 'Spotter', move: 0.55, range: 9.4, wait: 2.1, shot: 5.8, hold: 5.4, h: 0.96, tint: [1.3, 0.7, 0.52] }
+    { name: 'Soldier', move: 1.05, range: 6.4, wait: 1.55, shot: 4.6, hold: 2.5, h: 0.86, hp: 1, art: 'rifleman' },
+    { name: 'Runner', move: 1.65, range: 4.8, wait: 1.05, shot: 5.5, hold: 1.15, h: 0.76, hp: 1, art: 'runner' },
+    { name: 'Heavy guard', move: 0.55, range: 9.4, wait: 2.1, shot: 5.8, hold: 5.4, h: 0.96, hp: 2, art: 'heavy' }
   ];
 
   var MAP;
@@ -52,7 +52,11 @@
   var doorImg = new Image();
   var soldierImg = new Image();
   doorImg.src = 'art/door.webp';
-  var kindSprites = [];
+  var kindSprites = KINDS.map(function (kind) {
+    var image = new Image();
+    image.src = 'art/guard-' + kind.art + '.webp';
+    return image;
+  });
   var soldierFallback = makeSoldier();
   var burstImg = makeBurst();
   var kitImg = makeKit();
@@ -64,7 +68,6 @@
   loadTex('art/wall.webp', function (tex) { wallTex = tex; });
   loadTex('art/floor.webp', function (tex) { floorTex = tex; });
   loadTex('art/ceiling.webp', function (tex) { ceilTex = tex; });
-  soldierImg.onload = function () { rebuildKindSprites(); };
   soldierImg.src = 'art/soldier.webp';
 
   var player = { x: 1.5, y: 1.5, dirX: 1, dirY: 0, planeX: 0, planeY: FOV_PLANE };
@@ -334,7 +337,7 @@
       placed.push(cell);
       pickups.push({ x: cell.x, y: cell.y, kind: 'ammo', n: 4, bob: 0.4 });
     });
-    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, 60, 1.8, placed);
+    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, 120, 1.4, placed);
     enemies.sort(function (a, b) { return a.d - b.d; });
     for (i = 0; i < enemies.length; i++) placed.push(enemies[i]);
     boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 12, 2.8, placed);
@@ -498,50 +501,9 @@
     return soldierFallback;
   }
 
-  function tintImage(source, mr, mg, mb) {
-    var c = document.createElement('canvas');
-    var w = source.naturalWidth || source.width;
-    var h = source.naturalHeight || source.height;
-    var g;
-    var data;
-    var d;
-    var i;
-    if (!w || !h) return source;
-    c.width = w;
-    c.height = h;
-    g = c.getContext('2d');
-    g.drawImage(source, 0, 0, w, h);
-    if (mr === 1 && mg === 1 && mb === 1) return c;
-    try {
-      data = g.getImageData(0, 0, w, h);
-    } catch (ignoreTint) {
-      return c;
-    }
-    d = data.data;
-    for (i = 0; i < d.length; i += 4) {
-      if (d[i + 3] < 8) continue;
-      d[i] = Math.min(255, d[i] * mr);
-      d[i + 1] = Math.min(255, d[i + 1] * mg);
-      d[i + 2] = Math.min(255, d[i + 2] * mb);
-    }
-    g.putImageData(data, 0, 0);
-    return c;
-  }
-
-  function rebuildKindSprites() {
-    var base = soldierSprite();
-    var i;
-    var tint;
-    kindSprites = [];
-    for (i = 0; i < KINDS.length; i++) {
-      tint = KINDS[i].tint;
-      kindSprites.push(tintImage(base, tint[0], tint[1], tint[2]));
-    }
-  }
-
   function enemyImage(kind) {
-    if (kindSprites[kind]) return kindSprites[kind];
-    return soldierSprite();
+    var image = kindSprites[kind];
+    return image.complete && image.naturalWidth > 0 ? image : soldierSprite();
   }
 
   function doorReady() {
@@ -559,6 +521,7 @@
         y: src.y,
         kind: src.kind,
         alive: true,
+        hp: KINDS[src.kind].hp,
         bob: src.bob,
         cool: 0,
         aim: 0,
@@ -838,7 +801,7 @@
       }
       if (state !== 'play') return;
       if (e.cool > 0) e.cool -= dt;
-      else if (e.aim > 0.3 && dist <= kind.range) {
+      else if (e.aim >= 2 && dist <= kind.range) {
         e.cool = kind.wait;
         if (dist < 0.62) hurt();
         else launchShot(e, kind);
@@ -873,6 +836,16 @@
       }
       if (state !== 'play') return;
     }
+  }
+
+  function hitEnemy(enemy) {
+    enemy.hp -= 1;
+    if (enemy.hp <= 0) {
+      dropEnemy(enemy);
+      return;
+    }
+    enemy.stun = 0.28;
+    bursts.push({ x: enemy.x, y: enemy.y, life: 0.16 });
   }
 
   function dropEnemy(e) {
@@ -980,7 +953,7 @@
         bestD = along;
       }
     }
-    if (best) dropEnemy(best);
+    if (best) hitEnemy(best);
     hintEl.hidden = true;
   }
 
@@ -1498,8 +1471,6 @@
   MAP = LEVEL.map;
   EXIT_X = LEVEL.exitX;
   EXIT_Y = LEVEL.exitY;
-  rebuildKindSprites();
-  if (soldierImg.complete && soldierImg.naturalWidth > 0) rebuildKindSprites();
   enemies = freshEnemies();
   pickups = freshPickups();
   paintIntro();

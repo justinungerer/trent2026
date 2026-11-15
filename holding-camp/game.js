@@ -728,7 +728,11 @@
     }
     santa.y = clamp(santa.y, BAND_TOP + 12, BAND_BOT - 8);
     santa.x = clamp(santa.x, 48, frontX());
-    cam = Math.min(santa.x - VIEW_W * 0.34, frontX() - VIEW_W + 62);
+    if (mx > 0 && santa.x - cam > VIEW_W * 0.9) {
+      cam = Math.max(cam, Math.min(santa.x - VIEW_W * 0.9, frontX() - VIEW_W + 62));
+    } else if (mx < 0 && santa.x - cam < VIEW_W * 0.22) {
+      cam = santa.x - VIEW_W * 0.22;
+    }
     if (cam < 0) cam = 0;
     if (cam > WORLD_R - VIEW_W) cam = WORLD_R - VIEW_W;
     considerSpawns();

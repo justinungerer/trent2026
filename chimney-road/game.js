@@ -57,6 +57,12 @@
     { x: 8160, y: 260, w: 420, name: 'The sleigh roof', role: 'main', goal: true }
   ];
   var GOAL = PLATFORMS.length - 1;
+  var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
+    if ((index % 4 === 0 && index !== 4) || index === GOAL) return null;
+    var height = 26 + (index % 3) * 7;
+    var width = Math.min(44, roof.w * .18);
+    return { x: roof.x + roof.w * .58, y: roof.y - height, w: width, h: height, bottom: roof.y, roof: index };
+  }).filter(Boolean);
   var SLEIGH_X = PLATFORMS[GOAL].x + 250;
   var GRAV = 1480;
   var JUMP = -630;
@@ -382,6 +388,7 @@
     box = crateBox();
     if (onCrate) body.x += box.x - cratePrev;
     cratePrev = box.x;
+    var prevX = body.x;
     body.x += body.vx * dt;
     prevY = body.y;
     body.y += body.vy * dt;
@@ -404,6 +411,17 @@
       if (body.y < roof.y) continue;
       if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
       if (!best || roof.y < best.top) best = { top: roof.y, id: n };
+    }
+    for (var obstacleIndex = 0; obstacleIndex < ROOF_BLOCKS.length; obstacleIndex++) {
+      var obstacle = ROOF_BLOCKS[obstacleIndex];
+      if (body.x < obstacle.x - 11 || body.x > obstacle.x + obstacle.w + 11 || body.y - 30 > obstacle.bottom) continue;
+      if (body.vy >= 0 && prevY <= obstacle.y + 5 && body.y >= obstacle.y &&
+          body.x >= obstacle.x && body.x <= obstacle.x + obstacle.w && (!best || obstacle.y < best.top)) {
+        best = { top: obstacle.y, id: obstacle.roof };
+      } else if (prevY > obstacle.y && body.y > obstacle.y && body.y <= obstacle.bottom + 6) {
+        if (prevX <= obstacle.x - 10) body.x = obstacle.x - 11;
+        else if (prevX >= obstacle.x + obstacle.w + 10) body.x = obstacle.x + obstacle.w + 11;
+      }
     }
     if (best) {
       body.y = best.top;
@@ -561,6 +579,20 @@
     }
   }
 
+  function drawRoofBlocks() {
+    ROOF_BLOCKS.forEach(function (obstacle) {
+      var x = obstacle.x - camX;
+      var y = obstacle.y - camY;
+      if (x > VIEW_W + 50 || x + obstacle.w < -50) return;
+      ctx.fillStyle = '#614838';
+      ctx.fillRect(x, y, obstacle.w, obstacle.h);
+      ctx.fillStyle = '#a37c58';
+      ctx.fillRect(x + 4, y + 7, obstacle.w - 8, obstacle.h - 11);
+      ctx.fillStyle = '#e3edf3';
+      ctx.fillRect(x - 2, y - 3, obstacle.w + 4, 8);
+    });
+  }
+
   function drawCrate() {
     var box = crateBox();
     if (!imageReady(crateImg)) return;
@@ -700,6 +732,7 @@
     drawPanorama();
     drawRoofs();
     drawCaps();
+    drawRoofBlocks();
     drawCrate();
     drawSnowball();
     drawIcicle(icicleAt(3070, PLATFORMS[10].y, 0));

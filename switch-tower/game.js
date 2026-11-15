@@ -3,7 +3,7 @@
    Five trains come, one after another, at 1.5x the original speed.
    The board shows that train's pattern.
    A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
-   After two trains leave, a soldier flips a random lever every 2.5 seconds.
+   After two trains leave, a soldier flips a random lever every about two seconds.
    Five correct departures win and send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/.
    The soldier is drawn on the canvas: plain gray-green coat and helmet, no marks. */
@@ -32,7 +32,8 @@
      The painted board is covered and redrawn so the current pattern shows. */
   var TRAIN_COUNT = 5;
   var SPEED_MULT = 1.5;
-  var FLIP_INTERVAL = 1.5 / 0.6;
+  var FLIP_INTERVAL = 2.5 / 1.2;
+  var RECOVERY_TIME = 1.8;
   var SABOTEUR_AFTER = 2;
   var PATTERNS = [
     [0, 1, 0, 1, 0],
@@ -101,6 +102,7 @@
   var blastT = 0;
   var blastParts = [];
   var trainX = -80;
+  var switchGrace = 0;
   var trentX = LEVER_X[0] - 74;
   var pullT = 1;
   var shake = 0;
@@ -234,6 +236,7 @@
     blastT = 0;
     blastParts = [];
     trainX = TRAIN_START;
+    switchGrace = 0;
     trentX = LEVER_X[0] - 74;
     pullT = 1;
     shake = 0;
@@ -248,6 +251,7 @@
   function armNextTrain() {
     levers = LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
+    switchGrace = 0;
     blastT = 0;
     blastParts = [];
     flipTimer = 0;
@@ -378,13 +382,13 @@
     }
   }
 
-  /* After two departures, throw one random lever on a 2.5s approach clock.
+  /* After two departures, throw one random lever on the approach clock.
      The lever changes on that clock. The figure only shows who did it. */
   function updateSoldier(dt) {
     var index;
     var mark;
     if (departures < SABOTEUR_AFTER) return;
-    if (state === 'approach') {
+    if (state === 'approach' && trainX + TRAIN_W < SWITCH_X) {
       flipTimer += dt;
       if (flipTimer >= FLIP_INTERVAL) {
         flipTimer -= FLIP_INTERVAL;
@@ -393,6 +397,7 @@
         soldierTarget = LEVER_X[index] + 52;
         soldierFace = -1;
         soldierFlipT = 0;
+        switchGrace = RECOVERY_TIME;
         mark = soldierTarget - soldierX;
         if (mark > 160) soldierX = soldierTarget - 160;
         else if (mark < -160) soldierX = soldierTarget + 160;
@@ -413,12 +418,15 @@
     var front;
     var mid;
     if (state === 'approach') {
-      trainX += APPROACH_SPEED * dt;
+      switchGrace = Math.max(0, switchGrace - dt);
+      trainX = Math.min(SWITCH_X - TRAIN_W, trainX + APPROACH_SPEED * dt);
       front = trainX + TRAIN_W;
       if (front >= SWITCH_X) {
         if (matches()) {
           state = 'depart';
           say('The route is open.');
+        } else if (switchGrace > 0) {
+          say('Train holding. Restore the route.');
         } else {
           misses += 1;
           doomed = misses >= missLimit;

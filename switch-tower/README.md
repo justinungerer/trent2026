@@ -34,7 +34,7 @@ Five trains roll in from the left, one after another, at one and a half times th
 
 A wrong pattern explodes that train and costs one miss. Three misses, and the puzzle starts over from the first throw. That run does not count as a win.
 
-After two trains get away, a soldier appears beside the levers and throws a random one every two and a half seconds. Put the levers back before the train arrives. A miss still explodes that train.
+After two trains get away, a soldier appears beside the levers and throws a random one about every two seconds. Put the levers back before the train arrives. A miss still explodes that train.
 
 Five trains away is the win.
 

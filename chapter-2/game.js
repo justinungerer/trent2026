@@ -161,7 +161,7 @@ for(const name of ['pointerup','pointercancel','lostpointercapture']){
 function alertHalf(){
  const quota=Math.round(run.guards.length/2);
  const idle=run.guards.filter(guard=>!guard.chase).sort((a,b)=>distance(a,run.player)-distance(b,run.player));
- idle.slice(0,quota).forEach(guard=>{guard.chase=true;});
+ idle.slice(0,quota).forEach(guard=>{guard.angle=Math.atan2(run.player.y-guard.y,run.player.x-guard.x);});
  if(idle.length)announce('Spotlight. Half the yard is looking');
 }
 function update(dt){
@@ -201,12 +201,13 @@ function update(dt){
    guard.chase=false;
    guard.aim=run.toy;
    along(guard,96,dt,12);
-  }else if(guard.chase||sees(guard,p)){
+  }else if(sees(guard,p)){
    if(!guard.chase)spotted=true;
    guard.chase=true;
    guard.aim=p;
    along(guard,trentSpeed*guardSpeedRatio,dt,12);
   }else{
+   guard.chase=false;
    const [x,y]=guard.route[guard.index];
    guard.aim={x,y};
    if(!along(guard,69,dt,12))guard.index=(guard.index+1)%guard.route.length;

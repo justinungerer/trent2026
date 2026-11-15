@@ -35,6 +35,7 @@
   var winTimeEl = document.getElementById('win-time');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
+  var wrapButton = document.getElementById('wrap-box');
   var stickEl = document.getElementById('stick');
   var knobEl = document.getElementById('stick-knob');
 
@@ -291,10 +292,28 @@
     say(parcel.type.name + ' present. ' + points + ' points. ' + lives + (lives === 1 ? ' life left.' : ' lives left.'));
   }
 
+  function tryWrap() {
+    if (state !== 'play') return;
+    var box = null;
+    var closest = 47;
+    for (var i = 0; i < parcels.length; i++) {
+      var candidate = parcels[i];
+      var gap = Math.abs(candidate.x - TARGET);
+      if (!candidate.judged && gap < closest && Math.abs(candidate.y - markY) <= MEET) {
+        box = candidate;
+        closest = gap;
+      }
+    }
+    if (!box) return;
+    box.judged = true;
+    meetPresent(box);
+  }
+
+  wrapButton.addEventListener('click', tryWrap);
+
   function update(dt) {
     var i;
     var parcel;
-    var aligned;
     if (bowT > 0) bowT -= dt;
     if (state === 'win' || state === 'over') return;
     if (state === 'play') {
@@ -320,11 +339,6 @@
       if (state !== 'play') break;
       parcel = parcels[i];
       parcel.x -= SPEED * dt;
-      if (!parcel.judged && parcel.x <= TARGET) {
-        parcel.judged = true;
-        aligned = Math.abs(parcel.y - markY) <= MEET;
-        if (aligned) meetPresent(parcel);
-      }
       if (parcel.x < -90) parcels.splice(i, 1);
     }
     if (state === 'play' && timeLeft <= 0) restartRound();
@@ -658,6 +672,11 @@
       event.preventDefault();
       if (state === 'play') openPause();
       else if (state === 'pause') closePause();
+      return;
+    }
+    if (event.code === 'Space' && event.target !== wrapButton) {
+      event.preventDefault();
+      if (!event.repeat) tryWrap();
       return;
     }
     if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {

@@ -11,7 +11,8 @@ const CRAFT = {
   skiff:  { hp: 2, speed: 168, size: 38, reload: 0.88, score: 160, hx: 16, hy: 13, touch: 18 },
   hauler: { hp: 8, speed: 50, size: 76, reload: 2.05, score: 340, hx: 34, hy: 22, touch: 34 },
   wisp:   { hp: 2, speed: 146, size: 32, reload: 0.64, score: 150, hx: 14, hy: 14, touch: 17 },
-  boss:   { hp: 70, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 }
+  boss:   { hp: 70, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 },
+  flagship: { hp: 140, speed: 60, size: 196, reload: 1.12, score: 5000, hx: 78, hy: 49, touch: 51 }
 };
 const WEAPONS = {
   flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
@@ -52,15 +53,24 @@ function ship(kind, x, y, width, bank) {
   g.restore();
 }
 function craftSprite(kind, x, y, width, bank) {
-  ship(kind, x, y, width, bank);
+  ship(kind === 'flagship' ? 'boss' : kind, x, y, width, bank);
+  if (kind === 'flagship') {
+    g.fillStyle = '#ffc681';
+    for (const side of [-1, 1]) {
+      g.beginPath();
+      g.ellipse(x + side * width * .33, y + width * .12, 7, 10, 0, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
 }
+const largeCraft = kind => kind === 'boss' || kind === 'flagship';
 const keys = new Set();
-let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, aim, drag, wraps, recoil, shake, kills;
+let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, flagshipAt, aim, drag, wraps, recoil, shake, kills;
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
   player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['laser'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
-  wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
+  wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; flagshipAt = null; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
   ui.hull.textContent = '◆'.repeat(MAX_HULL);
   ui.phase.textContent = 'THE FROZEN VALLEY';
@@ -185,6 +195,18 @@ function shoot(enemy) {
   enemy.fire = CRAFT[enemy.kind].reload;
   if (enemy.kind === 'boss') {
     for (const offset of [-.46, -.23, 0, .23, .46]) bolt(aim + offset, 195);
+  } else if (enemy.kind === 'flagship') {
+    const pattern = enemy.mode++ % 3;
+    if (pattern === 0) {
+      for (const offset of [-.62, -.41, -.20, 0, .20, .41, .62]) bolt(aim + offset, 206);
+    } else if (pattern === 1) {
+      for (const port of [-59, -31, 31, 59]) bolt(Math.PI / 2, 305, port, 26);
+    } else {
+      for (const port of [-64, 64]) {
+        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x - port);
+        for (const offset of [-.16, 0, .16]) bolt(angle + offset, 258, port, 14);
+      }
+    }
   } else if (enemy.kind === 'skiff') {
     const px = Math.cos(aim + Math.PI / 2) * 8;
     const py = Math.sin(aim + Math.PI / 2) * 8;
@@ -201,9 +223,10 @@ function shoot(enemy) {
 function fly(enemy, dt) {
   const spec = CRAFT[enemy.kind];
   enemy.age += dt;
-  if (enemy.kind === 'boss') {
-    enemy.y = Math.min(144, enemy.y + spec.speed * dt);
-    enemy.x = 240 + Math.sin(enemy.age * 1.1) * 113;
+  if (largeCraft(enemy.kind)) {
+    const final = enemy.kind === 'flagship';
+    enemy.y = Math.min(final ? 162 : 144, enemy.y + spec.speed * dt);
+    enemy.x = 240 + Math.sin(enemy.age * (final ? .86 : 1.1)) * (final ? 87 : 113);
     return;
   }
   let speed = spec.speed, amp = 40, freq = 1.4;
@@ -247,12 +270,16 @@ function grant(pod) {
   paintStack();
 }
 function fell(enemy) {
-  const boss = enemy.kind === 'boss';
+  const boss = largeCraft(enemy.kind);
   wraps.push({ x: enemy.x, y: enemy.y, age: 0, kind: enemy.kind });
   score += CRAFT[enemy.kind].score;
   burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
   if (!boss && ++kills % KILLS_PER_DROP === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
-  if (boss) {
+  if (enemy.kind === 'boss') {
+    flagshipAt = time + 2.4;
+    ui.phase.textContent = 'A HEAVIER FLAGSHIP IS APPROACHING';
+  }
+  if (enemy.kind === 'flagship') {
     overlay('won', 'SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: ' + score + '.', 'Fly again');
     const skyDetail = { score, hull: player.hull };
     window.dispatchEvent(new CustomEvent('frosted-skies:complete', { detail: skyDetail }));
@@ -356,6 +383,11 @@ function update(dt) {
     bossSpawned = true;
     enemies.push({ kind: 'boss', x: 240, y: -100, base: 240, age: 0, fire: 1.2, hp: CRAFT.boss.hp, mode: 0, side: 1 });
     ui.phase.textContent = 'CONVOY FLAGSHIP / DESTROY THE SIGNAL JAMMER';
+  }
+  if (flagshipAt !== null && time >= flagshipAt) {
+    flagshipAt = null;
+    enemies.push({ kind: 'flagship', x: W / 2, y: -120, age: 0, fire: 2.7, hp: CRAFT.flagship.hp, mode: 0 });
+    ui.phase.textContent = 'FINAL FLAGSHIP';
   }
   for (const enemy of enemies) {
     enemy.impact = Math.max(0, (enemy.impact || 0) - dt);
@@ -490,7 +522,7 @@ function render() {
   for (const enemy of enemies) {
     if (enemy.hp <= 0) continue;
     const spec = CRAFT[enemy.kind];
-    const bank = Math.cos(enemy.age * (enemy.kind === 'boss' ? 1.1 : 2)) * .13;
+    const bank = Math.cos(enemy.age * (largeCraft(enemy.kind) ? 1.1 : 2)) * .13;
     craftSprite(enemy.kind, enemy.x, enemy.y, spec.size, bank);
     if (enemy.impact > 0) {
       g.globalAlpha = enemy.impact * 4;
@@ -502,8 +534,8 @@ function render() {
       g.globalAlpha = 1;
     }
     if (spec.hp > 1) {
-      const bw = enemy.kind === 'boss' ? 98 : Math.max(28, spec.hx * 1.4);
-      const by = enemy.y - (enemy.kind === 'boss' ? 45 : spec.hy + 8);
+      const bw = largeCraft(enemy.kind) ? spec.size * .8 : Math.max(28, spec.hx * 1.4);
+      const by = enemy.y - (largeCraft(enemy.kind) ? spec.hy + 15 : spec.hy + 8);
       g.fillStyle = '#061629';
       g.fillRect(enemy.x - bw / 2, by, bw, 4);
       g.fillStyle = colors.gold;
