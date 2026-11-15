@@ -39,6 +39,7 @@
   var VIEW_H = 390;
   var PX = 32;
   var CAR_X = 230;
+  var BOMBER_COUNT = 23;
   var FINISH = 454;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
@@ -114,6 +115,9 @@
   var state = 'title';
   var pausedState = 'play';
   var distance = 0;
+  var followX = CAR_X;
+  var flyovers = [];
+  var nextFlyover = 0;
   var speed = 0;
   var slips = 0;
   var slipLimit = 3 + (window.TrentMissionBonus || 0);
@@ -206,15 +210,15 @@
   }
 
   function wx(worldX) {
-    return CAR_X + (worldX - distance) * PX;
+    return followX + (worldX - distance) * PX;
   }
 
   function viewWorldMin() {
-    return distance + (-80 - CAR_X) / PX;
+    return distance + (-80 - followX) / PX;
   }
 
   function viewWorldMax() {
-    return distance + (VIEW_W + 80 - CAR_X) / PX;
+    return distance + (VIEW_W + 80 - followX) / PX;
   }
 
   function onScreen(worldX, worldW) {
@@ -285,6 +289,9 @@
 
   function resetWorld() {
     distance = 0;
+    followX = CAR_X;
+    flyovers = [];
+    nextFlyover = 0;
     speed = 0;
     slips = 0;
     fromLane = 1;
@@ -600,9 +607,19 @@
     }
   }
 
-  function drawPlaneAt(px, py) {
+  function updateFlyovers(dt) {
+    while (nextFlyover < BOMBER_COUNT && distance >= 12 + nextFlyover * (FINISH - 40) / (BOMBER_COUNT - 1)) {
+      flyovers.push({ x: VIEW_W + 55, y: 36 + (nextFlyover % 3) * 24, speed: 156 + (nextFlyover % 5) * 18 });
+      nextFlyover += 1;
+    }
+    flyovers.forEach(function (jet) { jet.x -= jet.speed * dt; });
+    flyovers = flyovers.filter(function (jet) { return jet.x > -75; });
+  }
+
+  function drawPlaneAt(px, py, size) {
     ctx.save();
     ctx.translate(px, py);
+    ctx.scale(size || 1, size || 1);
     ctx.fillStyle = '#2a3544';
     roundRect(-26, -5, 50, 10, 4);
     ctx.fill();
@@ -620,6 +637,14 @@
     ctx.fill();
     ctx.fillStyle = '#d5e4f0';
     ctx.fillRect(-16, -3, 7, 4);
+    ctx.fillStyle = '#58677b';
+    ctx.beginPath();
+    ctx.moveTo(-5, 1);
+    ctx.lineTo(21, 13);
+    ctx.lineTo(11, 14);
+    ctx.lineTo(-22, 5);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 
@@ -816,7 +841,7 @@
     destH = 64 * sc;
     destY = LANES[i].y - destH * RAIL_ANCHOR;
     tileW = destH * (railsImg.naturalWidth / RAIL_SRC_H);
-    origin = CAR_X - distance * PX;
+    origin = wx(0);
     ctx.save();
     ctx.beginPath();
     ctx.rect(sx0, destY, sx1 - sx0, destH);
@@ -1102,7 +1127,7 @@
     var bob = 0;
     if (!reduceMotion() && speed > 0.2) bob = Math.sin(distance * 4.6) * Math.min(1.5, speed * 0.08);
     ctx.save();
-    ctx.translate(CAR_X, y + bob);
+    ctx.translate(wx(distance), y + bob);
     ctx.rotate(slipAngle());
     ctx.scale(sc, sc);
 
@@ -1174,6 +1199,7 @@
   function drawWorld() {
     var i;
     drawSky();
+    flyovers.forEach(function (jet) { drawPlaneAt(jet.x, jet.y, .68); });
     drawSheds();
     drawWaterTower();
     drawYardGlow();
@@ -1256,6 +1282,12 @@
     }
     if (state === 'play') updatePlay(dt);
     else if (state === 'slip') updateSlip(dt);
+    if (state === 'play' || state === 'slip') {
+      var ahead = CAR_X + clamp((speed - START_SPEED) * 9, -34, 115);
+      if (!reduceMotion()) ahead += Math.sin(distance / 23) * 42;
+      followX += (ahead - followX) * Math.min(1, dt * 2.4);
+      updateFlyovers(dt);
+    }
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 24);
     refreshPump();
     renderHud();

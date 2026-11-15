@@ -1,9 +1,9 @@
 /* Chapter 5 — The Switch Tower.
-   Side view of a small snowy yard. Three levers set the route.
+   Side view of a small snowy yard. Five levers set the route.
    Five trains come, one after another, at 1.5x the original speed.
    The board shows that train's pattern.
    A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
-   After two trains leave, a soldier flips a random lever every 1.5 seconds.
+   After two trains leave, a soldier flips a random lever every 2.5 seconds.
    Five correct departures win and send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/.
    The soldier is drawn on the canvas: plain gray-green coat and helmet, no marks. */
@@ -14,11 +14,7 @@
   var ctx = canvas.getContext('2d');
   var missesEl = document.getElementById('misses');
   var pauseBtn = document.getElementById('pause');
-  var leverBtns = [
-    document.getElementById('lever-0'),
-    document.getElementById('lever-1'),
-    document.getElementById('lever-2')
-  ];
+  var leverBtns = Array.from(document.querySelectorAll('#levers button'));
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
   var loseSheet = document.getElementById('lose-sheet');
@@ -36,22 +32,16 @@
      The painted board is covered and redrawn so the current pattern shows. */
   var TRAIN_COUNT = 5;
   var SPEED_MULT = 1.5;
-  var FLIP_INTERVAL = 1.5;
+  var FLIP_INTERVAL = 1.5 / 0.6;
   var SABOTEUR_AFTER = 2;
   var PATTERNS = [
-    [0, 1, 0],
-    [1, 0, 1],
-    [0, 0, 1],
-    [1, 1, 0],
-    [0, 1, 1]
+    [0, 1, 0, 1, 0],
+    [1, 0, 1, 0, 1],
+    [0, 0, 1, 1, 0],
+    [1, 1, 0, 0, 1],
+    [0, 1, 1, 0, 1]
   ];
-  /* Blue windows on board.webp, source pixels: x, y, width, height. */
-  var PANELS = [
-    [86, 108, 224, 235],
-    [368, 108, 221, 235],
-    [646, 108, 228, 235]
-  ];
-  var LEVER_X = [300, 640, 980];
+  var LEVER_X = [210, 435, 640, 845, 1050];
   var GROUND_Y = 628;
 
   /* Near rail under the wheels. Sampled from scene.webp. */
@@ -101,7 +91,7 @@
 
   var state = 'title';
   var pausedState = 'approach';
-  var levers = [1, 1, 1];
+  var levers = LEVER_X.map(function () { return 1; });
   var activeLever = 0;
   var patternIndex = 0;
   var departures = 0;
@@ -198,7 +188,7 @@
 
   function matches() {
     var pattern = currentPattern();
-    return levers[0] === pattern[0] && levers[1] === pattern[1] && levers[2] === pattern[2];
+    return levers.every(function (lever, index) { return lever === pattern[index]; });
   }
 
   function canThrow() {
@@ -223,7 +213,7 @@
     var btn;
     var right;
     var name;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < LEVER_X.length; i++) {
       btn = leverBtns[i];
       right = levers[i] === 1;
       btn.classList.toggle('is-left', !right);
@@ -235,7 +225,7 @@
   }
 
   function resetPuzzle() {
-    levers = [1, 1, 1];
+    levers = LEVER_X.map(function () { return 1; });
     activeLever = 0;
     patternIndex = 0;
     departures = 0;
@@ -256,13 +246,13 @@
   }
 
   function armNextTrain() {
-    levers = [1, 1, 1];
+    levers = LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
     blastT = 0;
     blastParts = [];
     flipTimer = 0;
     if (departures >= SABOTEUR_AFTER && soldierTarget > 1100) {
-      soldierTarget = LEVER_X[2] + 52;
+      soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
       soldierFace = -1;
     }
     refreshLevers();
@@ -366,7 +356,7 @@
 
   function throwLever(index) {
     if (!canThrow()) return;
-    if (index < 0 || index > 2) return;
+    if (index < 0 || index >= levers.length) return;
     levers[index] = levers[index] === 1 ? 0 : 1;
     activeLever = index;
     pullT = 0;
@@ -388,7 +378,7 @@
     }
   }
 
-  /* After two departures, throw one random lever on a 1.5s approach clock.
+  /* After two departures, throw one random lever on a 2.5s approach clock.
      The lever changes on that clock. The figure only shows who did it. */
   function updateSoldier(dt) {
     var index;
@@ -398,7 +388,7 @@
       flipTimer += dt;
       if (flipTimer >= FLIP_INTERVAL) {
         flipTimer -= FLIP_INTERVAL;
-        index = Math.floor(Math.random() * 3);
+        index = Math.floor(Math.random() * LEVER_X.length);
         levers[index] = levers[index] === 1 ? 0 : 1;
         soldierTarget = LEVER_X[index] + 52;
         soldierFace = -1;
@@ -510,7 +500,6 @@
   function drawPattern(scale) {
     var pattern = currentPattern();
     var i;
-    var panel;
     var x;
     var y;
     var pw;
@@ -518,12 +507,11 @@
     var lh;
     var ls;
     var frame;
-    for (i = 0; i < 3; i++) {
-      panel = PANELS[i];
-      x = BOARD.x + panel[0] * scale;
-      y = BOARD.y + panel[1] * scale;
-      pw = panel[2] * scale;
-      ph = panel[3] * scale;
+    for (i = 0; i < LEVER_X.length; i++) {
+      x = BOARD.x + (75 + i * 162) * scale;
+      y = BOARD.y + 102 * scale;
+      pw = 162 * scale;
+      ph = 243 * scale;
       ctx.save();
       ctx.beginPath();
       ctx.rect(x, y, pw, ph);
@@ -760,7 +748,7 @@
     drawBoard();
     drawTrainSprite();
     drawBlast();
-    for (i = 0; i < 3; i++) drawLever(i);
+    for (i = 0; i < LEVER_X.length; i++) drawLever(i);
     drawTrent();
     drawSoldier();
     drawSnow();
@@ -863,9 +851,7 @@
     button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   }
 
-  bindLever(leverBtns[0], 0);
-  bindLever(leverBtns[1], 1);
-  bindLever(leverBtns[2], 2);
+  leverBtns.forEach(bindLever);
 
   window.addEventListener('keydown', function (event) {
     var key = event.key;
@@ -875,7 +861,7 @@
       else if (state === 'pause') closePause();
       return;
     }
-    if (key === '1' || key === '2' || key === '3') {
+    if (/^[1-5]$/.test(key)) {
       if (canThrow()) {
         event.preventDefault();
         if (!event.repeat) throwLever(Number(key) - 1);

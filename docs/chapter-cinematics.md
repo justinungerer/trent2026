@@ -1,6 +1,6 @@
-# Chapter and opening films
+# Campaign films
 
-The game serves eleven 30-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. Each chapter film uses two original pieces of realistic WWII artwork, four camera setups, and animated weather and lighting rendered in Blender. The chapter captions are part of each video. The campaign plays each chapter’s music separately. Frosted Skies uses portrait video.
+The game serves eleven 30-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. Each chapter film uses two original pieces of realistic WWII artwork, four camera setups, and animated weather and lighting rendered in Blender. The chapter captions are part of each video. The campaign plays each chapter’s music separately. The opening and all eleven chapter films fill a portrait screen. The 22-second widescreen closing film also includes in-frame story captions.
 
 The title screen displays artwork from Chimney Road and scrolls the cast and production credits in a window below the title. The opening film uses four portrait Blender shots with the story captions built into the frames. Players can replay the opening and chapter films from an unlocked chapter menu.
 
@@ -12,7 +12,7 @@ Install Blender 4.5 LTS, FFmpeg, Node.js, and Python with Pillow. Run these comm
 blender --background --factory-startup --python-exit-code 1 --python tools/render_fresh_chapter_films.py -- --output .\new-films
 ```
 
-The Blender script reads the source plates from `assets/chapter-film-art/` and skips completed exports. Add a chapter ID to render just that chapter or add `--preview` to render stills. Burn the story text into the clean exports before copying them into `assets/intro-video/`.
+The Blender script reads the source plates from `assets/chapter-film-art/` and skips completed exports. Add a chapter ID to render just that chapter or add `--preview` to render stills. Reframe the clean exports for portrait and burn in the story text before copying them into `assets/intro-video/`.
 
 ```powershell
 python tools/burn_chapter_captions.py .\new-films .\captioned-films --font C:/Windows/Fonts/segoeui.ttf
@@ -25,6 +25,8 @@ Render the opening film from `assets/opening-film-art/` with the same Blender an
 ```powershell
 blender --background --factory-startup --python-exit-code 1 --python tools/render_realistic_opening.py -- --output .\new-films\opening.mp4
 ```
+
+Add `--ending path/to/clean-ending.mp4` to the caption command to rebuild the closing film.
 
 Edit chapter prose in `campaign.js`, then rebuild the captioned exports from clean masters. Update the cache version when publishing replacement media.
 

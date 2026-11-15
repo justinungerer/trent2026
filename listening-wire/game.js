@@ -56,7 +56,9 @@
   var soldierFallback = makeSoldier();
   var burstImg = makeBurst();
   var kitImg = makeKit();
-  var crateImg = makeCrate();
+  var bulletImg = new Image();
+  bulletImg.src = 'art/ammo-bullet.webp';
+  var bulletFallback = makeBullet();
   var shotImg = makeShot();
 
   loadTex('art/wall.webp', function (tex) { wallTex = tex; });
@@ -303,7 +305,6 @@
     var placed = [];
     var enemies = [];
     var pickups = [];
-    var spot;
     var boxes;
     var kits;
     var i;
@@ -328,21 +329,15 @@
       }
     }
     cells.sort(function (a, b) { return a.d - b.d || a.x - b.x; });
-    for (i = 0; i < cells.length; i++) {
-      if (cells[i].d >= 4 && cells[i].d <= 8) {
-        spot = cells[i];
-        break;
-      }
-    }
-    if (spot) {
-      spot.used = true;
-      placed.push(spot);
-      pickups.push({ x: spot.x, y: spot.y, kind: 'ammo', n: 4, bob: 0.4 });
-    }
-    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, 15, 3.1, placed);
+    var startingAmmo = spreadTake(cells, function (c) { return c.d >= 4 && c.d <= 8; }, 2, 2, placed);
+    startingAmmo.forEach(function (cell) {
+      placed.push(cell);
+      pickups.push({ x: cell.x, y: cell.y, kind: 'ammo', n: 4, bob: 0.4 });
+    });
+    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, 60, 1.8, placed);
     enemies.sort(function (a, b) { return a.d - b.d; });
     for (i = 0; i < enemies.length; i++) placed.push(enemies[i]);
-    boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 6, 5, placed);
+    boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 12, 2.8, placed);
     for (i = 0; i < boxes.length; i++) {
       placed.push(boxes[i]);
       pickups.push({ x: boxes[i].x, y: boxes[i].y, kind: 'ammo', n: 2, bob: i * 0.8 });
@@ -415,18 +410,23 @@
     return c;
   }
 
-  function makeCrate() {
+  function makeBullet() {
     var c = document.createElement('canvas');
     var g = c.getContext('2d');
     c.width = 64;
     c.height = 64;
-    g.fillStyle = '#8a6230';
-    round(g, 8, 16, 48, 36, 8);
+    g.translate(32, 32);
+    g.rotate(0.62);
     g.fillStyle = '#e2b85a';
-    g.fillRect(14, 30, 36, 6);
-    g.fillStyle = '#f7f4ec';
-    g.fillRect(18, 22, 10, 6);
-    g.fillRect(36, 22, 10, 6);
+    round(g, -9, -10, 18, 34, 3);
+    g.fillStyle = '#ad6847';
+    g.beginPath();
+    g.moveTo(-8, -10);
+    g.quadraticCurveTo(-8, -21, 0, -27);
+    g.quadraticCurveTo(8, -21, 8, -10);
+    g.fill();
+    g.fillStyle = '#fff1bb';
+    g.fillRect(-5, -8, 3, 25);
     return c;
   }
 
@@ -1254,7 +1254,7 @@
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
       list.push({
-        img: p.kind === 'health' ? kitImg : crateImg,
+        img: p.kind === 'health' ? kitImg : (bulletImg.naturalWidth ? bulletImg : bulletFallback),
         x: p.x,
         y: p.y + (bob ? Math.sin(played * 2 + p.bob) * 0.04 : 0),
         h: 0.34,

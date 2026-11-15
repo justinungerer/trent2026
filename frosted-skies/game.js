@@ -56,7 +56,7 @@ const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, aim, drag, wraps, recoil, shake, kills;
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
-  player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['flame'], cool: [0] };
+  player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['laser'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
   wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
@@ -66,7 +66,7 @@ function reset() {
 }
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
-  ui.stack.replaceChildren(...player.stack.map(name => {
+  ui.stack.replaceChildren(...player.stack.slice(1).map(name => {
     const spec = WEAPONS[name];
     const slot = document.createElement('span');
     slot.textContent = spec.mark;
@@ -131,8 +131,9 @@ function burst(x, y, color, n = 14) {
   }
 }
 function stackShift(index) {
-  const count = player.stack.length;
-  return (index - (count - 1) / 2) * 32;
+  if (index === 0) return 0;
+  const side = index % 2 ? -1 : 1;
+  return side * (28 + Math.floor((index - 1) / 2) * 24);
 }
 function inFlame(px, py, ox, oy) {
   const dy = oy - py;
@@ -235,9 +236,9 @@ function hit() {
 }
 function grant(pod) {
   const kind = WEAPONS[pod.kind] ? pod.kind : 'flame';
-  if (player.stack.length >= 4) {
-    player.stack.shift();
-    player.cool.shift();
+  if (player.stack.length >= 5) {
+    player.stack.splice(1, 1);
+    player.cool.splice(1, 1);
   }
   player.stack.push(kind);
   player.cool.push(0);
@@ -321,7 +322,9 @@ function fireSlot(index) {
   if (kind === 'missile') {
     shots.push({ kind, x, y: player.y - 18, vx: 0, vy: -240, dmg: 1, speed: 440, life: 2.4 });
   } else if (kind === 'laser') {
-    shots.push({ kind, x, y: player.y - 30, vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
+    for (const offset of [-6, 6]) {
+      shots.push({ kind, x: x + offset, y: player.y - (index === 0 ? 49 : 30), vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
+    }
   } else if (kind === 'explosive') {
     shots.push({ kind, x, y: player.y - 8, vx: 0, vy: -280, dmg: 1, fuse: .78, radius: 76 });
   }
@@ -582,7 +585,20 @@ function render() {
     grad.addColorStop(.7, '#ff4d1f99');
     grad.addColorStop(1, '#ff2a0000');
     g.globalAlpha = reduceMotion.matches ? .78 : .64 + Math.sin(time * 36 + index) * .14;
-    polygon(grad, [[origin.x, origin.y], [origin.x - FLAME_HALF, tipY], [origin.x + FLAME_HALF, tipY]]);
+    // Irregular tongues share the exact collision envelope defined by inFlame.
+    for (let tongue = 0; tongue < 9; tongue++) {
+      const phase = tongue * 2.4 + (reduceMotion.matches ? 0 : time * 31);
+      const length = FLAME_REACH * (.62 + .36 * (.5 + .5 * Math.sin(phase)));
+      const spread = (tongue - 4) / 4;
+      const tipX = origin.x + spread * FLAME_HALF * length / FLAME_REACH;
+      g.beginPath();
+      g.moveTo(origin.x, origin.y);
+      g.bezierCurveTo(origin.x + spread * 10, origin.y - length * .36,
+        tipX + Math.sin(phase) * 10, origin.y - length * .72, tipX, origin.y - length);
+      g.quadraticCurveTo(origin.x + spread * 16, origin.y - length * .78, origin.x, origin.y);
+      g.fillStyle = grad;
+      g.fill();
+    }
     g.globalAlpha = 1;
   });
   if (shield <= 0 || reduceMotion.matches || Math.floor(shield * 11) % 2 === 0) {
@@ -602,7 +618,7 @@ function render() {
       g.stroke();
     }
     if (recoil > .045) player.stack.forEach((kind, index) => {
-      if (kind === 'flame') return;
+      if (kind === 'flame' || index === 0) return;
       const dx = stackShift(index);
       const flare = g.createRadialGradient(x + dx, y - 23, 0, x + dx, y - 23, 15);
       flare.addColorStop(0, '#fff');

@@ -1,6 +1,6 @@
 # Chapter 5 — The Switch Tower
 
-A route puzzle in a small snowy yard. Trent throws three track levers so the right train can leave. The sky, the yard, the destination board, the levers, the train, and Trent are original painted pictures in `art/`. Snow specks are still drawn on the canvas. There are no third-party assets, no downloaded images, and no build step.
+A route puzzle in a small snowy yard. Trent throws five track levers so the right train can leave. The sky, the yard, the destination board, the levers, the train, and Trent are original painted pictures in `art/`. Snow specks are still drawn on the canvas. There are no third-party assets, no downloaded images, and no build step.
 
 ## Open it
 
@@ -20,7 +20,7 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- The three buttons along the bottom throw lever 1, lever 2, and lever 3. Each tap flips that lever between left and right and plays Trent's pull.
+- The five buttons along the bottom control levers 1 through 5. Each tap flips that lever between left and right and plays Trent's pull.
 - Keyboard: 1, 2, and 3 throw those levers. Escape pauses.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the puzzle over returns to the first throw and does not count as sending the train out.
 
@@ -30,11 +30,11 @@ If the device asks for reduced motion, a wrong route does not shake the picture.
 
 ## Rules
 
-Five trains roll in from the left, one after another, at one and a half times the original pace. The wooden board over the yard shows the route for the train that is coming: three pictures, one for each lever. Match every lever to its picture before the train reaches the switch.
+Five trains roll in from the left, one after another, at one and a half times the original pace. The wooden board over the yard shows the route for the train that is coming: five pictures, one for each lever. Match every lever to its picture before the train reaches the switch.
 
 A wrong pattern explodes that train and costs one miss. Three misses, and the puzzle starts over from the first throw. That run does not count as a win.
 
-After two trains get away, a soldier appears beside the levers and throws a random one every second and a half. Put the levers back before the train arrives. A miss still explodes that train.
+After two trains get away, a soldier appears beside the levers and throws a random one every two and a half seconds. Put the levers back before the train arrives. A miss still explodes that train.
 
 Five trains away is the win.
 

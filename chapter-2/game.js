@@ -12,6 +12,7 @@ const shelves=[
 ];
 const spawn={x:95,y:613};
 const caches=[{x:145,y:142},{x:534,y:359},{x:942,y:598}];
+const hearts=[{x:150,y:564},{x:560,y:370},{x:935,y:510}];
 const patrols=[
  [[108,150],[108,450],[380,450],[380,150]],
  [[660,140],[660,400],[1000,400],[1000,140]],
@@ -32,7 +33,7 @@ const beams=[
 const trentSpeed=178;
 const guardSpeedRatio=0.75;
 const sightRange=200;
-const sightHalf=0.85;
+const sightHalf=0.85*0.75;
 const sightDot=Math.cos(sightHalf);
 const lampOffset=21;
 const mineReach=26;
@@ -55,6 +56,7 @@ function reset(notice){
    return {x:route[0][0],y:route[0][1],route,index:1,angle,chase:false};
   }),
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
+  hearts:hearts.map(p=>({...p,taken:false})),
   mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3+(window.TrentMissionBonus||0),toy:null,time:0,alarm:0,flash:notice?0.45:0,
   notice:notice||'Find Buddy’s three dispatches',noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
@@ -224,6 +226,9 @@ function update(dt){
    alertHalf();
   }
  }
+ for(const item of run.hearts){
+  if(!item.taken&&p.hull<3&&distance(p,item)<25){item.taken=true;p.hull++;announce('Heart recovered');sync();}
+ }
  for(const item of run.mail){
   if(!item.taken&&distance(p,item)<30){item.taken=true;run.count++;announce(run.count===3?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');sync();}
  }
@@ -329,6 +334,13 @@ function render(){
  glow(depot.x,depot.y,52,run.count===3?'#72f7c8aa':'#cf903f84');
  ctx.fillStyle=run.count===3?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);
  label(run.count===3?'MAIL HATCH OPEN':'MAIL HATCH · LOCKED',depot.x,depot.y-24);
+ for(const item of run.hearts){
+  if(item.taken)continue;
+  ctx.save();ctx.translate(item.x,item.y);
+  ctx.fillStyle='#f06471';ctx.strokeStyle='#761e3c';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,10);ctx.bezierCurveTo(-26,-9,-8,-20,0,-9);
+  ctx.bezierCurveTo(8,-20,26,-9,0,10);ctx.fill();ctx.stroke();ctx.restore();
+ }
  for(const item of run.mail){
   if(item.taken)continue;
   const lift=Math.sin(run.time*5+item.x)*4;

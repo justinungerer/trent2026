@@ -469,7 +469,7 @@
     santa.stun = 0.2;
     santa.atk = '';
     santa.buffer = '';
-    santa.face = from.x < santa.x ? 1 : -1;
+    santa.face = from.x < santa.x ? -1 : 1;
     santa.x = clamp(santa.x - santa.face * 34, 48, WORLD_R);
     santa.y = clamp(santa.y + (santa.y < from.y ? -16 : 16), BAND_TOP + 12, BAND_BOT - 8);
     if (!reduceMotion()) shake = 7;
@@ -600,9 +600,10 @@
       }
       return;
     }
-    if (Math.abs(dx) < kind.reach * 0.72 && Math.abs(dy) < 40 && e.cool <= 0) {
+    if (Math.abs(dx) < kind.reach * 0.88 && Math.abs(dy) < 45 && e.cool <= 0) {
       e.state = 'wind';
-      e.anim = Math.random() < kind.jab ? 'punch' : 'upper';
+      e.anim = !e.attacked || Math.random() < kind.jab ? 'punch' : 'upper';
+      e.attacked = true;
       e.t = kind.wind + (e.anim === 'upper' ? 0.2 : 0);
       e.aimY = santa.y;
       e.animT = 0;
@@ -876,7 +877,7 @@
         h = SANTA_H * KIND[e.kind].h * depthMul(e.y);
         far = e.y < BAND_TOP + BAND_H * 0.45;
         shadow(e.x - cam, e.y, h * 0.22, far);
-        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, e.face, h, e.alpha);
+        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, e.kind === 'heavy' ? e.face : -e.face, h, e.alpha);
         drawDots(e, h);
         continue;
       }

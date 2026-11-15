@@ -34,9 +34,9 @@ var CHAPTERS = [
     title: 'Landing at Normandy',
     kicker: 'Prologue',
     lines: [
-      "June 1944. Dawn breaks over Normandy as Trent’s landing craft noses into the surf.",
-      "The ramp drops. Beyond the breakers, wire and steel obstacles cut across the beach.",
-      "The seawall is the only cover. Trent has to reach it before the tide pushes him back."
+      "June 1944. At dawn, Trent’s landing craft noses into the Normandy surf.",
+      "The ramp drops. Cold water pours in, and a sea of wire rises beyond the breakers.",
+      "Through the smoke, Trent glimpses the seawall. For a moment it is the only solid thing in the world."
     ],
     event: 'prologue:complete',
     path: './prologue/',
@@ -59,12 +59,12 @@ var CHAPTERS = [
     kicker: 'Chapter 1',
     line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
     lines: [
-      'Months after the landing, Trent tunes a field radio in the snow. Allied intel is on a narrow band.',
-      'Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued.',
-      'The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers.',
-      'Hold the dial still until the lock fills. Trent is the Allied hero who has to stop all of it.'
+      "Months later, on a snowy December night, a radio lamp glows in Trent’s tent.",
+      "The signal breaks through the static. Hitler has taken Santa, and the Allies’ scout Buddy has vanished.",
+      "The same report names the workshop and a freight yard where Rudolph is being held.",
+      "Trent folds the message into his coat. By dawn he will be over the winter valley."
     ],
-    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow and holds a narrow band until it locks. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers. Trent is the Allied hero who has to carry the depot, the escape, the workshop, and the flight home.',
+    story: 'A radio transmission names the workshop, a freight yard, and the scouts Trent needs to find.',
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
     pin: 'NIGHT',
@@ -85,12 +85,12 @@ var CHAPTERS = [
     kicker: 'Chapter 2',
     line: 'The Luftwaffe plans to bomb Santa’s secret workshop, and this flight is what stops that bombing. Trent takes the ribbon sleigh into the winter valley, breaks the raid, and turns it back before it reaches the roof.',
     lines: [
-      'The Luftwaffe plans to bomb Santa’s secret workshop. This flight is what stops that bombing.',
-      'Trent flies the ribbon sleigh over the valley. The cannons fire on their own.',
-      'Scout craft and amber fire cross his path. Repair parcels keep the hull together.',
-      'Stop the raid. The workshop has to still be standing, and the race to save Rudolph comes next.'
+      "The radio warned of a raid on Santa’s hidden workshop. Now the bombers are crossing the mountains.",
+      "Trent’s sleigh climbs into the snow, its engine echoing off the frozen cliffs.",
+      "Below the cloud line, the workshop’s lights shine through the fir trees.",
+      "On the other side of the valley, a dark ribbon of rail leads toward Rudolph."
     ],
-    story: 'The radio already named the raid. The Luftwaffe plans to bomb Santa’s secret workshop, and Frosted Skies is the flight that stops that bombing. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, and breaks the attack before it reaches the roof.',
+    story: "The bombers are already in the mountains. Down in the valley, Santa’s workshop is still lit.",
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
     pin: 'SKY',
@@ -111,12 +111,12 @@ var CHAPTERS = [
     kicker: 'Chapter 3',
     line: 'The enemy plans to turn Rudolph into meat for hamburgers. White Rail is the race to stop that. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the first half of the race.',
     lines: [
-      'The enemy plans to turn Rudolph into hamburgers. The handcar is the race to the yard.',
-      'Crates, gaps, and a signal arm block the straight line.',
-      'The left thumb picks the track. The right thumb keeps the speed up.',
-      'Reach the yard mouth before three slips. Special Delivery finishes the race.'
+      "Through the trees, Trent spots the railway that leads to Rudolph’s freight yard.",
+      "A handcar waits beside the signal shed. Its iron wheels are rimmed with frost.",
+      "The valley fills with the drone of bombers as snow swallows the tracks ahead.",
+      "At the yard mouth, a lantern swings in the wind. Someone is still working in there."
     ],
-    story: 'The enemy plans to turn Rudolph into meat for hamburgers. White Rail is the race to stop that. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the way through.',
+    story: "At the edge of the forest, a handcar waits on the railway to Rudolph.",
     event: 'white-rail:complete',
     path: './white-rail/',
     pin: 'RAIL',
@@ -137,12 +137,12 @@ var CHAPTERS = [
     kicker: 'Chapter 4',
     line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Buddy, the elf on the shelf, is held.',
     lines: [
-      'The race to keep Rudolph from becoming hamburgers continues in the freight yard.',
-      'Inspectors walk fixed routes. Stay out of their sight.',
-      'A wind-up penguin draws them away for a few seconds.',
-      'The dispatches stop that order, and they point to the depot where Buddy is held.'
+      "Night settles over the freight yard, and the lamps cast long shadows between the wagons.",
+      "Trent finds a dispatch pouch beneath a pile of freight ledgers.",
+      "Inside is the order that put Rudolph in danger, along with the address of a guarded depot.",
+      "Buddy is being held at that depot. The next train is Trent’s only lead."
     ],
-    story: 'Special Delivery is the rest of the race to stop the enemy from turning Rudolph into hamburgers. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers point to the depot, where Buddy, the elf on the shelf, is still held and still has to be rescued.',
+    story: "The freight yard holds the orders that could lead Trent to both Rudolph and Buddy.",
     event: 'special-delivery:complete',
     path: './chapter-2/',
     pin: 'YARD',
@@ -163,12 +163,12 @@ var CHAPTERS = [
     kicker: 'Chapter 5',
     line: 'Buddy, the elf on the shelf, was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
     lines: [
-      'Buddy is held at the depot. This train is the way to the elf on the shelf.',
-      'The destination board shows the lever order as pictures, not a speech.',
-      'Trent throws each lever left or right before the train arrives.',
-      'The matching pattern lets the rescue train leave the yard.'
+      "At the switch tower, the station lights are the only color in the snow.",
+      "A rescue train waits on the approach. The yard’s guards are watching the points.",
+      "Inside the tower, Trent spots the depot route on the board above the levers.",
+      "Steam rolls across the glass as the train starts toward Buddy."
     ],
-    story: 'Buddy, the elf on the shelf, was caught spying and is still held at the depot. The destination board shows the lever order as pictures. Trent throws each switch to match it so the train can leave and the rescue can start.',
+    story: "The winter train could reach Buddy’s depot, if it leaves the switch yard.",
     event: 'switch-tower:complete',
     path: './switch-tower/',
     pin: 'SWITCH',
@@ -189,12 +189,12 @@ var CHAPTERS = [
     kicker: 'Chapter 6',
     line: 'The depot is where Buddy, the elf on the shelf, is held. The quiz builds his ribbon gun. Then Trent plays as Buddy: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
     lines: [
-      'This is the rescue. Buddy, the elf the Allies sent to spy, is trapped in the depot.',
-      'The questions decide his ammunition, his reload, and his ribbon.',
-      'Inside, shelves block shots. Guards can be wrapped into parcels.',
-      'Disable the alarms, get Buddy out, and take the route toward Santa.'
+      "Buddy hears a train pull in beyond the depot wall. Its whistle sounds like home.",
+      "Hidden among the crates are the orders the guards took from him when he was caught.",
+      "A mail hatch opens onto the alley. Beyond it, a dispatch points to the camp where Santa is held.",
+      "Buddy tucks the papers under his coat and steps out of the shadows."
     ],
-    story: 'Trent reaches the depot to rescue Buddy, the elf on the shelf. The questions build Buddy’s ribbon gun. Then Buddy wraps the guards, quiets the alarms, and leaves through the mail hatch with the route toward Santa.',
+    story: "Buddy hears the rescue train. The papers hidden in the depot could lead him to Santa.",
     event: null,
     path: './shelf-escape/',
     pin: 'DEPOT',
@@ -214,12 +214,12 @@ var CHAPTERS = [
     kicker: 'Chapter 7',
     line: 'Buddy is free, and the way to Santa is a first-person cartoon corridor maze. The enemies shoot. Trent picks up health and ammunition as he fights through to the green door.',
     lines: [
-      'Buddy is out. Santa is still held. The way ahead is a cartoon corridor maze.',
-      'Trent moves in first person. The enemies shoot back.',
-      'Health and ammunition sit in the halls. Pick them up and keep moving.',
-      'Clear the maze. The green door at the end leads on toward Santa.'
+      "Buddy is free, and the papers have led Trent to a lonely outpost beyond the depot.",
+      "A searchlight washes over the yard. Inside, footsteps echo down branching corridors.",
+      "From the radio room comes a burst of static and a mention of Santa’s name.",
+      "At the far end of the corridor, a green door opens onto the road to the camp."
     ],
-    story: 'Buddy is free. Trent fights through a first-person cartoon corridor maze on the way to Santa. The enemies shoot. Health and ammunition pickups keep him moving. The green door at the end of the maze is the way through.',
+    story: "A green door at the end of the outpost corridor stands between Trent and the road to Santa.",
     event: 'listening-wire:complete',
     path: './listening-wire/',
     pin: 'WIRE',
@@ -240,12 +240,12 @@ var CHAPTERS = [
     kicker: 'Chapter 8',
     line: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Buddy and Rudolph are waiting beyond the gate. The secret workshop is next.',
     lines: [
-      'Santa is held here. This is a cartoon holding camp, and Trent has come to free him.',
-      'Cartoon guards block the yard. Trent fights them in a brawl.',
-      'When a guard sits in the snow, the path toward Santa opens.',
-      'Free Santa and reach the gate. The secret workshop, and home, come next.'
+      "Beyond the wire, Trent finds Santa alive in the frozen holding camp.",
+      "The yard falls quiet. A guard’s footsteps crunch across the snow by the gate.",
+      "Trent reaches Santa under the lamps and helps him into the shelter of the passage.",
+      "Buddy and Rudolph wait outside the fence. The workshop is still standing."
     ],
-    story: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Buddy and Rudolph are waiting at the gate. Together they turn toward the workshop and the flight home.',
+    story: "Santa is alive behind the wire. Buddy and Rudolph are waiting beyond the gate.",
     event: 'holding-camp:complete',
     path: './holding-camp/',
     pin: 'CAMP',
@@ -266,12 +266,12 @@ var CHAPTERS = [
     kicker: 'Chapter 9',
     line: 'Santa’s secret workshop is still standing after the Luftwaffe raid. Parcels ride a belt while Trent, Buddy, Rudolph, and Santa ready the flight home. Some parcels add points. Damaged ones take points away. Thirty points before the timer ends clears the line.',
     lines: [
-      'The workshop the Luftwaffe meant to bomb is safe. Trent has Buddy, Rudolph, and Santa with him.',
-      'The four of them ready the flight home. The belt brings one parcel after another.',
-      'Whole parcels add points. A torn parcel takes points away.',
-      'Thirty points before the timer ends finish the line. Order does not matter.'
+      "The workshop the raiders meant to destroy is still standing.",
+      "Buddy, Rudolph, Santa, and Trent gather in its warm light for the first time since the rescue.",
+      "The packing line rattles to life, and a familiar smell of paper and pine fills the room.",
+      "Outside, snow settles on the rooftops that lead to the waiting sleigh."
     ],
-    story: 'Trent has carried the rescue through the depot, the escape, and the holding camp. The workshop the Luftwaffe meant to bomb is still standing. Trent, Buddy, Rudolph, and Santa ready the flight home. Parcels ride a belt. Whole ones add points and damaged ones take points away. Thirty points before the timer ends clear the line.',
+    story: "The rescued crew gathers in the workshop to prepare for the flight home.",
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
     pin: 'BOW',
@@ -292,12 +292,12 @@ var CHAPTERS = [
     kicker: 'Chapter 10',
     line: 'Snowy roofs lead to the waiting sleigh. Trent climbs up and down the roofs, doubles back out of dead ends, and jumps the gaps, with Buddy, Rudolph, and Santa bound for home. The flight home comes after.',
     lines: [
-      'The sleigh is parked above the first roofs. Home is the flight after it.',
-      'Trent brings Buddy, Rudolph, and Santa from the workshop toward the sky.',
-      'The road branches. Some paths climb, some drop, and some end and send him back.',
-      'Jump the gaps and the moving hazards. The sleigh is the way home.'
+      "High above the village, a sleigh waits among the chimney pots.",
+      "Trent, Buddy, Santa, and Rudolph can see its lantern through the snowfall.",
+      "Below them, a few warm windows light the winding streets. Above, the clouds are beginning to clear.",
+      "The last chimney sends up a plume of smoke. Beyond it lies the way home."
     ],
-    story: 'The sleigh waits above the last roofs. Trent, Buddy, Rudolph, and Santa are nearly home after the depot, the escape, and the workshop. Trent climbs, drops, and doubles back through the snowy paths until he reaches the chimney. The flight home comes after the sleigh.',
+    story: "The sleigh waits beyond the snowy roofs, and the last clouds are beginning to clear.",
     event: 'chimney-road:complete',
     path: './chimney-road/',
     pin: 'HOME',
@@ -655,7 +655,7 @@ function showOpeningFilm(done) {
   openingVideo.setAttribute('aria-label', 'Opening film. Hitler orders Santa’s capture. ' +
     'Guards march him into a Nazi concentration camp, where they attack him behind a locked gate. ' +
     'The Allies pick up the first report. A rescue is still possible.');
-  openingVideo.src = './assets/opening.mp4?v=in-frame';
+  openingVideo.src = './assets/opening.mp4?v=portrait-story';
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
@@ -875,7 +875,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=in-frame';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=portrait-story';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -953,7 +953,7 @@ function playIntro(chapter, done) {
       introRaf = requestAnimationFrame(tick);
       return;
     }
-    elapsed += Math.min(80, now - last);
+    elapsed += Math.max(0, Math.min(80, now - last));
     last = now;
     reduced = reduceMotion.matches;
     if (!updateVideo()) {
@@ -1138,7 +1138,7 @@ function playEnding() {
   endingVideo.setAttribute('webkit-playsinline', '');
   endingVideo.preload = 'auto';
   if (!endingVideo.getAttribute('src')) {
-    endingVideo.src = new URL('./assets/ending.mp4', location.href).href;
+    endingVideo.src = new URL('./assets/ending.mp4?v=portrait-story', location.href).href;
   }
   try { endingVideo.currentTime = 0; } catch (error) {}
   pending = endingVideo.play();

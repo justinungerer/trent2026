@@ -92,7 +92,7 @@
   var cp = 0;
   var stood = 0;
   var body = { x: 96, y: 300, vx: 0, vy: 0, face: 1, ground: true, runT: 0 };
-  var held = { left: false, right: false };
+  var held = { left: false, right: false, climb: false };
   var jumpQueued = 0;
   var coyote = 0;
   var jumpBonus = (window.TrentMissionBonus || 0) * 0.04;
@@ -266,6 +266,7 @@
     state = 'pause';
     held.left = false;
     held.right = false;
+    held.climb = false;
     pauseSheet.hidden = false;
   }
 
@@ -403,6 +404,12 @@
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
       if (body.vy < 0) break;
+      if (roof.cap) {
+        var cap = capX(roof);
+        var capTop = roof.y - 108;
+        if (prevY <= capTop + 6 && body.y >= capTop && body.x >= cap - 4 && body.x <= cap + 46 &&
+            (!best || capTop < best.top)) best = { top: capTop, id: n };
+      }
       if (prevY > roof.y + 8) continue;
       if (body.y < roof.y) continue;
       if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
@@ -416,6 +423,16 @@
       else {
         stood = best.id;
         if (PLATFORMS[best.id].role === 'main') cp = best.id;
+      }
+    }
+    if (held.climb) {
+      var chimney = PLATFORMS.find(function (roof) {
+        return roof.cap && body.x >= capX(roof) - 23 && body.x <= capX(roof) + 65 &&
+          body.y <= roof.y + 8 && body.y > roof.y - 108;
+      });
+      if (chimney) {
+        body.y = Math.max(chimney.y - 108, body.y - 180 * dt);
+        body.vy = 0;
       }
     }
     if (!onCrate && body.x > box.x - 16 && body.x < box.x + box.w + 16 && body.y > box.y + 18 && body.y - 48 < box.y + box.h) {
@@ -434,11 +451,11 @@
         if (overlapsBody(br.x, br.y, br.w, br.h)) drop('The brush knocked you off.');
         else {
           ice = icicleAt(3070, PLATFORMS[10].y, 0);
-          if ((ice.mode === 'fall' || ice.mode === 'down') && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
+          if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
             drop('The icicle knocked you off.');
           } else {
             ice = icicleAt(7500, PLATFORMS[22].y, 1.3);
-            if ((ice.mode === 'fall' || ice.mode === 'down') && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
+            if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
               drop('The icicle knocked you off.');
             } else {
               bob = lanternBob();
@@ -533,6 +550,10 @@
     }
   }
 
+  function capX(roof) {
+    return roof.cap === 'left' ? roof.x + 16 : roof.x + roof.w - 58;
+  }
+
   function drawCaps() {
     var n;
     var roof;
@@ -541,10 +562,12 @@
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
       if (roof.role !== 'end') continue;
-      x = (roof.cap === 'left' ? roof.x + 16 : roof.x + roof.w - 58) - camX;
+      x = capX(roof) - camX;
       y = roof.y - camY;
       ctx.fillStyle = '#5c4034';
       ctx.fillRect(x, y - 84, 42, 84);
+      ctx.fillStyle = '#b28c5c';
+      for (var rung = 18; rung <= 72; rung += 18) ctx.fillRect(x + 7, y - rung, 28, 4);
       ctx.fillStyle = '#c5d0dc';
       ctx.fillRect(x - 6, y - 94, 54, 12);
       ctx.fillStyle = '#241c18';
@@ -803,14 +826,18 @@
   document.getElementById('jump').addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     event.preventDefault();
+    held.climb = true;
     requestJump();
     hintEl.hidden = true;
+    if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.classList.add('held');
   });
   document.getElementById('jump').addEventListener('pointerup', function (event) {
+    held.climb = false;
     event.currentTarget.classList.remove('held');
   });
   document.getElementById('jump').addEventListener('pointercancel', function (event) {
+    held.climb = false;
     event.currentTarget.classList.remove('held');
   });
 
@@ -823,7 +850,10 @@
     }
     if (event.key === 'ArrowLeft') held.left = true;
     else if (event.key === 'ArrowRight') held.right = true;
-    else if ((event.key === 'ArrowUp' || event.key === ' ') && !event.repeat) requestJump();
+    else if (event.key === 'ArrowUp' || event.key === ' ') {
+      held.climb = true;
+      if (!event.repeat) requestJump();
+    }
     else return;
     event.preventDefault();
     hintEl.hidden = true;
@@ -832,11 +862,13 @@
   window.addEventListener('keyup', function (event) {
     if (event.key === 'ArrowLeft') held.left = false;
     if (event.key === 'ArrowRight') held.right = false;
+    if (event.key === 'ArrowUp' || event.key === ' ') held.climb = false;
   });
 
   window.addEventListener('blur', function () {
     held.left = false;
     held.right = false;
+    held.climb = false;
   });
 
   document.addEventListener('visibilitychange', function () {
