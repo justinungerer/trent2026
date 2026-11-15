@@ -4,8 +4,8 @@ Work from branch `illustrated-missions`. The branch is based on the published qu
 
 Run from the repo root with `python -m http.server 8080` and open:
 
-- `http://localhost:8080/frosted-skies/` for the standalone Chapter 1 prototype. Drag to steer with automatic fire, or use WASD or arrow keys. A flagship enters at about 51 seconds.
-- `http://localhost:8080/shelf-escape/` for the updated standalone depot mission. Left thumb moves, right thumb aims/fires. On desktop use WASD and Space.
+- `http://localhost:8080/frosted-skies/` for the standalone Chapter 1 prototype. Drag to steer with automatic fire. A flagship enters at about 51 seconds.
+- `http://localhost:8080/shelf-escape/` for the updated standalone depot mission. The left stick moves and aims. Tap the right-side Jump and Fire buttons.
 - `http://localhost:8080/` for the existing quiz, including the real equipment handoff into Shelf Escape.
 
 ## What changed

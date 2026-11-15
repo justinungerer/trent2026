@@ -4,9 +4,9 @@ Open index.html in a browser or serve this folder through VS Code Live Server.
 The game uses Canvas 2D to animate original raster sprites over an illustrated scrolling valley. There are no
 dependencies, remote assets, or build steps.
 
-Drag the sleigh on a touchscreen or use WASD / arrow keys. The twin ribbon
+Drag to steer the sleigh. The twin ribbon
 cannons fire automatically. Dodge amber fire and collect cyan repair parcels.
-The convoy flagship arrives at about 51 seconds. Escape pauses or resumes.
+The convoy flagship arrives at about 51 seconds. Tap Pause to take a break.
 
 ## Handoff
 

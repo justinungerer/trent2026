@@ -22,11 +22,11 @@ Landscape is the intended orientation. A portrait visit shows a "turn sideways" 
 
 Touch first. Nothing you need is hover-only.
 
-- Left thumb: a four-way pad. Up, down, left, and right each are 56 pixels. Arrow keys and WASD do the same.
-- Right thumb: Punch and Upper. Punch is at least 64 pixels tall. Upper is at least 72. J, Z, or Space punches. K, U, or X throws the uppercut.
+- Left thumb: a four-way pad. Up, down, left, and right each are 56 pixels.
+- Right thumb: Punch and Upper. Punch is at least 64 pixels tall. Upper is at least 72.
 - Punch is fast and deals 1 hit point. Uppercut is slower and deals 3.
 - Step up or down, off a guard's line, while he winds up.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the how-to-play card and does not open the gate.
+- Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the how-to-play card and does not open the gate.
 
 The how-to-play card is the card shown before the walk.
 

@@ -22,8 +22,8 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Hold the left stick, or hold the up and down arrows (or W and S), to move the mark.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same belt. Give up returns to the start and does not keep the run.
+- Move the mark with the left stick and tap Wrap when a good box reaches it.
+- Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same belt. Give up returns to the start and does not keep the run.
 
 The stick is larger than 48 pixels.
 

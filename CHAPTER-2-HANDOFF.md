@@ -11,7 +11,6 @@ A penguin appears ahead of Trent and draws nearby inspectors for five seconds.
 
 - Phone: drag anywhere in the yard like a floating joystick. Release to stop.
   Use the Decoy button with either thumb.
-- Keyboard: WASD or arrows, Space for Decoy, Escape to pause or resume.
 
 ## Implementation and art
 

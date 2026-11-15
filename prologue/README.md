@@ -24,7 +24,6 @@ Touch first. Nothing you need is hover-only.
 
 - Drag on the left half of the screen to walk. Up the sand is away from the water. Down the sand is toward the surf.
 - Hold the Brace button on the lower right. It sits where a right thumb rests in landscape.
-- Keyboard: arrow keys or WASD to walk, Space to brace, Escape to pause.
 - Pause also opens when the page is hidden. Resume continues the same run.
 
 Buttons are at least 48 pixels. Brace is larger so it is easy to hold.

@@ -26,7 +26,6 @@ Touch first. Nothing you need is hover-only.
 
 - Left thumb: Left and Right pick the track. Swipe sideways on the left half of the picture to change tracks.
 - Right thumb: Pump. Hold it and the lever keeps stroking. Each stroke pushes the car. Let go and the car slows.
-- Keyboard: Left and Right change track. Up/W and Down/S also work. Space pumps. Escape pauses.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the line over returns to the start and does not count as reaching the yard.
 
 Buttons are at least 48 pixels. Left, Right, and Pump are larger so a thumb can hold them.

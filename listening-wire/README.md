@@ -26,10 +26,10 @@ The maze is 33 by 25 cells, with dead ends and a few loops. Trent starts at the 
 
 Touch first. Nothing you need is hover-only. Every control is at least 48 pixels.
 
-- Turn left and turn right, or A and D, or the left and right arrow keys.
-- Walk forward and back, or W and S, or the up and down arrow keys.
-- Shoot, or hold Space or Enter. Each shot spends one bullet.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the opening card and does not count as reaching the door.
+- Tap the turn controls to look left or right.
+- Tap the movement controls to walk forward or back.
+- Tap or hold Shoot. Each shot spends one bullet.
+- Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the opening card and does not count as reaching the door.
 
 If the device asks for reduced motion, the view does not shake and the gun does not bob.
 

@@ -48,13 +48,10 @@ transitions into an original parcel effect.
   assets; [OpenGameArt's FAQ](https://opengameart.org/content/oga-by-30-faq)
   explains the terms. The sprite sheets total approximately 0.97 MB.
 
-On a landscape phone, move with the left pad and aim/fire with the right pad.
-Push up on the move pad to jump guards, ribbon parcels, tall crates, and the alarm bells. A relay counts only when Buddy is at the top of that jump and just touches the bell. Each successful interaction brings every defeated guard back. Tap the fire pad's center to target the nearest guard. Fire is one shot per tap. On desktop use A/D or
-left/right arrows to move, W or Up to jump, S or Down to hide at a crate, and Space to fire
-once per press at the nearest guard. Green supply boxes refill the earned magazine on entry;
+On a landscape phone, use the left stick to move and aim. Tap Jump to clear crates, reach ribbon parcels, or reach an alarm bell. A relay counts when Buddy touches the bell at the top of his jump. Tap Fire once per shot. Pull the left stick down behind a crate to hide. Green supply boxes refill the earned magazine on entry;
 each box also restores one heart once per attempt. Leave and return for another
 ammo refill. Pause with
-the pause button or Escape; switching tabs or losing focus also pauses. A
+the pause button; switching tabs or losing focus also pauses. A
 retry restores health, the mission objectives, and the earned equipment.
 Physical iPhone Safari and Android testing is still needed.
 
@@ -64,8 +61,7 @@ large jumps; tab or focus loss pauses the mission.
 
 This remains a prototype, not a validated three-to-five-minute mission.
 Real-time state-guided automated routes on the current mission took about
-138 seconds using keyboard controls and 143 seconds using simulated
-simultaneous touch. Neither was a human playthrough or a physical-phone test.
+143 seconds using simulated simultaneous touch.
 Further substantive level design and human playtesting are needed to establish
 the desired pacing.
 

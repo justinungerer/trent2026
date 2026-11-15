@@ -21,7 +21,6 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 Touch first. Nothing you need is hover-only.
 
 - The five buttons along the bottom control levers 1 through 5. Each tap flips that lever between left and right and plays Trent's pull.
-- Keyboard: 1, 2, and 3 throw those levers. Escape pauses.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the puzzle over returns to the first throw and does not count as sending the train out.
 
 Buttons are at least 48 pixels. The lever buttons are larger so a thumb can hit them.

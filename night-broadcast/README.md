@@ -23,11 +23,11 @@ Landscape is the intended orientation. A portrait phone shows a short "turn side
 Touch first. Nothing you need is hover-only.
 
 - Drag the tuning knob left or right. The painted gear on the radio is the tuner.
-- On-screen arrows tune lower and higher. Hold one to sweep. Keyboard left and right arrows tune the same way. Space is not used.
+- On-screen arrows tune lower and higher. Hold one to sweep.
 - Each station shows a moving marker and a strong-signal wedge. Stay inside one wedge for 1 second. That reveals a red band on that station. The red band is hidden until the 1-second hold succeeds. Leaving the strong wedge clears the hold and hides the band.
 - Hold Lock and keep the needle inside the red band for 3 seconds. Tuning still works while Lock is held, so the other hand can keep chasing. Releasing Lock, or leaving the red band while still in the strong wedge, unwinds the lock. Leaving the strong wedge hides the red band.
 - Lock works on any of the five stations. A lock on the wrong station shows the text "wrong station" and does not win. The field report is the correct station on every run.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same tune. Give up returns to the start and does not count as a lock.
+- Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same tune. Give up returns to the start and does not count as a lock.
 
 Buttons are at least 48 pixels. The arrows and Lock are larger so a thumb can hold them.
 

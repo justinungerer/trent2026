@@ -24,9 +24,9 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Left and right run. Jump hops, and a second jump near the top of the first one climbs higher. Arrow keys run, and Up or Space jumps.
+- Left and right run. Jump hops, and a second jump near the top of the first one climbs higher.
 - A running jump clears a gap. Jump near the edge. The crate can be landed on, and it will push Trent if it meets him. The snowball, icicles, lantern, smoke, and brush each cost a fall when they hit.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same roofs. Give up returns to the start and does not reach the sleigh.
+- Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same roofs. Give up returns to the start and does not reach the sleigh.
 
 Left, right, and Jump are at least 76 pixels tall.
 
