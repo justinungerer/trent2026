@@ -3,7 +3,6 @@
 let activeRun = null;
 
 function launchMission(loadout) {
-  const frame = document.getElementById('game');
   const url = new URL('./shelf-escape/', location.href);
   const params = {
     build: 'side6',
@@ -16,9 +15,7 @@ function launchMission(loadout) {
     url.searchParams.set(key, params[key]);
   });
   activeRun = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
-  document.getElementById('mission').hidden = false;
-  document.body.classList.add('playing');
-  frame.src = url.href;
+  window.TrentCampaign.openMissionFrame(url.href, 'Operation Ribbonfall');
 }
 
 window.addEventListener('message', function (event) {
@@ -30,9 +27,6 @@ window.addEventListener('message', function (event) {
   }
   if (event.data.type === 'trent:complete' && event.data.runId === activeRun) {
     activeRun = null;
-    frame.src = 'about:blank';
-    document.getElementById('mission').hidden = true;
-    document.body.classList.remove('playing');
     if (window.TrentCampaign && typeof window.TrentCampaign.onShelfWon === 'function') {
       window.TrentCampaign.onShelfWon();
     }

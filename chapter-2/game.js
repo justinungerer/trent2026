@@ -335,7 +335,7 @@ function resize(){
 window.addEventListener('resize',resize);
 function frame(now){
  const dt=last?Math.min((now-last)/1000,.04):0;last=now;
- if(mode==='play')update(dt);
+ if(mode==='play'&&!window.TrentGameOrientation?.blocked())update(dt);
  render();requestAnimationFrame(frame);
 }
 reset();resize();requestAnimationFrame(frame);

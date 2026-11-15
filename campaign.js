@@ -12,10 +12,13 @@ var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
 var endingVideo = document.getElementById('ending-video');
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+var mobilePointer = window.matchMedia('(pointer: coarse)');
+var portraitViewport = window.matchMedia('(orientation: portrait)');
 
 var active = null;
 var shelfOpen = false;
-var introChapter = null;
+var pendingMissionUrl = '';
+var resumeEndingAfterTurn = false;
 var introToken = 0;
 var introRaf = 0;
 var introDone = null;
@@ -388,7 +391,6 @@ function stopIntro() {
   if (introRaf) cancelAnimationFrame(introRaf);
   introRaf = 0;
   introDone = null;
-  introChapter = null;
   if (introImages.length) releaseImages(introImages);
   introImages = [];
   if (cleanupIntroVideo) cleanupIntroVideo();
@@ -398,18 +400,21 @@ function stopIntro() {
 }
 
 function clearCredits() {
-  if (creditTimer) clearTimeout(creditTimer);
+  if (creditTimer) clearInterval(creditTimer);
   creditTimer = 0;
 }
 
 function closeMission() {
+  pendingMissionUrl = '';
   var frame = document.getElementById('game');
   if (frame) frame.src = 'about:blank';
   document.getElementById('mission').hidden = true;
   document.body.classList.remove('playing');
+  syncTurn();
 }
 
 function stopEndingVideo() {
+  resumeEndingAfterTurn = false;
   endingVideo.pause();
   endingVideo.removeAttribute('src');
   endingVideo.load();
@@ -425,7 +430,7 @@ function showTester() {
   var home = document.createElement('button');
   var scores = [10, 9, 8, 7];
   var i;
-  clearTimeout(pinTimer);
+  clearInterval(pinTimer);
   clearCredits();
   stopIntro();
   closeMission();
@@ -504,7 +509,7 @@ function showStart() {
   var open;
   var status;
   clearCredits();
-  clearTimeout(pinTimer);
+  clearInterval(pinTimer);
   stopIntro();
   active = null;
   shelfOpen = false;
@@ -581,7 +586,7 @@ function showLogo() {
   var begin = document.createElement('button');
   if (window.TrentTrivia) window.TrentTrivia.abort();
   clearCredits();
-  clearTimeout(pinTimer);
+  clearInterval(pinTimer);
   stopIntro();
   active = null;
   shelfOpen = false;
@@ -624,7 +629,7 @@ function showCredits(done) {
   }
   section.appendChild(reel);
   campaignRoot.appendChild(section);
-  creditTimer = setTimeout(function () {
+  creditTimer = schedulePortraitStep(function () {
     if (generation !== introToken) return;
     introToken += 1;
     clearCredits();
@@ -633,38 +638,30 @@ function showCredits(done) {
 }
 
 function handheld() {
-  return window.matchMedia('(pointer: coarse)').matches;
-}
-
-function isPortrait() {
-  return window.innerHeight > window.innerWidth + 20;
-}
-
-function chapterOnScreen() {
-  var mission = document.getElementById('mission');
-  if (mission && !mission.hidden && active && active.chapter) return active.chapter;
-  if (cinema && !cinema.hidden && introChapter) return introChapter;
-  return null;
-}
-
-function isPortraitChapter(chapter) {
-  if (!chapter) return false;
-  return chapter.portrait === true || chapter.path === './frosted-skies/';
+  return mobilePointer.matches;
 }
 
 function wantsLandscape() {
-  var mission = document.getElementById('mission');
-  var playing = mission && !mission.hidden;
-  var introducing = cinema && !cinema.hidden;
-  var endingOpen = ending && !ending.hidden;
-  if (isPortraitChapter(chapterOnScreen())) return false;
-  return !!(playing || introducing || endingOpen);
+  return !document.getElementById('mission').hidden;
 }
 
 function turnNeeded() {
-  if (!handheld()) return false;
-  if (isPortraitChapter(chapterOnScreen())) return !isPortrait();
-  return wantsLandscape() ? isPortrait() : !isPortrait();
+  return handheld() && portraitViewport.matches === wantsLandscape();
+}
+
+function schedulePortraitStep(done, duration) {
+  var elapsed = 0;
+  var last = performance.now();
+  var timer = setInterval(function () {
+    var now = performance.now();
+    if (!turnNeeded() && !document.hidden) elapsed += now - last;
+    last = now;
+    if (elapsed >= duration) {
+      clearInterval(timer);
+      done();
+    }
+  }, 100);
+  return timer;
 }
 
 function syncTurn() {
@@ -673,15 +670,44 @@ function syncTurn() {
   var note = document.getElementById('turn-note');
   var mark = document.getElementById('turn-mark');
   var needed = turnNeeded();
-  var toLandscape = wantsLandscape() && isPortrait();
-  if (!gate) return;
+  var landscape = wantsLandscape();
+  var focusGate = needed && gate.hidden;
   if (gate.hidden === needed) gate.hidden = !needed;
-  if (!needed || !heading) return;
-  heading.textContent = toLandscape ? 'Turn the screen sideways' : 'Turn the screen upright';
-  note.textContent = toLandscape
-    ? 'This part stays paused until the phone is landscape.'
-    : 'This part stays paused until the phone is portrait.';
-  mark.classList.toggle('upright', !toLandscape);
+  if (needed) {
+    heading.textContent = landscape ? 'Turn your phone sideways' : 'Turn your phone upright';
+    note.textContent = landscape ? 'Minigames play in landscape.' : 'The campaign continues in portrait.';
+    mark.classList.toggle('upright', !landscape);
+  }
+  document.body.classList.toggle('waiting-for-rotation', needed);
+  [document.querySelector('header'), campaignRoot, cinema, ending,
+    document.getElementById('mission'), document.querySelector('.quiz-modal')].forEach(function (screen) {
+    if (screen && screen.inert !== needed) screen.inert = needed;
+  });
+  if (focusGate) heading.focus({ preventScroll: true });
+
+  if (needed && !endingVideo.hidden && !endingVideo.paused) {
+    resumeEndingAfterTurn = true;
+    endingVideo.pause();
+  } else if (!needed && resumeEndingAfterTurn && !ending.hidden && !endingVideo.hidden) {
+    resumeEndingAfterTurn = false;
+    endingVideo.play().catch(function () {});
+  }
+
+  if (!needed && pendingMissionUrl) {
+    document.getElementById('game').src = pendingMissionUrl;
+    pendingMissionUrl = '';
+  }
+}
+
+function openMissionFrame(url, title) {
+  document.getElementById('game').title = title;
+  pendingMissionUrl = url;
+  campaignRoot.hidden = true;
+  cinema.hidden = true;
+  ending.hidden = true;
+  document.getElementById('mission').hidden = false;
+  document.body.classList.add('playing');
+  syncTurn();
 }
 
 function fitCanvas(canvas) {
@@ -847,7 +873,6 @@ function playIntro(chapter, done) {
   var updateVideo;
   stopIntro();
   token = introToken;
-  introChapter = chapter;
   images.push(loadImage(spec.bg));
   spec.layers.forEach(function (layer) { images.push(loadImage(layer.src)); });
   introImages = images;
@@ -908,7 +933,6 @@ function playIntro(chapter, done) {
 }
 
 function launchGame(chapter, score) {
-  var frame = document.getElementById('game');
   var runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   var url = new URL(chapter.path, location.href);
   var lives;
@@ -918,14 +942,7 @@ function launchGame(chapter, score) {
     lives = (typeof score === 'number' && isFinite(score)) ? score : 7;
     url.searchParams.set('lives', String(lives));
   }
-  campaignRoot.hidden = true;
-  cinema.hidden = true;
-  ending.hidden = true;
-  frame.title = chapter.title;
-  document.getElementById('mission').hidden = false;
-  document.body.classList.add('playing');
-  frame.src = url.href;
-  syncTurn();
+  openMissionFrame(url.href, chapter.title);
 }
 
 function afterIntro(chapter) {
@@ -970,7 +987,7 @@ function openChapter(id, test) {
     showStart();
     return;
   }
-  clearTimeout(pinTimer);
+  clearInterval(pinTimer);
   clearCredits();
   pendingTest = test || null;
   active = null;
@@ -1009,7 +1026,7 @@ function showPin(chapter) {
   home.className = 'secondary';
   home.textContent = 'Start screen';
   home.onclick = function () {
-    clearTimeout(pinTimer);
+    clearInterval(pinTimer);
     showStart();
   };
   section.appendChild(kicker);
@@ -1019,8 +1036,8 @@ function showPin(chapter) {
   section.appendChild(home);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
-  clearTimeout(pinTimer);
-  pinTimer = setTimeout(function () {
+  clearInterval(pinTimer);
+  pinTimer = schedulePortraitStep(function () {
     if (chapter.id === 'prologue' && nextId) showCaptureCard(nextId);
     else if (nextId) openChapter(nextId);
     else showEnding();
@@ -1032,7 +1049,7 @@ function showCaptureCard(nextId) {
   var kicker = document.createElement('p');
   var title = document.createElement('h1');
   var copy = document.createElement('p');
-  clearTimeout(pinTimer);
+  clearInterval(pinTimer);
   closeMission();
   ending.hidden = true;
   cinema.hidden = true;
@@ -1050,12 +1067,13 @@ function showCaptureCard(nextId) {
   section.appendChild(copy);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
-  pinTimer = setTimeout(function () {
+  pinTimer = schedulePortraitStep(function () {
     openChapter(nextId);
   }, 6500);
 }
 
 function showRestored() {
+  resumeEndingAfterTurn = false;
   endingVideo.pause();
   endingVideo.hidden = true;
   document.getElementById('ending-skip').hidden = true;
@@ -1085,6 +1103,7 @@ function showEnding() {
 
 function playEnding() {
   var pending;
+  if (turnNeeded()) return;
   document.getElementById('ending-gate').hidden = true;
   document.getElementById('ending-skip').hidden = false;
   endingVideo.hidden = false;
@@ -1132,12 +1151,15 @@ document.getElementById('intro-skip').onclick = function () {
 };
 window.addEventListener('resize', syncTurn);
 window.addEventListener('orientationchange', syncTurn);
+mobilePointer.addEventListener('change', syncTurn);
+portraitViewport.addEventListener('change', syncTurn);
 document.getElementById('ending-play').onclick = playEnding;
 document.getElementById('ending-skip').onclick = showRestored;
 document.getElementById('ending-home').onclick = showStart;
 endingVideo.addEventListener('ended', showRestored);
 
 window.TrentCampaign = {
+  openMissionFrame: openMissionFrame,
   onShelfWon: function () {
     var chapter;
     if (!shelfOpen) return;

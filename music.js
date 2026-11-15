@@ -9,8 +9,7 @@ let introPlaying = false;
 let campaignTime = 0;
 
 function musicBlocked() {
-  return document.hidden || document.body.classList.contains('playing') ||
-    (introPlaying && !turnGate.hidden);
+  return document.hidden || document.body.classList.contains('playing') || !turnGate.hidden;
 }
 
 function updateMusic() {

@@ -4,53 +4,63 @@
   if (!name) return;
   var base = '../assets/audio/' + name;
   var music = new Audio('../assets/audio/christmas-metal/' + name + '.mp3?v=carol-metal1');
-  var on = true;
+  var wantsMusic = false;
+  var gate = null;
+  var orientation = window.matchMedia('(orientation: portrait)');
+  var touch = window.matchMedia('(pointer: coarse)');
   music.loop = true;
   music.volume = 0.35;
   music.preload = 'auto';
 
-  function start() {
-    if (on) music.play().catch(function () {});
+  function blocked() {
+    return touch.matches && orientation.matches;
+  }
+  window.TrentGameOrientation = { blocked: blocked };
+
+  function sync() {
+    var waiting = blocked();
+    if (gate && gate.hidden === waiting) {
+      gate.hidden = !waiting;
+      for (var child of document.body.children) {
+        if (child !== gate && child.tagName !== 'SCRIPT') child.inert = waiting;
+      }
+      if (waiting) gate.focus({ preventScroll: true });
+    }
+    if (waiting || document.hidden || !wantsMusic) music.pause();
+    else if (music.paused) music.play().catch(function () {});
   }
 
-  document.addEventListener('pointerdown', start);
-  document.addEventListener('keydown', start);
-  window.addEventListener('pagehide', function () { music.pause(); });
+  function start() {
+    if (blocked()) return;
+    wantsMusic = true;
+    sync();
+  }
 
   if (!document.getElementById('portrait')) {
-    var gate = document.createElement('div');
-    var mark = document.createElement('div');
-    var heading = document.createElement('h1');
-    var note = document.createElement('p');
+    gate = document.createElement('div');
     gate.id = 'turn-gate';
     gate.hidden = true;
-    mark.className = 'rotate-mark';
-    mark.setAttribute('aria-hidden', 'true');
-    heading.textContent = 'Turn the screen sideways';
-    note.textContent = 'This part stays paused until the phone is landscape.';
-    gate.appendChild(mark);
-    gate.appendChild(heading);
-    gate.appendChild(note);
+    gate.tabIndex = -1;
+    gate.innerHTML = '<div class="rotate-mark" aria-hidden="true"></div>' +
+      '<h1>Turn your phone sideways</h1><p>Minigames play in landscape.</p>';
     var style = document.createElement('style');
-    style.textContent = '#turn-gate{position:fixed;inset:0;z-index:40;display:grid;place-items:center;align-content:center;gap:12px;background:#0c171e;color:#f8ecd4;text-align:center;padding:24px}#turn-gate[hidden]{display:none!important}#turn-gate .rotate-mark{width:92px;height:148px;border:8px solid #f8ecd4;border-radius:16px;transform:rotate(90deg)}';
+    style.textContent = '#turn-gate{position:fixed;inset:0;z-index:80;display:grid;place-items:center;align-content:center;gap:12px;background:#0c171e;color:#f8ecd4;text-align:center;padding:24px}#turn-gate[hidden]{display:none!important}#turn-gate h1,#turn-gate p{margin:0}#turn-gate .rotate-mark{width:92px;height:148px;border:8px solid #f8ecd4;border-radius:16px;transform:rotate(90deg)}';
     document.head.appendChild(style);
-    var held = false;
-    function landscape() {
-      var portrait = window.innerHeight > window.innerWidth + 20;
-      var pause = document.getElementById('pause');
-      gate.hidden = !portrait;
-      if (portrait && pause && !held) {
-        pause.click();
-        held = true;
-      } else if (!portrait && held) {
-        held = false;
-        if (pause) pause.click();
-      }
-    }
-    window.addEventListener('resize', landscape);
-    window.addEventListener('orientationchange', landscape);
-    landscape();
+    document.body.appendChild(gate);
   }
+
+  window.addEventListener('keydown', function (event) {
+    if (blocked()) event.stopImmediatePropagation();
+  }, true);
+  document.addEventListener('pointerdown', start);
+  document.addEventListener('keydown', start);
+  document.addEventListener('visibilitychange', sync);
+  window.addEventListener('pagehide', function () { music.pause(); });
+  window.addEventListener('resize', sync);
+  window.addEventListener('orientationchange', sync);
+  orientation.addEventListener('change', sync);
+  touch.addEventListener('change', sync);
+  sync();
 
   window.TrentSfx = {
     play: function (kind) {

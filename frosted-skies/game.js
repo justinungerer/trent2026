@@ -637,7 +637,7 @@ let last = 0;
 function frame(now) {
   const dt = last ? Math.min((now - last) / 1000, .033) : 0;
   last = now;
-  if (state === 'playing') update(dt);
+  if (state === 'playing' && !window.TrentGameOrientation?.blocked()) update(dt);
   else if (state === 'won') { for (const w of wraps) w.age = Math.min(.8, w.age + dt); }
   render();
   requestAnimationFrame(frame);

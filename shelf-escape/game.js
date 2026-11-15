@@ -204,5 +204,5 @@ function render(){
 }
 reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; return each to its alarm relay to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; push up, W, or Up to jump guards and ribbon parcels. Right thumb or Space fires once per tap. Pull down behind a crate to hide. Green boxes refill ammo and restore one heart once.','Begin escape');
 let last=0;
-function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
+function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

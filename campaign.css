@@ -234,6 +234,14 @@ body {
 }
 
 @media (orientation: portrait) {
+  #cinema:not([data-chapter="frost"]) :is(#intro-video, #intro-canvas) {
+    top: 50%;
+    bottom: auto;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    transform: translateY(-50%);
+  }
+
   #cinema {
     --intro-beat-height: 7.4rem;
   }
@@ -410,7 +418,7 @@ body {
 #turn-gate {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 80;
   display: grid;
   place-items: center;
   align-content: center;
@@ -422,6 +430,16 @@ body {
 }
 
 #turn-gate[hidden] { display: none !important; }
+
+@media (pointer: coarse) {
+  .playing #music {
+    display: none;
+  }
+}
+
+.waiting-for-rotation .credit-reel {
+  animation-play-state: paused;
+}
 
 #turn-gate .rotate-mark {
   width: 92px;
