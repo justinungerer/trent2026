@@ -25,6 +25,7 @@ var creditTimer = 0;
 
 var CREDITS = [
   'Trent Saves Christmas',
+  'Music by Justin Ungerer',
   'Designer',
   'Justin Ungerer',
   'Producer',

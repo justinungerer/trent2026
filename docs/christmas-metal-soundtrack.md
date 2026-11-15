@@ -1,28 +1,30 @@
 # Christmas metal soundtrack
 
-The MP3s in `assets/audio/christmas-metal/` are the replacements for the synthesized background music in Trent Saves Christmas. The quiz and campaign screens share one track. Each of the eleven playable minigames has its own track. All twelve tracks are original instrumental arrangements generated locally with ACE-Step 1.5 Turbo.
+The MP3s in `assets/audio/christmas-metal/` are the replacements for the synthesized background music in Trent Saves Christmas. The quiz and campaign screens share one track. Each of the eleven playable minigames has its own track. The eleven minigame tracks are heavy-metal covers of traditional Christmas songs.
 
 ## Track assignments
 
 The filename stem identifies both the game and the previous background-music file. For example, `assets/audio/christmas-metal/shelf-escape.mp3` replaces `assets/audio/shelf-escape.wav`.
 
 - `campaign.mp3` — **Bells Over the Map** · Quiz and campaign · melodic symphonic metal · 3:16
-- `prologue.mp3` — **Christmas at First Light** · Landing at Normandy · cinematic power metal · 3:20
-- `night-broadcast.mp3` — **Carols After Curfew** · The Night Broadcast · gothic progressive metal · 3:24
-- `frosted-skies.mp3` — **Sleighbells at Altitude** · Frosted Skies · melodic speed metal · 3:12
-- `white-rail.mp3` — **Iron Tinsel Express** · White Rail · industrial groove metal · 3:28
-- `chapter-2.mp3` — **Special Delivery in Steel** · Special Delivery · punk-inflected thrash metal · 3:24
-- `switch-tower.mp3` — **Midnight Switch** · The Switch Tower · progressive metal · 3:20
-- `shelf-escape.mp3` — **Ribbonfall Rhapsody** · Operation Ribbonfall · neoclassical metal · 3:12
-- `listening-wire.mp3` — **A Carol on the Wire** · The Listening Wire · atmospheric post-metal · 3:28
-- `holding-camp.mp3` — **The Bells Beyond the Fence** · The Holding Camp · melodic doom metal · 3:32
-- `wrapping-line.mp3` — **The Tinsel Machine** · The Wrapping Line · funk-influenced groove metal · 3:16
-- `chimney-road.mp3` — **The Last Chimney** · The Chimney Road · melodic heavy metal · 3:24
+- `prologue.mp3` — **Hark! The Herald Angels Sing** · Landing at Normandy · symphonic battle metal · 3:12
+- `night-broadcast.mp3` — **O Come, O Come, Emmanuel** · The Night Broadcast · blackened melodic metal · 3:20
+- `frosted-skies.mp3` — **Joy to the World** · Frosted Skies · speed thrash · 3:13
+- `white-rail.mp3` — **Go Tell It on the Mountain** · White Rail · industrial groove metal · 3:16
+- `chapter-2.mp3` — **Angels We Have Heard on High** · Special Delivery · crossover thrash · 3:15
+- `switch-tower.mp3` — **O Come, All Ye Faithful** · The Switch Tower · progressive thrash · 3:16
+- `shelf-escape.mp3` — **Shchedryk (Ukrainian Bell Carol)** · Operation Ribbonfall · neoclassical speed metal · 3:14
+- `listening-wire.mp3` — **What Child Is This? (Greensleeves)** · The Listening Wire · progressive death metal · 3:25
+- `holding-camp.mp3` — **Silent Night** · The Holding Camp · doom and groove metal · 3:28
+- `wrapping-line.mp3` — **Good Christian Men, Rejoice** · The Wrapping Line · groove thrash · 3:15
+- `chimney-road.mp3` — **We Three Kings** · The Chimney Road · melodic death and power metal · 3:22
+
+The minigame tracks are newly rendered instrumental covers made locally with ACE-Step 1.5 Turbo. The [Hymn Commons Christmas carol library](https://hymncommons.org/hymn-commons-home/christmas-public-domain-carols/) supplied public-domain guide recordings for ten arrangements. The Shchedryk arrangement uses a locally programmed reference of the traditional four-note melody. The opening reel includes **Music by Justin Ungerer**.
 
 ## Integration
 
 - The root `index.html` loads `assets/audio/christmas-metal/campaign.mp3` through the existing `soundtrack` element. `music.js` controls its loop, mute toggle, and pause while a minigame is open.
-- Each minigame declares its ID in the `data-game` attribute of its HTML document. The shared `game-audio.js` loads `../assets/audio/christmas-metal/<data-game>.mp3` and loops it.
+- Each minigame declares its ID in the `data-game` attribute of its HTML document. The shared `game-audio.js` loads `../assets/audio/christmas-metal/<data-game>.mp3` with a versioned URL and loops it.
 - Keep the `*-action.wav`, `*-elf.wav`, `*-right.wav`, and `*-wrong.wav` files in `assets/audio/`. The background tracks and the short sound effects have separate paths. The legacy Python composers generate the old synthesized audio.
 - When porting these assets to another branch, copy the entire `assets/audio/christmas-metal/` directory and carry over the soundtrack path in `index.html` and the `Audio` path in `game-audio.js`.
 
