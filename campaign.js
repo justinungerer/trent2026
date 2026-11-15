@@ -20,6 +20,7 @@ var introToken = 0;
 var introRaf = 0;
 var introDone = null;
 var introImages = [];
+var cleanupIntroVideo = null;
 var creditTimer = 0;
 
 var CREDITS = [
@@ -41,13 +42,11 @@ var CHAPTERS = [
     id: 'prologue',
     number: 0,
     title: 'Landing at Normandy',
-    kicker: 'Prologue · Landing at Normandy',
-    line: 'June 1944. Trent leaves the landing craft and crosses the sand. Surf shoves him back. Wire and hedgehogs block the way. Landing at Normandy is the only finish.',
+    kicker: 'Prologue',
     lines: [
-      'June 1944. Trent steps off the landing craft onto the sand.',
-      'The surf runs in. Brace, or it shoves him back toward the boat.',
-      'Wire and metal hedgehogs block the beach. Walk around them.',
-      'Landing at Normandy is ahead. Reach it and the landing is done.'
+      "June 1944. Dawn breaks over Normandy as Trent’s landing craft noses into the surf.",
+      "The ramp drops. Beyond the breakers, wire and steel obstacles cut across the beach.",
+      "The seawall is the only cover. Trent has to reach it before the tide pushes him back."
     ],
     event: 'prologue:complete',
     path: './prologue/',
@@ -68,12 +67,10 @@ var CHAPTERS = [
     number: 1,
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
-    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Most stations are noise. One narrow band says Santa has been captured. Hold that band until it locks.',
     lines: [
-      'Months after the landing, Christmas is close and Santa is missing.',
-      'Trent opens a field radio. The canteen, the weather, and a music box are the wrong stations.',
-      'The field report is a narrow band. Hold the dial still until the lock fills.',
-      'When it locks, he knows Santa has been taken. The search can start.'
+      "Months later, Christmas is drawing near. A field radio crackles inside a tent in the snow.",
+      "Between a weather report and a tinny carol, a voice breaks through the static.",
+      "Santa has been taken. Trent leans over the dial, trying to hold the signal long enough to learn where."
     ],
     story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow. Most stations are noise. One narrow band says Santa has been captured, and he holds it until the lock fills.',
     event: 'night-broadcast:complete',
@@ -94,12 +91,10 @@ var CHAPTERS = [
     number: 2,
     title: 'Frosted Skies',
     kicker: 'Chapter 2',
-    line: 'The broadcast gives a heading. Trent takes the ribbon sleigh into the winter valley, dodges the convoy, and recovers Santa’s last signal from the sky.',
     lines: [
-      'The captured signal points into the winter sky.',
-      'Trent flies the ribbon sleigh over the valley. The cannons fire on their own.',
-      'Scout craft and amber fire cross his path. Repair parcels keep the hull together.',
-      'The flagship arrives. Recover the broadcast and the heading is his.'
+      "The radio call points into a winter valley. Trent takes the ribbon sleigh up between the pines.",
+      "Scout craft sweep the valley ahead. Amber fire cuts across the snow below.",
+      "The last broadcast is aboard the flagship. Trent needs that signal to find the next heading."
     ],
     story: 'The captured signal points into the winter sky. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, to recover Santa’s last broadcast.',
     event: 'frosted-skies:complete',
@@ -121,12 +116,10 @@ var CHAPTERS = [
     number: 3,
     title: 'White Rail',
     kicker: 'Chapter 3',
-    line: 'The rails run through the snow. Trent pumps a handcar and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the end of the line.',
     lines: [
-      'A handcar sits on the snowy rails. Pumping is the only engine.',
-      'Crates, gaps, and a signal arm block the straight line.',
-      'The left thumb picks the track. The right thumb keeps the speed up.',
-      'Reach the yard mouth before three slips send him back to the start.'
+      "The new heading leads to a rail yard buried in snow. A handcar waits on the tracks.",
+      "Beyond the first bend, crates and broken rails choke the line. A lowered signal arm cuts across the route.",
+      "Trent grips the pump handle. The yard mouth is ahead, if he can keep the car moving."
     ],
     story: 'A handcar waits on the snowy rails. Trent pumps for speed and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the end of the line.',
     event: 'white-rail:complete',
@@ -147,12 +140,10 @@ var CHAPTERS = [
     number: 4,
     title: 'Special Delivery',
     kicker: 'Chapter 4',
-    line: 'The freight yard hides three dispatches. Trent moves in the open, avoids the inspectors, and uses a wind-up penguin when a patrol gets close. The mail hatch is the way out.',
     lines: [
-      'Three dispatches are hidden among the shelves of the freight yard.',
-      'Inspectors walk fixed routes. Stay out of their sight.',
-      'A wind-up penguin draws them away for a few seconds.',
-      'Collect every dispatch, then reach the mail hatch.'
+      "Lanterns burn in the freight yard. Three dispatches are hidden among the stores.",
+      "Inspectors cross the aisles on fixed rounds. Trent winds up a toy penguin and watches for a gap.",
+      "Once he has the dispatches, the mail hatch is his way out."
     ],
     story: 'Three dispatches are hidden in the freight yard. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch.',
     event: 'special-delivery:complete',
@@ -173,12 +164,10 @@ var CHAPTERS = [
     number: 5,
     title: 'The Switch Tower',
     kicker: 'Chapter 5',
-    line: 'A train is coming. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
     lines: [
-      'The destination board shows the lever order as pictures, not a speech.',
-      'Trent throws each lever left or right before the train arrives.',
-      'A wrong pattern sends the train back and costs a try.',
-      'The matching pattern lets the right train leave the yard.'
+      "A train is coming through the snow. Inside the switch tower, a picture board marks its route.",
+      "Each picture points to a lever. Get the order wrong and the train goes back the way it came.",
+      "Trent studies the board as the engine draws nearer."
     ],
     story: 'A train is coming. The destination board shows the lever order as pictures. Trent throws each switch to match it. The right pattern lets the train leave the yard.',
     event: 'switch-tower:complete',
@@ -199,12 +188,10 @@ var CHAPTERS = [
     number: 6,
     title: 'The shelf operative',
     kicker: 'Chapter 6',
-    line: 'Sprout is inside the depot with Santa’s transport orders. The quiz builds his ribbon gun. Then Trent plays as Sprout: wrap the guards, disable the relays, and leave through the mail hatch.',
     lines: [
-      'Sprout is trapped in the colonel’s depot with the transport orders.',
-      'The questions decide his ammunition, his reload, and his ribbon.',
-      'Inside, shelves block shots. Guards can be wrapped into parcels.',
-      'Disable the alarms, send the orders, and escape with the route to Santa.'
+      "Sprout is inside the depot. Somewhere between the shelves are the orders for Santa’s transport.",
+      "Guards patrol the aisles, and the alarm relays cover the exits. Sprout has a ribbon gun and a narrow lead.",
+      "He has to quiet the relays, send the orders, and get out through the mail hatch."
     ],
     story: 'Sprout is inside the depot with Santa’s transport orders. The questions build his ribbon gun. Then he wraps the guards, quiets the alarms, and leaves through the mail hatch with the route.',
     event: null,
@@ -224,12 +211,10 @@ var CHAPTERS = [
     number: 7,
     title: 'The Listening Wire',
     kicker: 'Chapter 7',
-    line: 'A short Morse pattern has to go out while a searchlight sweeps the yard. Trent sends only when the light is in the safe gap. Three slips restart the message.',
     lines: [
-      'A message has to leave before the next patrol.',
-      'The searchlight sweeps the yard. The safe gap is brief.',
-      'Hold Send only while the lamp is in that gap.',
-      'Dot, dash, dot, dot. Three slips and the pattern starts over.'
+      "Trent reaches an old signal post at the edge of the yard. A short message is ready to send.",
+      "A searchlight sweeps the snow. Every pass leaves a few seconds of darkness.",
+      "Dot, dash, dot, dot. The message has to get through before the next patrol."
     ],
     story: 'A short Morse pattern has to leave before the next patrol. A searchlight sweeps the yard. Trent holds Send only in the safe gap. Three slips, and the message starts over.',
     event: 'listening-wire:complete',
@@ -250,12 +235,10 @@ var CHAPTERS = [
     number: 8,
     title: 'The Holding Camp',
     kicker: 'Chapter 8',
-    line: 'Santa walks the cabin shadow toward the gate. Trent has to stay near him. Falling behind or stepping into a searchlight costs a slip. Three slips restart the walk.',
     lines: [
-      'Santa is walking out. He will not wait in the open.',
-      'Stay close. The searchlights punish a wander.',
-      'A slip is a setback, not the end, until the third one.',
-      'Reach the gate together and the camp is behind them.'
+      "Santa steps out of the cabin and into its shadow. The gate is across the camp.",
+      "Searchlights sweep the open ground between them. Santa keeps moving from one patch of darkness to the next.",
+      "Trent has to stay close enough for both of them to reach the gate together."
     ],
     story: 'Santa walks the cabin shadow toward the gate and will not wait in the open. Trent stays close. A searchlight or a long gap costs a slip. Three slips restart the walk.',
     event: 'holding-camp:complete',
@@ -276,12 +259,10 @@ var CHAPTERS = [
     number: 9,
     title: 'The Wrapping Line',
     kicker: 'Chapter 9',
-    line: 'Parcels ride a belt through Quinn’s workshop. Trent taps on the beat to drop a bow. Early or late resets the run. Eight bows in a row clear the line.',
     lines: [
-      'The workshop belt brings one parcel after another.',
-      'A bow has to land as the parcel meets the mark.',
-      'Early and late both reset the count.',
-      'Eight bows in time finish the line.'
+      "The belt is running in Quinn’s workshop, but the parcels are leaving without their bows.",
+      "Each box spends only a moment under the ribbon mark. Trent listens for the rhythm of the rollers.",
+      "Eight bows in time will finish the line and send him on his way."
     ],
     story: 'Parcels ride a belt through Quinn’s workshop. A bow has to land as each parcel meets the mark. Early or late resets the count. Eight bows in time clear the line.',
     event: 'wrapping-line:complete',
@@ -302,12 +283,10 @@ var CHAPTERS = [
     number: 10,
     title: 'The Chimney Road',
     kicker: 'Chapter 10',
-    line: 'Snowy roofs lead to the waiting sleigh. Trent runs and jumps the gaps, gets past a sliding crate, and reaches the chimney. Three falls restart the road. The flight home comes after.',
     lines: [
-      'The sleigh is parked on the last roof.',
-      'The road is a run of snowy rooftops and open gaps.',
-      'A crate slides across one roof. Jump it.',
-      'Three falls send him back. The sleigh is the end of the road.'
+      "The sleigh is waiting above a moonlit village, on the last roof along the chimney road.",
+      "Snow hides the edges of the tiles. A crate comes sliding down one pitch toward the gap.",
+      "Trent looks past the chimneys to the waiting sleigh. The flight home is one roof away."
     ],
     story: 'The sleigh waits on the last roof. Trent runs the snowy gaps, jumps a sliding crate, and reaches the chimney. Three falls send him back. The flight home comes after the sleigh.',
     event: 'chimney-road:complete',
@@ -390,6 +369,8 @@ function stopIntro() {
   introChapter = null;
   if (introImages.length) releaseImages(introImages);
   introImages = [];
+  if (cleanupIntroVideo) cleanupIntroVideo();
+  cleanupIntroVideo = null;
   cinema.hidden = true;
   if (window.TrentMusic) window.TrentMusic.stopIntro();
 }
@@ -752,15 +733,96 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   ctx.drawImage(image, sx, 0, fw, fh, dx, dy, destW, destH);
 }
 
+function updateIntroCrawl(beats, count, elapsed, reduced) {
+  if (reduced) {
+    beats.style.transform = '';
+    return;
+  }
+  var beatDuration = INTRO_MS / count;
+  var beat = Math.min(count - 1, Math.floor(elapsed / beatDuration));
+  var transition = beat === count - 1 ? 0 :
+    Math.max(0, (elapsed - (beat + 1) * beatDuration + 1250) / 1250);
+  var offset = beat + transition * transition * (3 - 2 * transition);
+  beats.style.transform = 'translate3d(0,' + (-100 * offset / count) + '%,0)';
+}
+
+function prepareIntroVideo(chapter, getElapsed) {
+  var video = document.getElementById('intro-video');
+  var showing = false;
+  var requested = false;
+  var failed = false;
+
+  function displayVideo(display) {
+    showing = display;
+    cinema.classList.toggle('has-video', display);
+  }
+
+  function showFrame() {
+    if (requested && !video.paused && !video.seeking) displayVideo(true);
+  }
+
+  function syncFrame() {
+    var time = getElapsed() / 1000;
+    if (requested && !video.seeking && Math.abs(video.currentTime - time) > 0.45) {
+      video.currentTime = time;
+    } else {
+      showFrame();
+    }
+  }
+
+  function updateVideo() {
+    var allowed = !failed && !document.hidden && !reduceMotion.matches && !turnNeeded();
+    if (requested === allowed) return showing;
+    requested = allowed;
+    if (!allowed) {
+      video.pause();
+      displayVideo(false);
+    } else {
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4';
+      video.play().catch(function (error) {
+        if (requested && error.name !== 'AbortError') {
+          failed = true;
+          displayVideo(false);
+        }
+      });
+    }
+    return showing;
+  }
+
+  video.muted = true;
+  video.onplaying = syncFrame;
+  video.onseeked = showFrame;
+  video.onwaiting = function () { displayVideo(false); };
+  video.onerror = function () {
+    failed = true;
+    displayVideo(false);
+  };
+  document.addEventListener('visibilitychange', updateVideo);
+  cleanupIntroVideo = function () {
+    requested = false;
+    document.removeEventListener('visibilitychange', updateVideo);
+    video.onplaying = video.onseeked = video.onwaiting = video.onerror = null;
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    displayVideo(false);
+  };
+  return updateVideo;
+}
+
 function playIntro(chapter, done) {
   var canvas = document.getElementById('intro-canvas');
   var ctx = canvas.getContext('2d');
   var spec = chapter.intro;
+  var crawl = document.getElementById('intro-crawl');
+  var beats = document.getElementById('intro-beats');
+  var progress = document.getElementById('intro-progress');
   var images = [];
   var started = performance.now();
   var elapsed = 0;
   var last = started;
   var token;
+  var updateVideo;
   stopIntro();
   token = introToken;
   introChapter = chapter;
@@ -769,10 +831,22 @@ function playIntro(chapter, done) {
   introImages = images;
   document.getElementById('intro-kicker').textContent = chapter.kicker;
   document.getElementById('intro-title').textContent = chapter.title;
-  document.getElementById('intro-line').textContent = chapter.line;
+  beats.replaceChildren();
+  chapter.lines.forEach(function (line) {
+    var paragraph = document.createElement('p');
+    paragraph.textContent = line;
+    beats.appendChild(paragraph);
+  });
+  beats.style.transform = '';
+  progress.style.transform = 'scaleX(0)';
+  crawl.tabIndex = reduceMotion.matches ? 0 : -1;
+  cinema.dataset.chapter = chapter.id;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   cinema.hidden = false;
   campaignRoot.hidden = true;
   syncTurn();
+  updateVideo = prepareIntroVideo(chapter, function () { return elapsed; });
+  updateVideo();
   if (window.TrentMusic) window.TrentMusic.startIntro(chapter.id);
   document.getElementById('intro-title').focus({ preventScroll: true });
   introDone = function () {
@@ -785,7 +859,8 @@ function playIntro(chapter, done) {
     var i;
     if (introToken !== token) return;
     syncTurn();
-    if (turnNeeded()) {
+    if (document.hidden || turnNeeded()) {
+      updateVideo();
       last = now;
       introRaf = requestAnimationFrame(tick);
       return;
@@ -793,14 +868,14 @@ function playIntro(chapter, done) {
     elapsed += Math.min(80, now - last);
     last = now;
     reduced = reduceMotion.matches;
-    fitCanvas(canvas);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    drawBackground(ctx, images[0], spec, elapsed, reduced);
-    for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, reduced);
-    if (chapter.lines && chapter.lines.length) {
-      var step = Math.min(chapter.lines.length - 1, Math.floor(elapsed / (INTRO_MS / chapter.lines.length)));
-      document.getElementById('intro-line').textContent = chapter.lines[step];
+    if (!updateVideo()) {
+      fitCanvas(canvas);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      drawBackground(ctx, images[0], spec, elapsed, reduced);
+      for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, reduced);
     }
+    updateIntroCrawl(beats, chapter.lines.length, elapsed, reduced);
+    progress.style.transform = 'scaleX(' + Math.min(1, elapsed / INTRO_MS) + ')';
     if (elapsed >= INTRO_MS) {
       introDone();
       return;

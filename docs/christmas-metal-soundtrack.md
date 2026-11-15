@@ -47,3 +47,5 @@ The files in `assets/audio/christmas-metal/intros/` use the chapter IDs from `ca
 - `chimney.mp3` — **Rooftop Fanfare** · The Chimney Road
 
 To port the intro themes, copy the `intros/` directory and carry over the `TrentMusic` controller in `music.js`, and its calls in `campaign.js`. The campaign test menu can replay each intro for a playback check.
+
+The [chapter cinematics guide](chapter-cinematics.md) covers the Blender renders and scrolling scene text.
