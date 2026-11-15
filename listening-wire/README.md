@@ -1,8 +1,8 @@
 # Chapter 7 — The Listening Wire
 
-A first-person corridor. Trent walks a painted hall, turns, and shoots cartoon soldiers who drop in a puff of dust. The gun fires faster partway down the hall, then throws a spread. The green door at the end wins the run. A careful walk is about a minute.
+A first-person maze in the enemy wire room. Trent walks painted corridors, turns, and shoots cartoon soldiers who shoot back. Health kits and bullet crates sit on the floor. The green door at the far end is the listening post.
 
-The corridor pictures are original generated paintings in `art/`: wall, floor, ceiling, the green door, and one soldier. The gun, dust, and crosshair are canvas drawings. The older yard paintings (`scene.webp`, `lamp.webp`, `trent.webp`) stay in this folder for the campaign’s chapter card. There are no third-party assets, no downloaded images, and no build step.
+The corridor pictures are original generated paintings in `art/`: wall, floor, ceiling, the green door, and one soldier. Runners and spotters are that same soldier, tinted in canvas. The gun, hit flash, kits, crates, and tracers are canvas drawings. The older yard paintings (`scene.webp`, `lamp.webp`, `trent.webp`) stay in this folder for the campaign’s chapter card. There are no third-party assets, no downloaded images, and no build step.
 
 ## Open it
 
@@ -18,29 +18,43 @@ On GitHub Pages that is the site's `/listening-wire/` path, for example `https:/
 
 Landscape is the intended orientation. A portrait visit shows a short "turn sideways" note and pauses a run already in progress.
 
+## Map
+
+The maze is 33 by 25 cells, with dead ends and a few loops. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
+
 ## Controls
 
 Touch first. Nothing you need is hover-only. Every control is at least 48 pixels.
 
 - Turn left and turn right, or A and D, or the left and right arrow keys.
 - Walk forward and back, or W and S, or the up and down arrow keys.
-- Shoot, or hold Space or Enter. The button keeps firing when the gun is ready.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the how-to card and does not count as reaching the door.
+- Shoot, or hold Space or Enter. Each shot spends one bullet.
+- Escape pauses. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the opening card and does not count as reaching the door.
 
 If the device asks for reduced motion, the view does not shake and the gun does not bob.
 
-## Gun
+## Fight
 
-The gun starts as a single steady shot. Farther along the corridor it becomes a quicker shot, then a three-way spread. A hit sits a soldier down in dust. Soldiers who reach you bump you back. They do not end the run.
+Trent starts with 3 health. A soldier’s shot, close enough to count, costs one health. At 0 health the run ends on a card and does not dispatch the win event. Kits on the floor restore one health, up to 3, and stay put when health is already full.
+
+Starting bullets come from the `lives` query, the same quiz score the parent passes into wrapping-line. A missing or unreadable value starts the run at 10. The number is capped at 10. Bullet crates in the maze add more, and a killed soldier drops 1 bullet where they stood. The soldier flashes and vanishes. No body stays on screen.
+
+There are three soldier pictures, all from `art/soldier.webp`:
+
+- Soldier — olive, as painted. Middling step and shot.
+- Runner — cool tint. Closes in and shoots sooner.
+- Spotter — warm tint. Hangs back and fires farther down the corridor.
+
+With bullets left, a soldier in the way shoves Trent back. With an empty gun, Trent can slip past to look for another crate.
 
 ## Win
 
-Walk up to the green door. There is no time limit and no fail state. Reaching the door wins.
+Walk up to the green door. Reaching the listening post wins.
 
 ## Victory event
 
-On a win the page shows a short card and dispatches a `CustomEvent` named `listening-wire:complete` on `window` once. The detail is `{ seconds }`: whole seconds spent walking, not counting time spent paused.
+On a win the page shows a short card and dispatches a `CustomEvent` named `listening-wire:complete` on `window` once. The detail is `{ seconds }`: whole seconds spent in the maze, not counting time spent paused.
 
-A bump does not dispatch the event. Give up does not dispatch the event. Walk it again starts a fresh corridor and allows the event again on the next win.
+A hit does not dispatch the event. Running out of health does not dispatch the event. Give up does not dispatch the event. Walk it again starts a fresh maze and allows the event again on the next win.
 
 If the page is inside a parent frame, that same win also posts `{ type: 'listening-wire:complete', detail: { seconds }, runId? }` to the parent. `runId` is copied from the page query string when it is present.

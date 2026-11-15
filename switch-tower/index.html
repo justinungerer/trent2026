@@ -14,7 +14,7 @@
     <div class="hud">
       <div class="hud-block">
         <span class="label">Away · miss</span>
-        <strong id="misses">0 / 3 · 0</strong>
+        <strong id="misses">0 / 5 · 0</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -29,8 +29,8 @@
       <div class="card">
         <p class="kicker">Chapter 5</p>
         <h1>The Switch Tower</h1>
-        <p>Three trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
-        <p>Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. Three trains away wins. Three explosions start the puzzle over.</p>
+        <p>Five trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
+        <p>Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. After two trains get away, a soldier appears and throws a random lever every second and a half. Set it back before the train arrives. Five trains away wins. Three explosions start the puzzle over.</p>
         <button type="button" id="start">Open the tower</button>
       </div>
     </div>
@@ -56,7 +56,7 @@
       <div class="card">
         <p class="kicker">The Switch Tower</p>
         <h1>The trains are away</h1>
-        <p id="win-time">Three trains away in 0 seconds.</p>
+        <p id="win-time">Five trains away in 0 seconds.</p>
         <button type="button" id="retry">Run the yard again</button>
       </div>
     </div>
@@ -70,6 +70,6 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="game.js?v=rotation2"></script>
+<script src="game.js?v=five-trains"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

@@ -22,6 +22,7 @@ directory alongside the game.
 Relative paths support GitHub Pages subpaths.
 
 The backdrop, cover and environmental effects are original Canvas artwork.
+Interactive props (alarm bell, key, order page, cipher book, rail switch, generator, fuse, ribbon ammo box, gift, aerial, radio, padlock, mail hatch, and crate) are original painted WebP files in `art/props/`. Provenance is in `art/ART-SOURCES.md`.
 Snow, steam, lights and parallax animate; reduced-motion preference freezes
 snow and character idle cycling and disables moving steam. Characters use
 actual animation frames. To replace the elf's original bow, the animation is
@@ -48,9 +49,9 @@ transitions into an original parcel effect.
   explains the terms. The sprite sheets total approximately 0.97 MB.
 
 On a landscape phone, move with the left pad and aim/fire with the right pad.
-Tap the fire pad's center to target the nearest guard. On desktop use A/D or
-left/right arrows to move, S/down arrow to hide at a crate, and Space to fire
-at the nearest guard. Green supply boxes refill the earned magazine on entry;
+Push up on the move pad to jump guards, ribbon parcels, tall crates, and the alarm bells. A relay counts only when Sprout is at the top of that jump and just touches the bell. Each successful interaction brings every defeated guard back. Tap the fire pad's center to target the nearest guard. Fire is one shot per tap. On desktop use A/D or
+left/right arrows to move, W or Up to jump, S or Down to hide at a crate, and Space to fire
+once per press at the nearest guard. Green supply boxes refill the earned magazine on entry;
 each box also restores one heart once per attempt. Leave and return for another
 ammo refill. Pause with
 the pause button or Escape; switching tabs or losing focus also pauses. A

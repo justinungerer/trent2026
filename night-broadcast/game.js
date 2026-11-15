@@ -1,13 +1,14 @@
 /* Chapter 1 — The Night Broadcast.
-   A few months after D-Day, near Christmas. The field report
-   drifts along the dial. Chase it, hold the needle steady in
-   that band, and lock three knobs in order. Each lock is three
-   steady seconds. After a lock the signal jumps and keeps drifting.
-   Painted sprites live in art/. The needle, meter, and knob
-   marks stay as small canvas overlays. No network.
-
-   Dial numbers run from 20 to 80. Drag and the arrow keys move
-   the dial at twice the original rate. */
+   Five stations drift on the dial. Each signal marker moves at
+   MARKER_SPEED (4× the old 0.04 chase) and reverses on its own.
+   Stay inside a station's strong zone for STRONG_HOLD seconds and
+   a red band appears on that station. It stays hidden until then.
+   Hold Lock and keep the needle inside the red band until LOCK_TIME
+   fills. Lock works on every station. Only the field report
+   (id "santa") wins. The correct station is fixed, not rolled.
+   A lock on any other station shows "wrong station".
+   Painted sprites live in art/. The needle, meter, markers, and
+   bands are canvas overlays. No network. */
 'use strict';
 
 (function () {
@@ -16,6 +17,7 @@
   var hearingEl = document.getElementById('hearing');
   var signalEl = document.getElementById('signal');
   var lockEl = document.getElementById('lock');
+  var timerLabel = document.getElementById('timer-label');
   var pauseBtn = document.getElementById('pause');
   var lockBtn = document.getElementById('lock-btn');
   var tuneDownBtn = document.getElementById('tune-down');
@@ -31,28 +33,28 @@
   var VIEW_W = 844;
   var VIEW_H = 390;
   var START_FREQ = 0.05;
+  /* Seconds of continuous strong signal before the red band is drawn. */
+  var STRONG_HOLD = 2;
+  /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = 3;
-  var KNOB_COUNT = 3;
-  var DRAG = 0.0008;
-  var KEY_STEP = 0.0064;
-  var KEY_RATE = 0.092;
   var DECAY = 1;
-  var DRIFT_LO = 0.12;
-  var DRIFT_HI = 0.9;
-  var DRIFT_CHASE = 0.04;
-  var DRIFT_HOLD = 0.0022;
-  var LOCK_SPOTS = [
-    { x: 312, y: 132 },
-    { x: 312, y: 206 },
-    { x: 312, y: 280 }
-  ];
+  /* Frequency units per second. The old chase drift was 0.04. */
+  var MARKER_SPEED = 0.16;
+  var TURN_LO = 0.85;
+  var TURN_HI = 1.75;
+  var EDGE_LO = 0.1;
+  var EDGE_HI = 0.9;
+  var STRONG_HALF = 0.08;
+  var RED_HALF = 0.045;
+  var DRAG = 0.0008;
+  var KEY_STEP = 0.008;
+  var KEY_RATE = 0.26;
+  var NOTE_MS = 2400;
 
-  /* Fractions of radio.webp. The painted dial and meter are blank. */
   var RADIO = { x: 352, y: 18, w: 468 };
   var DIAL_U = { x: 0.5162, y: 0.5622, r: 0.1478 };
   var METER_U = { x: 0.8173, y: 0.4392, r: 0.0824 };
   var KNOB_U = { x: 0.8152, y: 0.7389, r: 0.0612 };
-  /* trent.webp: six equal frames. Idle 2, tuning 4. Soles share one baseline. */
   var TRENT = { w: 235, h: 513, anchorX: 80, anchorY: 497, idleMs: 480, tuneMs: 160 };
   var sceneImg = new Image();
   var radioImg = new Image();
@@ -61,40 +63,21 @@
   radioImg.src = 'art/radio.webp';
   trentImg.src = 'art/trent.webp';
 
+  /* correct is only the field report. Chosen by id, every run. */
   var stations = [
-    {
-      id: 'canteen',
-      name: 'Canteen',
-      center: 0.2,
-      half: 0.032,
-      line: 'Canteen. Laughter and tin cups.'
-    },
-    {
-      id: 'weather',
-      name: 'Weather',
-      center: 0.41,
-      half: 0.026,
-      line: 'Weather. Snow overnight, roads quiet.'
-    },
-    {
-      id: 'music',
-      name: 'Music box',
-      center: 0.61,
-      half: 0.022,
-      line: 'A music box, thin and far.'
-    },
-    {
-      id: 'santa',
-      name: 'Field report',
-      center: 0.58,
-      half: 0.018,
-      line: 'Field voice: Santa has been captured.'
-    }
+    { id: 'canteen', name: 'Canteen', line: 'Canteen. Laughter and tin cups.', home: 0.16, homeDir: 1, speedScale: 1, correct: false },
+    { id: 'weather', name: 'Weather', line: 'Weather. Snow overnight, roads quiet.', home: 0.34, homeDir: -1, speedScale: 0.9, correct: false },
+    { id: 'music', name: 'Music box', line: 'A music box, thin and far.', home: 0.5, homeDir: 1, speedScale: 1.15, correct: false },
+    { id: 'chapel', name: 'Chapel', line: 'Chapel. A hymn under the wind.', home: 0.66, homeDir: -1, speedScale: 0.95, correct: false },
+    { id: 'santa', name: 'Field report', line: 'Field voice: Santa has been captured.', home: 0.84, homeDir: 1, speedScale: 1.08, correct: true }
   ];
 
   var state = 'title';
   var freq = START_FREQ;
+  var strongT = 0;
   var lockT = 0;
+  var chargeId = null;
+  var bandId = null;
   var visualTime = 0;
   var cssW = 844;
   var cssH = 390;
@@ -106,10 +89,6 @@
   var victorySent = false;
   var rotateHold = false;
   var lastLine = '';
-  var knobsLocked = 0;
-  var targetFreq = 0.58;
-  var driftDir = 1;
-  var driftPhase = 0;
   var statusUntil = 0;
   var statusNote = '';
 
@@ -169,31 +148,43 @@
     return best;
   }
 
-  function currentStation() {
+  function stationById(id) {
+    var i;
+    for (i = 0; i < stations.length; i++) {
+      if (stations[i].id === id) return stations[i];
+    }
+    return null;
+  }
+
+  function insideHalf(station, f, half) {
+    return !!station && Math.abs(f - station.center) <= half;
+  }
+
+  function strongestInside() {
     var i;
     var s;
     var d;
     var best = null;
-    if (inReport()) return reportStation();
+    var bestD = 1;
     for (i = 0; i < stations.length; i++) {
       s = stations[i];
       d = Math.abs(freq - s.center);
-      if (d <= s.half && (!best || d < best.d)) best = { d: d, station: s };
+      if (d <= s.half && d < bestD) {
+        bestD = d;
+        best = s;
+      }
     }
-    return best ? best.station : null;
+    return best;
   }
 
-  function reportStation() {
-    var i;
-    for (i = 0; i < stations.length; i++) {
-      if (stations[i].id === 'santa') return stations[i];
-    }
-    return stations[stations.length - 1];
+  function heardStation() {
+    var band = stationById(bandId);
+    if (insideHalf(band, freq, band ? band.half : 0)) return band;
+    return strongestInside();
   }
 
-  function inReport() {
-    var report = reportStation();
-    return Math.abs(freq - report.center) <= report.half;
+  function inStrongNow() {
+    return !!strongestInside();
   }
 
   function tuneDirection() {
@@ -216,55 +207,84 @@
     return clamp(freq + amount, 0, 1);
   }
 
-  function signalWord(s) {
+  function signalWord(s, inside) {
+    if (inside) return 'Strong';
     if (s < 0.08) return 'Quiet';
     if (s < 0.4) return 'Faint';
-    if (s < 0.75) return 'Rising';
-    return 'Strong';
+    return 'Rising';
   }
 
   function say(text) {
     statusEl.textContent = text;
   }
 
+  function hintText() {
+    if (bandId) return 'Hold Lock inside the red band';
+    return 'Hold a strong signal for 2 seconds';
+  }
+
   function renderHud() {
-    var station = currentStation();
+    var station = heardStation();
     var line = station ? station.line : 'Static. Snow on the aerial.';
+    var showingNote = performance.now() < statusUntil;
+    var heard = showingNote ? statusNote : line;
     var sig = signalAt(freq);
-    var word = signalWord(sig);
-    var shownKnob = state === 'win' ? KNOB_COUNT : Math.min(KNOB_COUNT, knobsLocked + 1);
-    var lockLine = shownKnob + ' · ' + Math.min(LOCK_TIME, lockT).toFixed(1) + ' / 3s';
-    if (hearingEl.textContent !== line) hearingEl.textContent = line;
-    if (performance.now() < statusUntil) {
+    var inside = inStrongNow();
+    var word = signalWord(sig, inside);
+    var label = bandId ? 'Lock' : 'Hold';
+    var lockLine = bandId
+      ? Math.min(LOCK_TIME, lockT).toFixed(1) + ' / 3s'
+      : Math.min(STRONG_HOLD, strongT).toFixed(1) + ' / 2s';
+    var redInside = insideHalf(stationById(bandId), freq, RED_HALF);
+    var hint = hintText();
+    if (hearingEl.textContent !== heard) hearingEl.textContent = heard;
+    hearingEl.classList.toggle('miss', showingNote && statusNote === 'wrong station');
+    if (showingNote) {
       if (statusEl.textContent !== statusNote) say(statusNote);
     } else if (line !== lastLine) {
       lastLine = line;
       if (state === 'play') say(line);
     }
     if (signalEl.textContent !== word) signalEl.textContent = word;
+    if (timerLabel.textContent !== label) timerLabel.textContent = label;
     if (lockEl.textContent !== lockLine) lockEl.textContent = lockLine;
-    signalEl.classList.toggle('hot', sig >= 0.75);
-    lockEl.classList.toggle('live', inReport() && state === 'play');
-    lockBtn.classList.toggle('ready', inReport() && state === 'play');
+    if (hintEl.textContent !== hint) hintEl.textContent = hint;
+    hintEl.hidden = state !== 'play';
+    signalEl.classList.toggle('hot', inside);
+    lockEl.classList.toggle('live', !!bandId && redInside && state === 'play');
+    lockBtn.classList.toggle('ready', !!bandId && state === 'play');
     lockBtn.classList.toggle('held', lockHeld);
     lockBtn.setAttribute('aria-pressed', lockHeld ? 'true' : 'false');
   }
 
+  function nextTurn() {
+    return TURN_LO + Math.random() * (TURN_HI - TURN_LO);
+  }
+
   function resetHunt() {
+    var i;
+    var station;
     freq = START_FREQ;
+    strongT = 0;
     lockT = 0;
-    knobsLocked = 0;
-    targetFreq = 0.58;
-    driftDir = 1;
-    driftPhase = 0;
+    chargeId = null;
+    bandId = null;
     statusUntil = 0;
     statusNote = '';
-    reportStation().center = targetFreq;
+    for (i = 0; i < stations.length; i++) {
+      station = stations[i];
+      station.center = station.home;
+      station.dir = station.homeDir;
+      station.half = STRONG_HALF;
+      station.redHalf = RED_HALF;
+      station.speed = MARKER_SPEED * station.speedScale;
+      station.turnIn = nextTurn();
+    }
   }
 
   function announce(text) {
     statusNote = text;
-    statusUntil = performance.now() + 2200;
+    statusUntil = performance.now() + NOTE_MS;
     say(text);
   }
 
@@ -341,7 +361,7 @@
     keys.clear();
     winTimeEl.textContent = 'Tuned in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('All three knobs locked. Santa has been taken. ' + seconds + ' seconds.');
+    say('Field report locked. Santa has been taken. ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('night-broadcast:complete', {
@@ -358,86 +378,90 @@
     }
   }
 
-  function updateDrift(dt, holding) {
-    var speed = holding ? DRIFT_HOLD : DRIFT_CHASE;
-    var wobble = holding ? 1 : (0.86 + 0.14 * Math.sin(driftPhase * 1.7));
-    driftPhase += dt;
-    targetFreq += driftDir * speed * wobble * dt;
-    if (targetFreq >= DRIFT_HI) {
-      targetFreq = DRIFT_HI;
-      driftDir = -1;
-    } else if (targetFreq <= DRIFT_LO) {
-      targetFreq = DRIFT_LO;
-      driftDir = 1;
+  function updateStations(dt) {
+    var i;
+    var station;
+    for (i = 0; i < stations.length; i++) {
+      station = stations[i];
+      station.turnIn -= dt;
+      if (station.turnIn <= 0) {
+        station.dir = -station.dir;
+        station.turnIn = nextTurn();
+      }
+      station.center += station.dir * station.speed * dt;
+      if (station.center >= EDGE_HI) {
+        station.center = EDGE_HI;
+        station.dir = -1;
+        station.turnIn = nextTurn();
+      } else if (station.center <= EDGE_LO) {
+        station.center = EDGE_LO;
+        station.dir = 1;
+        station.turnIn = nextTurn();
+      }
     }
-    reportStation().center = targetFreq;
   }
 
-  function jumpSignal() {
-    var dir = freq < 0.5 ? 1 : -1;
-    var jump;
-    var next;
-    if (Math.random() < 0.35) dir = -dir;
-    jump = 0.3 + Math.random() * 0.2;
-    next = freq + dir * jump;
-    if (next < DRIFT_LO + 0.04 || next > DRIFT_HI - 0.04) {
-      dir = -dir;
-      next = freq + dir * jump;
-    }
-    targetFreq = clamp(next, DRIFT_LO, DRIFT_HI);
-    if (Math.abs(targetFreq - freq) < 0.24) {
-      targetFreq = clamp(freq + dir * 0.36, DRIFT_LO, DRIFT_HI);
-    }
-    driftDir = targetFreq >= freq ? 1 : -1;
-    reportStation().center = targetFreq;
-  }
-
-  function advanceKnob() {
-    knobsLocked += 1;
+  function clearBand() {
+    bandId = null;
+    chargeId = null;
+    strongT = 0;
     lockT = 0;
-    if (knobsLocked >= KNOB_COUNT) {
-      win();
-      return;
-    }
-    jumpSignal();
-    announce('Knob ' + knobsLocked + ' locked. The signal moved.');
   }
 
   function updateTuning(dt) {
-    var moved = false;
     var dir;
-    var applied;
-    var steady;
-    var inside;
-    /* Finger noise cancels. A real drag accumulates past the deadzone,
-       so a resting thumb can still hold the needle steady. */
-    if (!lockHeld) {
-      if (Math.abs(pendingDx) >= 1.6) {
-        applied = pendingDx;
-        freq += applied * DRAG;
-        pendingDx = 0;
-        moved = true;
-      }
-      dir = tuneDirection();
-      if (dir) {
-        freq += dir * KEY_RATE * dt;
-        moved = true;
-      }
-    } else {
+    var charged;
+    var next;
+    var band;
+    var onBand;
+    var inRed;
+    if (Math.abs(pendingDx) >= 1.6) {
+      freq += pendingDx * DRAG;
       pendingDx = 0;
     }
+    dir = tuneDirection();
+    if (dir) freq += dir * KEY_RATE * dt;
     freq = clamp(freq, 0, 1);
-    steady = !moved;
-    inside = inReport();
-    updateDrift(dt, steady && inside);
-    inside = inReport();
-    if (inside && steady) {
+    updateStations(dt);
+    if (!bandId) {
+      charged = stationById(chargeId);
+      if (insideHalf(charged, freq, charged ? charged.half : 0)) {
+        strongT += dt;
+      } else {
+        next = strongestInside();
+        if (next) {
+          chargeId = next.id;
+          strongT = dt;
+        } else {
+          chargeId = null;
+          strongT = 0;
+        }
+      }
+      if (strongT >= STRONG_HOLD) {
+        strongT = STRONG_HOLD;
+        bandId = chargeId;
+        lockT = 0;
+      }
+      return;
+    }
+    band = stationById(bandId);
+    onBand = insideHalf(band, freq, band ? band.half : 0);
+    inRed = insideHalf(band, freq, band ? band.redHalf : 0);
+    if (!onBand) {
+      clearBand();
+      return;
+    }
+    if (lockHeld && inRed) {
       lockT += dt;
       if (lockT >= LOCK_TIME) {
         lockT = LOCK_TIME;
-        advanceKnob();
+        if (band.correct) win();
+        else {
+          clearBand();
+          announce('wrong station');
+        }
       }
-    } else if (!inside) {
+    } else {
       lockT = Math.max(0, lockT - DECAY * dt);
     }
   }
@@ -525,6 +549,56 @@
     ctx.drawImage(radioImg, box.x, box.y, box.w, box.h);
   }
 
+  function drawWedge(center, half, innerScale, outerScale, fill) {
+    var dial = radioPoint(DIAL_U);
+    var a0 = dialAngle(center - half);
+    var a1 = dialAngle(center + half);
+    var outer = dial.r * outerScale;
+    var inner = dial.r * innerScale;
+    ctx.beginPath();
+    ctx.arc(dial.x, dial.y, outer, a0, a1);
+    ctx.arc(dial.x, dial.y, inner, a1, a0, true);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  function drawBandArc(center, half, radiusScale, color, width) {
+    var dial = radioPoint(DIAL_U);
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'butt';
+    ctx.arc(dial.x, dial.y, dial.r * radiusScale, dialAngle(center - half), dialAngle(center + half));
+    ctx.stroke();
+  }
+
+  function drawStations() {
+    var i;
+    var station;
+    var dial = radioPoint(DIAL_U);
+    var a;
+    var x;
+    var y;
+    var revealed;
+    for (i = 0; i < stations.length; i++) {
+      station = stations[i];
+      revealed = station.id === bandId;
+      drawBandArc(station.center, station.half, 0.72, 'rgba(196, 122, 32, 0.95)', 8);
+      if (revealed) drawWedge(station.center, station.redHalf, 0.4, 0.96, 'rgba(214, 32, 36, 0.94)');
+      a = dialAngle(station.center);
+      x = dial.x + Math.cos(a) * dial.r * 0.72;
+      y = dial.y + Math.sin(a) * dial.r * 0.72;
+      ctx.beginPath();
+      ctx.arc(x, y, revealed ? 8 : 6.5, 0, Math.PI * 2);
+      ctx.fillStyle = revealed ? '#fff6f5' : '#24180f';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = revealed ? '#8e1214' : '#f3d48a';
+      ctx.stroke();
+    }
+  }
+
   function drawNeedle() {
     var dial = radioPoint(DIAL_U);
     var a = dialAngle(needleFreq());
@@ -587,16 +661,11 @@
     var knob = knobCenter();
     var a = dialAngle(freq);
     var ring = knob.r + 8;
-    if (lockT > 0) {
+    var frac = bandId ? Math.min(lockT, LOCK_TIME) / LOCK_TIME : Math.min(strongT, STRONG_HOLD) / STRONG_HOLD;
+    if (frac > 0) {
       ctx.beginPath();
-      ctx.arc(
-        knob.x,
-        knob.y,
-        ring,
-        -Math.PI / 2,
-        -Math.PI / 2 + (Math.min(lockT, LOCK_TIME) / LOCK_TIME) * Math.PI * 2
-      );
-      ctx.strokeStyle = '#fff1c9';
+      ctx.arc(knob.x, knob.y, ring, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+      ctx.strokeStyle = bandId ? '#ff5a52' : '#fff1c9';
       ctx.lineWidth = 4;
       ctx.lineCap = 'round';
       ctx.stroke();
@@ -610,66 +679,6 @@
     ctx.lineTo(knob.x + Math.cos(a) * (knob.r * 0.72), knob.y + Math.sin(a) * (knob.r * 0.72));
     ctx.stroke();
     ctx.lineCap = 'butt';
-  }
-
-  function drawLockKnobs() {
-    var i;
-    var spot;
-    var r = 22;
-    var locked;
-    var active;
-    for (i = 0; i < KNOB_COUNT; i++) {
-      spot = LOCK_SPOTS[i];
-      locked = i < knobsLocked;
-      active = !locked && i === knobsLocked;
-      ctx.beginPath();
-      ctx.arc(spot.x + 2, spot.y + 3, r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(8, 12, 20, 0.35)';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(spot.x, spot.y, r, 0, Math.PI * 2);
-      if (locked) ctx.fillStyle = '#e6c07a';
-      else if (active) ctx.fillStyle = '#f3e2c0';
-      else ctx.fillStyle = 'rgba(90, 70, 48, 0.78)';
-      ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = locked || active ? '#fff1c9' : '#6b5340';
-      ctx.stroke();
-      if (locked) {
-        ctx.beginPath();
-        ctx.arc(spot.x, spot.y, r + 6, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fff1c9';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      } else if (active && lockT > 0 && state !== 'title') {
-        ctx.beginPath();
-        ctx.arc(
-          spot.x,
-          spot.y,
-          r + 6,
-          -Math.PI / 2,
-          -Math.PI / 2 + (Math.min(lockT, LOCK_TIME) / LOCK_TIME) * Math.PI * 2
-        );
-        ctx.strokeStyle = '#fff1c9';
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.lineCap = 'butt';
-      }
-      ctx.strokeStyle = locked ? '#3a2a18' : '#fff6e4';
-      ctx.lineWidth = 2.5;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(spot.x, spot.y - r * 0.42);
-      ctx.lineTo(spot.x, spot.y - r * 0.78);
-      ctx.stroke();
-      ctx.lineCap = 'butt';
-      ctx.fillStyle = locked || active ? '#3a2a18' : '#f7f4ec';
-      ctx.font = '800 16px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(i + 1), spot.x, spot.y + 5);
-    }
   }
 
   function drawVignette() {
@@ -687,10 +696,10 @@
     ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.ox, dpr * view.oy);
     drawTrent();
     drawRadio();
+    drawStations();
     drawNeedle();
     drawMeter();
     drawKnobCue();
-    drawLockKnobs();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawVignette();
   }
@@ -771,7 +780,6 @@
     dragId = event.pointerId;
     lastDragX = p.x;
     pendingDx = 0;
-    hintEl.hidden = true;
     if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
   });
 
@@ -805,10 +813,7 @@
         tuneUp = true;
         tuneUpId = event.pointerId;
       }
-      if (state === 'play' && !lockHeld) {
-        freq = clamp(freq + sign * KEY_STEP, 0, 1);
-        hintEl.hidden = true;
-      }
+      if (state === 'play') freq = clamp(freq + sign * KEY_STEP, 0, 1);
       if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
     });
     function release(event) {
@@ -833,7 +838,6 @@
     event.preventDefault();
     lockHeld = true;
     lockPointer = event.pointerId;
-    hintEl.hidden = true;
     if (lockBtn.setPointerCapture) lockBtn.setPointerCapture(event.pointerId);
   });
   function releaseLock(event) {
@@ -856,9 +860,8 @@
     event.preventDefault();
     if (event.repeat) return;
     keys.add(event.key.toLowerCase());
-    if (state === 'play' && !lockHeld) {
+    if (state === 'play') {
       freq = clamp(freq + (event.key === 'ArrowLeft' ? -KEY_STEP : KEY_STEP), 0, 1);
-      hintEl.hidden = true;
     }
   });
 
@@ -902,6 +905,7 @@
     });
   }
 
+  resetHunt();
   resize();
   syncPortrait();
   lastFrame = performance.now();

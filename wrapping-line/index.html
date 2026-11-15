@@ -44,8 +44,12 @@
 
     <div class="hud">
       <div class="hud-block grow">
-        <span class="label">Bows</span>
-        <strong id="run">0 / 8</strong>
+        <span class="label">Points</span>
+        <strong id="run">0 / 30</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Time</span>
+        <strong id="time">27</strong>
       </div>
       <div class="hud-block">
         <span class="label">Lives</span>
@@ -69,7 +73,7 @@
         <p class="kicker">Chapter 9</p>
         <h1>The wrapping line</h1>
         <p>Presents ride in at different heights. Hold the left stick to move the mark up or down and meet them.</p>
-        <p>Eight meets in a row clear the line. A miss starts that run over. Stay off the green Grinch presents. Meeting one takes a life.</p>
+        <p>Reach 30 points before the clock runs out. A plain present is 1, a ribbon present is 3, and a gilt present is 5. A torn present takes 1 point. A crushed present takes 3. Grabbing either damaged present also costs a life. If the clock hits zero, that round starts over.</p>
         <button type="button" id="start">Start the belt</button>
       </div>
     </div>
@@ -87,7 +91,7 @@
       <div class="card">
         <p class="kicker">The wrapping line</p>
         <h1>Out of lives</h1>
-        <p>A green Grinch present took the last life. The line was not cleared.</p>
+        <p>A damaged present took the last life. The line was not cleared.</p>
         <button type="button" id="out-retry">Run the line again</button>
       </div>
     </div>
@@ -95,8 +99,8 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The wrapping line</p>
-        <h1>Eight bows</h1>
-        <p>The line has its run of bows.</p>
+        <h1>Thirty points</h1>
+        <p>The line is wrapped.</p>
         <p id="win-time">Wrapped in 0 seconds.</p>
         <button type="button" id="retry">Run the line again</button>
       </div>
@@ -111,6 +115,6 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="game.js?v=rotation2"></script>
+<script src="game.js?v=points30"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

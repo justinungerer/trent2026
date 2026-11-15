@@ -124,24 +124,29 @@ button:focus-visible {
 
 #pause:active { background: rgba(12, 22, 36, 0.94); }
 
-.move {
+.pad {
   position: absolute;
   z-index: 5;
-  left: max(12px, env(safe-area-inset-left));
-  bottom: max(12px, env(safe-area-inset-bottom));
-  display: flex;
-  gap: 8px;
+  left: max(10px, env(safe-area-inset-left));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  width: 176px;
+  height: 176px;
 }
 
-.move button,
-#punch {
-  width: 48px;
-  height: 48px;
+.pad button,
+.attacks button {
+  touch-action: none;
+}
+
+.pad button {
+  position: absolute;
+  width: 56px;
+  height: 56px;
   min-width: 48px;
   min-height: 48px;
   padding: 0;
   border: 3px solid #e6c98a;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(28, 22, 14, 0.88);
   color: #f6e7c4;
   font-size: 20px;
@@ -149,20 +154,45 @@ button:focus-visible {
   line-height: 1;
 }
 
-#punch {
+#up { left: 60px; top: 0; }
+#left { left: 0; top: 60px; }
+#down { left: 60px; top: 120px; }
+#right { left: 120px; top: 60px; }
+
+.attacks {
   position: absolute;
   z-index: 5;
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(12px, env(safe-area-inset-bottom));
-  background: #f3efe4;
-  color: #3a2a18;
-  font-size: 22px;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
 }
 
-.move button.held,
-.move button:active,
-#punch.held,
-#punch:active {
+.attacks button {
+  min-width: 76px;
+  min-height: 64px;
+  height: 64px;
+  padding: 0 12px;
+  border: 3px solid #e6c98a;
+  border-radius: 14px;
+  background: #f3efe4;
+  color: #3a2a18;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+#upper {
+  min-height: 72px;
+  height: 72px;
+  background: #f0d7a8;
+}
+
+.pad button.held,
+.pad button:active,
+.attacks button.held,
+.attacks button:active {
   background: #8a6230;
   border-color: #f0d7a4;
   color: #fff6e4;
@@ -172,7 +202,7 @@ button:focus-visible {
   position: absolute;
   z-index: 3;
   left: max(16px, env(safe-area-inset-left));
-  bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
+  bottom: max(196px, calc(env(safe-area-inset-bottom) + 188px));
   margin: 0;
   max-width: 46%;
   color: rgba(247, 244, 236, 0.95);

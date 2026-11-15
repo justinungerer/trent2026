@@ -9,35 +9,40 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="yard" width="844" height="390" aria-label="Santa fighting night wardens on the way to the yard gate"></canvas>
+    <canvas id="yard" width="1280" height="592" aria-label="Santa walking a snowy yard, punching cartoon guards on the way to the wreath gate"></canvas>
 
-    <p id="hint" class="hint">Left thumb moves. A punches.</p>
+    <p id="hint" class="hint">Left thumb moves in four directions. Punch is fast. Upper hits harder.</p>
 
     <div class="hud">
       <div class="hud-block">
         <span class="label">Santa</span>
-        <strong id="pips">♥♥♥♥</strong>
+        <strong id="pips">♥♥♥♥♥</strong>
       </div>
       <div class="hud-block grow">
-        <span class="label">Gate</span>
-        <strong id="gate">Three wardens</strong>
+        <span class="label">Yard</span>
+        <strong id="gate">Walk on</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
 
-    <div class="move" aria-label="Move">
+    <div class="pad" aria-label="Move">
+      <button type="button" id="up" aria-label="Move up">▲</button>
       <button type="button" id="left" aria-label="Move left">◀</button>
+      <button type="button" id="down" aria-label="Move down">▼</button>
       <button type="button" id="right" aria-label="Move right">▶</button>
     </div>
-    <button type="button" id="punch" aria-label="Punch">A</button>
+    <div class="attacks">
+      <button type="button" id="upper" aria-label="Uppercut">Upper</button>
+      <button type="button" id="punch" aria-label="Punch">Punch</button>
+    </div>
 
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 8</p>
         <h1>The holding camp</h1>
-        <p>Santa is leaving the snowy yard. Three night wardens stand between him and the wreath gate.</p>
+        <p>Santa is walking out of a snowy cartoon yard. Night guards in knit caps step in from either side. The wreath gate is at the far end.</p>
         <p class="how">How to play</p>
-        <p>The left thumb moves. The A button punches. Arrows move, and A or Space punches. A warden blocks the path until he sits in the snow. Then walk through the gate. If Santa sits down, he gets back up and that warden is ready again. Paused time does not count.</p>
+        <p>The left thumb moves up, down, left, and right. Punch is a fast jab. Upper is slower and hits three times as hard. Step off a guard's line while he swings. A beaten guard flashes and vanishes. Two mugs of cocoa each give one hit point back, up to five. Walk through the gate. Paused time does not count.</p>
         <button type="button" id="start">Step into the yard</button>
       </div>
     </div>
@@ -45,7 +50,7 @@
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
-        <p>The wardens wait. The gate stays shut.</p>
+        <p>The guards wait. The gate stays shut.</p>
         <button type="button" id="resume">Resume</button>
         <button type="button" id="give-up" class="ghost">Give up</button>
       </div>
@@ -55,9 +60,17 @@
       <div class="card">
         <p class="kicker">The holding camp</p>
         <h1>Through the gate</h1>
-        <p>The wardens are sitting in the snow, and Santa is out.</p>
+        <p>The yard is empty, and Santa walks out.</p>
         <p id="win-time">Out in 0 seconds.</p>
-        <button type="button" id="retry">Fight through again</button>
+        <button type="button" id="retry">Walk it again</button>
+      </div>
+    </div>
+
+    <div id="lose-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>Sitting in the snow</h1>
+        <p>Santa is dizzy. The wreath gate is still shut.</p>
+        <button type="button" id="retry-lose">Try the yard again</button>
       </div>
     </div>
 
@@ -70,6 +83,8 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="game.js?v=rotation2"></script>
-<script src="../game-audio.js?v=rotation3"></script></body>
+  <script src="art/frames.js?v=brawl1"></script>
+  <script src="game.js?v=brawl2"></script>
+  <script src="../game-audio.js?v=rotation3"></script>
+</body>
 </html>

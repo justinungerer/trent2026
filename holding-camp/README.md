@@ -1,8 +1,8 @@
 # Chapter 8 — The Holding Camp
 
-Santa is leaving a snowy cartoon yard. Three night wardens stand between him and the wreath gate. He walks the line and punches with a mitten. Nobody is hurt for real: a beaten warden sits in the snow, and if Santa sits down dizzy he gets back up. There is no blood.
+Santa walks out of a snowy cartoon yard. Night guards in knit caps and winter coats step in from either side. He moves along the lane and toward the fence or the foreground, jabs with a fast punch, and throws a slower uppercut. A beaten guard flashes and vanishes. There is no blood, and nobody is left lying in the snow.
 
-The pictures are original generated paintings in `art/`: Santa's idle, punch, hit, and defeat frames, the wardens, and the side-view yard. There are no third-party assets and no build step.
+The fight art is original painted strips in `art/brawl-*.webp`. `art/scene.webp`, `art/trent.webp`, and `art/santa.webp` stay as they were for the campaign intro.
 
 ## Open it
 
@@ -22,25 +22,30 @@ Landscape is the intended orientation. A portrait visit shows a "turn sideways" 
 
 Touch first. Nothing you need is hover-only.
 
-- Left thumb: Left and Right move Santa along the yard. Each button is 48 pixels. Arrow keys do the same.
-- Right thumb: A punches. The button is 48 pixels. The A key, J, and Space punch too.
-- A warden blocks the path until he sits down. Santa cannot walk through him.
-- Escape pauses. Pause also opens when the page is hidden. Resume continues the same fight. Give up returns to the how-to-play card and does not open the gate.
+- Left thumb: a four-way pad. Up, down, left, and right each are 56 pixels. Arrow keys and WASD do the same.
+- Right thumb: Punch and Upper. Punch is at least 64 pixels tall. Upper is at least 72. J, Z, or Space punches. K, U, or X throws the uppercut.
+- Punch is fast and deals 1 hit point. Uppercut is slower and deals 3.
+- Step up or down, off a guard's line, while he winds up.
+- Escape pauses. Pause also opens when the page is hidden. Resume continues the same walk. Give up returns to the how-to-play card and does not open the gate.
 
-The how-to-play card is the card shown before the fight.
+The how-to-play card is the card shown before the walk.
 
-If the device asks for reduced motion, a hit does not shake the yard, and the snow holds still. Poses still change with the action.
+If the device asks for reduced motion, a hit does not shake the yard, the snow holds still, and a beaten guard fades out instead of strobing. Poses still change with the action.
 
-## Win and a sit-down
+## The walk
 
-Each warden takes three punches. Santa has four hearts. Step into reach, punch, and step back while a warden is winding up. If Santa's hearts run out he sits, then stands back up and that warden is ready again. Wardens who are already sitting stay sitting. The clock keeps running.
+Santa starts with 5 hit points. The lane he can walk up and down is three quarters of the screen height. The yard ahead is five times the old one-screen walk from Santa's start to the gate.
 
-The gate opens when every warden is sitting and Santa walks up to it. There is no time limit.
+Guards come in three sizes. The slim runner falls to 1 damage, the plump warden takes 2, and the big coat takes 3. One uppercut drops any of them. They walk in from the left or the right and punch back for 1 hit point.
+
+Two mugs of cocoa sit along the lane. Each gives 1 hit point back, and neither raises Santa above 5. A mug stays put until he needs it.
+
+Santa cannot pass a group until that group has vanished. When the yard is clear he walks through the wreath gate. There is no time limit. If his hit points run out he sits, and the walk starts over. That sit-down does not open the gate.
 
 ## Victory event
 
-On a win the page shows a short card and dispatches a `CustomEvent` named `holding-camp:complete` on `window` once. The detail is `{ seconds }`: whole seconds on the fight, not counting time spent paused.
+On a win the page shows a short card and dispatches a `CustomEvent` named `holding-camp:complete` on `window` once. The detail is `{ seconds }`: whole seconds on the walk, not counting time spent paused.
 
 When the page is inside another frame, it also `postMessage`s `{ type: 'holding-camp:complete', detail: { seconds }, runId }` to the parent. `runId` is copied from the page query string.
 
-A sit-down does not dispatch the event. Give up does not dispatch the event. Fighting through again starts from the first warden and allows the event again on the next win.
+A sit-down does not dispatch the event. Give up does not dispatch the event. Walking it again starts from the first step and allows the event again on the next win.

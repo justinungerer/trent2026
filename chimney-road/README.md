@@ -1,6 +1,8 @@
 # Chapter 10 — The Chimney Road
 
-Trent runs and jumps a line of snowy roofs to a sleigh that is waiting on the last one. The gaps are short. A crate slides on the long roof. This is a platformer: not the beach scroller, and not the handcar.
+Trent runs and jumps a long road of snowy roofs to a sleigh that is waiting on the last one. The road is about three times the old run: the world is 8580 pixels wide, and the main path is about 8820 pixels from the first roof to the sleigh. The old world was 2860 pixels wide, about 2600 pixels of running, with the camera locked to one 390-pixel-tall view. Roofs now climb above that first view and drop below it, and the camera follows Trent up and down.
+
+Some roofs are dead ends. The way on is back the way you came. A double jump, pressed again near the top of a jump, reaches the higher roofs. Hazards knock Trent off a roof if they touch him. Each one can be dodged: jump the rolling snowball, step out from under a falling icicle, time the swinging lantern, move aside from chimney smoke, drop to the lower road to pass the sweeping brush, and jump or wait out the sliding crate. A hit is a fall. There is no gore.
 
 The pictures are original generated paintings in `art/`: a night rooftop panorama, roof platforms, Trent, a crate, and a small parked sleigh. The sleigh is its own painting. There are no third-party assets, no downloaded images, and no build step.
 
@@ -22,8 +24,8 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Left and right run. Jump hops. Arrow keys run, and Up or Space jumps.
-- A running jump clears a gap. Jump near the edge. The crate can be landed on, and it will push Trent if it meets him.
+- Left and right run. Jump hops, and a second jump near the top of the first one climbs higher. Arrow keys run, and Up or Space jumps.
+- A running jump clears a gap. Jump near the edge. The crate can be landed on, and it will push Trent if it meets him. The snowball, icicles, lantern, smoke, and brush each cost a fall when they hit.
 - Escape pauses. Pause also opens when the page is hidden. Resume continues the same roofs. Give up returns to the start and does not reach the sleigh.
 
 Left, right, and Jump are at least 76 pixels tall.
@@ -32,7 +34,7 @@ If the device asks for reduced motion, a fall does not shake the view. Running h
 
 ## Win and lose
 
-Missing a roof is a fall. Trent is set back on the roof he last stood on. Three falls start the whole road again from the first roof and clear the fall count. The clock keeps running.
+Missing a roof, or being knocked off by a hazard, is a fall. Trent is set back on the last main roof he reached. A dead-end roof does not become that checkpoint. Three falls start the whole road again from the first roof and clear the fall count. The clock keeps running.
 
 Reaching the sleigh on the last roof wins. There is no time limit.
 

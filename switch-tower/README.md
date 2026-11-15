@@ -30,19 +30,19 @@ If the device asks for reduced motion, a wrong route does not shake the picture.
 
 ## Rules
 
-The train rolls in from the left. The wooden board over the yard shows the route as three pictures, one for each lever. Match every lever to its picture before the train reaches the switch.
+Five trains roll in from the left, one after another, at one and a half times the original pace. The wooden board over the yard shows the route for the train that is coming: three pictures, one for each lever. Match every lever to its picture before the train reaches the switch.
 
-The pictures are a lever thrown left, a lever thrown right, and a lever thrown left.
+A wrong pattern explodes that train and costs one miss. Three misses, and the puzzle starts over from the first throw. That run does not count as a win.
 
-A wrong pattern sends the train back and costs one miss. The levers stay where you left them, so you can change them while the train rolls out and comes in again. Three misses, and the puzzle starts over from the first throw. That run does not count as a win.
+After two trains get away, a soldier appears beside the levers and throws a random one every second and a half. Put the levers back before the train arrives. A miss still explodes that train.
 
-The matching pattern lets the train leave the yard. That is the win.
+Five trains away is the win.
 
 ## Victory event
 
 On a win the page shows a short card and dispatches a `CustomEvent` named `switch-tower:complete` on `window` once. The detail is `{ seconds }`: whole seconds on the puzzle, not counting time spent paused.
 
-A wrong route, three misses, pause, and starting the puzzle over do not dispatch the event. Run another train, or set the route again, starts a fresh run and allows the event again the next time the train leaves.
+A wrong route, three misses, pause, and starting the puzzle over do not dispatch the event. Run the yard again, or set the route again, starts a fresh run and allows the event again the next time five trains leave.
 
 ## Art
 

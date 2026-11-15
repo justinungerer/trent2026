@@ -1,14 +1,29 @@
 /* Chapter 9 — The Wrapping Line.
    Presents ride in at different heights. A left-thumb stick moves the mark
-   up and down to meet them. Eight meets in a row clear the line.
-   A green Grinch present takes one life. Lives come from ?lives=10|9|8|7,
-   or 7 when that value is missing. Painted sprites live in art/. */
+   up and down to meet them. The point total wins the line at 30. There is
+   no streak to keep.
+   A shuffled bag of 12 is 4 plain (+1), 3 ribbon (+3), 2 gilt (+5),
+   2 torn (-1), and 1 crushed (-3). A random meet is worth
+   (4 + 9 + 10 - 2 - 3) / 12 = 1.5 points.
+   The clock is 27 seconds. Spawn x is 920, the mark is 456, and speed is
+   232 px/s, so a present reaches the mark in 2.00 seconds. The first spawn
+   waits 0.40 seconds and the rest arrive every 0.80 seconds, so present k
+   is judged at 2.40 + 0.80k. k = 0..30 are judged by 26.40 seconds. k = 31
+   would be 27.20 seconds, after the clock. That is 31 presents.
+   0.65 * 1.5 * 31 = 30.225, so meeting about 65% of them reaches 30 as the
+   clock ends. A present that passes the mark scores nothing. Time running
+   out restarts the round. Across the 844px view the belt holds about
+   844 / 232 / 0.80 = 4.6 presents.
+   Torn and crushed presents also spend one life. Lives come from
+   ?lives=10|9|8|7, or 7 when that value is missing. At 0 lives the run ends.
+   Painted sprites live in art/. */
 'use strict';
 
 (function () {
   var canvas = document.getElementById('shop');
   var ctx = canvas.getContext('2d');
   var runEl = document.getElementById('run');
+  var timeEl = document.getElementById('time');
   var livesEl = document.getElementById('lives');
   var lastEl = document.getElementById('last');
   var pauseBtn = document.getElementById('pause');
@@ -28,23 +43,35 @@
   var VIEW_H = 390;
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
-  var NEED = 8;
+  var NEED = 30;
+  var ROUND_SECONDS = 27;
   var TARGET = 456;
   var MEET = 26;
-  var SPEED = 236;
-  var INTERVAL = 0.86;
+  var SPEED = 232;
+  var INTERVAL = 0.8;
+  var FIRST_SPAWN = 0.4;
   var LANES = [150, 206, 262, 318];
   var MARK_MIN = 150;
   var MARK_MAX = 318;
   var MARK_SPEED = 460;
   var STICK_TRAVEL = 46;
+  var PRESENT_TYPES = [
+    { id: 'plain', name: 'Plain', points: 1, weight: 4, src: 'art/present-plain.webp' },
+    { id: 'ribbon', name: 'Ribbon', points: 3, weight: 3, src: 'art/present-ribbon.webp' },
+    { id: 'gilt', name: 'Gilt', points: 5, weight: 2, src: 'art/present-gilt.webp' },
+    { id: 'torn', name: 'Torn', points: -1, weight: 2, src: 'art/present-torn.webp' },
+    { id: 'crushed', name: 'Crushed', points: -3, weight: 1, src: 'art/present-crushed.webp' }
+  ];
 
   var sceneImg = new Image();
   var trentImg = new Image();
-  var parcelImg = new Image();
   sceneImg.src = 'art/scene.webp';
   trentImg.src = 'art/trent.webp';
-  parcelImg.src = 'art/parcel.webp';
+  var typeIndex;
+  for (typeIndex = 0; typeIndex < PRESENT_TYPES.length; typeIndex++) {
+    PRESENT_TYPES[typeIndex].img = new Image();
+    PRESENT_TYPES[typeIndex].img.src = PRESENT_TYPES[typeIndex].src;
+  }
 
   var state = 'title';
   var cssW = 844;
@@ -57,11 +84,13 @@
   var visualTime = 0;
   var lastFrame = 0;
   var shake = 0;
-  var streak = 0;
+  var score = 0;
+  var timeLeft = ROUND_SECONDS;
   var lives = readLives();
-  var spawnIn = 0.35;
+  var spawnIn = FIRST_SPAWN;
   var spawned = 0;
   var parcels = [];
+  var bag = [];
   var bowT = 0;
   var markY = 262;
   var lastWord = 'Wait';
@@ -101,7 +130,11 @@
 
   function renderHud() {
     var heightNow = Math.round((markY - MARK_MIN) / (MARK_MAX - MARK_MIN) * 100);
-    runEl.textContent = streak + ' / ' + NEED;
+    var shown = Math.ceil(timeLeft);
+    if (shown < 0) shown = 0;
+    if (shown > ROUND_SECONDS) shown = ROUND_SECONDS;
+    runEl.textContent = score + ' / ' + NEED;
+    timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
     lastEl.className = lastKind;
@@ -117,18 +150,43 @@
     knobEl.style.transform = 'translate(-50%, -50%) translateY(' + (axis * STICK_TRAVEL) + 'px)';
   }
 
-  function beginRun() {
-    streak = 0;
-    lives = readLives();
+  function nextType() {
+    var i;
+    var n;
+    var swap;
+    var held;
+    if (!bag.length) {
+      for (i = 0; i < PRESENT_TYPES.length; i++) {
+        for (n = 0; n < PRESENT_TYPES[i].weight; n++) bag.push(PRESENT_TYPES[i]);
+      }
+      for (i = bag.length - 1; i > 0; i--) {
+        swap = Math.floor(Math.random() * (i + 1));
+        held = bag[i];
+        bag[i] = bag[swap];
+        bag[swap] = held;
+      }
+    }
+    return bag.pop();
+  }
+
+  function resetBelt(keepLives) {
+    score = 0;
+    timeLeft = ROUND_SECONDS;
     played = 0;
-    spawnIn = 0.45;
+    spawnIn = FIRST_SPAWN;
     spawned = 0;
     parcels = [];
+    bag = [];
     bowT = 0;
     shake = 0;
     markY = 262;
     lastWord = 'Wait';
     lastKind = '';
+    if (!keepLives) lives = readLives();
+  }
+
+  function beginRun() {
+    resetBelt(false);
     victorySent = false;
     state = 'play';
     startSheet.hidden = true;
@@ -137,7 +195,17 @@
     outSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('Move the mark up or down to meet each present.');
+    say('Move the mark. Reach 30 points before time runs out.');
+  }
+
+  function restartRound() {
+    if (state !== 'play') return;
+    resetBelt(true);
+    lastWord = 'Time';
+    lastKind = 'bad';
+    if (!reduceMotion()) shake = 6;
+    say('Time. The round starts over.');
+    renderHud();
   }
 
   function openPause() {
@@ -169,7 +237,7 @@
     state = 'win';
     winTimeEl.textContent = 'Wrapped in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('Eight bows. ' + seconds + ' seconds.');
+    say('30 points. ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('wrapping-line:complete', {
@@ -193,41 +261,30 @@
     say('Out of lives. The line was not cleared.');
   }
 
-  function miss(word) {
+  function meetPresent(parcel) {
+    var points;
     if (state !== 'play') return;
-    streak = 0;
-    lastWord = word;
-    lastKind = 'bad';
+    parcel.hit = true;
+    points = parcel.type.points;
+    score += points;
+    lastWord = (points > 0 ? '+' : '') + points;
+    lastKind = points > 0 ? 'good' : 'bad';
+    if (points > 0) {
+      bowT = 0.36;
+      say(parcel.type.name + ' present. ' + score + (score === 1 ? ' point.' : ' points.'));
+      renderHud();
+      if (score >= NEED) win();
+      return;
+    }
     if (!reduceMotion()) shake = 6;
-    say(word + '. The run starts over.');
-    renderHud();
-  }
-
-  function loseLife() {
-    if (state !== 'play') return;
     lives -= 1;
-    lastWord = 'Grinch';
-    lastKind = 'bad';
-    if (!reduceMotion()) shake = 6;
     if (lives < 0) lives = 0;
     renderHud();
     if (lives <= 0) {
       endRun();
       return;
     }
-    say('Grinch present. ' + lives + (lives === 1 ? ' life left.' : ' lives left.'));
-  }
-
-  function grantBow(parcel) {
-    if (state !== 'play') return;
-    parcel.hit = true;
-    bowT = 0.36;
-    streak += 1;
-    lastWord = 'Bow';
-    lastKind = 'good';
-    say('Bow ' + streak + '.');
-    renderHud();
-    if (streak >= NEED) win();
+    say(parcel.type.name + ' present. ' + points + ' points. ' + lives + (lives === 1 ? ' life left.' : ' lives left.'));
   }
 
   function update(dt) {
@@ -242,6 +299,7 @@
       if (markY > MARK_MAX) markY = MARK_MAX;
       if (stickAxis !== 0) hintEl.hidden = true;
     }
+    timeLeft -= dt;
     spawnIn -= dt;
     if (spawnIn <= 0) {
       parcels.push({
@@ -249,10 +307,10 @@
         y: LANES[(spawned * 3) % LANES.length],
         judged: false,
         hit: false,
-        grinch: spawned % 5 === 4
+        type: nextType()
       });
       spawned += 1;
-      spawnIn = INTERVAL;
+      spawnIn += INTERVAL;
     }
     for (i = parcels.length - 1; i >= 0; i--) {
       if (state !== 'play') break;
@@ -261,16 +319,11 @@
       if (!parcel.judged && parcel.x <= TARGET) {
         parcel.judged = true;
         aligned = Math.abs(parcel.y - markY) <= MEET;
-        if (parcel.grinch) {
-          if (aligned) loseLife();
-        } else if (aligned) {
-          grantBow(parcel);
-        } else {
-          miss('Miss');
-        }
+        if (aligned) meetPresent(parcel);
       }
       if (parcel.x < -90) parcels.splice(i, 1);
     }
+    if (state === 'play' && timeLeft <= 0) restartRound();
   }
 
   function trentFrame() {
@@ -311,30 +364,110 @@
     ctx.fill();
   }
 
+  function paintFallback(parcel, size) {
+    var x = parcel.x;
+    var y = parcel.y;
+    var w = size;
+    var h = size * 0.78;
+    var id = parcel.type.id;
+    ctx.save();
+    ctx.translate(x, y);
+    if (id === 'crushed') {
+      ctx.scale(1.12, 0.72);
+      ctx.fillStyle = '#b43338';
+      roundBox(-w / 2, -h / 2, w, h);
+      ctx.fillStyle = '#e7d3a4';
+      ctx.beginPath();
+      ctx.moveTo(-8, -h * 0.2);
+      ctx.lineTo(10, 4);
+      ctx.lineTo(-2, h * 0.28);
+      ctx.lineTo(-16, 2);
+      ctx.fill();
+    } else if (id === 'torn') {
+      ctx.fillStyle = '#c4a574';
+      roundBox(-w / 2, -h / 2, w, h);
+      ctx.fillStyle = '#efe2c4';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.08, -h * 0.2);
+      ctx.lineTo(w * 0.42, -h * 0.05);
+      ctx.lineTo(w * 0.22, h * 0.34);
+      ctx.lineTo(-4, h * 0.08);
+      ctx.fill();
+    } else if (id === 'gilt') {
+      ctx.fillStyle = '#e2b84a';
+      roundBox(-w / 2, -h / 2, w, h);
+      ctx.strokeStyle = '#f3e2a8';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(0, -h / 2);
+      ctx.lineTo(0, h / 2);
+      ctx.moveTo(-w / 2, 0);
+      ctx.lineTo(w / 2, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#c5363a';
+      ctx.beginPath();
+      ctx.ellipse(-12, -h * 0.42, 14, 8, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(12, -h * 0.42, 14, 8, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (id === 'ribbon') {
+      ctx.fillStyle = '#a32632';
+      roundBox(-w / 2, -h / 2, w, h);
+      ctx.strokeStyle = '#2f8a45';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, -h / 2);
+      ctx.lineTo(0, h / 2);
+      ctx.moveTo(-w / 2, -2);
+      ctx.lineTo(w / 2, -2);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = '#c9a36a';
+      roundBox(-w / 2, -h / 2, w, h);
+      ctx.strokeStyle = '#8a6230';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, -h / 2);
+      ctx.lineTo(0, h / 2);
+      ctx.moveTo(-w / 2, 0);
+      ctx.lineTo(w / 2, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#c5363a';
+      ctx.beginPath();
+      ctx.arc(0, -4, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function roundBox(x, y, w, h) {
+    var r = 8;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   function drawParcels() {
     var i;
     var parcel;
-    var size = 78;
-    var dh = 74;
+    var size = 84;
+    var dh = 78;
+    var img;
     for (i = 0; i < parcels.length; i++) {
       parcel = parcels[i];
-      if (imageReady(parcelImg)) {
-        dh = size * parcelImg.naturalHeight / parcelImg.naturalWidth;
-        ctx.save();
-        if (parcel.grinch) ctx.filter = 'hue-rotate(100deg) saturate(2.4) brightness(1.05)';
-        ctx.drawImage(parcelImg, parcel.x - size / 2, parcel.y - dh / 2, size, dh);
-        ctx.restore();
+      img = parcel.type.img;
+      if (imageReady(img)) {
+        dh = size * img.naturalHeight / img.naturalWidth;
+        ctx.drawImage(img, parcel.x - size / 2, parcel.y - dh / 2, size, dh);
+      } else {
+        paintFallback(parcel, size);
+        dh = size * 0.78;
       }
-      if (parcel.grinch) {
-        ctx.strokeStyle = '#39d26a';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(parcel.x - size / 2 - 4, parcel.y - dh / 2 - 4, size + 8, dh + 8);
-        ctx.fillStyle = 'rgba(40, 170, 72, 0.95)';
-        ctx.beginPath();
-        ctx.arc(parcel.x, parcel.y, 14, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (parcel.hit) drawBow(parcel.x, parcel.y - dh * 0.28);
+      if (parcel.hit && parcel.type.points > 0) drawBow(parcel.x, parcel.y - dh * 0.36);
     }
   }
 

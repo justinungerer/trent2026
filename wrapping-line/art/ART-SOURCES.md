@@ -13,7 +13,7 @@ Horizontal strip of equal frames on a transparent background. The feet share one
 - Anchor: (127, 666) in every frame, at the feet. X is the center of the soles. Y is the shared sole baseline.
 - Milliseconds per frame:
   - idle: 520
-  - bow: a one-shot of three frames, 120 ms each, played when Trent taps
+  - bow: a one-shot of three frames, 120 ms each, played when a good present is met
 
 ## scene.webp
 
@@ -21,4 +21,18 @@ Painted workshop, opaque. 1280 × 720 px. A belt bench, ribbon spools, garland, 
 
 ## parcel.webp
 
-One wrapped parcel on a transparent background, 420 × 418 px. Brown paper and twine, no bow. The bow is drawn when a tap lands. The feet of this sprite are not a character anchor; draw it by its center.
+One wrapped parcel on a transparent background, 420 × 418 px. Brown paper and twine, no bow. The bow is drawn when a good present is met. The feet of this sprite are not a character anchor; draw it by its center. The scored presents below are separate pictures. This parcel is not one of those five.
+
+## Scored presents
+
+Five original paintings, one present each, on a transparent background. They were generated as painted props, then the flat magenta backdrop was removed. Draw each by its center. None of them is a character. The two damaged presents are torn or crushed packages, not green figures.
+
+| File | Pixels | Points | What it shows |
+| --- | --- | --- | --- |
+| present-plain.webp | 394 × 412 | +1 | Kraft paper, twine, and a red snowflake seal. |
+| present-ribbon.webp | 403 × 412 | +3 | Crimson paper, gold sprigs, and a green bow. |
+| present-gilt.webp | 373 × 413 | +5 | Gold paper, a cream band, a crimson bow, and holly. |
+| present-torn.webp | 412 × 409 | −1 | Kraft paper ripped open, with cardboard and loose tape showing. |
+| present-crushed.webp | 411 × 411 | −3 | A squashed red package, split at the seam, with slack twine. |
+
+If a picture has not loaded, the belt paints a matching stand-in: kraft, crimson with a green cross, gold with a red bow, a torn kraft box, or a flattened red box.

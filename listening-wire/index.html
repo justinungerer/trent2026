@@ -9,19 +9,19 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="yard" aria-label="A first-person corridor. Cartoon soldiers stand between you and a green door."></canvas>
+    <canvas id="yard" aria-label="A first-person maze in the enemy wire room. Cartoon soldiers shoot back. The green door is the listening post."></canvas>
 
-    <p id="hint" class="hint">Turn, walk, shoot</p>
-    <p id="toast" class="toast" hidden>Quicker shot</p>
+    <p id="hint" class="hint">The green door is the listening post</p>
+    <p id="toast" class="toast" hidden>Hit</p>
 
     <div class="hud">
       <div class="hud-block">
-        <span class="label">Gun</span>
-        <strong id="gun">Steady</strong>
+        <span class="label">Health</span>
+        <strong id="health">3</strong>
       </div>
       <div class="hud-block">
-        <span class="label">In the hall</span>
-        <strong id="left">0</strong>
+        <span class="label">Bullets</span>
+        <strong id="bullets">10</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -42,16 +42,17 @@
       <div class="card">
         <p class="kicker">Chapter 7</p>
         <h1>The listening wire</h1>
-        <p>The wire runs down a corridor. Cartoon soldiers block the way. The green door at the end is the way out.</p>
-        <p>Turn, walk, and shoot. A shot drops a soldier in a puff of dust. Farther in, the gun fires faster, then it throws a spread. Arrows or W A S D do the same. Space shoots.</p>
-        <button type="button" id="start">Start down the hall</button>
+        <p>Trent is in the enemy wire room. The listening post is the green door at the end of the maze.</p>
+        <p>Cartoon soldiers hold the corridors and shoot back. Health and spare bullets are on the floor. A soldier who goes down leaves one bullet.</p>
+        <p id="loadout">Three life points, and 10 bullets.</p>
+        <button type="button" id="start">Into the wire room</button>
       </div>
     </div>
 
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
-        <p>The corridor waits. The soldiers hold still.</p>
+        <p>The wire room waits. The soldiers hold their fire.</p>
         <button type="button" id="resume">Resume</button>
         <button type="button" id="give-up" class="ghost">Give up</button>
       </div>
@@ -60,10 +61,19 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The listening wire</p>
-        <h1>The green door</h1>
-        <p>You reached the end of the corridor.</p>
-        <p id="win-time">Out in 0 seconds.</p>
+        <h1>The listening post</h1>
+        <p>The green door is open.</p>
+        <p id="win-time">Through in 0 seconds.</p>
         <button type="button" id="retry">Walk it again</button>
+      </div>
+    </div>
+
+    <div id="lose-sheet" class="sheet" hidden>
+      <div class="card">
+        <p class="kicker">The listening wire</p>
+        <h1>Held in the wire room</h1>
+        <p>Health is gone. The listening post is still ahead.</p>
+        <button type="button" id="again">Try the corridor again</button>
       </div>
     </div>
 
@@ -76,6 +86,6 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="game.js?v=rotation2"></script>
+<script src="game.js?v=wiremaze1"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

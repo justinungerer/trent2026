@@ -1,9 +1,12 @@
 /* Chapter 5 — The Switch Tower.
    Side view of a small snowy yard. Three levers set the route.
-   Three trains come, one after another. The board shows that train's pattern.
+   Five trains come, one after another, at 1.5x the original speed.
+   The board shows that train's pattern.
    A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
-   Three correct departures win and send switch-tower:complete once.
-   Scene, board, levers, train, and Trent are painted pictures in art/. */
+   After two trains leave, a soldier flips a random lever every 1.5 seconds.
+   Five correct departures win and send switch-tower:complete once.
+   Scene, board, levers, train, and Trent are painted pictures in art/.
+   The soldier is drawn on the canvas: plain gray-green coat and helmet, no marks. */
 'use strict';
 
 (function () {
@@ -29,12 +32,18 @@
   var VIEW_W = 1280;
   var VIEW_H = 720;
 
-  /* 0 is left, 1 is right. Three patterns, one per successful departure.
+  /* 0 is left, 1 is right. Five patterns, one per successful departure.
      The painted board is covered and redrawn so the current pattern shows. */
+  var TRAIN_COUNT = 5;
+  var SPEED_MULT = 1.5;
+  var FLIP_INTERVAL = 1.5;
+  var SABOTEUR_AFTER = 2;
   var PATTERNS = [
     [0, 1, 0],
     [1, 0, 1],
-    [0, 0, 1]
+    [0, 0, 1],
+    [1, 1, 0],
+    [0, 1, 1]
   ];
   /* Blue windows on board.webp, source pixels: x, y, width, height. */
   var PANELS = [
@@ -58,8 +67,8 @@
 
   var TRAIN_W = 340;
   var SWITCH_X = 520;
-  var APPROACH_SPEED = 58;
-  var DEPART_SPEED = 260;
+  var APPROACH_SPEED = 58 * SPEED_MULT;
+  var DEPART_SPEED = 260 * SPEED_MULT;
   var TRAIN_START = -380;
 
   /* trent.webp: six equal frames. Idle, idle, then four pull frames.
@@ -116,6 +125,11 @@
   var victorySent = false;
   var rotateHold = false;
   var lastFrame = 0;
+  var flipTimer = 0;
+  var soldierX = 1180;
+  var soldierTarget = 1180;
+  var soldierFace = -1;
+  var soldierFlipT = 1;
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -199,7 +213,7 @@
   }
 
   function renderHud() {
-    var line = departures + ' / 3 · ' + misses;
+    var line = departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
     if (missesEl.textContent !== line) missesEl.textContent = line;
   }
 
@@ -232,6 +246,11 @@
     trentX = LEVER_X[0] - 74;
     pullT = 1;
     shake = 0;
+    flipTimer = 0;
+    soldierX = 1180;
+    soldierTarget = 1180;
+    soldierFace = -1;
+    soldierFlipT = 1;
     refreshLevers();
   }
 
@@ -240,6 +259,11 @@
     trainX = TRAIN_START;
     blastT = 0;
     blastParts = [];
+    flipTimer = 0;
+    if (departures >= SABOTEUR_AFTER && soldierTarget > 1100) {
+      soldierTarget = LEVER_X[2] + 52;
+      soldierFace = -1;
+    }
     refreshLevers();
     state = 'approach';
   }
@@ -291,9 +315,9 @@
     if (state === 'win' || state === 'lose') return;
     seconds = elapsedSeconds();
     state = 'win';
-    winTimeEl.textContent = 'Three trains away in ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
+    winTimeEl.textContent = 'Five trains away in ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
-    say('Three trains are away. ' + seconds + ' seconds.');
+    say('Five trains are away. ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('switch-tower:complete', {
@@ -363,6 +387,37 @@
     }
   }
 
+  /* After two departures, throw one random lever on a 1.5s approach clock.
+     The lever changes on that clock. The figure only shows who did it. */
+  function updateSoldier(dt) {
+    var index;
+    var mark;
+    if (departures < SABOTEUR_AFTER) return;
+    if (state === 'approach') {
+      flipTimer += dt;
+      if (flipTimer >= FLIP_INTERVAL) {
+        flipTimer -= FLIP_INTERVAL;
+        index = Math.floor(Math.random() * 3);
+        levers[index] = levers[index] === 1 ? 0 : 1;
+        soldierTarget = LEVER_X[index] + 52;
+        soldierFace = -1;
+        soldierFlipT = 0;
+        mark = soldierTarget - soldierX;
+        if (mark > 160) soldierX = soldierTarget - 160;
+        else if (mark < -160) soldierX = soldierTarget + 160;
+        refreshLevers();
+        say('A soldier threw lever ' + (index + 1) + '.');
+      }
+    }
+    if (reduceMotion()) {
+      soldierX = soldierTarget;
+      soldierFlipT = 1;
+    } else {
+      soldierX += (soldierTarget - soldierX) * Math.min(1, dt * 8);
+      if (soldierFlipT < 1) soldierFlipT = Math.min(1, soldierFlipT + dt / 0.4);
+    }
+  }
+
   function updateTrain(dt) {
     var front;
     var mid;
@@ -398,11 +453,15 @@
       if (trainX > VIEW_W + 30) {
         departures += 1;
         renderHud();
-        if (departures >= 3) win();
+        if (departures >= TRAIN_COUNT) win();
         else {
           patternIndex += 1;
           armNextTrain();
-          say('Train ' + departures + ' is away. Set pattern ' + (patternIndex + 1) + '.');
+          if (departures >= SABOTEUR_AFTER) {
+            say('Train ' + departures + ' is away. A soldier is throwing levers. Set pattern ' + (patternIndex + 1) + '.');
+          } else {
+            say('Train ' + departures + ' is away. Set pattern ' + (patternIndex + 1) + '.');
+          }
         }
       }
     }
@@ -565,6 +624,122 @@
     }
   }
 
+  /* Plain field-gray cartoon soldier. No badge, armband, eagle, or rune. */
+  function drawSoldier() {
+    var walking;
+    var stride;
+    var bob;
+    var swing;
+    if (departures < SABOTEUR_AFTER || state === 'title') return;
+    walking = Math.abs(soldierTarget - soldierX) > 8 && !reduceMotion();
+    stride = walking ? Math.sin(visualTime * 11) : 0;
+    bob = walking ? Math.abs(stride) * 2 : 0;
+    swing = Math.sin(Math.PI * clamp(soldierFlipT, 0, 1));
+
+    ctx.fillStyle = 'rgba(20, 32, 48, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(soldierX, GROUND_Y + 4, 30, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(soldierX, GROUND_Y - bob);
+    ctx.scale(soldierFace * 1.35, 1.35);
+
+    ctx.strokeStyle = '#2c332c';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-4, -46);
+    ctx.lineTo(-4 - stride * 10, -8);
+    ctx.moveTo(4, -46);
+    ctx.lineTo(4 + stride * 10, -8);
+    ctx.stroke();
+
+    ctx.fillStyle = '#241c18';
+    ctx.beginPath();
+    ctx.ellipse(-4 - stride * 10, -5, 8, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(4 + stride * 10, -5, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#4a5644';
+    ctx.beginPath();
+    ctx.moveTo(-16, -104);
+    ctx.quadraticCurveTo(-20, -70, -18, -42);
+    ctx.lineTo(16, -42);
+    ctx.quadraticCurveTo(18, -70, 14, -104);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1c241c';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = '#3c4838';
+    ctx.fillRect(-3, -100, 6, 58);
+    ctx.fillStyle = '#2a3128';
+    ctx.beginPath();
+    ctx.arc(0, -88, 2.2, 0, Math.PI * 2);
+    ctx.arc(0, -74, 2.2, 0, Math.PI * 2);
+    ctx.arc(0, -60, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(10, -92);
+    ctx.rotate(-1.15 * swing + 0.35);
+    ctx.fillStyle = '#4a5644';
+    ctx.fillRect(-4, -4, 8, 34);
+    ctx.fillStyle = '#e2b394';
+    ctx.beginPath();
+    ctx.arc(0, 32, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = '#4a5644';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(-8, -90);
+    ctx.lineTo(-16, -62);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2b394';
+    ctx.beginPath();
+    ctx.arc(2, -120, 15, 0, Math.PI * 2);
+    ctx.arc(-8, -120, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1c1814';
+    ctx.beginPath();
+    ctx.arc(7, -122, 1.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1c1814';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(2, -128);
+    ctx.lineTo(12, -126);
+    ctx.moveTo(4, -112);
+    ctx.quadraticCurveTo(8, -109, 12, -112);
+    ctx.stroke();
+
+    ctx.fillStyle = '#3d463c';
+    ctx.beginPath();
+    ctx.ellipse(1, -132, 16, 11, 0, Math.PI, 0, true);
+    ctx.fill();
+    ctx.strokeStyle = '#1c241c';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.fillStyle = '#323a32';
+    ctx.beginPath();
+    ctx.ellipse(1, -126, 17, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#2c332c';
+    ctx.beginPath();
+    ctx.ellipse(14, -124, 7, 3.2, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(210, 216, 200, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(-2, -136, 6, 3, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   function drawSnow() {
     var i;
     var f;
@@ -586,6 +761,7 @@
     drawBlast();
     for (i = 0; i < 3; i++) drawLever(i);
     drawTrent();
+    drawSoldier();
     drawSnow();
   }
 
@@ -646,6 +822,7 @@
       updateTrent(dt);
     }
     if (playingMotion()) updateTrain(dt);
+    if (state !== 'pause') updateSoldier(dt);
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 26);
     renderHud();
     render();

@@ -1,6 +1,6 @@
 # Chapter 1 — The Night Broadcast
 
-A few months after D-Day, near Christmas. Trent tunes a field radio and chases the field report that says Santa has been captured. That signal drifts, then jumps after each lock. The other stations are harmless noise: a canteen, a weather report, and a music box. Three knobs have to lock, in order.
+A few months after D-Day, near Christmas. Trent tunes a field radio and finds the field report that says Santa has been captured. Five stations move on the dial and change direction. The other four are a canteen, a weather report, a music box, and a chapel. Only the field report finishes the tune.
 
 The pictures are original generated paintings in `art/`: a snowy night, a brass field radio, and Trent. The tuning needle and the signal meter are small canvas overlays. There are no third-party assets, no downloaded images, and no build step.
 
@@ -23,11 +23,10 @@ Landscape is the intended orientation. A portrait phone shows a short "turn side
 Touch first. Nothing you need is hover-only.
 
 - Drag the tuning knob left or right. The painted gear on the radio is the tuner.
-- On-screen arrows tune lower and higher. Hold one to sweep. Drag and the arrows move the dial at twice the earlier rate.
-- Keyboard left and right arrows tune the same way. Space is not used.
-- Three numbered knobs sit beside the set. Only one is active. The lock on that knob fills while the needle stays inside the drifting field-report band and the dial is still. A few steady seconds, three on the counter, locks it.
-- Hold Lock to keep the dial from moving. Arrows and dragging do nothing while Lock is held.
-- Slipping out of the band unwinds the current knob. A small nudge that stays inside the band pauses the count and does not unwind it.
+- On-screen arrows tune lower and higher. Hold one to sweep. Keyboard left and right arrows tune the same way. Space is not used.
+- Each station shows a moving marker and a strong-signal wedge. Stay inside one wedge for 2 seconds. That reveals a red band on that station. The red band is hidden until the 2 second hold succeeds. Leaving the strong wedge clears the hold and hides the band.
+- Hold Lock and keep the needle inside the red band for 3 seconds. Tuning still works while Lock is held, so the other hand can keep chasing. Releasing Lock, or leaving the red band while still in the strong wedge, unwinds the lock. Leaving the strong wedge hides the red band.
+- Lock works on any of the five stations. A lock on the wrong station shows the text "wrong station" and does not win. The field report is the correct station on every run.
 - Escape pauses. Pause also opens when the page is hidden. Resume continues the same tune. Give up returns to the start and does not count as a lock.
 
 Buttons are at least 48 pixels. The arrows and Lock are larger so a thumb can hold them.
@@ -36,16 +35,16 @@ If the device asks for reduced motion, the dial lamp does not flicker and the ne
 
 ## Win rule
 
-There is no fail state. Missing the band does not injure anyone. The signal meter climbs near any station. Words appear when the needle is inside one: the canteen, the weather desk, the music box, or the field report.
+There is no fail state. Missing a band does not injure anyone. The signal meter climbs near any station. Words appear when the needle is inside one: the canteen, the weather desk, the music box, the chapel, or the field report.
 
-Only the field report can lock. Its center drifts along the dial, and it is still the narrow band. While you are turning the dial, or while you are outside that band, it drifts quickly enough that you have to chase it. While the needle is inside the band and the dial is steady, the drift slows to a creep so a centered hold can last a few seconds. Catch it on the edge and the creep can still carry it off.
+All five markers move, faster than the old single drift, and each one reverses direction on its own. The strong wedge is the wide zone. The red band is narrower and only appears after 2 continuous seconds in that station's strong wedge.
 
-Lock knob 1, then the signal jumps to a new frequency and keeps drifting. Knob 2 is next, then knob 3. Each lock is three steady seconds inside the band. The third lock wins.
+The correct station is the field report. It is chosen by its id, `santa`, and it is the same every run. Nothing random picks it. Locking a different station shows "wrong station" and the tune continues.
 
-The run has no time limit. A practiced tune is a chase, a steady hold, and the same again for the next knob.
+The run has no time limit. A practiced tune is a chase, a 2 second strong hold, then 3 seconds in the red band with Lock held.
 
 ## Victory event
 
-On the third lock the page shows a short card — Santa has been taken — and dispatches a `CustomEvent` named `night-broadcast:complete` on `window` once. The detail is `{ seconds }`: whole seconds on the dial, not counting time spent paused.
+Locking the field report shows a short card — Santa has been taken — and dispatches a `CustomEvent` named `night-broadcast:complete` on `window` once. The detail is `{ seconds }`: whole seconds on the dial, not counting time spent paused. The same message is posted to the parent frame when the page is embedded.
 
-The first and second knobs do not dispatch the event. Pause does not dispatch the event. Give up does not dispatch the event. Tune again starts a fresh dial at the low end, with knob 1 waiting, and allows the event again on the next win.
+A lock on a wrong station does not dispatch the event. Pause does not dispatch the event. Give up does not dispatch the event. Tune again starts a fresh dial at the low end and allows the event again on the next win.

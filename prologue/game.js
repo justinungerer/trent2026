@@ -1,8 +1,8 @@
 /* D-Day prologue. Walk Trent from the landing craft to the seawall.
    Painted sprites in art/. Layout is documented in art/ART-SOURCES.md.
 
-   Walk speed clears an open beach in about half a minute. Waves, detours,
-   and soldiers make a careful run longer, still under three minutes. */
+   Walk speed is 360, one and a half times the previous 240. An open beach
+   is a short run. Waves, mines, and soldiers make a careful crossing longer. */
 'use strict';
 
 (function () {
@@ -30,13 +30,15 @@
   var START_Y = 124;
   var WALL_X = 7000;
   var GOAL_X = 6960;
-  var SPEED = 240;
+  var SPEED = 360;
   var SHOT_SPEED = 700;
   var FIRE_GAP = 0.42;
   var SOLDIER_RANGE = 640;
   var TOTAL_METERS = 80;
   var STUMBLE_TIME = 1.05;
   var BRACED_PUSH = 0.18;
+  var START_AMMO = 10;
+  var SURF_SPEED = 220;
 
   /* Surf cycle, as a fraction of the period:
      calm until warnAt, foam climbs until hitAt, then the wash recedes. */
@@ -57,9 +59,9 @@
     { kind: 'hedgehog', x: 5740, y: 206, r: 26 }
   ];
 
-  /* reach is the dry line: y >= reach is in the wave. reach 0 covers the
-     whole beach. Those full-width zones are longer than one calm gap, so
-     Trent has to brace. The other zones can be walked on the high sand. */
+  /* reach is the dry line: y >= reach is in the surf. reach 0 covers the
+     whole beach. Curved crests travel right to left. A crest shoves Trent
+     toward the landing craft until he braces. High sand stays out of the wash. */
   var waves = [
     { x0: 520, x1: 980, reach: 178, push: 280, offset: 0.4 },
     { x0: 1080, x1: 1700, reach: 0, push: 360, offset: 1.5 },
@@ -75,6 +77,19 @@
     { x: 4760, w: 860 }
   ];
 
+  var mines = [
+    { x: 1560, y: 204, r: 16 },
+    { x: 2520, y: 214, r: 16 },
+    { x: 3080, y: 118, r: 16 },
+    { x: 4200, y: 78, r: 16 },
+    { x: 5100, y: 150, r: 16 },
+    { x: 6100, y: 72, r: 16 }
+  ];
+  var packs = [
+    { x: 2060, y: 42, r: 14 },
+    { x: 3580, y: 228, r: 14 },
+    { x: 5980, y: 48, r: 14 }
+  ];
   var puffs = buildPuffs();
 
   var state = 'title';
@@ -108,6 +123,9 @@
   var fireQueued = false;
   var aim = { x: 1, y: 0 };
   var fireLeft = 0;
+  var ammo = START_AMMO;
+  var surfHold = -1;
+  var ammoEl = document.getElementById('ammo');
   var flash = 0;
   var shots = [];
   var hazards = [];
@@ -160,6 +178,10 @@
   wallImg.src = 'art/seawall.webp';
   hedgehogImg.src = 'art/hedgehog.webp';
   wireImg.src = 'art/wire.webp';
+  var mineImg = new Image();
+  var crateImg = new Image();
+  mineImg.src = 'art/mine.webp';
+  crateImg.src = 'art/crate.webp';
 
   var moving = false;
 
@@ -208,8 +230,12 @@
     aim.x = 1;
     aim.y = 0;
     fireLeft = 0;
+    ammo = START_AMMO;
     flash = 0;
     shots = [];
+    var p;
+    for (p = 0; p < packs.length; p++) packs[p].taken = false;
+    surfHold = -1;
     hazards = [];
     soldiers = makeSoldiers();
     clearFireHold();
@@ -218,6 +244,63 @@
       waves[i].prevU = phaseU(waves[i], 0);
     }
     renderHud();
+  }
+
+  function crestPose(wave, index) {
+    var width = wave.x1 - wave.x0;
+    var cycle = width + 150;
+    var travel = (seaTime * SURF_SPEED + wave.offset * 180 + index * cycle * 0.5) % cycle;
+    return wave.x1 - travel;
+  }
+
+  function crestShape(wave) {
+    var mid = wave.reach <= 0 ? BEACH_W * 0.58 : (wave.reach + BEACH_W) * 0.5;
+    var amp = wave.reach <= 0 ? 90 : Math.max(24, (BEACH_W - wave.reach) * 0.46);
+    return { mid: mid, amp: amp };
+  }
+
+  function crestPoint(head, mid, amp, t) {
+    var a = (t - 0.5) * Math.PI;
+    return {
+      x: head + (1 - Math.cos(a)) * 130,
+      y: mid + Math.sin(a) * amp
+    };
+  }
+
+  function crestTouchIndex() {
+    var i;
+    var n;
+    var wave;
+    var shape;
+    var head;
+    var s;
+    var p;
+    var dx;
+    var dy;
+    for (i = 0; i < waves.length; i++) {
+      wave = waves[i];
+      if (player.x < wave.x0 || player.x > wave.x1) continue;
+      if (player.y < wave.reach) continue;
+      shape = crestShape(wave);
+      for (n = 0; n < 2; n++) {
+        head = crestPose(wave, n);
+        for (s = 0; s <= 12; s++) {
+          p = crestPoint(head, shape.mid, shape.amp, s / 12);
+          if (p.x < wave.x0 || p.x > wave.x1) continue;
+          dx = player.x - p.x;
+          dy = player.y - p.y;
+          if (dx * dx + dy * dy < 32 * 32) return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  function heldInZone() {
+    var wave;
+    if (surfHold < 0) return false;
+    wave = waves[surfHold];
+    return player.x >= wave.x0 && player.x <= wave.x1 && player.y >= wave.reach;
   }
 
   function phaseU(wave, time) {
@@ -361,6 +444,7 @@
       dots[i].classList.toggle('used', i < player.stumbles);
     }
     marksEl.setAttribute('aria-label', player.stumbles + ' of 3 stumbles');
+    if (ammoEl) ammoEl.textContent = String(ammo);
   }
 
   function elapsedMs() {
@@ -426,7 +510,10 @@
   }
 
   function lose() {
+    var copy;
     if (state === 'lose' || state === 'win') return;
+    copy = document.getElementById('lose-copy');
+    if (copy) copy.textContent = 'Three stumbles. Trent gets up at the landing craft and can try the beach again.';
     state = 'lose';
     loseSheet.hidden = false;
     say('Three stumbles. Back at the landing craft.');
@@ -862,6 +949,9 @@
     if (fireLeft > 0) return;
     if (!fireQueued && !keyFire && !firePointer) return;
     fireQueued = false;
+    if (ammo <= 0) return;
+    ammo -= 1;
+    renderHud();
     fireLeft = FIRE_GAP;
     flash = 0.08;
     dir = aimUnit();
@@ -879,6 +969,73 @@
     if (flash > 0) flash = Math.max(0, flash - dt);
   }
 
+  function updateSurf(dt) {
+    var hit;
+    if (isBracing()) {
+      surfHold = -1;
+      return;
+    }
+    if (state !== 'play') return;
+    hit = crestTouchIndex();
+    if (hit >= 0) surfHold = hit;
+    if (!heldInZone()) {
+      surfHold = -1;
+      return;
+    }
+    pushBack(waves[surfHold].push * dt);
+  }
+
+  function restartAtRamp() {
+    if (state === 'win') return;
+    resetWorld();
+    runStart = performance.now();
+    pauseAccum = 0;
+    state = 'play';
+    startSheet.hidden = true;
+    pauseSheet.hidden = true;
+    loseSheet.hidden = true;
+    winSheet.hidden = true;
+    say('A mine. Back at the ramp.');
+  }
+
+  function updateMinesAndPacks() {
+    var i;
+    var mine;
+    var pack;
+    var s;
+    var dx;
+    var dy;
+    for (i = 0; i < mines.length; i++) {
+      mine = mines[i];
+      dx = player.x - mine.x;
+      dy = player.y - mine.y;
+      if (dx * dx + dy * dy > (mine.r + RADIUS) * (mine.r + RADIUS)) continue;
+      restartAtRamp();
+      return true;
+    }
+    for (i = soldiers.length - 1; i >= 0; i--) {
+      s = soldiers[i];
+      if (s.mode !== 'parcel') continue;
+      dx = player.x - s.x;
+      dy = player.y - s.y;
+      if (dx * dx + dy * dy > 40 * 40) continue;
+      ammo += 1;
+      soldiers.splice(i, 1);
+      say('One more bullet.');
+    }
+    for (i = 0; i < packs.length; i++) {
+      pack = packs[i];
+      if (pack.taken) continue;
+      dx = player.x - pack.x;
+      dy = player.y - pack.y;
+      if (dx * dx + dy * dy > (pack.r + RADIUS) * (pack.r + RADIUS)) continue;
+      pack.taken = true;
+      ammo += 1;
+      say('One more bullet.');
+    }
+    return false;
+  }
+
   function updatePlay(dt) {
     var stick = controlVector();
     var beforeX = player.x;
@@ -892,7 +1049,9 @@
       if (stick.x < -0.25) player.facing = -1;
       else if (stick.x > 0.25) player.facing = 1;
     }
-    if (!bracing) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
+    updateSurf(dt);
+    if (!bracing && surfHold < 0) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
+    if (updateMinesAndPacks()) return;
     moved = Math.hypot(player.x - beforeX, player.y - beforeY);
     moving = !bracing && moved > 0.01;
     if (moving) player.step += moved * 0.09;
@@ -907,7 +1066,6 @@
     updateShots(dt);
     updateSoldiers(dt, true);
     updateHazards(dt);
-    updateWaves();
   }
 
   function updateStumble(dt) {
@@ -917,7 +1075,7 @@
     updateShots(dt);
     updateSoldiers(dt, false);
     updateHazards(dt);
-    updateWaves();
+    updateSurf(dt);
     if (stumbleT < STUMBLE_TIME) return;
     if (player.stumbles >= 3) lose();
     else state = 'play';
@@ -925,16 +1083,30 @@
 
   function braceNeeded() {
     var i;
+    var n;
     var wave;
-    var mode;
+    var shape;
+    var head;
+    var s;
+    var p;
+    var dx;
+    var dy;
     if (state !== 'play') return false;
+    if (surfHold >= 0) return true;
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
-      mode = surfMode(phaseU(wave, seaTime));
-      if (mode === 'calm') continue;
-      if (player.x < wave.x0 || player.x > wave.x1) continue;
       if (player.y < wave.reach) continue;
-      return true;
+      if (player.x < wave.x0 - 20 || player.x > wave.x1 + 20) continue;
+      shape = crestShape(wave);
+      for (n = 0; n < 2; n++) {
+        head = crestPose(wave, n);
+        for (s = 0; s <= 8; s++) {
+          p = crestPoint(head, shape.mid, shape.amp, s / 8);
+          dx = p.x - player.x;
+          dy = p.y - player.y;
+          if (dx > -40 && dx < 150 && dx * dx + dy * dy < 120 * 120) return true;
+        }
+      }
     }
     return false;
   }
@@ -1120,6 +1292,131 @@
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  function traceCrest(wave, head, mid, amp) {
+    var steps = 16;
+    var s;
+    var p;
+    var started = false;
+    var any = false;
+    ctx.beginPath();
+    for (s = 0; s <= steps; s++) {
+      p = crestPoint(head, mid, amp, s / steps);
+      if (p.x < wave.x0 || p.x > wave.x1) {
+        started = false;
+        continue;
+      }
+      if (!started) {
+        ctx.moveTo(worldToX(p.x), worldToY(p.y));
+        started = true;
+        any = true;
+      } else ctx.lineTo(worldToX(p.x), worldToY(p.y));
+    }
+    return any;
+  }
+
+  function drawSurf() {
+    var i;
+    var n;
+    var wave;
+    var shape;
+    var head;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (i = 0; i < waves.length; i++) {
+      wave = waves[i];
+      if (worldToX(wave.x1) < -50 || worldToX(wave.x0) > cssW + 50) continue;
+      shape = crestShape(wave);
+      for (n = 0; n < 2; n++) {
+        head = crestPose(wave, n);
+        if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
+        ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
+        ctx.lineWidth = Math.max(8, 34 * scale);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(248, 252, 252, 0.95)';
+        ctx.lineWidth = Math.max(2, 5 * scale);
+        ctx.stroke();
+        if (!traceCrest(wave, head + 18, shape.mid + 4, shape.amp * 0.62)) continue;
+        ctx.strokeStyle = 'rgba(232, 246, 246, 0.75)';
+        ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPainted(img, x, y, worldW) {
+    var px;
+    var py;
+    var dw;
+    var dh;
+    if (!imageReady(img)) return false;
+    dw = worldW * scale;
+    dh = dw * (img.naturalHeight / img.naturalWidth);
+    px = worldToX(x);
+    py = worldToY(y);
+    if (px < -dw || px > cssW + dw) return true;
+    ctx.drawImage(img, px - dw * 0.5, py - dh * 0.62, dw, dh);
+    return true;
+  }
+
+  function drawCartoonMine(x, y) {
+    var px = worldToX(x);
+    var py = worldToY(y);
+    var rad = 15 * scale;
+    if (px < -40 || px > cssW + 40) return;
+    ctx.fillStyle = 'rgba(176, 154, 116, 0.95)';
+    ctx.beginPath();
+    ctx.ellipse(px, py + rad * 0.55, rad * 1.4, rad * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#5e6848';
+    ctx.beginPath();
+    ctx.arc(px, py, rad, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#243028';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px, py - rad);
+    ctx.lineTo(px, py - rad - 8);
+    ctx.moveTo(px - rad * 0.75, py + rad * 0.15);
+    ctx.lineTo(px - rad - 7, py + rad * 0.6);
+    ctx.moveTo(px + rad * 0.75, py + rad * 0.15);
+    ctx.lineTo(px + rad + 7, py + rad * 0.6);
+    ctx.stroke();
+  }
+
+  function drawCartoonCrate(x, y) {
+    var px = worldToX(x);
+    var py = worldToY(y);
+    if (px < -40 || px > cssW + 40) return;
+    ctx.fillStyle = '#8d5a32';
+    ctx.fillRect(px - 13, py - 10, 26, 18);
+    ctx.strokeStyle = '#4a3018';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px - 13, py - 10, 26, 18);
+    ctx.fillStyle = '#e2c07a';
+    ctx.fillRect(px - 2, py - 10, 4, 18);
+    ctx.fillStyle = '#d7a441';
+    ctx.beginPath();
+    ctx.ellipse(px - 6, py - 2, 5, 2, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawMinesAndPacks() {
+    var i;
+    var mine;
+    var pack;
+    for (i = 0; i < mines.length; i++) {
+      mine = mines[i];
+      if (!drawPainted(mineImg, mine.x, mine.y, 62)) drawCartoonMine(mine.x, mine.y);
+    }
+    for (i = 0; i < packs.length; i++) {
+      pack = packs[i];
+      if (pack.taken) continue;
+      if (!drawPainted(crateImg, pack.x, pack.y, 54)) drawCartoonCrate(pack.x, pack.y);
     }
   }
 
@@ -1432,7 +1729,8 @@
     drawCraft();
     drawWall();
     drawSmoke();
-    drawFoam();
+    drawSurf();
+    drawMinesAndPacks();
     drawSoldiers();
     drawHazards();
     drawShots();

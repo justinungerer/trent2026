@@ -25,9 +25,16 @@ test('all reachable quiz loadouts complete through the actual mission update loo
   const result=run(`start();let steps=0;while(state==='playing'&&steps++<30000){
    keys.clear();const count=relays.filter(r=>r.done).length;
    const target=missionTarget().x;
-   if(player.x<target-3)keys.add('d');else if(player.x>target+3)keys.add('a');
+   let goal=target;
+   if(ammo===0&&startingAmmo){const box=supplies.filter(x=>Math.abs(x-player.x)>30&&(x<=player.x||!gates.some((g,i)=>!relays[i].done&&player.x<=g-20&&x>g-20)&&!locks.some(l=>!l.done&&player.x<=l.x+250&&x>l.x+250))).sort((a,b)=>Math.abs(a-player.x)-Math.abs(b-player.x))[0];if(box!==undefined)goal=box}
+   if(player.x<goal-3)keys.add('d');else if(player.x>goal+3)keys.add('a');
+   const dir=goal>=player.x?1:-1;
+   const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
+   const alarm=missionTarget().hint==='ALARM RELAY'&&goal===target&&Math.abs(player.x-target)<48&&player.y<112;
+   const threat=guards.some(g=>g.hp>0&&Math.abs(g.x-player.x)<200)||guardShots.some(s=>Math.abs(s.x-player.x)<180);
+   if(hurdle||alarm||(threat&&player.y<12))keys.add('w');
    const enemy=guards.filter(x=>x.hp>0&&Math.abs(x.x-player.x)<340).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0];
-   if((enemy||(missionTarget().action==='shoot'&&Math.abs(player.x-target)<10))&&!shots.length&&elapsed>=nextShot)keys.add(' ');update(.02);
+   if((enemy||(missionTarget().action==='shoot'&&Math.abs(player.x-target)<10))&&!shots.length&&elapsed>=nextShot&&player.y<8)keys.add(' ');update(.02);
   } JSON.stringify({state,x:player.x,hp:player.hp,elapsed,documents:documents.filter(d=>d.found).length,relays:relays.filter(r=>r.done).length,transmit,locks:locks.filter(l=>l.done).length,ammo,startingAmmo,damage,reload})`);
   const value=JSON.parse(result);
   assert.equal(value.state,'won',`${charges} ${reload} ${ribbon} ${result}`);
@@ -138,6 +145,30 @@ test('a short valid tap fires once, while cancellation and cooldown taps do not 
  assert.equal(run('update(.4);shotsUsed'),1);
  elements.fire.handlers.pointerdown(event);elements.fire.handlers.pointercancel(event);
  assert.equal(run('update(.02);shotsUsed'),1);
+});
+
+test('alarm bells need a jump, boxes block the ground, and interactions revive every defeated guard',()=>{
+ const {run}=game();
+ const result=JSON.parse(run(`start();guards=[{x:500,home:500,hp:2,dir:-1,stun:0,attack:0,cooldown:0}];player.x=400;player.y=0;update(.02);const cooldown=guards[0].cooldown;
+  guards=[];documents[0].found=true;documents[0].pages.forEach(p=>p.found=true);
+  player.x=relays[0].x;player.y=0;player.vy=0;update(.02);const grounded=!relays[0].done;
+  player.vy=760;for(let n=0;n<40;n++)update(.02);const jumped=relays[0].done;
+  guards=[{x:100,home:100,hp:0,dir:1,stun:0,attack:0,cooldown:0,windup:0}];
+  keys.clear();player.x=parcels[0].x;player.y=80;player.vy=0;update(.02);
+  const revived=guards[0].hp===2&&parcels[0].found;
+  player.y=0;player.vy=0;player.x=hurdles[0].x-90;keys.add('d');for(let n=0;n<40;n++)update(.02);
+  const blocked=player.x<hurdles[0].x-hurdles[0].half;
+  keys.clear();player.y=90;player.vy=0;player.x=hurdles[0].x;keys.add('d');update(.02);
+  const cleared=player.x>hurdles[0].x;
+  JSON.stringify({grounded,jumped,revived,blocked,cleared,cooldown,alertedFire,calmFire})`));
+ assert.equal(result.grounded,true);
+ assert.equal(result.jumped,true);
+ assert.equal(result.revived,true);
+ assert.equal(result.blocked,true);
+ assert.equal(result.cleared,true);
+ assert.ok(Math.abs(result.cooldown-3.5/1.3)<1e-9);
+ assert.ok(Math.abs(result.alertedFire-3.5/1.3)<1e-12);
+ assert.ok(Math.abs(result.calmFire-5/1.3)<1e-12);
 });
 
 test('low frame rates advance real time in small steps and bound long stalls',()=>{

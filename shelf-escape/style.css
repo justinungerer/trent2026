@@ -6,7 +6,7 @@ canvas{display:block;width:100%;height:100%}
 button{font:800 14px system-ui;border:1px solid #83c3d9;background:#122b3a;color:#fff;border-radius:6px;cursor:pointer;min-height:44px}
 .hud{position:absolute;inset:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) auto max(16px,env(safe-area-inset-left));display:flex;justify-content:space-between;align-items:start;gap:12px;pointer-events:none;text-shadow:0 2px 8px #000;font-weight:700}
 .hud small,.card small{display:block;color:#f5ca7e;font-size:10px;letter-spacing:.18em}
-.hud strong{display:block;font-size:clamp(12px,2.1vw,18px)}
+.hud strong{display:block;font-size:clamp(27px,4.7vw,40px);line-height:1.15}
 #progress{display:block;color:#afe0e4;font-size:11px}
 .resources{display:flex;align-items:center;gap:12px;font-size:13px;white-space:nowrap}.resources button{pointer-events:auto;padding:0 14px}
 .controls{position:absolute;inset:auto max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));display:flex;justify-content:space-between;pointer-events:none}

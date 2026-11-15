@@ -9,9 +9,9 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night. Chase the drifting signal and lock three knobs in order."></canvas>
+    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night. Five stations move on the dial. Hold a strong signal for 2 seconds, then hold Lock inside the red band for 3 seconds."></canvas>
 
-    <p id="hint" class="hint">Chase the signal</p>
+    <p id="hint" class="hint">Hold a strong signal for 2 seconds</p>
 
     <div class="hud">
       <div class="hud-block grow">
@@ -23,8 +23,8 @@
         <strong id="signal">Quiet</strong>
       </div>
       <div class="hud-block">
-        <span class="label">Knob</span>
-        <strong id="lock">1 · 0.0 / 3s</strong>
+        <span class="label" id="timer-label">Hold</span>
+        <strong id="lock">0.0 / 2s</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -39,10 +39,10 @@
       <div class="card">
         <p class="kicker">A few months after D-Day</p>
         <h1>The night broadcast</h1>
-        <p>Near Christmas, Trent warms a field radio in the snow.</p>
-        <p>Chase the moving signal. It drifts along the dial, so a spot that worked a moment ago will slide away.</p>
-        <p>Hold the needle steady inside that band. The Lock button keeps the dial still. Drag the tuning knob, or use the arrows.</p>
-        <p>Lock knob 1, then knob 2, then knob 3. Each lock is a few steady seconds. After each one, the signal moves.</p>
+        <p>Near Christmas, Trent warms a field radio in the snow. Five stations move on the dial, and each one changes direction.</p>
+        <p>Keep the needle in a strong signal for 2 seconds. A red band then appears on that station. It stays hidden until that hold is done.</p>
+        <p>Hold Lock and keep the needle inside the red band for 3 seconds. You can still tune while Lock is held. Drag the knob, or use the arrows.</p>
+        <p>Any station can lock. The wrong ones do not finish the tune. Lock the field report.</p>
         <button type="button" id="start">Switch on the lamp</button>
       </div>
     </div>
@@ -60,7 +60,7 @@
       <div class="card">
         <p class="kicker">The night broadcast</p>
         <h1>Santa has been taken</h1>
-        <p>All three knobs are locked. A field voice says Santa has been captured.</p>
+        <p>The field report is locked. A field voice says Santa has been captured.</p>
         <p id="win-time">Tuned in 0 seconds.</p>
         <button type="button" id="retry">Tune again</button>
       </div>
@@ -75,6 +75,6 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="game.js?v=rotation2"></script>
+<script src="game.js?v=redband3"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

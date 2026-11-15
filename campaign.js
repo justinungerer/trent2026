@@ -70,14 +70,14 @@ var CHAPTERS = [
     number: 1,
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
-    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Most stations are noise. One narrow band says Hitler has captured Santa and is holding him. Hold that band until it locks.',
+    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
     lines: [
-      'Months after the landing, Christmas is close and Santa is missing.',
-      'Trent opens a field radio. The canteen, the weather, and a music box are the wrong stations.',
-      'The field report is a narrow band. Hold the dial still until the lock fills.',
-      'When it locks, Allied intel is plain: Hitler has captured Santa and is holding him.'
+      'Months after the landing, Trent tunes a field radio in the snow. Allied intel is on a narrow band.',
+      'Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued.',
+      'The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers.',
+      'Hold the dial still until the lock fills. Trent is the Allied hero who has to stop all of it.'
     ],
-    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow. Most stations are noise. One narrow band says Hitler has captured Santa and is holding him, and Trent holds that band until the lock fills.',
+    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow and holds a narrow band until it locks. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers. Trent is the Allied hero who has to carry the depot, the escape, the workshop, and the flight home.',
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
     pin: 'NIGHT',
@@ -96,14 +96,14 @@ var CHAPTERS = [
     number: 2,
     title: 'Frosted Skies',
     kicker: 'Chapter 2',
-    line: 'The Luftwaffe plans to bomb Santa’s secret workshop. Trent takes the ribbon sleigh into the winter valley, breaks the raid, and stops that attack before it reaches the roof.',
+    line: 'The Luftwaffe plans to bomb Santa’s secret workshop, and this flight is what stops that bombing. Trent takes the ribbon sleigh into the winter valley, breaks the raid, and turns it back before it reaches the roof.',
     lines: [
-      'The Luftwaffe plans to bomb Santa’s secret workshop.',
+      'The Luftwaffe plans to bomb Santa’s secret workshop. This flight is what stops that bombing.',
       'Trent flies the ribbon sleigh over the valley. The cannons fire on their own.',
       'Scout craft and amber fire cross his path. Repair parcels keep the hull together.',
-      'Stop the raid. The workshop has to still be standing when they come home.'
+      'Stop the raid. The workshop has to still be standing, and the race to save Rudolph comes next.'
     ],
-    story: 'The Luftwaffe plans to bomb Santa’s secret workshop. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, and this flight stops that attack before the bombs arrive.',
+    story: 'The radio already named the raid. The Luftwaffe plans to bomb Santa’s secret workshop, and Frosted Skies is the flight that stops that bombing. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, and breaks the attack before it reaches the roof.',
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
     pin: 'SKY',
@@ -122,14 +122,14 @@ var CHAPTERS = [
     number: 3,
     title: 'White Rail',
     kicker: 'Chapter 3',
-    line: 'The enemy plans to turn Rudolph into meat. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the race to stop it.',
+    line: 'The enemy plans to turn Rudolph into meat for hamburgers. White Rail is the race to stop that. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the first half of the race.',
     lines: [
-      'The enemy plans to turn Rudolph into meat. The handcar is the race to the yard.',
+      'The enemy plans to turn Rudolph into hamburgers. The handcar is the race to the yard.',
       'Crates, gaps, and a signal arm block the straight line.',
       'The left thumb picks the track. The right thumb keeps the speed up.',
-      'Reach the yard mouth before three slips, and before that order is carried out.'
+      'Reach the yard mouth before three slips. Special Delivery finishes the race.'
     ],
-    story: 'The enemy plans to turn Rudolph into meat. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the only way to stop it in time.',
+    story: 'The enemy plans to turn Rudolph into meat for hamburgers. White Rail is the race to stop that. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the way through.',
     event: 'white-rail:complete',
     path: './white-rail/',
     pin: 'RAIL',
@@ -148,14 +148,14 @@ var CHAPTERS = [
     number: 4,
     title: 'Special Delivery',
     kicker: 'Chapter 4',
-    line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into meat. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They also say Sprout was caught spying.',
+    line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Sprout, the elf on the shelf, is held.',
     lines: [
-      'The enemy still plans to turn Rudolph into meat. Three dispatches in the freight yard can stop it.',
+      'The race to keep Rudolph from becoming hamburgers continues in the freight yard.',
       'Inspectors walk fixed routes. Stay out of their sight.',
       'A wind-up penguin draws them away for a few seconds.',
-      'The dispatches save Rudolph, and they say Sprout was caught spying. He has to be rescued.'
+      'The dispatches stop that order, and they point to the depot where Sprout is held.'
     ],
-    story: 'The freight yard is the race to stop the enemy from turning Rudolph into meat. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers say Sprout was caught spying and has to be rescued.',
+    story: 'Special Delivery is the rest of the race to stop the enemy from turning Rudolph into hamburgers. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers point to the depot, where Sprout, the elf on the shelf, is still held and still has to be rescued.',
     event: 'special-delivery:complete',
     path: './chapter-2/',
     pin: 'YARD',
@@ -174,14 +174,14 @@ var CHAPTERS = [
     number: 5,
     title: 'The Switch Tower',
     kicker: 'Chapter 5',
-    line: 'Sprout was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
+    line: 'Sprout, the elf on the shelf, was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
     lines: [
-      'Sprout was caught spying. This train is the way to the depot, and to him.',
+      'Sprout is held at the depot. This train is the way to the elf on the shelf.',
       'The destination board shows the lever order as pictures, not a speech.',
       'Trent throws each lever left or right before the train arrives.',
       'The matching pattern lets the rescue train leave the yard.'
     ],
-    story: 'Sprout was caught spying and has to be rescued from the depot. The destination board shows the lever order as pictures. Trent throws each switch to match it so the train can leave for the depot.',
+    story: 'Sprout, the elf on the shelf, was caught spying and is still held at the depot. The destination board shows the lever order as pictures. Trent throws each switch to match it so the train can leave and the rescue can start.',
     event: 'switch-tower:complete',
     path: './switch-tower/',
     pin: 'SWITCH',
@@ -200,14 +200,14 @@ var CHAPTERS = [
     number: 6,
     title: 'The shelf operative',
     kicker: 'Chapter 6',
-    line: 'Sprout was caught spying and is inside the depot. The quiz builds his ribbon gun. Then Trent plays as Sprout: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
+    line: 'The depot is where Sprout, the elf on the shelf, is held. The quiz builds his ribbon gun. Then Trent plays as Sprout: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
     lines: [
-      'Sprout was caught spying. He is trapped in the depot, and this is the rescue.',
+      'This is the rescue. Sprout, the elf the Allies sent to spy, is trapped in the depot.',
       'The questions decide his ammunition, his reload, and his ribbon.',
       'Inside, shelves block shots. Guards can be wrapped into parcels.',
       'Disable the alarms, get Sprout out, and take the route toward Santa.'
     ],
-    story: 'Sprout was caught spying and has to be rescued from the depot. The questions build his ribbon gun. Then he wraps the guards, quiets the alarms, and leaves through the mail hatch with the route toward Santa.',
+    story: 'Trent reaches the depot to rescue Sprout, the elf on the shelf. The questions build Sprout’s ribbon gun. Then Sprout wraps the guards, quiets the alarms, and leaves through the mail hatch with the route toward Santa.',
     event: null,
     path: './shelf-escape/',
     pin: 'DEPOT',
@@ -223,16 +223,16 @@ var CHAPTERS = [
   {
     id: 'wire',
     number: 7,
-    title: 'The Listening Wire',
+    title: 'The Corridor',
     kicker: 'Chapter 7',
-    line: 'Sprout is free and Rudolph is with them. A short Morse pattern has to reach Santa while a searchlight sweeps the yard. Trent sends only when the light is in the safe gap. Three slips restart the message.',
+    line: 'Sprout is free, and the way to Santa is a first-person cartoon corridor maze. The enemies shoot. Trent picks up health and ammunition as he fights through to the green door.',
     lines: [
-      'Sprout is out and Rudolph is safe. The message has to reach Santa.',
-      'The searchlight sweeps the yard. The safe gap is brief.',
-      'Hold Send only while the lamp is in that gap.',
-      'Dot, dash, dot, dot. Three slips and the pattern starts over.'
+      'Sprout is out. Santa is still held. The way ahead is a cartoon corridor maze.',
+      'Trent moves in first person. The enemies shoot back.',
+      'Health and ammunition sit in the halls. Pick them up and keep moving.',
+      'Clear the maze. The green door at the end leads on toward Santa.'
     ],
-    story: 'Sprout is free and Rudolph is with Trent. A short Morse pattern has to reach Santa before the next patrol. A searchlight sweeps the yard. Trent holds Send only in the safe gap. Three slips, and the message starts over.',
+    story: 'Sprout is free. Trent fights through a first-person cartoon corridor maze on the way to Santa. The enemies shoot. Health and ammunition pickups keep him moving. The green door at the end of the maze is the way through.',
     event: 'listening-wire:complete',
     path: './listening-wire/',
     pin: 'WIRE',
@@ -251,14 +251,14 @@ var CHAPTERS = [
     number: 8,
     title: 'The Holding Camp',
     kicker: 'Chapter 8',
-    line: 'Santa walks the cabin shadow toward the gate, where Sprout and Rudolph are waiting. Trent has to stay near him. Falling behind or stepping into a searchlight costs a slip. Three slips restart the walk. The workshop is next.',
+    line: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Sprout and Rudolph are waiting beyond the gate. The secret workshop is next.',
     lines: [
-      'Santa is walking out toward Sprout and Rudolph. He will not wait in the open.',
-      'Stay close. The searchlights punish a wander.',
-      'A slip is a setback, not the end, until the third one.',
-      'Reach the gate together. The secret workshop, and home, come next.'
+      'Santa is held here. This is a cartoon holding camp, and Trent has come to free him.',
+      'Cartoon guards block the yard. Trent fights them in a brawl.',
+      'When a guard sits in the snow, the path toward Santa opens.',
+      'Free Santa and reach the gate. The secret workshop, and home, come next.'
     ],
-    story: 'Santa walks the cabin shadow toward the gate, where Sprout and Rudolph are waiting, and he will not wait in the open. Trent stays close. A searchlight or a long gap costs a slip. Three slips restart the walk. Together they turn toward the workshop and home.',
+    story: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Sprout and Rudolph are waiting at the gate. Together they turn toward the workshop and the flight home.',
     event: 'holding-camp:complete',
     path: './holding-camp/',
     pin: 'CAMP',
@@ -277,14 +277,14 @@ var CHAPTERS = [
     number: 9,
     title: 'The Wrapping Line',
     kicker: 'Chapter 9',
-    line: 'Santa’s secret workshop is still standing. Parcels ride a belt while Trent, Sprout, Rudolph, and Santa ready the flight home. Trent taps on the beat to drop a bow. Early or late resets the run. Eight bows in a row clear the line.',
+    line: 'Santa’s secret workshop is still standing after the Luftwaffe raid. Parcels ride a belt while Trent, Sprout, Rudolph, and Santa ready the flight home. Some parcels add points. Damaged ones take points away. Thirty points before the timer ends clears the line.',
     lines: [
-      'The workshop the Luftwaffe meant to bomb is safe. The four of them ready the flight home.',
-      'The belt brings one parcel after another.',
-      'A bow has to land as the parcel meets the mark.',
-      'Early and late both reset the count. Eight bows in time finish the line.'
+      'The workshop the Luftwaffe meant to bomb is safe. Trent has Sprout, Rudolph, and Santa with him.',
+      'The four of them ready the flight home. The belt brings one parcel after another.',
+      'Whole parcels add points. A torn parcel takes points away.',
+      'Thirty points before the timer ends finish the line. Order does not matter.'
     ],
-    story: 'The workshop is still standing, and Trent, Sprout, Rudolph, and Santa are inside it, ready for home. Parcels ride a belt. A bow has to land as each parcel meets the mark. Early or late resets the count. Eight bows in time clear the line.',
+    story: 'Trent has carried the rescue through the depot, the escape, and the holding camp. The workshop the Luftwaffe meant to bomb is still standing. Trent, Sprout, Rudolph, and Santa ready the flight home. Parcels ride a belt. Whole ones add points and damaged ones take points away. Thirty points before the timer ends clear the line.',
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
     pin: 'BOW',
@@ -303,14 +303,14 @@ var CHAPTERS = [
     number: 10,
     title: 'The Chimney Road',
     kicker: 'Chapter 10',
-    line: 'Snowy roofs lead to the waiting sleigh. Trent runs and jumps the gaps, gets past a sliding crate, and reaches the chimney, with Sprout, Rudolph, and Santa bound for home. Three falls restart the road. The flight home comes after.',
+    line: 'Snowy roofs lead to the waiting sleigh. Trent climbs up and down the roofs, doubles back out of dead ends, and jumps the gaps, with Sprout, Rudolph, and Santa bound for home. The flight home comes after.',
     lines: [
-      'The sleigh is parked on the last roof. Home is the flight after it.',
-      'Trent, Sprout, Rudolph, and Santa have the workshop behind them and the sky ahead.',
-      'The road is snowy rooftops and open gaps. A crate slides across one roof. Jump it.',
-      'Three falls send him back. The sleigh is the way home.'
+      'The sleigh is parked above the first roofs. Home is the flight after it.',
+      'Trent brings Sprout, Rudolph, and Santa from the workshop toward the sky.',
+      'The road branches. Some paths climb, some drop, and some end and send him back.',
+      'Jump the gaps and the moving hazards. The sleigh is the way home.'
     ],
-    story: 'The sleigh waits on the last roof, and Trent, Sprout, Rudolph, and Santa are nearly home. Trent runs the snowy gaps, jumps a sliding crate, and reaches the chimney. Three falls send him back. The flight home comes after the sleigh.',
+    story: 'The sleigh waits above the last roofs. Trent, Sprout, Rudolph, and Santa are nearly home after the depot, the escape, and the workshop. Trent climbs, drops, and doubles back through the snowy paths until he reaches the chimney. The flight home comes after the sleigh.',
     event: 'chimney-road:complete',
     path: './chimney-road/',
     pin: 'HOME',
@@ -939,6 +939,9 @@ function launchGame(chapter, score) {
   if (chapter.path === './wrapping-line/') {
     lives = (typeof score === 'number' && isFinite(score)) ? score : 7;
     url.searchParams.set('lives', String(lives));
+  } else if (chapter.path === './listening-wire/' && typeof score === 'number' && isFinite(score)) {
+    lives = Math.max(0, Math.min(10, Math.round(score)));
+    url.searchParams.set('lives', String(lives));
   }
   openMissionFrame(url.href, chapter.title);
 }
@@ -1059,7 +1062,7 @@ function showCaptureCard(nextId) {
   title.tabIndex = -1;
   title.textContent = 'A report comes in';
   copy.className = 'lead';
-  copy.textContent = 'A few months have passed, and Allied intel says Hitler has captured Santa and is holding him.';
+  copy.textContent = 'A few months have passed. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught, and he has to be rescued.';
   section.appendChild(kicker);
   section.appendChild(title);
   section.appendChild(copy);

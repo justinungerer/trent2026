@@ -30,8 +30,11 @@ const beams=[
  {route:[[280,600],[860,600]],r:52,speed:90}
 ];
 const trentSpeed=178;
+const guardSpeedRatio=0.75;
 const sightRange=200;
-const sightDot=Math.cos(0.85);
+const sightHalf=0.85;
+const sightDot=Math.cos(sightHalf);
+const lampOffset=21;
 const mineReach=26;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
@@ -81,11 +84,15 @@ function lineBlocked(a,b){
  }
  return false;
 }
+function lampPoint(guard){
+ return {x:guard.x+Math.cos(guard.angle)*lampOffset,y:guard.y+Math.sin(guard.angle)*lampOffset};
+}
 function sees(guard,target){
- const dx=target.x-guard.x,dy=target.y-guard.y,dist=Math.hypot(dx,dy);
+ const origin=lampPoint(guard);
+ const dx=target.x-origin.x,dy=target.y-origin.y,dist=Math.hypot(dx,dy);
  if(dist>sightRange||dist<1)return false;
  const facing=(Math.cos(guard.angle)*dx+Math.sin(guard.angle)*dy)/dist;
- return facing>=sightDot&&!lineBlocked(guard,target);
+ return facing>=sightDot&&!lineBlocked(origin,target);
 }
 function walk(actor,dx,dy,r){
  if(!blocked(actor.x+dx,actor.y,r))actor.x+=dx;
@@ -196,7 +203,7 @@ function update(dt){
    if(!guard.chase)spotted=true;
    guard.chase=true;
    guard.aim=p;
-   along(guard,trentSpeed*0.9,dt,12);
+   along(guard,trentSpeed*guardSpeedRatio,dt,12);
   }else{
    const [x,y]=guard.route[guard.index];
    guard.aim={x,y};
@@ -243,6 +250,50 @@ function glow(x,y,r,color){
 function label(text,x,y){
  ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#151c2c';ctx.strokeText(text,x,y);
  ctx.fillStyle='#ffe8bf';ctx.fillText(text,x,y);
+}
+function visionReach(origin,angle){
+ const dx=Math.cos(angle),dy=Math.sin(angle),steps=24;
+ for(let i=1;i<=steps;i++){
+  const dist=sightRange*i/steps,x=origin.x+dx*dist,y=origin.y+dy*dist;
+  if(x<0||y<0||x>world.w||y>world.h)return sightRange*(i-1)/steps;
+  if(shelves.some(s=>x>=s.x&&x<=s.x+s.w&&y>=s.y&&y<=s.y+s.h))return sightRange*(i-1)/steps;
+ }
+ return sightRange;
+}
+function drawVision(guard){
+ const origin=lampPoint(guard),slices=18;
+ ctx.save();
+ ctx.beginPath();
+ ctx.moveTo(origin.x,origin.y);
+ for(let i=0;i<=slices;i++){
+  const angle=guard.angle-sightHalf+(sightHalf*2)*i/slices;
+  const dist=visionReach(origin,angle);
+  ctx.lineTo(origin.x+Math.cos(angle)*dist,origin.y+Math.sin(angle)*dist);
+ }
+ ctx.closePath();
+ ctx.clip();
+ const beam=ctx.createRadialGradient(origin.x,origin.y,10,origin.x,origin.y,sightRange);
+ if(guard.chase){
+  beam.addColorStop(0,'rgba(255,110,40,0.62)');
+  beam.addColorStop(1,'rgba(255,70,20,0.08)');
+ }else{
+  beam.addColorStop(0,'rgba(255,214,90,0.58)');
+  beam.addColorStop(1,'rgba(255,190,60,0.1)');
+ }
+ ctx.fillStyle=beam;
+ ctx.fillRect(origin.x-sightRange,origin.y-sightRange,sightRange*2,sightRange*2);
+ ctx.restore();
+ ctx.beginPath();
+ ctx.moveTo(origin.x,origin.y);
+ for(let i=0;i<=slices;i++){
+  const angle=guard.angle-sightHalf+(sightHalf*2)*i/slices;
+  const dist=visionReach(origin,angle);
+  ctx.lineTo(origin.x+Math.cos(angle)*dist,origin.y+Math.sin(angle)*dist);
+ }
+ ctx.closePath();
+ ctx.strokeStyle=guard.chase?'rgba(255,150,70,0.95)':'rgba(255,226,130,0.9)';
+ ctx.lineWidth=2;
+ ctx.stroke();
 }
 function drawMine(mine){
  ctx.fillStyle='#24180f';ctx.beginPath();ctx.arc(mine.x,mine.y,11,0,7);ctx.fill();
@@ -294,10 +345,12 @@ function render(){
   ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';
   ctx.beginPath();ctx.ellipse(print.x,print.y,5,2.8,print.angle,0,7);ctx.fill();
  }
+ for(const g of run.guards)drawVision(g);
  for(const g of run.guards){
   const bob=reducedMotion.matches?0:Math.sin(run.time*12+g.x*.03)*1.4;
+  const lamp=lampPoint(g);
   const beam=g.chase?'#ff8a3d99':'#ffc16b80';
-  glow(g.x+Math.cos(g.angle)*21,g.y+Math.sin(g.angle)*21,g.chase?56:43,beam);
+  glow(lamp.x,lamp.y,16,beam);
   sprite('guard',g.x,g.y-11+bob,49,55,Math.cos(g.angle)<0);
  }
  const p=run.player;

@@ -1,6 +1,8 @@
 /* Chapter 10 — The Chimney Road.
-   A short rooftop run. Jump the gaps, mind the sliding crate,
-   and reach the sleigh. Three falls start the road again.
+   Old route: world 2860px wide, about 2598px of running,
+   camera locked to one 390px-tall view.
+   This route: world 8580px wide (3x), about 8820px along the main path.
+   Platforms run from y=-80 to y=558, and the camera follows both ways.
    Painted sprites live in art/. */
 'use strict';
 
@@ -20,20 +22,49 @@
 
   var VIEW_W = 844;
   var VIEW_H = 390;
-  /* trent.webp: idle 2, run 4, jump up, jump down. */
+  var WORLD_W = 8580;
+  var WORLD_TOP = -620;
+  var WORLD_BOTTOM = 1120;
   var TRENT = { w: 558, h: 578, ax: 210, ay: 568, n: 8 };
+  /* Main path is a chain of roofs. role "end" is a dead end: the way on
+     is back the way you came. A fall returns you to the last main roof. */
   var PLATFORMS = [
-    { x: 0, y: 270, w: 600, name: 'The first roof' },
-    { x: 750, y: 302, w: 480, name: 'The middle roof' },
-    { x: 1390, y: 236, w: 680, name: 'The long roof' },
-    { x: 2230, y: 278, w: 580, name: 'The sleigh roof' }
+    { x: 0, y: 300, w: 500, name: 'The first roof', role: 'main' },
+    { x: 630, y: 348, w: 380, name: 'The lower eave', role: 'main' },
+    { x: 560, y: 198, w: 240, name: 'The cold chimney', role: 'end', cap: 'right' },
+    { x: 1120, y: 290, w: 340, name: 'The snow step', role: 'main' },
+    { x: 1580, y: 248, w: 420, name: 'The broken span', role: 'main' },
+    { x: 1760, y: 408, w: 200, name: 'The alley roof', role: 'end', cap: 'right' },
+    { x: 1780, y: 558, w: 160, name: 'The dark well', role: 'end', cap: 'right' },
+    { x: 2120, y: 220, w: 620, name: 'The long roof', role: 'main' },
+    { x: 2460, y: 70, w: 300, name: 'The high gutter', role: 'main' },
+    { x: 2360, y: -80, w: 200, name: 'The capped stack', role: 'end', cap: 'right' },
+    { x: 2880, y: 24, w: 380, name: 'The ridge', role: 'main' },
+    { x: 3380, y: 190, w: 360, name: 'The drop roof', role: 'main' },
+    { x: 3220, y: 340, w: 400, name: 'The cellar run', role: 'end', cap: 'left' },
+    { x: 3340, y: 490, w: 220, name: 'The sealed hatch', role: 'end', cap: 'left' },
+    { x: 3860, y: 190, w: 400, name: 'The lantern roof', role: 'main' },
+    { x: 4380, y: 140, w: 680, name: 'The chimney row', role: 'main' },
+    { x: 4460, y: -10, w: 300, name: 'The false stair', role: 'end', cap: 'right' },
+    { x: 5180, y: 86, w: 320, name: 'The north eave', role: 'main' },
+    { x: 5600, y: 10, w: 360, name: 'The high slate', role: 'main' },
+    { x: 5480, y: 170, w: 320, name: 'The broken gutter', role: 'end', cap: 'left' },
+    { x: 6080, y: 48, w: 700, name: 'The snowball roof', role: 'main' },
+    { x: 6560, y: 228, w: 520, name: 'The low road', role: 'main' },
+    { x: 7200, y: 176, w: 460, name: 'The narrow cap', role: 'main' },
+    { x: 7220, y: 26, w: 120, name: 'The short stack', role: 'end', cap: 'right' },
+    { x: 7780, y: 236, w: 260, name: 'The last eave', role: 'main' },
+    { x: 8160, y: 260, w: 420, name: 'The sleigh roof', role: 'main', goal: true }
   ];
-  var WORLD = 2860;
-  var SLEIGH_X = 2560;
+  var GOAL = PLATFORMS.length - 1;
+  var SLEIGH_X = PLATFORMS[GOAL].x + 250;
   var GRAV = 1480;
   var JUMP = -630;
   var HOP = -420;
   var RUN = 260;
+  var LONG = 7;
+  var BALLS = 20;
+  var ROW = 15;
 
   var panoramaImg = new Image();
   var roofImg = new Image();
@@ -59,23 +90,29 @@
   var shake = 0;
   var falls = 0;
   var cp = 0;
-  var body = { x: 90, y: 268, vx: 0, vy: 0, face: 1, ground: true, runT: 0 };
+  var stood = 0;
+  var body = { x: 96, y: 300, vx: 0, vy: 0, face: 1, ground: true, runT: 0 };
   var held = { left: false, right: false };
   var jumpQueued = 0;
   var coyote = 0;
   var airJumps = 1;
-  var cam = 0;
-  var cratePrev = 1750;
+  var airBuffer = 0;
+  var hurt = 0;
+  var camX = 0;
+  var camY = 0;
+  var camSnap = true;
+  var cratePrev = 0;
   var onCrate = false;
   var flakes = [];
-  var i;
+  var fi;
 
-  for (i = 0; i < 24; i++) {
+  for (fi = 0; fi < 42; fi++) {
     flakes.push({
-      x: Math.random() * WORLD,
+      x: Math.random() * VIEW_W,
       y: Math.random() * VIEW_H,
-      v: 14 + Math.random() * 20,
-      r: 1 + Math.random() * 1.4
+      v: 16 + Math.random() * 22,
+      r: 1 + Math.random() * 1.5,
+      drift: Math.random() * 12 - 6
     });
   }
 
@@ -99,29 +136,108 @@
     return v;
   }
 
+  function spawnX(roof) {
+    return roof.x + Math.min(96, Math.max(48, roof.w * 0.22));
+  }
+
   function crateBox() {
+    var roof = PLATFORMS[LONG];
     var w = 112;
     var h = 74;
-    var x = 1750 + Math.sin(visualTime * 1.05) * 180;
-    return { x: x, y: PLATFORMS[2].y - h, w: w, h: h };
+    var left = 2320 + Math.sin(visualTime * 0.9) * 60;
+    return { x: left, y: roof.y - h, w: w, h: h };
+  }
+
+  function snowball() {
+    var roof = PLATFORMS[BALLS];
+    var span = 120;
+    var travel = visualTime * 68;
+    var ping = travel % (span * 2);
+    if (ping < 0) ping += span * 2;
+    if (ping > span) ping = span * 2 - ping;
+    var r = 22;
+    return { x: 6360 + ping, y: roof.y - r, r: r, roofY: roof.y };
+  }
+
+  function brushBox() {
+    var span = 180;
+    var travel = visualTime * 46;
+    var ping = travel % (span * 2);
+    if (ping < 0) ping += span * 2;
+    if (ping > span) ping = span * 2 - ping;
+    return { x: 6560 + ping, y: -300, w: 58, h: 378 };
+  }
+
+  function icicleAt(x, roofY, phase) {
+    var period = 2.9;
+    var t = (visualTime + phase) % period;
+    var len = 54;
+    var tip = roofY - 124;
+    var mode = 'hang';
+    if (t < 1.15) mode = 'warn';
+    else if (t < 1.42) {
+      mode = 'fall';
+      tip = (roofY - 124) + ((roofY - 8) - (roofY - 124)) * ((t - 1.15) / 0.27);
+    } else if (t < 2.05) {
+      mode = 'down';
+      tip = roofY - 8;
+    }
+    return { x: x, hang: tip - len, tip: tip, roofY: roofY, mode: mode, shake: mode === 'warn' };
+  }
+
+  function lanternBob() {
+    var angle = Math.sin(visualTime * Math.PI * 2 / 3.15) * 0.85;
+    var len = 130;
+    var pivotX = 3800;
+    var pivotY = -20;
+    return {
+      px: pivotX,
+      py: pivotY,
+      x: pivotX + Math.sin(angle) * len,
+      y: pivotY + Math.cos(angle) * len,
+      r: 16
+    };
+  }
+
+  function smokeList() {
+    var y = PLATFORMS[ROW].y;
+    return [
+      puffAt(4810, y, 0),
+      puffAt(4965, y, 1.9)
+    ];
+  }
+
+  function puffAt(x, roofY, phase) {
+    var period = 3.8;
+    var t = (visualTime + phase) % period;
+    if (t < 1.05) return { x: x, y: roofY, h: 0, danger: false, pot: true };
+    if (t < 1.9) return { x: x, y: roofY, h: 36, danger: false, pot: true };
+    var grow = t < 3.25 ? 158 : 158 * (1 - (t - 3.25) / 0.55);
+    return { x: x, y: roofY, h: grow, danger: grow > 70, pot: true };
   }
 
   function renderHud() {
-    roadEl.textContent = PLATFORMS[cp].name;
+    roadEl.textContent = PLATFORMS[stood].name;
     fallsEl.textContent = falls + ' / 3';
     fallsEl.className = falls ? 'warn' : '';
   }
 
   function placeOn(index) {
     var roof = PLATFORMS[index];
-    body.x = roof.x + 56;
+    body.x = spawnX(roof);
     body.y = roof.y;
     body.vx = 0;
     body.vy = 0;
     body.ground = true;
     body.face = 1;
     airJumps = 1;
-    cp = index;
+    airBuffer = 0;
+    jumpQueued = 0;
+    onCrate = false;
+    hurt = 0.45;
+    stood = index;
+    camSnap = true;
+    cratePrev = crateBox().x;
   }
 
   function beginRun() {
@@ -131,15 +247,17 @@
     jumpQueued = 0;
     coyote = 0;
     airJumps = 1;
+    airBuffer = 0;
     victorySent = false;
     placeOn(0);
+    cp = 0;
     state = 'play';
     startSheet.hidden = true;
     pauseSheet.hidden = true;
     winSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('The sleigh is on the last roof.');
+    say('The sleigh is at the end of the road.');
   }
 
   function openPause() {
@@ -189,30 +307,41 @@
     }
   }
 
-  function drop() {
+  function drop(reason) {
     falls += 1;
     if (!reduceMotion()) shake = 8;
     if (falls >= 3) {
       falls = 0;
       placeOn(0);
+      cp = 0;
       say('Three falls. The road starts again.');
     } else {
       placeOn(cp);
-      say('Back on the roof.');
+      say(reason || 'Back on the roof.');
     }
     renderHud();
   }
 
-  function land(top, left, right, id, prevY) {
-    if (body.vy < 0) return false;
-    if (prevY > top + 10) return false;
-    if (body.y < top) return false;
-    if (body.x < left || body.x > right) return false;
-    body.y = top;
-    body.vy = 0;
-    body.ground = true;
-    if (id >= 0) cp = id;
+  function hitsBob(bob) {
+    var y;
+    for (y = body.y - 96; y <= body.y - 10; y += 18) {
+      if (Math.hypot(body.x - bob.x, y - bob.y) < bob.r + 12) return true;
+    }
+    return false;
+  }
+
+  function overlapsBody(x, y, w, h) {
+    var top = body.y - 108;
+    var bot = body.y - 4;
+    if (bot < y || top > y + h) return false;
+    if (body.x + 14 < x || body.x - 14 > x + w) return false;
     return true;
+  }
+
+  function requestJump() {
+    if (state !== 'play') return;
+    if (body.ground || coyote > 0) jumpQueued = 0.14;
+    else airBuffer = 0.52;
   }
 
   function update(dt) {
@@ -220,8 +349,15 @@
     var box;
     var n;
     var roof;
-    var grounded;
     var prevY;
+    var best;
+    var ball;
+    var br;
+    var ice;
+    var bob;
+    var puff;
+    var puffs;
+    var si;
     if (held.left) dir -= 1;
     if (held.right) dir += 1;
     if (dir < 0) body.face = -1;
@@ -231,18 +367,23 @@
     body.vx = clamp(body.vx, -RUN, RUN);
     if (jumpQueued > 0) jumpQueued -= dt;
     if (body.ground) {
-      coyote = 0.1;
+      coyote = 0.11;
       airJumps = 1;
-    } else coyote -= dt;
+      airBuffer = 0;
+    } else {
+      coyote -= dt;
+      if (airBuffer > 0) airBuffer -= dt;
+    }
     if (jumpQueued > 0 && coyote > 0) {
       body.vy = JUMP;
       body.ground = false;
       coyote = 0;
       jumpQueued = 0;
-    } else if (jumpQueued > 0 && !body.ground && airJumps > 0) {
+      airBuffer = 0;
+    } else if (!body.ground && airJumps > 0 && airBuffer > 0 && body.vy > -70) {
       body.vy = HOP;
       airJumps = 0;
-      jumpQueued = 0;
+      airBuffer = 0;
     }
     body.vy += GRAV * dt;
     if (body.vy > 820) body.vy = 820;
@@ -254,12 +395,26 @@
     body.y += body.vy * dt;
     body.ground = false;
     onCrate = false;
-    grounded = land(box.y, box.x + 8, box.x + box.w - 8, -1, prevY);
-    if (grounded) onCrate = true;
-    if (!body.ground) {
-      for (n = 0; n < PLATFORMS.length; n++) {
-        roof = PLATFORMS[n];
-        if (land(roof.y, roof.x + 10, roof.x + roof.w - 10, n, prevY)) break;
+    best = null;
+    if (body.vy >= 0 && prevY <= box.y + 8 && body.y >= box.y && body.x >= box.x + 8 && body.x <= box.x + box.w - 8) {
+      best = { top: box.y, id: -1 };
+    }
+    for (n = 0; n < PLATFORMS.length; n++) {
+      roof = PLATFORMS[n];
+      if (body.vy < 0) break;
+      if (prevY > roof.y + 8) continue;
+      if (body.y < roof.y) continue;
+      if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
+      if (!best || roof.y < best.top) best = { top: roof.y, id: n };
+    }
+    if (best) {
+      body.y = best.top;
+      body.vy = 0;
+      body.ground = true;
+      if (best.id < 0) onCrate = true;
+      else {
+        stood = best.id;
+        if (PLATFORMS[best.id].role === 'main') cp = best.id;
       }
     }
     if (!onCrate && body.x > box.x - 16 && body.x < box.x + box.w + 16 && body.y > box.y + 18 && body.y - 48 < box.y + box.h) {
@@ -268,8 +423,43 @@
       body.vx = body.x < box.x ? Math.min(body.vx, 0) : Math.max(body.vx, 0);
     }
     if (Math.abs(body.vx) > 30 && body.ground) body.runT += dt;
-    if (body.y > 460) drop();
-    if (body.ground && cp === 3 && body.x > SLEIGH_X && body.x < SLEIGH_X + 130) win();
+    if (hurt > 0) hurt -= dt;
+    else {
+      ball = snowball();
+      if (body.y > ball.roofY - 40 && body.y < ball.roofY + 24 && Math.abs(body.x - ball.x) < ball.r + 12) {
+        drop('The snowball knocked you off.');
+      } else {
+        br = brushBox();
+        if (overlapsBody(br.x, br.y, br.w, br.h)) drop('The brush knocked you off.');
+        else {
+          ice = icicleAt(3070, PLATFORMS[10].y, 0);
+          if ((ice.mode === 'fall' || ice.mode === 'down') && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
+            drop('The icicle knocked you off.');
+          } else {
+            ice = icicleAt(7500, PLATFORMS[22].y, 1.3);
+            if ((ice.mode === 'fall' || ice.mode === 'down') && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
+              drop('The icicle knocked you off.');
+            } else {
+              bob = lanternBob();
+              if (hitsBob(bob)) drop('The lantern knocked you off.');
+              else {
+                puffs = smokeList();
+                for (si = 0; si < puffs.length; si++) {
+                  puff = puffs[si];
+                  if (!puff.danger) continue;
+                  if (overlapsBody(puff.x - 34, puff.y - 18 - puff.h, 68, puff.h)) {
+                    drop('The smoke knocked you off.');
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
+    if (body.ground && stood === GOAL && body.x > SLEIGH_X - 8 && body.x < SLEIGH_X + 130) win();
   }
 
   function trentFrame() {
@@ -282,6 +472,31 @@
     return Math.floor(visualTime * 1000 / 520) % 2;
   }
 
+  function followCamera(dt) {
+    var look = body.face * 56;
+    var tx = clamp(body.x - 310 + look, 0, WORLD_W - VIEW_W);
+    var ty = clamp(body.y - 230, WORLD_TOP, WORLD_BOTTOM - VIEW_H);
+    var k;
+    if (camSnap || reduceMotion()) {
+      camX = tx;
+      camY = ty;
+      camSnap = false;
+      return;
+    }
+    k = Math.min(1, dt * 5.5);
+    camX += (tx - camX) * k;
+    camY += (ty - camY) * k;
+  }
+
+  function drawSky() {
+    var g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+    g.addColorStop(0, '#07111c');
+    g.addColorStop(0.55, '#16324e');
+    g.addColorStop(1, '#0e1c2e');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
+
   function drawPanorama() {
     var iw;
     var ih;
@@ -290,15 +505,19 @@
     var dh;
     var extra;
     var u;
+    var v;
+    var span;
     if (!imageReady(panoramaImg)) return;
     iw = panoramaImg.naturalWidth;
     ih = panoramaImg.naturalHeight;
-    scale = Math.max(VIEW_W / iw, VIEW_H / ih);
+    scale = Math.max(VIEW_W / iw, (VIEW_H * 1.85) / ih);
     dw = iw * scale;
     dh = ih * scale;
     extra = Math.max(0, dw - VIEW_W);
-    u = cam / Math.max(1, WORLD - VIEW_W);
-    ctx.drawImage(panoramaImg, -u * extra * 0.35, (VIEW_H - dh) / 2, dw, dh);
+    u = camX / Math.max(1, WORLD_W - VIEW_W);
+    span = Math.max(1, (WORLD_BOTTOM - WORLD_TOP) - VIEW_H);
+    v = (camY - WORLD_TOP) / span;
+    ctx.drawImage(panoramaImg, -u * extra * 0.35, -v * (dh - VIEW_H) * 0.9, dw, dh);
   }
 
   function drawRoofs() {
@@ -309,23 +528,133 @@
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
       dh = roof.w * roofImg.naturalHeight / roofImg.naturalWidth;
-      ctx.drawImage(roofImg, roof.x - cam, roof.y, roof.w, dh);
+      ctx.drawImage(roofImg, roof.x - camX, roof.y - camY, roof.w, dh);
+    }
+  }
+
+  function drawCaps() {
+    var n;
+    var roof;
+    var x;
+    var y;
+    for (n = 0; n < PLATFORMS.length; n++) {
+      roof = PLATFORMS[n];
+      if (roof.role !== 'end') continue;
+      x = (roof.cap === 'left' ? roof.x + 16 : roof.x + roof.w - 58) - camX;
+      y = roof.y - camY;
+      ctx.fillStyle = '#5c4034';
+      ctx.fillRect(x, y - 84, 42, 84);
+      ctx.fillStyle = '#c5d0dc';
+      ctx.fillRect(x - 6, y - 94, 54, 12);
+      ctx.fillStyle = '#241c18';
+      ctx.fillRect(x + 10, y - 108, 22, 16);
     }
   }
 
   function drawCrate() {
     var box = crateBox();
     if (!imageReady(crateImg)) return;
-    ctx.drawImage(crateImg, box.x - cam, box.y, box.w, box.h);
+    ctx.drawImage(crateImg, box.x - camX, box.y - camY, box.w, box.h);
+  }
+
+  function drawSnowball() {
+    var ball = snowball();
+    var x = ball.x - camX;
+    var y = ball.y - camY;
+    ctx.fillStyle = 'rgba(18, 28, 42, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(x, ball.roofY - camY + 2, ball.r * 0.85, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f4f7fb';
+    ctx.beginPath();
+    ctx.arc(x, y, ball.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#d5e2ef';
+    ctx.beginPath();
+    ctx.arc(x - 6, y - 6, ball.r * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawIcicle(ice) {
+    var x = ice.x - camX + (ice.shake && !reduceMotion() ? Math.sin(visualTime * 46) * 3 : 0);
+    var hang = ice.hang - camY;
+    var tip = ice.tip - camY;
+    if (ice.mode === 'hang' || ice.mode === 'warn') {
+      ctx.fillStyle = 'rgba(210, 224, 234, 0.45)';
+      ctx.beginPath();
+      ctx.ellipse(ice.x - camX, ice.roofY - camY + 2, 18, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = ice.mode === 'warn' ? '#d7ecf6' : '#e7f3f8';
+    ctx.beginPath();
+    ctx.moveTo(x - 12, hang);
+    ctx.lineTo(x + 12, hang);
+    ctx.lineTo(x, tip);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(90, 120, 140, 0.7)';
+    ctx.stroke();
+  }
+
+  function drawLantern() {
+    var bob = lanternBob();
+    ctx.strokeStyle = '#cbb48a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bob.px - camX, bob.py - camY);
+    ctx.lineTo(bob.x - camX, bob.y - camY);
+    ctx.stroke();
+    ctx.fillStyle = '#f0d7a8';
+    ctx.beginPath();
+    ctx.arc(bob.x - camX, bob.y - camY, bob.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8a6230';
+    ctx.fillRect(bob.x - camX - 7, bob.y - camY - 4, 14, 10);
+  }
+
+  function drawPuffs() {
+    var list = smokeList();
+    var i;
+    var p;
+    var x;
+    var y;
+    for (i = 0; i < list.length; i++) {
+      p = list[i];
+      x = p.x - camX;
+      y = p.y - camY;
+      ctx.fillStyle = '#6a5348';
+      ctx.fillRect(x - 16, y - 28, 32, 28);
+      ctx.fillStyle = '#d5dde6';
+      ctx.fillRect(x - 20, y - 34, 40, 8);
+      if (p.h < 8) continue;
+      ctx.fillStyle = p.danger ? 'rgba(206, 214, 222, 0.72)' : 'rgba(206, 214, 222, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 36 - p.h * 0.45, p.danger ? 30 : 14, Math.max(12, p.h * 0.45), 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawBrush() {
+    var br = brushBox();
+    var x = br.x - camX;
+    var y = br.y - camY;
+    ctx.fillStyle = '#8d6a45';
+    ctx.fillRect(x + 24, y, 10, 46);
+    ctx.fillStyle = '#2c241c';
+    ctx.fillRect(x, y + 40, br.w, br.h - 40);
+    ctx.fillStyle = '#4a3b30';
+    ctx.fillRect(x + 8, y + 52, 10, br.h - 70);
+    ctx.fillRect(x + 28, y + 52, 10, br.h - 70);
+    ctx.fillRect(x + 44, y + 52, 8, br.h - 70);
   }
 
   function drawSleigh() {
     var w = 168;
     var h;
-    var roof = PLATFORMS[3];
+    var roof = PLATFORMS[GOAL];
     if (!imageReady(sleighImg)) return;
     h = w * sleighImg.naturalHeight / sleighImg.naturalWidth;
-    ctx.drawImage(sleighImg, SLEIGH_X - cam, roof.y - h + 10, w, h);
+    ctx.drawImage(sleighImg, SLEIGH_X - camX, roof.y - camY - h + 10, w, h);
   }
 
   function drawTrent() {
@@ -336,7 +665,7 @@
     frame = trentFrame();
     s = destH / TRENT.h;
     ctx.save();
-    ctx.translate(body.x - cam, body.y);
+    ctx.translate(body.x - camX, body.y - camY);
     if (body.face < 0) ctx.scale(-1, 1);
     ctx.drawImage(
       trentImg,
@@ -353,17 +682,17 @@
     var f;
     if (reduceMotion()) return;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    for (i = 0; i < flakes.length; i++) {
-      f = flakes[i];
+    for (fi = 0; fi < flakes.length; fi++) {
+      f = flakes[fi];
       ctx.beginPath();
-      ctx.arc(f.x - cam * 0.4, f.y, f.r, 0, Math.PI * 2);
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  function render() {
+  function render(dt) {
     var mag = reduceMotion() ? 0 : shake;
-    cam = clamp(body.x - 300, 0, WORLD - VIEW_W);
+    followCamera(dt || 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
     ctx.setTransform(
@@ -371,9 +700,17 @@
       dpr * (view.ox + Math.sin(visualTime * 34) * mag),
       dpr * (view.oy + (reduceMotion() ? 0 : Math.cos(visualTime * 29) * mag * 0.4))
     );
+    drawSky();
     drawPanorama();
     drawRoofs();
+    drawCaps();
     drawCrate();
+    drawSnowball();
+    drawIcicle(icicleAt(3070, PLATFORMS[10].y, 0));
+    drawIcicle(icicleAt(7500, PLATFORMS[22].y, 1.3));
+    drawLantern();
+    drawPuffs();
+    drawBrush();
     drawSleigh();
     drawTrent();
     drawSnow();
@@ -405,17 +742,20 @@
       if (shake > 0) shake = Math.max(0, shake - dt * 14);
     }
     if (!reduceMotion() && state !== 'pause') {
-      for (i = 0; i < flakes.length; i++) {
-        f = flakes[i];
+      for (fi = 0; fi < flakes.length; fi++) {
+        f = flakes[fi];
         f.y += f.v * dt;
-        if (f.y > VIEW_H) {
+        f.x += f.drift * dt;
+        if (f.y > VIEW_H + 6) {
           f.y = -6;
-          f.x = Math.random() * WORLD;
+          f.x = Math.random() * VIEW_W;
         }
+        if (f.x < -8) f.x = VIEW_W + 4;
+        if (f.x > VIEW_W + 8) f.x = -4;
       }
     }
     renderHud();
-    render();
+    render(dt);
     requestAnimationFrame(loop);
   }
 
@@ -462,7 +802,7 @@
   document.getElementById('jump').addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     event.preventDefault();
-    if (state === 'play') jumpQueued = 0.14;
+    requestJump();
     hintEl.hidden = true;
     event.currentTarget.classList.add('held');
   });
@@ -482,9 +822,8 @@
     }
     if (event.key === 'ArrowLeft') held.left = true;
     else if (event.key === 'ArrowRight') held.right = true;
-    else if ((event.key === 'ArrowUp' || event.key === ' ') && !event.repeat) {
-      if (state === 'play') jumpQueued = 0.14;
-    } else return;
+    else if ((event.key === 'ArrowUp' || event.key === ' ') && !event.repeat) requestJump();
+    else return;
     event.preventDefault();
     hintEl.hidden = true;
   });
@@ -526,6 +865,7 @@
 
   resize();
   syncPortrait();
+  cratePrev = crateBox().x;
   lastFrame = performance.now();
   requestAnimationFrame(loop);
 })();

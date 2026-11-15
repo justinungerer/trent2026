@@ -2,23 +2,25 @@
 const canvas = document.querySelector('canvas');
 const g = canvas.getContext('2d');
 const W = 480, H = 760;
-const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon','swap'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
 const CRAFT = {
-  drone:  { hp: 2, speed: 92, size: 54, reload: 2.05, score: 180, hx: 23, hy: 16, touch: 26 },
+  drone:  { hp: 3, speed: 92, size: 54, reload: 2.05, score: 180, hx: 23, hy: 16, touch: 26 },
   skiff:  { hp: 1, speed: 168, size: 38, reload: 1.02, score: 160, hx: 16, hy: 13, touch: 18 },
   hauler: { hp: 5, speed: 50, size: 76, reload: 2.45, score: 340, hx: 34, hy: 22, touch: 34 },
   wisp:   { hp: 1, speed: 146, size: 32, reload: 0.64, score: 150, hx: 14, hy: 14, touch: 17 },
   boss:   { hp: 55, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 }
 };
 const WEAPONS = {
-  ribbon: { label: 'RIBBON', mark: 'R', color: colors.ice, rate: 0.132 },
+  flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
   missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.48 },
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
   explosive: { label: 'BLAST', mark: 'X', color: colors.red, rate: 0.62 }
 };
-const PODS = ['ribbon', 'missile', 'laser', 'explosive'];
+const PODS = ['flame', 'missile', 'laser', 'explosive'];
+const FLAME_REACH = 0.6 * H;
+const FLAME_HALF = 46;
 function loadArt(name) {
   const image = new Image();
   image.src = './art/' + name + '.webp';
@@ -50,37 +52,27 @@ function craftSprite(kind, x, y, width, bank) {
   ship(kind, x, y, width, bank);
 }
 const keys = new Set();
-let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, shotAt, bossSpawned, aim, drag, wraps, recoil, shake, kills;
+let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, aim, drag, wraps, recoil, shake, kills;
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
-  player = { x: W / 2, y: 625, hull: 3, bank: 0, shield: 0, stack: ['ribbon'], active: 0 };
+  player = { x: W / 2, y: 625, hull: 3, bank: 0, shield: 0, stack: ['flame'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
-  wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; shotAt = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
+  wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
   ui.hull.textContent = '◆◆◆';
   ui.phase.textContent = 'THE FROZEN VALLEY';
   paintStack();
 }
 function paintStack() {
-  const kind = player.stack[player.active] || 'ribbon';
-  ui.weapon.textContent = WEAPONS[kind].label;
-  ui.stack.replaceChildren(...player.stack.map((name, index) => {
+  ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
+  ui.stack.replaceChildren(...player.stack.map(name => {
     const spec = WEAPONS[name];
     const slot = document.createElement('span');
     slot.textContent = spec.mark;
     slot.title = spec.label;
     slot.style.color = spec.color;
-    if (index === player.active) {
-      slot.className = 'on';
-      slot.setAttribute('aria-current', 'true');
-    }
     return slot;
   }));
-}
-function cycleWeapon() {
-  if (state !== 'playing' || player.stack.length < 2) return;
-  player.active = (player.active + 1) % player.stack.length;
-  paintStack();
 }
 function overlay(next, title, brief, label) {
   state = next; drag = null; aim = null; keys.clear();
@@ -95,10 +87,6 @@ ui.action.onclick = () => {
   ui.sheet.hidden = true;
   canvas.focus();
 };
-ui.swap.onclick = () => {
-  cycleWeapon();
-  canvas.focus();
-};
 function pause() {
   if (state === 'playing') overlay('paused', 'HOLD POSITION', 'Quinn says this is an excellent time to check whether the fruitcake has stopped glowing.', 'Resume flight');
 }
@@ -108,10 +96,6 @@ window.addEventListener('keydown', e => {
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k) && state === 'playing') {
     e.preventDefault();
     keys.add(k);
-  }
-  if (k === 'q' && !e.repeat && state === 'playing') {
-    e.preventDefault();
-    cycleWeapon();
   }
   if (k === 'escape' && !e.repeat) {
     if (state === 'paused') ui.action.click();
@@ -145,11 +129,27 @@ function burst(x, y, color, n = 14) {
     sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .35 + Math.random() * .35, color });
   }
 }
-function activeKind() {
-  return player.stack[player.active] || 'ribbon';
+function stackShift(index) {
+  const count = player.stack.length;
+  return (index - (count - 1) / 2) * 32;
 }
-function muzzleOffsets() {
-  return activeKind() === 'ribbon' ? [-16, 16] : [0];
+function inFlame(px, py, ox, oy) {
+  const dy = oy - py;
+  if (dy < 0 || dy > FLAME_REACH) return false;
+  return Math.abs(px - ox) <= FLAME_HALF * (dy / FLAME_REACH);
+}
+function enemyInFlame(enemy, ox, oy) {
+  const spec = CRAFT[enemy.kind];
+  return [
+    [enemy.x, enemy.y],
+    [enemy.x - spec.hx, enemy.y],
+    [enemy.x + spec.hx, enemy.y],
+    [enemy.x, enemy.y - spec.hy],
+    [enemy.x, enemy.y + spec.hy]
+  ].some(([x, y]) => inFlame(x, y, ox, oy));
+}
+function flameOrigin(index) {
+  return { x: player.x + stackShift(index), y: player.y - 28 };
 }
 function spawn() {
   const next = wave++;
@@ -223,16 +223,23 @@ function hit() {
   shake = .28;
   player.hull--;
   player.shield = 1.6;
+  if (player.stack.length > 1) {
+    player.stack = [player.stack[0]];
+    player.cool = [player.cool[0] || 0];
+    paintStack();
+  }
   burst(player.x, player.y, colors.gold, 23);
   ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(3 - player.hull);
   if (!player.hull) overlay('lost', 'SLEIGH DOWN', 'The fruitcake survived. Quinn would prefer that you do likewise. Score: ' + score + '.', 'Retry the intercept');
 }
 function grant(pod) {
-  const kind = WEAPONS[pod.kind] ? pod.kind : 'ribbon';
-  if (player.stack.length >= 4) player.stack.shift();
+  const kind = WEAPONS[pod.kind] ? pod.kind : 'flame';
+  if (player.stack.length >= 4) {
+    player.stack.shift();
+    player.cool.shift();
+  }
   player.stack.push(kind);
-  player.active = player.stack.length - 1;
-  shotAt = time;
+  player.cool.push(0);
   burst(pod.x, pod.y, WEAPONS[kind].color, 16);
   paintStack();
 }
@@ -299,18 +306,34 @@ function guideMissile(shot, dt) {
   shot.vx += (Math.cos(ang) * speed - shot.vx) * k;
   shot.vy += (Math.sin(ang) * speed - shot.vy) * k;
 }
-function launch() {
-  const kind = activeKind();
-  shotAt = time + WEAPONS[kind].rate;
-  recoil = kind === 'explosive' ? .16 : .1;
-  if (kind === 'ribbon') {
-    for (const lane of [-16, 16]) shots.push({ kind, x: player.x + lane, y: player.y - 17, vx: 0, vy: -710, dmg: 1 });
-  } else if (kind === 'missile') {
-    shots.push({ kind, x: player.x, y: player.y - 18, vx: 0, vy: -240, dmg: 3, speed: 440, life: 2.4 });
+function scorch(index) {
+  const origin = flameOrigin(index);
+  for (const enemy of enemies) {
+    if (enemy.hp <= 0 || !enemyInFlame(enemy, origin.x, origin.y)) continue;
+    harm(enemy, 1, enemy.x, enemy.y);
+    if (state !== 'playing') return;
+  }
+}
+function fireSlot(index) {
+  const kind = player.stack[index];
+  const x = player.x + stackShift(index);
+  if (kind === 'missile') {
+    shots.push({ kind, x, y: player.y - 18, vx: 0, vy: -240, dmg: 1, speed: 440, life: 2.4 });
   } else if (kind === 'laser') {
-    shots.push({ kind, x: player.x, y: player.y - 30, vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
-  } else {
-    shots.push({ kind, x: player.x, y: player.y - 8, vx: 0, vy: -280, dmg: 2, fuse: .78, radius: 76 });
+    shots.push({ kind, x, y: player.y - 30, vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
+  } else if (kind === 'explosive') {
+    shots.push({ kind, x, y: player.y - 8, vx: 0, vy: -280, dmg: 1, fuse: .78, radius: 76 });
+  }
+  recoil = Math.max(recoil, kind === 'explosive' ? .16 : .1);
+}
+function armWeapons(dt) {
+  for (let index = 0; index < player.stack.length; index++) {
+    player.cool[index] -= dt;
+    if (player.cool[index] > 0) continue;
+    player.cool[index] = WEAPONS[player.stack[index]].rate;
+    if (player.stack[index] === 'flame') scorch(index);
+    else fireSlot(index);
+    if (state !== 'playing') return;
   }
 }
 function update(dt) {
@@ -332,7 +355,7 @@ function update(dt) {
   player.x = clamp(player.x, 25, W - 25);
   player.y = clamp(player.y, 315, H - 55);
   player.bank += (clamp((player.x - x0) * .12, -.65, .65) - player.bank) * Math.min(dt * 13, 1);
-  if (time >= shotAt) launch();
+  armWeapons(dt);
   if (wave < 9 && time >= 1.35 + wave * 5.15) spawn();
   if (time > 51 && !bossSpawned) {
     bossSpawned = true;
@@ -422,7 +445,7 @@ function polygon(color, points) {
   g.fill();
 }
 function drawPod(pod) {
-  const spec = WEAPONS[pod.kind] || WEAPONS.ribbon;
+  const spec = WEAPONS[pod.kind] || WEAPONS.flame;
   const look = spec.color;
   const mark = spec.mark;
   g.save();
@@ -494,11 +517,13 @@ function render() {
       g.stroke();
       g.globalAlpha = 1;
     }
-    if (enemy.kind === 'boss') {
+    if (spec.hp > 1) {
+      const bw = enemy.kind === 'boss' ? 98 : Math.max(28, spec.hx * 1.4);
+      const by = enemy.y - (enemy.kind === 'boss' ? 45 : spec.hy + 8);
       g.fillStyle = '#061629';
-      g.fillRect(enemy.x - 49, enemy.y - 45, 98, 5);
+      g.fillRect(enemy.x - bw / 2, by, bw, 4);
       g.fillStyle = colors.gold;
-      g.fillRect(enemy.x - 49, enemy.y - 45, 98 * enemy.hp / CRAFT.boss.hp, 5);
+      g.fillRect(enemy.x - bw / 2, by, bw * clamp(enemy.hp, 0, spec.hp) / spec.hp, 4);
     }
   }
   for (const s of shots) {
@@ -534,11 +559,6 @@ function render() {
       g.beginPath();
       g.arc(s.x - 2, s.y - 2, 2.5, 0, Math.PI * 2);
       g.fill();
-    } else {
-      g.fillStyle = '#3eaec7';
-      g.fillRect(s.x - 3, s.y, 6, 15);
-      g.fillStyle = '#c9ffff';
-      g.fillRect(s.x - 1, s.y, 2, 11);
     }
   }
   for (const b of bolts) {
@@ -551,6 +571,19 @@ function render() {
   }
   for (const pod of parcels) drawPod(pod);
   const { x, y, bank, shield } = player;
+  player.stack.forEach((kind, index) => {
+    if (kind !== 'flame') return;
+    const origin = flameOrigin(index);
+    const tipY = origin.y - FLAME_REACH;
+    const grad = g.createLinearGradient(origin.x, origin.y, origin.x, tipY);
+    grad.addColorStop(0, '#fff6d0');
+    grad.addColorStop(.22, '#ffb15a');
+    grad.addColorStop(.7, '#ff4d1f99');
+    grad.addColorStop(1, '#ff2a0000');
+    g.globalAlpha = reduceMotion.matches ? .78 : .64 + Math.sin(time * 36 + index) * .14;
+    polygon(grad, [[origin.x, origin.y], [origin.x - FLAME_HALF, tipY], [origin.x + FLAME_HALF, tipY]]);
+    g.globalAlpha = 1;
+  });
   if (shield <= 0 || reduceMotion.matches || Math.floor(shield * 11) % 2 === 0) {
     for (const dx of [-16, 16]) {
       const flame = g.createLinearGradient(0, y + 38, 0, y + 72);
@@ -567,14 +600,16 @@ function render() {
       g.ellipse(x, y, 33, 46, 0, 0, Math.PI * 2);
       g.stroke();
     }
-    if (recoil > .045) for (const dx of muzzleOffsets()) {
+    if (recoil > .045) player.stack.forEach((kind, index) => {
+      if (kind === 'flame') return;
+      const dx = stackShift(index);
       const flare = g.createRadialGradient(x + dx, y - 23, 0, x + dx, y - 23, 15);
       flare.addColorStop(0, '#fff');
       flare.addColorStop(.25, '#84ffff');
       flare.addColorStop(1, '#42e3ff00');
       g.fillStyle = flare;
       g.fillRect(x + dx - 15, y - 38, 30, 30);
-    }
+    });
   }
   for (const w of wraps) {
     const t = w.age / .8;

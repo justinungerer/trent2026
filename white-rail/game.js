@@ -1,9 +1,13 @@
 /* Chapter 3 — White Rail.
    Side-view handcar chase along a snowy line. Not the overhead yard.
-   Pump to keep speed. Steer among three tracks.
-   A crate, a gap, or a lowered signal arm is a slip, a jolt.
-   Three slips restart the line. The yard mouth wins.
-   Pump rate sets the pace. Idle speed is the base; the fastest steady pump is about twenty times that.
+   The handcar stays on screen. Track art, ground, and obstacles share one
+   scroll, so a crate stays planted while the line rushes past. Far scenery
+   uses that same distance at a slower rate, and speeds up when the car does.
+   Pump to build speed. Release the pump and the car coasts to a stop.
+   Steer among three tracks.
+   A crate or a lowered signal arm is a slip, a jolt. A gap ends the run.
+   A plane sometimes bombs the track the car is on.
+   Three slips, or one gap, restart the line. The yard mouth wins.
    Sky, rails, handcar, and Trent are painted pictures in art/.
    Snow specks stay on the canvas. No network. */
 'use strict';
@@ -24,6 +28,8 @@
   var loseSheet = document.getElementById('lose-sheet');
   var winSheet = document.getElementById('win-sheet');
   var winTimeEl = document.getElementById('win-time');
+  var loseTitleEl = document.getElementById('lose-title');
+  var loseCopyEl = document.getElementById('lose-copy');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
 
@@ -34,10 +40,14 @@
   var PX = 32;
   var CAR_X = 230;
   var FINISH = 454;
-  /* Slower than the old 0.62 so the climb to the doubled top takes about twice the strokes. */
-  var DECAY = 0.30;
-  /* Resting pace. target = SPEED_FLOOR * (1 + 19 * pumpRate / PUMP_RATE_MAX). Top is 9. */
+  /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
+  var DECAY = 0.15;
+  /* Letting go of the pump can stop the car before a break in the rail. */
+  var COAST = 1.15;
+  /* Full pump is SPEED_FLOOR * 40 = 18. The old full pump was 9. */
   var SPEED_FLOOR = 0.45;
+  /* Far scenery uses the same distance as the rails, at this fraction, so it speeds up with the car. */
+  var SKY_PARALLAX = 0.42;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
   var START_SPEED = 4.6;
@@ -118,6 +128,10 @@
   var safeLane = -1;
   var safeUntil = 0;
   var obstacles = makeObstacles();
+  var strike = null;
+  var puffs = [];
+  var bombWait = 9;
+  var nextBombDist = 28;
   var hintDismissed = false;
   var visualTime = 0;
   var cssW = 844;
@@ -284,6 +298,10 @@
     safeLane = -1;
     safeUntil = 0;
     obstacles = makeObstacles();
+    strike = null;
+    puffs = [];
+    bombWait = 9;
+    nextBombDist = 28;
     hintDismissed = false;
     dragging = false;
     dragAccum = 0;
@@ -347,6 +365,7 @@
     state = 'win';
     distance = FINISH;
     speed = 0;
+    strike = null;
     dragging = false;
     winTimeEl.textContent = 'On the line for ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
@@ -367,14 +386,32 @@
     }
   }
 
-  /* Three slips put the car back at the start. No victory event. */
-  function failLine() {
+  /* A failed run returns to the start. No victory event and no gore. */
+  function showLose(title, copy, status) {
     if (state === 'win' || state === 'lose') return;
     resetWorld();
     speed = 0;
     state = 'lose';
+    if (loseTitleEl) loseTitleEl.textContent = title;
+    if (loseCopyEl) loseCopyEl.textContent = copy;
     loseSheet.hidden = false;
-    say('Three slips. Back at the start of the line.');
+    say(status);
+  }
+
+  function failLine() {
+    showLose(
+      'Back at the start',
+      'Three slips. The handcar is at the start of the line again.',
+      'Three slips. Back at the start of the line.'
+    );
+  }
+
+  function failGap() {
+    showLose(
+      'The rail is out',
+      'A break in the track. The handcar is at the start of the line again.',
+      'The rail is out. Back at the start of the line.'
+    );
   }
 
   function doPump() {
@@ -435,17 +472,23 @@
 
   function checkHits() {
     var i;
+    var slip = null;
     for (i = 0; i < obstacles.length; i++) {
       if (!hitTest(obstacles[i])) continue;
-      beginSlip(obstacles[i]);
-      return;
+      if (obstacles[i].kind === 'gap') {
+        failGap();
+        return;
+      }
+      if (!slip) slip = obstacles[i];
     }
+    if (slip) beginSlip(slip);
   }
 
   function integrate(dt) {
     var pumping = pumpHeld || spaceHeld;
     var effort;
     var target;
+    var rate;
     sincePump += dt;
     if (sincePump > PUMP_COOLDOWN * 1.35) {
       pumpRate += (0 - pumpRate) * (1 - Math.exp(-2.2 * dt));
@@ -453,10 +496,14 @@
     if (pumpCool > 0) pumpCool -= dt;
     if (pumping) doPump();
     effort = pumpRate / PUMP_RATE_MAX;
-    if (effort < 0) effort = 0;
+    if (effort < 0.04) effort = 0;
     if (effort > 1) effort = 1;
-    target = SPEED_FLOOR * (1 + 19 * effort);
-    speed += (target - speed) * (1 - Math.exp(-DECAY * dt));
+    if (effort === 0) target = 0;
+    else target = SPEED_FLOOR * (1 + 39 * effort);
+    rate = speed > target ? COAST : DECAY;
+    speed += (target - speed) * (1 - Math.exp(-rate * dt));
+    if (speed < 0.03 && target === 0) speed = 0;
+    if (speed < 0) speed = 0;
     if (pumpAnim < 1) pumpAnim = Math.min(1, pumpAnim + dt / 0.32);
     if (laneT < 1) {
       laneT = Math.min(1, laneT + dt / SWITCH_TIME);
@@ -466,14 +513,165 @@
     if (distance < 0) distance = 0;
   }
 
+  function stretchBlocked(lane, x, w) {
+    var i;
+    var ob;
+    for (i = 0; i < obstacles.length; i++) {
+      ob = obstacles[i];
+      if (ob.lane !== lane) continue;
+      if (x < ob.x + ob.w + 0.8 && x + w > ob.x - 0.8) return true;
+    }
+    return false;
+  }
+
+  /* Nudge forward until the bombed lane is clear and some other lane is open. */
+  function placeGapX(lane, x, w) {
+    var tries;
+    var other;
+    var open;
+    for (tries = 0; tries < 7; tries++) {
+      if (x + w > FINISH - 4) return -1;
+      if (!stretchBlocked(lane, x, w)) {
+        open = false;
+        for (other = 0; other < 3; other++) {
+          if (other !== lane && !stretchBlocked(other, x, w)) open = true;
+        }
+        if (open) return x;
+      }
+      x += 4.5;
+    }
+    return -1;
+  }
+
+  function spawnStrike() {
+    var lane = occupiedLane();
+    var w = 4.2;
+    var lead = 14 + speed * 1.35;
+    var maxLead = (VIEW_W - CAR_X + 24) / PX;
+    var x;
+    if (lead < 12) lead = 12;
+    if (lead > maxLead) lead = maxLead;
+    x = placeGapX(lane, distance + lead, w);
+    if (x < 0) {
+      bombWait = 4 + Math.random() * 2;
+      return;
+    }
+    strike = {
+      lane: lane,
+      x: x,
+      w: w,
+      planeX: VIEW_W + 96,
+      age: 0,
+      fall: -1
+    };
+  }
+
+  function updateBombs(dt) {
+    var i;
+    if (strike) {
+      strike.age += dt;
+      strike.planeX -= 340 * dt;
+      if (strike.fall < 0 && strike.age >= 0.42) strike.fall = 0;
+      if (strike.fall >= 0) {
+        strike.fall += dt;
+        if (strike.fall >= 0.62) {
+          obstacles.push({
+            kind: 'gap',
+            lane: strike.lane,
+            x: strike.x,
+            w: strike.w,
+            cleared: false
+          });
+          puffs.push({ x: strike.x + strike.w * 0.5, lane: strike.lane, t: 0 });
+          strike = null;
+          bombWait = 12 + Math.random() * 5;
+          nextBombDist = distance + 64;
+          if (!reduceMotion()) shake = Math.max(shake, 4);
+        }
+      }
+    } else if (state === 'play' || state === 'slip') {
+      bombWait -= dt;
+      if (bombWait <= 0 && distance >= nextBombDist && distance < FINISH - 28) spawnStrike();
+    }
+    for (i = puffs.length - 1; i >= 0; i--) {
+      puffs[i].t += dt;
+      if (puffs[i].t > 0.45) puffs.splice(i, 1);
+    }
+  }
+
+  function drawPlaneAt(px, py) {
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = '#2a3544';
+    roundRect(-26, -5, 50, 10, 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-26, 0);
+    ctx.lineTo(-40, 3);
+    ctx.lineTo(-24, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(12, -4);
+    ctx.lineTo(26, -15);
+    ctx.lineTo(18, -3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#d5e4f0';
+    ctx.fillRect(-16, -3, 7, 4);
+    ctx.restore();
+  }
+
+  function drawBombs() {
+    var i;
+    var puff;
+    var x0;
+    var x1;
+    var laneY;
+    var u;
+    var by;
+    var bx;
+    if (strike) {
+      x0 = wx(strike.x);
+      x1 = wx(strike.x + strike.w);
+      laneY = LANES[strike.lane].y;
+      ctx.fillStyle = 'rgba(36, 44, 54, 0.38)';
+      ctx.fillRect(x0, laneY - 8, Math.max(4, x1 - x0), 16);
+      if (strike.planeX > -150) drawPlaneAt(strike.planeX, 46);
+      if (strike.fall >= 0) {
+        u = strike.fall / 0.62;
+        if (u > 1) u = 1;
+        bx = wx(strike.x + strike.w * 0.5);
+        by = 46 + (laneY - 10 - 46) * u * u;
+        ctx.fillStyle = '#241c16';
+        ctx.fillRect(bx - 5, by - 12, 10, 4);
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 5, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    for (i = 0; i < puffs.length; i++) {
+      puff = puffs[i];
+      u = puff.t / 0.45;
+      bx = wx(puff.x);
+      laneY = LANES[puff.lane].y - 2;
+      ctx.fillStyle = 'rgba(244, 248, 252, ' + ((1 - u) * 0.75) + ')';
+      ctx.beginPath();
+      ctx.ellipse(bx, laneY, 8 + u * 24, 5 + u * 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   function updatePlay(dt) {
     integrate(dt);
+    updateBombs(dt);
+    if (state !== 'play') return;
+    checkHits();
+    if (state !== 'play') return;
     if (distance >= FINISH) {
       distance = FINISH;
       win();
-      return;
     }
-    if (state === 'play') checkHits();
   }
 
   function updateSlip(dt) {
@@ -485,6 +683,10 @@
       return;
     }
     integrate(dt);
+    updateBombs(dt);
+    if (state !== 'slip') return;
+    checkHits();
+    if (state !== 'slip') return;
     if (distance >= FINISH) {
       distance = FINISH;
       win();
@@ -496,7 +698,7 @@
   function updateFlakes(dt) {
     var i;
     var f;
-    var wind = speed * 0.02;
+    var wind = speed * 0.04;
     for (i = 0; i < flakes.length; i++) {
       f = flakes[i];
       f.y += f.s * dt;
@@ -529,7 +731,7 @@
     if (!imageReady(railsImg)) return;
     destH = VIEW_H + 28;
     tileW = destH * (railsImg.naturalWidth / SKY_SRC_H);
-    scroll = distance * PX * 0.18;
+    scroll = distance * PX * SKY_PARALLAX;
     x = -wrap(scroll, tileW);
     while (x < VIEW_W + 1) {
       ctx.drawImage(railsImg, 0, 0, railsImg.naturalWidth, SKY_SRC_H, x, -14, tileW + 1, destH);
@@ -896,8 +1098,10 @@
     var footX;
     var footY;
 
+    var bob = 0;
+    if (!reduceMotion() && speed > 0.2) bob = Math.sin(distance * 4.6) * Math.min(1.5, speed * 0.08);
     ctx.save();
-    ctx.translate(CAR_X, y);
+    ctx.translate(CAR_X, y + bob);
     ctx.rotate(slipAngle());
     ctx.scale(sc, sc);
 
@@ -947,11 +1151,23 @@
 
   function drawForeground() {
     var g = ctx.createLinearGradient(0, 318, 0, VIEW_H);
+    var spacing = 6.4;
+    var x = Math.floor(viewWorldMin() / spacing) * spacing;
+    var sx;
+    var n = 0;
     g.addColorStop(0, 'rgba(232, 240, 247, 0)');
     g.addColorStop(0.4, 'rgba(226, 236, 244, 0.88)');
     g.addColorStop(1, '#d5e2ee');
     ctx.fillStyle = g;
     ctx.fillRect(-20, 318, VIEW_W + 40, VIEW_H - 300);
+    for (; x < viewWorldMax(); x += spacing) {
+      sx = wx(x);
+      ctx.fillStyle = n % 2 ? 'rgba(255, 255, 255, 0.55)' : 'rgba(186, 206, 220, 0.5)';
+      ctx.beginPath();
+      ctx.ellipse(sx, 346 + (n % 3) * 7, 20, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      n += 1;
+    }
   }
 
   function drawWorld() {
@@ -966,6 +1182,7 @@
       drawObstacles(i);
     }
     drawYard();
+    drawBombs();
     drawHandcar();
     drawForeground();
     drawSnow();

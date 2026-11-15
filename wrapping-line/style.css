@@ -104,6 +104,7 @@ button:focus-visible {
 }
 
 #run,
+#time,
 #last {
   font-size: 22px;
   font-variant-numeric: tabular-nums;

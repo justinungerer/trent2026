@@ -18,13 +18,13 @@ Painted plaster ceiling with a warm lamp glow, opaque, 256 × 256 px. Tiled in w
 
 ### door.webp
 
-A sage-green wooden door, opaque, 256 × 256 px. Drawn as a billboard at the end of the corridor. Reaching it wins.
+A sage-green wooden door, opaque, 256 × 256 px. Drawn as a billboard on the listening-post cell. Reaching it wins.
 
 ### soldier.webp
 
-One cartoon soldier on a transparent background, about 348 × 620 px. Olive coat, plain helmet, wooden rifle. No emblem. The same picture is used for every soldier. A hit sinks the sprite and a canvas dust puff covers the spot.
+One cartoon soldier on a transparent background, about 348 × 620 px. Olive coat, plain helmet, wooden rifle. No emblem. The same picture is drawn three ways: the olive soldier as painted, a cool-tinted runner, and a warm-tinted spotter. A hit is a white flash, then the sprite is gone. Nothing is left on the floor except a bullet pickup.
 
-The gun, the crosshair, and the dust puff are drawn in canvas, not from files.
+The gun, the crosshair, the hit flash, the health kit, and the bullet crate are drawn in canvas, not from files.
 
 ## Chapter card paintings
 
