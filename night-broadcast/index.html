@@ -9,9 +9,9 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night, looking for the station about Santa"></canvas>
+    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night. Chase the drifting signal and lock three knobs in order."></canvas>
 
-    <p id="hint" class="hint">Drag the knob</p>
+    <p id="hint" class="hint">Chase the signal</p>
 
     <div class="hud">
       <div class="hud-block grow">
@@ -23,8 +23,8 @@
         <strong id="signal">Quiet</strong>
       </div>
       <div class="hud-block">
-        <span class="label">Lock</span>
-        <strong id="lock">0.0 / 3s</strong>
+        <span class="label">Knob</span>
+        <strong id="lock">1 · 0.0 / 3s</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -39,9 +39,10 @@
       <div class="card">
         <p class="kicker">A few months after D-Day</p>
         <h1>The night broadcast</h1>
-        <p>Near Christmas, Trent warms a field radio and turns the dial.</p>
-        <p>A canteen, a weather desk, and a music box are only noise. The station that says Santa has been captured is a narrow band.</p>
-        <p>Drag the knob, or use the arrows. Hold the needle in that band for three seconds. It locks on its own. Slipping off only unwinds the lock. Lock keeps the dial still.</p>
+        <p>Near Christmas, Trent warms a field radio in the snow.</p>
+        <p>Chase the moving signal. It drifts along the dial, so a spot that worked a moment ago will slide away.</p>
+        <p>Hold the needle steady inside that band. The Lock button keeps the dial still. Drag the tuning knob, or use the arrows.</p>
+        <p>Lock knob 1, then knob 2, then knob 3. Each lock is a few steady seconds. After each one, the signal moves.</p>
         <button type="button" id="start">Switch on the lamp</button>
       </div>
     </div>
@@ -59,7 +60,7 @@
       <div class="card">
         <p class="kicker">The night broadcast</p>
         <h1>Santa has been taken</h1>
-        <p>The station locks. A field voice says Santa has been captured.</p>
+        <p>All three knobs are locked. A field voice says Santa has been captured.</p>
         <p id="win-time">Tuned in 0 seconds.</p>
         <button type="button" id="retry">Tune again</button>
       </div>

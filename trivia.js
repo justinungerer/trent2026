@@ -557,9 +557,39 @@
     if (modal) modal.remove();
   }
 
+  function renderStory(chapter, story, onBegin) {
+    var section = document.createElement('section');
+    var kicker = document.createElement('p');
+    var title = document.createElement('h1');
+    var copy = document.createElement('p');
+    var begin = document.createElement('button');
+    showShell();
+    appRoot.innerHTML = '';
+    section.className = 'campaign-start quiz-card story-card';
+    kicker.className = 'eyebrow';
+    kicker.textContent = chapter.kicker || ('Chapter ' + chapter.number);
+    title.tabIndex = -1;
+    title.textContent = chapter.title || 'Chapter';
+    copy.className = 'lead';
+    copy.textContent = story;
+    begin.type = 'button';
+    begin.className = 'primary';
+    begin.textContent = 'Begin questions';
+    begin.onclick = onBegin;
+    section.appendChild(kicker);
+    section.appendChild(title);
+    section.appendChild(copy);
+    section.appendChild(begin);
+    appRoot.appendChild(section);
+    window.scrollTo(0, 0);
+    focus(title);
+  }
+
   function start(chapter, hooks) {
     var token;
+    var story;
     hooks = hooks || {};
+    story = typeof hooks.story === 'string' ? hooks.story : ((chapter && chapter.story) || '');
     appRoot = document.getElementById('app');
     appRoot.trentTriviaHome = hooks.onHome || function () {};
     abort();
@@ -568,9 +598,14 @@
     appRoot.innerHTML = '';
     loadBank().then(function (questions) {
       if (token !== session) return;
-      startRound(chapter, questions, function (correct) {
-        if (typeof hooks.onClear === 'function') hooks.onClear(correct);
-      });
+      function openRound() {
+        if (token !== session) return;
+        startRound(chapter, questions, function (correct) {
+          if (typeof hooks.onClear === 'function') hooks.onClear(correct);
+        });
+      }
+      if (story) renderStory(chapter, story, openRound);
+      else openRound();
     }).catch(function () {
       if (token !== session) return;
       renderStatus('The question bank did not load. Nothing was substituted.', function () {

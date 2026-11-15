@@ -1,13 +1,13 @@
 /* Chapter 1 — The Night Broadcast.
-   A few months after D-Day, near Christmas. Tune a field radio
-   and hold the narrow station that says Santa has been captured.
-   Painted sprites live in art/. The needle and signal meter
-   stay as small canvas overlays. No network.
+   A few months after D-Day, near Christmas. The field report
+   drifts along the dial. Chase it, hold the needle steady in
+   that band, and lock three knobs in order. Each lock is three
+   steady seconds. After a lock the signal jumps and keeps drifting.
+   Painted sprites live in art/. The needle, meter, and knob
+   marks stay as small canvas overlays. No network.
 
-   Dial numbers run from 20 to 80. The report sits on 70.
-   A sweep finds it. Three still seconds inside that band lock
-   the set. A second try, once the band is known, stays under
-   two minutes. */
+   Dial numbers run from 20 to 80. Drag and the arrow keys move
+   the dial at twice the original rate. */
 'use strict';
 
 (function () {
@@ -32,10 +32,20 @@
   var VIEW_H = 390;
   var START_FREQ = 0.05;
   var LOCK_TIME = 3;
-  var DRAG = 0.0004;
-  var KEY_STEP = 0.0032;
-  var KEY_RATE = 0.046;
+  var KNOB_COUNT = 3;
+  var DRAG = 0.0008;
+  var KEY_STEP = 0.0064;
+  var KEY_RATE = 0.092;
   var DECAY = 1;
+  var DRIFT_LO = 0.12;
+  var DRIFT_HI = 0.9;
+  var DRIFT_CHASE = 0.04;
+  var DRIFT_HOLD = 0.0022;
+  var LOCK_SPOTS = [
+    { x: 312, y: 132 },
+    { x: 312, y: 206 },
+    { x: 312, y: 280 }
+  ];
 
   /* Fractions of radio.webp. The painted dial and meter are blank. */
   var RADIO = { x: 352, y: 18, w: 468 };
@@ -76,8 +86,8 @@
     {
       id: 'santa',
       name: 'Field report',
-      center: 0.8333,
-      half: 0.0115,
+      center: 0.58,
+      half: 0.018,
       line: 'Field voice: Santa has been captured.'
     }
   ];
@@ -96,6 +106,12 @@
   var victorySent = false;
   var rotateHold = false;
   var lastLine = '';
+  var knobsLocked = 0;
+  var targetFreq = 0.58;
+  var driftDir = 1;
+  var driftPhase = 0;
+  var statusUntil = 0;
+  var statusNote = '';
 
   var keys = new Set();
   var lockHeld = false;
@@ -159,6 +175,7 @@
     var s;
     var d;
     var best = null;
+    if (inReport()) return reportStation();
     for (i = 0; i < stations.length; i++) {
       s = stations[i];
       d = Math.abs(freq - s.center);
@@ -216,9 +233,12 @@
     var line = station ? station.line : 'Static. Snow on the aerial.';
     var sig = signalAt(freq);
     var word = signalWord(sig);
-    var lockLine = Math.min(LOCK_TIME, lockT).toFixed(1) + ' / 3s';
+    var shownKnob = state === 'win' ? KNOB_COUNT : Math.min(KNOB_COUNT, knobsLocked + 1);
+    var lockLine = shownKnob + ' · ' + Math.min(LOCK_TIME, lockT).toFixed(1) + ' / 3s';
     if (hearingEl.textContent !== line) hearingEl.textContent = line;
-    if (line !== lastLine) {
+    if (performance.now() < statusUntil) {
+      if (statusEl.textContent !== statusNote) say(statusNote);
+    } else if (line !== lastLine) {
       lastLine = line;
       if (state === 'play') say(line);
     }
@@ -231,9 +251,26 @@
     lockBtn.setAttribute('aria-pressed', lockHeld ? 'true' : 'false');
   }
 
-  function beginRun() {
+  function resetHunt() {
     freq = START_FREQ;
     lockT = 0;
+    knobsLocked = 0;
+    targetFreq = 0.58;
+    driftDir = 1;
+    driftPhase = 0;
+    statusUntil = 0;
+    statusNote = '';
+    reportStation().center = targetFreq;
+  }
+
+  function announce(text) {
+    statusNote = text;
+    statusUntil = performance.now() + 2200;
+    say(text);
+  }
+
+  function beginRun() {
+    resetHunt();
     victorySent = false;
     lockHeld = false;
     tuneDown = false;
@@ -278,8 +315,7 @@
 
   function giveUp() {
     if (state !== 'pause') return;
-    freq = START_FREQ;
-    lockT = 0;
+    resetHunt();
     lockHeld = false;
     tuneDown = false;
     tuneUp = false;
@@ -289,7 +325,7 @@
     pauseSheet.hidden = true;
     startSheet.hidden = false;
     lastLine = '';
-    say('Gave up. Nothing was locked.');
+    announce('Gave up. Nothing was locked.');
   }
 
   function win() {
@@ -306,7 +342,7 @@
     keys.clear();
     winTimeEl.textContent = 'Tuned in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('Santa has been taken. ' + seconds + ' seconds.');
+    say('All three knobs locked. Santa has been taken. ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('night-broadcast:complete', {
@@ -323,10 +359,57 @@
     }
   }
 
+  function updateDrift(dt, holding) {
+    var speed = holding ? DRIFT_HOLD : DRIFT_CHASE;
+    var wobble = holding ? 1 : (0.86 + 0.14 * Math.sin(driftPhase * 1.7));
+    driftPhase += dt;
+    targetFreq += driftDir * speed * wobble * dt;
+    if (targetFreq >= DRIFT_HI) {
+      targetFreq = DRIFT_HI;
+      driftDir = -1;
+    } else if (targetFreq <= DRIFT_LO) {
+      targetFreq = DRIFT_LO;
+      driftDir = 1;
+    }
+    reportStation().center = targetFreq;
+  }
+
+  function jumpSignal() {
+    var dir = freq < 0.5 ? 1 : -1;
+    var jump;
+    var next;
+    if (Math.random() < 0.35) dir = -dir;
+    jump = 0.3 + Math.random() * 0.2;
+    next = freq + dir * jump;
+    if (next < DRIFT_LO + 0.04 || next > DRIFT_HI - 0.04) {
+      dir = -dir;
+      next = freq + dir * jump;
+    }
+    targetFreq = clamp(next, DRIFT_LO, DRIFT_HI);
+    if (Math.abs(targetFreq - freq) < 0.24) {
+      targetFreq = clamp(freq + dir * 0.36, DRIFT_LO, DRIFT_HI);
+    }
+    driftDir = targetFreq >= freq ? 1 : -1;
+    reportStation().center = targetFreq;
+  }
+
+  function advanceKnob() {
+    knobsLocked += 1;
+    lockT = 0;
+    if (knobsLocked >= KNOB_COUNT) {
+      win();
+      return;
+    }
+    jumpSignal();
+    announce('Knob ' + knobsLocked + ' locked. The signal moved.');
+  }
+
   function updateTuning(dt) {
     var moved = false;
     var dir;
     var applied;
+    var steady;
+    var inside;
     /* Finger noise cancels. A real drag accumulates past the deadzone,
        so a resting thumb can still hold the needle steady. */
     if (!lockHeld) {
@@ -345,13 +428,17 @@
       pendingDx = 0;
     }
     freq = clamp(freq, 0, 1);
-    if (inReport() && !moved) {
+    steady = !moved;
+    inside = inReport();
+    updateDrift(dt, steady && inside);
+    inside = inReport();
+    if (inside && steady) {
       lockT += dt;
       if (lockT >= LOCK_TIME) {
         lockT = LOCK_TIME;
-        win();
+        advanceKnob();
       }
-    } else if (!inReport()) {
+    } else if (!inside) {
       lockT = Math.max(0, lockT - DECAY * dt);
     }
   }
@@ -526,6 +613,66 @@
     ctx.lineCap = 'butt';
   }
 
+  function drawLockKnobs() {
+    var i;
+    var spot;
+    var r = 22;
+    var locked;
+    var active;
+    for (i = 0; i < KNOB_COUNT; i++) {
+      spot = LOCK_SPOTS[i];
+      locked = i < knobsLocked;
+      active = !locked && i === knobsLocked;
+      ctx.beginPath();
+      ctx.arc(spot.x + 2, spot.y + 3, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(8, 12, 20, 0.35)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(spot.x, spot.y, r, 0, Math.PI * 2);
+      if (locked) ctx.fillStyle = '#e6c07a';
+      else if (active) ctx.fillStyle = '#f3e2c0';
+      else ctx.fillStyle = 'rgba(90, 70, 48, 0.78)';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = locked || active ? '#fff1c9' : '#6b5340';
+      ctx.stroke();
+      if (locked) {
+        ctx.beginPath();
+        ctx.arc(spot.x, spot.y, r + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff1c9';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      } else if (active && lockT > 0 && state !== 'title') {
+        ctx.beginPath();
+        ctx.arc(
+          spot.x,
+          spot.y,
+          r + 6,
+          -Math.PI / 2,
+          -Math.PI / 2 + (Math.min(lockT, LOCK_TIME) / LOCK_TIME) * Math.PI * 2
+        );
+        ctx.strokeStyle = '#fff1c9';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+      }
+      ctx.strokeStyle = locked ? '#3a2a18' : '#fff6e4';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(spot.x, spot.y - r * 0.42);
+      ctx.lineTo(spot.x, spot.y - r * 0.78);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+      ctx.fillStyle = locked || active ? '#3a2a18' : '#f7f4ec';
+      ctx.font = '800 16px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), spot.x, spot.y + 5);
+    }
+  }
+
   function drawVignette() {
     var v = ctx.createRadialGradient(cssW * 0.5, cssH * 0.45, cssW * 0.2, cssW * 0.5, cssH * 0.5, cssW * 0.72);
     v.addColorStop(0, 'rgba(0, 0, 0, 0)');
@@ -544,6 +691,7 @@
     drawNeedle();
     drawMeter();
     drawKnobCue();
+    drawLockKnobs();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawVignette();
   }

@@ -15,6 +15,7 @@ var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 var active = null;
 var shelfOpen = false;
+var introChapter = null;
 var introToken = 0;
 var introRaf = 0;
 var introDone = null;
@@ -39,14 +40,14 @@ var CHAPTERS = [
   {
     id: 'prologue',
     number: 0,
-    title: 'The seawall',
-    kicker: 'Prologue · 6 June 1944',
-    line: 'June 1944. Trent leaves the landing craft and crosses the sand. Surf shoves him back. Wire and hedgehogs block the way. The seawall is the only finish.',
+    title: 'Landing at Normandy',
+    kicker: 'Prologue · Landing at Normandy',
+    line: 'June 1944. Trent leaves the landing craft and crosses the sand. Surf shoves him back. Wire and hedgehogs block the way. Landing at Normandy is the only finish.',
     lines: [
       'June 1944. Trent steps off the landing craft onto the sand.',
       'The surf runs in. Brace, or it shoves him back toward the boat.',
       'Wire and metal hedgehogs block the beach. Walk around them.',
-      'The seawall is ahead. Reach it and the landing is done.'
+      'Landing at Normandy is ahead. Reach it and the landing is done.'
     ],
     event: 'prologue:complete',
     path: './prologue/',
@@ -74,6 +75,7 @@ var CHAPTERS = [
       'The field report is a narrow band. Hold the dial still until the lock fills.',
       'When it locks, he knows Santa has been taken. The search can start.'
     ],
+    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow. Most stations are noise. One narrow band says Santa has been captured, and he holds it until the lock fills.',
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
     pin: 'NIGHT',
@@ -99,8 +101,10 @@ var CHAPTERS = [
       'Scout craft and amber fire cross his path. Repair parcels keep the hull together.',
       'The flagship arrives. Recover the broadcast and the heading is his.'
     ],
+    story: 'The captured signal points into the winter sky. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, to recover Santa’s last broadcast.',
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
+    portrait: true,
     pin: 'SKY',
     nextId: 'rail',
     intro: {
@@ -124,6 +128,7 @@ var CHAPTERS = [
       'The left thumb picks the track. The right thumb keeps the speed up.',
       'Reach the yard mouth before three slips send him back to the start.'
     ],
+    story: 'A handcar waits on the snowy rails. Trent pumps for speed and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the end of the line.',
     event: 'white-rail:complete',
     path: './white-rail/',
     pin: 'RAIL',
@@ -149,6 +154,7 @@ var CHAPTERS = [
       'A wind-up penguin draws them away for a few seconds.',
       'Collect every dispatch, then reach the mail hatch.'
     ],
+    story: 'Three dispatches are hidden in the freight yard. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch.',
     event: 'special-delivery:complete',
     path: './chapter-2/',
     pin: 'YARD',
@@ -174,6 +180,7 @@ var CHAPTERS = [
       'A wrong pattern sends the train back and costs a try.',
       'The matching pattern lets the right train leave the yard.'
     ],
+    story: 'A train is coming. The destination board shows the lever order as pictures. Trent throws each switch to match it. The right pattern lets the train leave the yard.',
     event: 'switch-tower:complete',
     path: './switch-tower/',
     pin: 'SWITCH',
@@ -199,6 +206,7 @@ var CHAPTERS = [
       'Inside, shelves block shots. Guards can be wrapped into parcels.',
       'Disable the alarms, send the orders, and escape with the route to Santa.'
     ],
+    story: 'Sprout is inside the depot with Santa’s transport orders. The questions build his ribbon gun. Then he wraps the guards, quiets the alarms, and leaves through the mail hatch with the route.',
     event: null,
     path: './shelf-escape/',
     pin: 'DEPOT',
@@ -223,6 +231,7 @@ var CHAPTERS = [
       'Hold Send only while the lamp is in that gap.',
       'Dot, dash, dot, dot. Three slips and the pattern starts over.'
     ],
+    story: 'A short Morse pattern has to leave before the next patrol. A searchlight sweeps the yard. Trent holds Send only in the safe gap. Three slips, and the message starts over.',
     event: 'listening-wire:complete',
     path: './listening-wire/',
     pin: 'WIRE',
@@ -248,6 +257,7 @@ var CHAPTERS = [
       'A slip is a setback, not the end, until the third one.',
       'Reach the gate together and the camp is behind them.'
     ],
+    story: 'Santa walks the cabin shadow toward the gate and will not wait in the open. Trent stays close. A searchlight or a long gap costs a slip. Three slips restart the walk.',
     event: 'holding-camp:complete',
     path: './holding-camp/',
     pin: 'CAMP',
@@ -273,6 +283,7 @@ var CHAPTERS = [
       'Early and late both reset the count.',
       'Eight bows in time finish the line.'
     ],
+    story: 'Parcels ride a belt through Quinn’s workshop. A bow has to land as each parcel meets the mark. Early or late resets the count. Eight bows in time clear the line.',
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
     pin: 'BOW',
@@ -298,6 +309,7 @@ var CHAPTERS = [
       'A crate slides across one roof. Jump it.',
       'Three falls send him back. The sleigh is the end of the road.'
     ],
+    story: 'The sleigh waits on the last roof. Trent runs the snowy gaps, jumps a sliding crate, and reaches the chimney. Three falls send him back. The flight home comes after the sleigh.',
     event: 'chimney-road:complete',
     path: './chimney-road/',
     pin: 'HOME',
@@ -375,6 +387,7 @@ function stopIntro() {
   if (introRaf) cancelAnimationFrame(introRaf);
   introRaf = 0;
   introDone = null;
+  introChapter = null;
   if (introImages.length) releaseImages(introImages);
   introImages = [];
   cinema.hidden = true;
@@ -509,7 +522,7 @@ function showStart() {
   start.className = 'primary';
   start.id = 'campaign-start';
   start.textContent = 'Start';
-  start.onclick = function () { showCredits(function () { openChapter('prologue'); }); };
+  start.onclick = showLogo;
   form = document.createElement('form');
   form.id = 'pin-form';
   label = document.createElement('label');
@@ -524,7 +537,6 @@ function showStart() {
   input.autocapitalize = 'characters';
   input.spellcheck = false;
   input.enterKeyHint = 'go';
-  input.value = stored;
   open = document.createElement('button');
   open.type = 'submit';
   open.className = 'primary';
@@ -555,6 +567,38 @@ function showStart() {
   section.appendChild(lead);
   section.appendChild(start);
   section.appendChild(form);
+  campaignRoot.appendChild(section);
+  title.focus({ preventScroll: true });
+}
+
+function showLogo() {
+  var section = document.createElement('section');
+  var title = document.createElement('h1');
+  var begin = document.createElement('button');
+  if (window.TrentTrivia) window.TrentTrivia.abort();
+  clearCredits();
+  clearTimeout(pinTimer);
+  stopIntro();
+  active = null;
+  shelfOpen = false;
+  closeMission();
+  stopEndingVideo();
+  ending.hidden = true;
+  campaignRoot.hidden = false;
+  campaignRoot.innerHTML = '';
+  section.className = 'campaign-start logo-screen';
+  title.className = 'logo-title';
+  title.tabIndex = -1;
+  title.textContent = 'Trent Saves Christmas';
+  begin.type = 'button';
+  begin.className = 'primary';
+  begin.id = 'logo-begin';
+  begin.textContent = 'Begin';
+  begin.onclick = function () {
+    showCredits(function () { openChapter('prologue'); });
+  };
+  section.appendChild(title);
+  section.appendChild(begin);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
 }
@@ -592,16 +636,30 @@ function isPortrait() {
   return window.innerHeight > window.innerWidth + 20;
 }
 
+function chapterOnScreen() {
+  var mission = document.getElementById('mission');
+  if (mission && !mission.hidden && active && active.chapter) return active.chapter;
+  if (cinema && !cinema.hidden && introChapter) return introChapter;
+  return null;
+}
+
+function isPortraitChapter(chapter) {
+  if (!chapter) return false;
+  return chapter.portrait === true || chapter.path === './frosted-skies/';
+}
+
 function wantsLandscape() {
   var mission = document.getElementById('mission');
   var playing = mission && !mission.hidden;
   var introducing = cinema && !cinema.hidden;
   var endingOpen = ending && !ending.hidden;
-  return playing || introducing || endingOpen;
+  if (isPortraitChapter(chapterOnScreen())) return false;
+  return !!(playing || introducing || endingOpen);
 }
 
 function turnNeeded() {
   if (!handheld()) return false;
+  if (isPortraitChapter(chapterOnScreen())) return !isPortrait();
   return wantsLandscape() ? isPortrait() : !isPortrait();
 }
 
@@ -704,6 +762,7 @@ function playIntro(chapter, done) {
   var token;
   stopIntro();
   token = introToken;
+  introChapter = chapter;
   images.push(loadImage(spec.bg));
   spec.layers.forEach(function (layer) { images.push(loadImage(layer.src)); });
   introImages = images;
@@ -721,6 +780,7 @@ function playIntro(chapter, done) {
     introDone = null;
     releaseImages(images);
     if (introImages === images) introImages = [];
+    introChapter = null;
     cinema.hidden = true;
     done();
   };
@@ -792,6 +852,7 @@ function afterIntro(chapter) {
     return;
   }
   window.TrentTrivia.start(chapter, {
+    story: chapter.story,
     onClear: function (correct) {
       if (chapter.number === 6) {
         active = null;
@@ -862,9 +923,38 @@ function showPin(chapter) {
   title.focus({ preventScroll: true });
   clearTimeout(pinTimer);
   pinTimer = setTimeout(function () {
-    if (nextId) openChapter(nextId);
+    if (chapter.id === 'prologue' && nextId) showCaptureCard(nextId);
+    else if (nextId) openChapter(nextId);
     else showEnding();
   }, 4500);
+}
+
+function showCaptureCard(nextId) {
+  var section = document.createElement('section');
+  var kicker = document.createElement('p');
+  var title = document.createElement('h1');
+  var copy = document.createElement('p');
+  clearTimeout(pinTimer);
+  closeMission();
+  ending.hidden = true;
+  cinema.hidden = true;
+  campaignRoot.hidden = false;
+  campaignRoot.innerHTML = '';
+  section.className = 'campaign-start story-card';
+  kicker.className = 'eyebrow';
+  kicker.textContent = 'Months later';
+  title.tabIndex = -1;
+  title.textContent = 'A report comes in';
+  copy.className = 'lead';
+  copy.textContent = 'A few months have passed, and Allied intel says Santa has been captured and is being held.';
+  section.appendChild(kicker);
+  section.appendChild(title);
+  section.appendChild(copy);
+  campaignRoot.appendChild(section);
+  title.focus({ preventScroll: true });
+  pinTimer = setTimeout(function () {
+    openChapter(nextId);
+  }, 6500);
 }
 
 function showRestored() {

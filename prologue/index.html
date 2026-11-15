@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#24384e">
-  <title>Prologue — The Seawall</title>
+  <title>Prologue — Landing at Normandy</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="stage">
     <canvas id="beach" width="844" height="390" aria-label="Trent crossing the beach from the landing craft to the seawall"></canvas>
 
-    <p id="hint" class="hint">Drag to walk</p>
+    <p id="hint" class="hint">Stick to walk. F to fire.</p>
 
     <div class="hud">
       <div class="hud-block">
@@ -28,14 +28,16 @@
     </div>
 
     <div id="stick" class="stick" aria-label="Move"><div id="stick-knob"></div></div>
+    <button type="button" id="fire" aria-pressed="false">Fire</button>
     <button type="button" id="brace" aria-pressed="false">Brace</button>
 
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">6 June 1944</p>
-        <h1>The seawall</h1>
-        <p>Trent steps off the landing craft. The seawall is to the right.</p>
-        <p>Drag the left side to walk. Hold Brace when the foam runs up the sand. Go around the wire, the hedgehogs, and the craters.</p>
+        <h1>Landing at Normandy</h1>
+        <p>Trent steps off the landing craft at Landing at Normandy. The wall is to the right.</p>
+        <p>Use the stick to walk. Hold Brace when the foam runs up the sand — he stays planted while it is held. Go around the wire, the hedgehogs, and the craters.</p>
+        <p>Soldiers along the beach sometimes shoot. Step clear of the gunfire and the grenades. Fire, or the F key, stops a soldier. Aim with the stick or the walk keys, including while you brace.</p>
         <p>Three stumbles, and he starts again at the ramp.</p>
         <button type="button" id="start">Step off the ramp</button>
       </div>
@@ -59,10 +61,10 @@
 
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
-        <p class="kicker">The seawall</p>
+        <p class="kicker">Landing at Normandy</p>
         <h1>He makes the wall</h1>
         <p id="win-time">Time on the sand: 0:00</p>
-        <p id="win-hold" hidden>Holding at the seawall.</p>
+        <p id="win-hold" hidden>Holding the landing.</p>
         <button type="button" id="continue">Continue</button>
       </div>
     </div>

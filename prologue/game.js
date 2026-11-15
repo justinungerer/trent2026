@@ -1,8 +1,8 @@
 /* D-Day prologue. Walk Trent from the landing craft to the seawall.
    Painted sprites in art/. Layout is documented in art/ART-SOURCES.md.
 
-   A straight walk is about a minute. Smoke, detours, and bracing
-   keep a careful run near a minute and a half, under three minutes. */
+   Walk speed clears an open beach in about half a minute. Waves, detours,
+   and soldiers make a careful run longer, still under three minutes. */
 'use strict';
 
 (function () {
@@ -12,6 +12,7 @@
   var marksEl = document.getElementById('marks');
   var pauseBtn = document.getElementById('pause');
   var braceBtn = document.getElementById('brace');
+  var fireBtn = document.getElementById('fire');
   var hintEl = document.getElementById('hint');
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
@@ -29,7 +30,10 @@
   var START_Y = 124;
   var WALL_X = 7000;
   var GOAL_X = 6960;
-  var SPEED = 120;
+  var SPEED = 240;
+  var SHOT_SPEED = 700;
+  var FIRE_GAP = 0.42;
+  var SOLDIER_RANGE = 640;
   var TOTAL_METERS = 80;
   var STUMBLE_TIME = 1.05;
   var BRACED_PUSH = 0.18;
@@ -99,6 +103,15 @@
   var keys = new Set();
   var keyBrace = false;
   var bracePointer = false;
+  var keyFire = false;
+  var firePointer = false;
+  var fireQueued = false;
+  var aim = { x: 1, y: 0 };
+  var fireLeft = 0;
+  var flash = 0;
+  var shots = [];
+  var hazards = [];
+  var soldiers = [];
   var dragging = false;
   var dragId = null;
   var dragX = 0;
@@ -170,6 +183,14 @@
     stumbleT = 0;
     lean = 0;
     shake = 0;
+    aim.x = 1;
+    aim.y = 0;
+    fireLeft = 0;
+    flash = 0;
+    shots = [];
+    hazards = [];
+    soldiers = makeSoldiers();
+    clearFireHold();
     var i;
     for (i = 0; i < waves.length; i++) {
       waves[i].prevU = phaseU(waves[i], 0);
@@ -359,6 +380,7 @@
     keyBrace = false;
     bracePointer = false;
     braceBtn.classList.remove('held');
+    clearFireHold();
     dragging = false;
     dragX = 0;
     dragY = 0;
@@ -440,30 +462,277 @@
     }
   }
 
+  function clearFireHold() {
+    keyFire = false;
+    firePointer = false;
+    fireQueued = false;
+    fireBtn.classList.remove('held');
+  }
+
+  function makeSoldiers() {
+    var spots = [
+      { x: 1320, y: 36, wrap: false },
+      { x: 1880, y: 118, wrap: true },
+      { x: 2360, y: 64, wrap: false },
+      { x: 3300, y: 40, wrap: true },
+      { x: 3800, y: 214, wrap: false },
+      { x: 4480, y: 136, wrap: true },
+      { x: 5400, y: 42, wrap: false },
+      { x: 6400, y: 176, wrap: true }
+    ];
+    var list = [];
+    var i;
+    for (i = 0; i < spots.length; i++) {
+      list.push({
+        x: spots[i].x,
+        y: spots[i].y,
+        wrap: spots[i].wrap,
+        mode: 'stand',
+        t: 0,
+        cool: 1.1 + (i % 4) * 0.45,
+        facing: -1,
+        away: 1
+      });
+    }
+    return list;
+  }
+
+  function aimUnit() {
+    var m = Math.hypot(aim.x, aim.y);
+    if (m < 0.05) return { x: player.facing < 0 ? -1 : 1, y: 0 };
+    return { x: aim.x / m, y: aim.y / m };
+  }
+
+  function stopSoldier(s) {
+    s.t = 0;
+    if (s.wrap) {
+      s.mode = 'parcel';
+      return;
+    }
+    s.mode = 'back';
+    s.away = player.x <= s.x ? 1 : -1;
+  }
+
+  function soldierAttack(s) {
+    var dx = player.x - s.x;
+    var dy = player.y - s.y;
+    var dist = Math.hypot(dx, dy) || 1;
+    var ang;
+    if (Math.random() < 0.55) {
+      ang = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.22;
+      hazards.push({
+        kind: 'gunfire',
+        x: s.x + (dx / dist) * 22,
+        y: s.y + (dy / dist) * 22,
+        vx: Math.cos(ang) * 520,
+        vy: Math.sin(ang) * 520,
+        life: 1.45,
+        spent: false,
+        hop: 0
+      });
+      return;
+    }
+    hazards.push({
+      kind: 'grenade',
+      x: s.x,
+      y: s.y,
+      x0: s.x,
+      y0: s.y,
+      tx: clamp(player.x + (Math.random() - 0.5) * 120, MIN_X, GOAL_X),
+      ty: clamp(player.y + (Math.random() - 0.5) * 80, 24, BEACH_W - 24),
+      t: 0,
+      flight: 0.9 + Math.random() * 0.35,
+      life: 0.3,
+      r: 34,
+      hop: 0,
+      spent: false
+    });
+  }
+
+  function updateSoldiers(dt, allowFire) {
+    var i;
+    var s;
+    var dx;
+    var dy;
+    var dist;
+    for (i = soldiers.length - 1; i >= 0; i--) {
+      s = soldiers[i];
+      if (s.mode === 'gone') {
+        soldiers.splice(i, 1);
+        continue;
+      }
+      if (s.mode === 'back') {
+        s.t += dt;
+        s.x += s.away * 150 * dt;
+        if (s.t > 0.62) s.mode = 'gone';
+        continue;
+      }
+      if (s.mode === 'parcel') {
+        if (s.t < 1) s.t = Math.min(1, s.t + dt / 0.28);
+        continue;
+      }
+      s.facing = player.x < s.x ? -1 : 1;
+      if (!allowFire) continue;
+      s.cool -= dt;
+      if (s.cool > 0) continue;
+      dx = player.x - s.x;
+      dy = player.y - s.y;
+      dist = Math.hypot(dx, dy);
+      if (dist > SOLDIER_RANGE) {
+        s.cool = 0.4;
+        continue;
+      }
+      s.cool = 2.15 + Math.random() * 2.2;
+      if (Math.random() < 0.8) soldierAttack(s);
+    }
+  }
+
+  function hazardHits(h, hitR) {
+    var dx = h.x - player.x;
+    var dy = h.y - player.y;
+    return dx * dx + dy * dy < hitR * hitR;
+  }
+
+  function updateHazards(dt) {
+    var i;
+    var h;
+    var u;
+    var hitR;
+    var remove;
+    for (i = hazards.length - 1; i >= 0; i--) {
+      h = hazards[i];
+      remove = false;
+      hitR = 0;
+      if (h.kind === 'gunfire') {
+        h.life -= dt;
+        h.x += h.vx * dt;
+        h.y += h.vy * dt;
+        hitR = 22;
+        if (h.life <= 0 || h.y < -40 || h.y > BEACH_W + 40 || h.x < MIN_X - 240 || h.x > WALL_X + 80) remove = true;
+      } else if (h.kind === 'grenade') {
+        h.t += dt;
+        u = h.t / h.flight;
+        if (u >= 1) {
+          h.kind = 'burst';
+          h.x = h.tx;
+          h.y = h.ty;
+          h.t = 0;
+          h.life = 0.3;
+          h.hop = 0;
+          hitR = h.r;
+        } else {
+          h.x = h.x0 + (h.tx - h.x0) * u;
+          h.y = h.y0 + (h.ty - h.y0) * u;
+          h.hop = Math.sin(Math.min(1, u) * Math.PI);
+          hitR = 18;
+        }
+      } else {
+        h.t += dt;
+        h.life -= dt;
+        hitR = h.r;
+        if (h.life <= 0) remove = true;
+      }
+      if (!remove && !h.spent && hitR > 0 && hazardHits(h, hitR)) {
+        h.spent = true;
+        if (h.kind !== 'burst') remove = true;
+        if (state === 'play') {
+          if (!reduceMotion()) shake = 7;
+          startStumble();
+        }
+      }
+      if (remove) hazards.splice(i, 1);
+    }
+  }
+
+  function updateShots(dt) {
+    var i;
+    var j;
+    var shot;
+    var s;
+    var dx;
+    var dy;
+    for (i = shots.length - 1; i >= 0; i--) {
+      shot = shots[i];
+      shot.life -= dt;
+      shot.x += shot.vx * dt;
+      shot.y += shot.vy * dt;
+      if (shot.life <= 0 || shot.y < -30 || shot.y > BEACH_W + 30 || shot.x < -200 || shot.x > WALL_X + 40) {
+        shots.splice(i, 1);
+        continue;
+      }
+      for (j = 0; j < soldiers.length; j++) {
+        s = soldiers[j];
+        if (s.mode !== 'stand') continue;
+        dx = shot.x - s.x;
+        dy = shot.y - s.y;
+        if (dx * dx + dy * dy < 32 * 32) {
+          stopSoldier(s);
+          shots.splice(i, 1);
+          break;
+        }
+      }
+    }
+  }
+
+  function tryShoot() {
+    var dir;
+    if (state !== 'play') return;
+    if (fireLeft > 0) return;
+    if (!fireQueued && !keyFire && !firePointer) return;
+    fireQueued = false;
+    fireLeft = FIRE_GAP;
+    flash = 0.08;
+    dir = aimUnit();
+    shots.push({
+      x: player.x + dir.x * 18,
+      y: player.y + dir.y * 18,
+      vx: dir.x * SHOT_SPEED,
+      vy: dir.y * SHOT_SPEED,
+      life: 1.05
+    });
+  }
+
+  function tickWeapons(dt) {
+    if (fireLeft > 0) fireLeft = Math.max(0, fireLeft - dt);
+    if (flash > 0) flash = Math.max(0, flash - dt);
+  }
+
   function updatePlay(dt) {
     var stick = controlVector();
     var beforeX = player.x;
     var beforeY = player.y;
     var moved;
-    if (stick.x !== 0 || stick.y !== 0) hintEl.hidden = true;
-    tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
-    moved = Math.hypot(player.x - beforeX, player.y - beforeY);
-    moving = moved > 0.01;
-    if (moving) {
-      player.step += moved * 0.09;
+    var bracing = isBracing();
+    if (stick.x !== 0 || stick.y !== 0) {
+      hintEl.hidden = true;
+      aim.x = stick.x;
+      aim.y = stick.y;
       if (stick.x < -0.25) player.facing = -1;
       else if (stick.x > 0.25) player.facing = 1;
     }
+    if (!bracing) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
+    moved = Math.hypot(player.x - beforeX, player.y - beforeY);
+    moving = !bracing && moved > 0.01;
+    if (moving) player.step += moved * 0.09;
     if (lean > 0) lean = Math.max(0, lean - dt);
     if (player.x >= GOAL_X) {
       win();
       return;
     }
+    tickWeapons(dt);
+    tryShoot();
+    updateShots(dt);
+    updateSoldiers(dt, true);
+    updateHazards(dt);
     updateWaves();
   }
 
   function updateStumble(dt) {
     stumbleT += dt;
+    tickWeapons(dt);
+    updateShots(dt);
+    updateSoldiers(dt, false);
+    updateHazards(dt);
     updateWaves();
     if (stumbleT < STUMBLE_TIME) return;
     if (player.stumbles >= 3) lose();
@@ -492,6 +761,12 @@
     braceBtn.classList.toggle('warn', hot && !held);
     braceBtn.classList.toggle('held', held);
     braceBtn.setAttribute('aria-pressed', held ? 'true' : 'false');
+  }
+
+  function refreshFire() {
+    var held = (keyFire || firePointer) && (state === 'play' || state === 'stumble');
+    fireBtn.classList.toggle('held', held);
+    fireBtn.setAttribute('aria-pressed', held ? 'true' : 'false');
   }
 
   function worldToX(x) { return (x - cameraX) * scale; }
@@ -752,6 +1027,189 @@
     ctx.restore();
   }
 
+  function drawParcel(s) {
+    var grow = 0.75 + 0.25 * Math.min(1, s.t);
+    var w = 30 * scale * grow;
+    var h = 16 * scale * grow;
+    ctx.fillStyle = 'rgba(48, 42, 34, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(2, 2, w * 0.55, h * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#c4a36a';
+    ctx.fillRect(-w / 2, -h, w, h);
+    ctx.strokeStyle = '#8a7048';
+    ctx.lineWidth = Math.max(1.5, 2 * scale);
+    ctx.strokeRect(-w / 2, -h, w, h);
+    ctx.strokeStyle = '#efe6d6';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h / 2);
+    ctx.lineTo(w / 2, -h / 2);
+    ctx.moveTo(0, -h);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+  }
+
+  function drawSoldier(s) {
+    var x = worldToX(s.x);
+    var y = worldToY(s.y);
+    var u;
+    var fade;
+    if (x < -60 || x > cssW + 60) return;
+    fade = s.mode === 'back' ? Math.max(0, 1 - s.t / 0.62) : 1;
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.translate(x, y);
+    if (s.mode === 'parcel') {
+      drawParcel(s);
+      ctx.restore();
+      return;
+    }
+    if (s.mode === 'back') ctx.rotate(0.22 * s.away);
+    u = scale * 1.45;
+    ctx.scale(s.facing < 0 ? -1 : 1, 1);
+    ctx.fillStyle = 'rgba(36, 40, 36, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(0, -2 * u, 12 * u, 4 * u, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#3a4038';
+    ctx.lineWidth = Math.max(2, 3.2 * u);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-4 * u, -2 * u);
+    ctx.lineTo(-5 * u, -18 * u);
+    ctx.moveTo(4 * u, -2 * u);
+    ctx.lineTo(5 * u, -18 * u);
+    ctx.stroke();
+    ctx.fillStyle = '#5d6856';
+    ctx.fillRect(-9 * u, -42 * u, 18 * u, 26 * u);
+    ctx.fillStyle = '#6d7464';
+    ctx.beginPath();
+    ctx.ellipse(1 * u, -46 * u, 8.5 * u, 7 * u, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#2c3134';
+    ctx.lineWidth = Math.max(1.5, 2 * u);
+    ctx.beginPath();
+    ctx.moveTo(4 * u, -30 * u);
+    ctx.lineTo(26 * u, -33 * u);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSoldiers() {
+    var i;
+    for (i = 0; i < soldiers.length; i++) drawSoldier(soldiers[i]);
+  }
+
+  function drawHazards() {
+    var i;
+    var h;
+    var x;
+    var y;
+    var k;
+    var lift;
+    var rad;
+    var head;
+    var tail;
+    for (i = 0; i < hazards.length; i++) {
+      h = hazards[i];
+      x = worldToX(h.x);
+      if (x < -50 || x > cssW + 50) continue;
+      y = worldToY(h.y);
+      if (h.kind === 'gunfire') {
+        k = Math.hypot(h.vx, h.vy) || 1;
+        head = { x: x, y: y - 10 * unit() };
+        tail = {
+          x: worldToX(h.x - (h.vx / k) * 16),
+          y: worldToY(h.y - (h.vy / k) * 16) - 10 * unit()
+        };
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#1c2430';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(tail.x, tail.y);
+        ctx.lineTo(head.x, head.y);
+        ctx.stroke();
+        ctx.strokeStyle = '#f7f4ec';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      } else if (h.kind === 'grenade') {
+        lift = (h.hop || 0) * 28 * unit();
+        ctx.fillStyle = 'rgba(36, 40, 36, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, 8, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#3e463c';
+        ctx.beginPath();
+        ctx.arc(x, y - lift, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#d9d3c4';
+        ctx.beginPath();
+        ctx.arc(x - 2, y - lift - 2, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (h.kind === 'burst') {
+        rad = (8 + (h.t / 0.3) * h.r) * scale;
+        ctx.strokeStyle = 'rgba(239, 230, 214, ' + Math.max(0, 1 - h.t / 0.3) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(2, rad), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(214, 210, 200, ' + (0.28 * Math.max(0, 1 - h.t / 0.3)) + ')';
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(2, rad * 0.7), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawShots() {
+    var i;
+    var shot;
+    var k;
+    var x;
+    var y;
+    for (i = 0; i < shots.length; i++) {
+      shot = shots[i];
+      k = Math.hypot(shot.vx, shot.vy) || 1;
+      x = worldToX(shot.x);
+      y = worldToY(shot.y) - 14 * unit();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#16384c';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(worldToX(shot.x - (shot.vx / k) * 12), worldToY(shot.y - (shot.vy / k) * 12) - 14 * unit());
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.strokeStyle = '#f0d7a8';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+  }
+
+  function drawAim() {
+    var dir;
+    var x;
+    var y;
+    if (state === 'title' || state === 'win' || state === 'lose') return;
+    dir = aimUnit();
+    x = worldToX(player.x + dir.x * 42);
+    y = worldToY(player.y + dir.y * 42) - 16 * unit();
+    ctx.save();
+    ctx.fillStyle = 'rgba(243, 239, 228, 0.95)';
+    ctx.strokeStyle = '#16384c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    if (flash > 0) {
+      ctx.fillStyle = 'rgba(244, 231, 176, 0.95)';
+      ctx.beginPath();
+      ctx.arc(worldToX(player.x + dir.x * 20), worldToY(player.y + dir.y * 20) - 16 * unit(), 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function render() {
     var jx = 0;
     var jy = 0;
@@ -773,6 +1231,10 @@
     drawWall();
     drawSmoke();
     drawFoam();
+    drawSoldiers();
+    drawHazards();
+    drawShots();
+    drawAim();
     drawTrent();
   }
 
@@ -819,6 +1281,7 @@
     }
     if (state === 'play' || state === 'stumble' || state === 'pause') renderHud();
     refreshBrace();
+    refreshFire();
     render();
     requestAnimationFrame(loop);
   }
@@ -868,6 +1331,18 @@
   window.addEventListener('pointercancel', endDrag);
   canvas.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
+  fireBtn.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    firePointer = true;
+    fireQueued = true;
+    hintEl.hidden = true;
+    if (fireBtn.setPointerCapture) fireBtn.setPointerCapture(event.pointerId);
+  });
+  fireBtn.addEventListener('pointerup', function () { firePointer = false; });
+  fireBtn.addEventListener('pointercancel', function () { firePointer = false; });
+  fireBtn.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+
   braceBtn.addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -886,6 +1361,12 @@
       keyBrace = true;
       hintEl.hidden = true;
     }
+    if ((event.key === 'f' || event.key === 'F') && state === 'play') {
+      event.preventDefault();
+      if (!event.repeat) fireQueued = true;
+      keyFire = true;
+      hintEl.hidden = true;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       if (state === 'play' || state === 'stumble') openPause();
@@ -897,12 +1378,14 @@
   window.addEventListener('keyup', function (event) {
     keys.delete(event.key.toLowerCase());
     if (event.code === 'Space') keyBrace = false;
+    if (event.key === 'f' || event.key === 'F') keyFire = false;
   });
 
   window.addEventListener('blur', function () {
     keys.clear();
     keyBrace = false;
     bracePointer = false;
+    clearFireHold();
     dragging = false;
     dragX = 0;
     dragY = 0;

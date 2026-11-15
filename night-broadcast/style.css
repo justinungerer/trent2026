@@ -117,6 +117,8 @@ button:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+#lock { white-space: nowrap; }
+
 #signal.hot,
 #lock.live { color: #ffd59a; }
 

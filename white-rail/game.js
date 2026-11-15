@@ -3,7 +3,7 @@
    Pump to keep speed. Steer among three tracks.
    A crate, a gap, or a lowered signal arm is a slip, a jolt.
    Three slips restart the line. The yard mouth wins.
-   Holding Pump from the start covers the line in about one minute.
+   Pump rate sets the pace. Idle speed is the base; the fastest steady pump is about ten times that.
    Sky, rails, handcar, and Trent are painted pictures in art/.
    Snow specks stay on the canvas. No network. */
 'use strict';
@@ -35,10 +35,10 @@
   var CAR_X = 230;
   var FINISH = 454;
   var DECAY = 0.62;
+  /* Resting pace. target = SPEED_FLOOR * (1 + 9 * pumpRate / PUMP_RATE_MAX). */
   var SPEED_FLOOR = 0.45;
-  var PUMP_ADD = 1.55;
   var PUMP_COOLDOWN = 0.34;
-  var SPEED_MAX = 9.2;
+  var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
   var START_SPEED = 4.6;
   var SWITCH_TIME = 0.2;
   var NOSE = 1.25;
@@ -109,6 +109,8 @@
   var toLane = 1;
   var laneT = 1;
   var pumpCool = 0;
+  var pumpRate = 0;
+  var sincePump = 8;
   var pumpAnim = 1;
   var slipT = 0;
   var shake = 0;
@@ -274,6 +276,8 @@
     toLane = 1;
     laneT = 1;
     pumpCool = 0;
+    pumpRate = 0;
+    sincePump = 8;
     pumpAnim = 1;
     slipT = 0;
     shake = 0;
@@ -374,12 +378,19 @@
   }
 
   function doPump() {
+    var gap;
+    var instant;
     if (!playing()) return;
     if (pumpCool > 0) return;
-    speed = Math.min(SPEED_MAX, speed + PUMP_ADD);
+    gap = sincePump;
     pumpCool = PUMP_COOLDOWN;
     pumpAnim = 0;
     hintDismissed = true;
+    sincePump = 0;
+    if (gap > 4) return;
+    if (gap <= PUMP_COOLDOWN + 0.05) instant = PUMP_RATE_MAX;
+    else instant = 1 / gap;
+    pumpRate += (instant - pumpRate) * 0.7;
   }
 
   function changeLane(dir) {
@@ -433,9 +444,19 @@
 
   function integrate(dt) {
     var pumping = pumpHeld || spaceHeld;
-    speed += (SPEED_FLOOR - speed) * (1 - Math.exp(-DECAY * dt));
+    var effort;
+    var target;
+    sincePump += dt;
+    if (sincePump > PUMP_COOLDOWN * 1.35) {
+      pumpRate += (0 - pumpRate) * (1 - Math.exp(-2.2 * dt));
+    }
     if (pumpCool > 0) pumpCool -= dt;
     if (pumping) doPump();
+    effort = pumpRate / PUMP_RATE_MAX;
+    if (effort < 0) effort = 0;
+    if (effort > 1) effort = 1;
+    target = SPEED_FLOOR * (1 + 9 * effort);
+    speed += (target - speed) * (1 - Math.exp(-DECAY * dt));
     if (pumpAnim < 1) pumpAnim = Math.min(1, pumpAnim + dt / 0.32);
     if (laneT < 1) {
       laneT = Math.min(1, laneT + dt / SWITCH_TIME);

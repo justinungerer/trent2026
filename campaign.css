@@ -19,6 +19,19 @@ body {
   max-width: 16ch;
 }
 
+.logo-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logo-screen h1 {
+  max-width: 9ch;
+  margin-bottom: 8px;
+  font-size: clamp(3.6rem, 14vw, 7.5rem);
+  line-height: 0.9;
+}
+
 #pin-form {
   margin-top: 28px;
   max-width: var(--measure);
