@@ -12,8 +12,6 @@ var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
 var endingVideo = document.getElementById('ending-video');
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-var mobilePointer = window.matchMedia('(pointer: coarse)');
-var portraitViewport = window.matchMedia('(orientation: portrait)');
 
 var active = null;
 var shelfOpen = false;
@@ -107,7 +105,6 @@ var CHAPTERS = [
     story: 'The Luftwaffe plans to bomb Santa’s secret workshop. Trent flies the ribbon sleigh over the valley, past scout craft and amber fire, and this flight stops that attack before the bombs arrive.',
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
-    portrait: true,
     pin: 'SKY',
     nextId: 'rail',
     intro: {
@@ -160,7 +157,6 @@ var CHAPTERS = [
     story: 'The freight yard is the race to stop the enemy from turning Rudolph into meat. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers say Sprout was caught spying and has to be rescued.',
     event: 'special-delivery:complete',
     path: './chapter-2/',
-    portrait: true,
     pin: 'YARD',
     nextId: 'tower',
     intro: {
@@ -637,16 +633,12 @@ function showCredits(done) {
   }, 14000);
 }
 
-function handheld() {
-  return mobilePointer.matches;
-}
-
 function wantsLandscape() {
   return !document.getElementById('mission').hidden;
 }
 
 function turnNeeded() {
-  return handheld() && portraitViewport.matches === wantsLandscape();
+  return window.TrentOrientation.blocked(wantsLandscape());
 }
 
 function schedulePortraitStep(done, duration) {
@@ -701,7 +693,9 @@ function syncTurn() {
 
 function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
-  pendingMissionUrl = url;
+  var address = new URL(url, location.href);
+  address.searchParams.set('layout', 'rotation2');
+  pendingMissionUrl = address.href;
   campaignRoot.hidden = true;
   cinema.hidden = true;
   ending.hidden = true;
@@ -1149,10 +1143,7 @@ window.addEventListener('message', function (event) {
 document.getElementById('intro-skip').onclick = function () {
   if (introDone) introDone();
 };
-window.addEventListener('resize', syncTurn);
-window.addEventListener('orientationchange', syncTurn);
-mobilePointer.addEventListener('change', syncTurn);
-portraitViewport.addEventListener('change', syncTurn);
+window.TrentOrientation.subscribe(syncTurn);
 document.getElementById('ending-play').onclick = playEnding;
 document.getElementById('ending-skip').onclick = showRestored;
 document.getElementById('ending-home').onclick = showStart;

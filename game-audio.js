@@ -6,14 +6,13 @@
   var music = new Audio('../assets/audio/christmas-metal/' + name + '.mp3?v=carol-metal1');
   var wantsMusic = false;
   var gate = null;
-  var orientation = window.matchMedia('(orientation: portrait)');
-  var touch = window.matchMedia('(pointer: coarse)');
+  var orientation = window.TrentOrientation;
   music.loop = true;
   music.volume = 0.35;
   music.preload = 'auto';
 
   function blocked() {
-    return touch.matches && orientation.matches;
+    return orientation.blocked(true);
   }
   window.TrentGameOrientation = { blocked: blocked };
 
@@ -36,7 +35,7 @@
     sync();
   }
 
-  if (!document.getElementById('portrait')) {
+  if (!orientation.embedded && !document.getElementById('portrait')) {
     gate = document.createElement('div');
     gate.id = 'turn-gate';
     gate.hidden = true;
@@ -56,10 +55,7 @@
   document.addEventListener('keydown', start);
   document.addEventListener('visibilitychange', sync);
   window.addEventListener('pagehide', function () { music.pause(); });
-  window.addEventListener('resize', sync);
-  window.addEventListener('orientationchange', sync);
-  orientation.addEventListener('change', sync);
-  touch.addEventListener('change', sync);
+  orientation.subscribe(sync);
   sync();
 
   window.TrentSfx = {

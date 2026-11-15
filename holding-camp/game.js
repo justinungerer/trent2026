@@ -67,7 +67,6 @@
   }
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var portraitQuery = window.matchMedia('(orientation: portrait)');
 
   function reduceMotion() {
     return motionQuery.matches;
@@ -543,12 +542,12 @@
   }
 
   function portraitWanted() {
-    return portraitQuery.matches || window.innerHeight > window.innerWidth + 20;
+    return window.TrentOrientation.blocked(true);
   }
 
   function syncPortrait() {
     var show = portraitWanted();
-    portraitEl.hidden = !show;
+    portraitEl.hidden = !show || window.TrentOrientation.embedded;
     if (show && state === 'play') {
       rotateHold = true;
       openPause();
@@ -642,7 +641,7 @@
     if (state === 'play') openPause();
     else if (state === 'pause') closePause();
   });
-  portraitQuery.addEventListener('change', syncPortrait);
+  window.TrentOrientation.subscribe(syncPortrait);
   window.addEventListener('resize', function () {
     resize();
     syncPortrait();
