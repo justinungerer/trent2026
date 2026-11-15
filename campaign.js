@@ -327,7 +327,9 @@ var PIN_TO_ID = {
   BOW: 'wrap',
   HOME: 'chimney'
 };
-var COMPLETION_PIN = '19820424';
+var COMPLETION_PIN = 'HOME2026';
+var TEST_PIN = '19820424';
+var testMode = false;
 var pinTimer = 0;
 
 function byId(id) {
@@ -345,6 +347,7 @@ function normalizePin(value) {
 function readStoredPin() {
   try {
     var value = normalizePin(localStorage.getItem(PIN_KEY) || '');
+    if (value === TEST_PIN) return COMPLETION_PIN;
     return value === COMPLETION_PIN || PIN_TO_ID[value] ? value : '';
   } catch (error) {
     return '';
@@ -415,7 +418,8 @@ function stopEndingVideo() {
   endingVideo.load();
 }
 
-function showChapterMenu(lastChapter, complete) {
+function showChapterMenu(lastChapter, complete, canTest) {
+  if (!canTest) testMode = false;
   active = null;
   if (window.TrentTrivia) window.TrentTrivia.abort();
   clearInterval(pinTimer);
@@ -447,9 +451,22 @@ function showChapterMenu(lastChapter, complete) {
 
   var clips = document.createElement('div');
   clips.className = 'choices';
-  function back() { showChapterMenu(lastChapter, complete); }
+  function back() { showChapterMenu(lastChapter, complete, canTest); }
   clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
   clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
+  if (canTest) {
+    var testToggle = button('Test mode', function () {
+      testMode = !testMode;
+      updateTestToggle();
+    }, 'secondary');
+    testToggle.id = 'test-mode';
+    function updateTestToggle() {
+      testToggle.setAttribute('aria-pressed', String(testMode));
+      testToggle.textContent = 'Test mode ' + (testMode ? 'on' : 'off');
+    }
+    updateTestToggle();
+    clips.appendChild(testToggle);
+  }
   section.appendChild(clips);
 
   var chapters = document.createElement('div');
@@ -498,6 +515,7 @@ function showRules() {
 }
 
 function showStart() {
+  testMode = false;
   var stored = readStoredPin();
   if (window.TrentTrivia) window.TrentTrivia.abort();
   var section;
@@ -561,6 +579,10 @@ function showStart() {
   form.onsubmit = function (event) {
     var pin = normalizePin(input.value);
     event.preventDefault();
+    if (pin === TEST_PIN) {
+      showChapterMenu(CHAPTERS.length - 1, true, true);
+      return;
+    }
     if (pin === COMPLETION_PIN) {
       storePin(pin);
       showChapterMenu(CHAPTERS.length - 1, true);
@@ -996,6 +1018,7 @@ function afterIntro(chapter) {
   }
   window.TrentTrivia.start(chapter, {
     story: chapter.story,
+    testMode: testMode,
     onClear: function (correct) { launchGame(chapter, correct); },
     onHome: showStart
   });

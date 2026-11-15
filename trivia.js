@@ -337,7 +337,7 @@
     return shuffle(questions).slice(0, PER_CHAPTER).map(presentQuestion);
   }
 
-  function startRound(chapter, questions, onClear) {
+  function startRound(chapter, questions, onClear, testMode) {
     var token = session;
     var round = drawRound(questions);
     var index = 0;
@@ -500,7 +500,7 @@
     function choiceButton(question, choice, choiceIndex, count) {
       var button = document.createElement('button');
       var letter = document.createElement('span');
-      var text = document.createElement('span');
+      var text = document.createElement(testMode && choice.correct ? 'em' : 'span');
       button.type = 'button';
       button.className = 'choice';
       letter.className = 'letter';
@@ -596,7 +596,7 @@
         if (token !== session) return;
         startRound(chapter, questions, function (correct) {
           if (typeof hooks.onClear === 'function') hooks.onClear(correct);
-        });
+        }, hooks.testMode === true);
       }
       if (story) renderStory(chapter, story, openRound);
       else openRound();
