@@ -3,7 +3,7 @@
   var name = document.documentElement.getAttribute('data-game');
   if (!name) return;
   var base = '../assets/audio/' + name;
-  var music = new Audio(base + '.wav');
+  var music = new Audio('../assets/audio/christmas-metal/' + name + '.mp3');
   var on = true;
   music.loop = true;
   music.volume = 0.35;
