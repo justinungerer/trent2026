@@ -32,6 +32,7 @@
   var SLEIGH_X = 2560;
   var GRAV = 1480;
   var JUMP = -630;
+  var HOP = -420;
   var RUN = 260;
 
   var panoramaImg = new Image();
@@ -62,6 +63,7 @@
   var held = { left: false, right: false };
   var jumpQueued = 0;
   var coyote = 0;
+  var airJumps = 1;
   var cam = 0;
   var cratePrev = 1750;
   var onCrate = false;
@@ -119,6 +121,7 @@
     body.vy = 0;
     body.ground = true;
     body.face = 1;
+    airJumps = 1;
     cp = index;
   }
 
@@ -128,6 +131,7 @@
     shake = 0;
     jumpQueued = 0;
     coyote = 0;
+    airJumps = 1;
     victorySent = false;
     placeOn(0);
     state = 'play';
@@ -227,12 +231,18 @@
     else body.vx *= Math.max(0, 1 - 10 * dt);
     body.vx = clamp(body.vx, -RUN, RUN);
     if (jumpQueued > 0) jumpQueued -= dt;
-    if (body.ground) coyote = 0.1;
-    else coyote -= dt;
+    if (body.ground) {
+      coyote = 0.1;
+      airJumps = 1;
+    } else coyote -= dt;
     if (jumpQueued > 0 && coyote > 0) {
       body.vy = JUMP;
       body.ground = false;
       coyote = 0;
+      jumpQueued = 0;
+    } else if (jumpQueued > 0 && !body.ground && airJumps > 0) {
+      body.vy = HOP;
+      airJumps = 0;
       jumpQueued = 0;
     }
     body.vy += GRAV * dt;

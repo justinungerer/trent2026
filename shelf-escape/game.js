@@ -11,14 +11,15 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
 const worldEnd=14300, crates=[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
 const supplies=[300,2900,5700,8500,10300,11400,12500];
-let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,atSupply,medicalUsed,alarmNotice,fireQueued=false;
+const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
+let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,atSupply,medicalUsed,alarmNotice,fireQueued=false,spaceWasDown=false;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const origin=params.get('parentOrigin');
 if(parent!==window&&origin){try{const u=new URL(origin);if(u.origin===origin&&(u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname)))){
  window.addEventListener('message',e=>{if(e.source===parent&&e.origin===origin&&e.data?.type==='trent:init'&&e.data.version===1&&typeof e.data.runId==='string')session={origin,runId:e.data.runId}});
  parent.postMessage({type:'trent:ready',version:1,mission:'shelf-escape'},origin);
 }}catch{}}
-function clearInput(){keys.clear();fireQueued=false;for(const name of ['move','fire']){Object.assign(sticks[name],{id:null,x:0,y:0});$(name).querySelector('span').style.transform=''}}
+function clearInput(){keys.clear();fireQueued=false;spaceWasDown=false;for(const name of ['move','fire']){Object.assign(sticks[name],{id:null,x:0,y:0});$(name).querySelector('span').style.transform=''}}
 for(const name of ['move','fire']){
  const pad=$(name),stick=sticks[name];
  function move(e){if(stick.id!==e.pointerId)return;const r=pad.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,scale=Math.max(r.width*.36,Math.hypot(x,y));stick.x=x/scale;stick.y=y/scale;pad.querySelector('span').style.transform=`translate(${stick.x*28}px,${stick.y*28}px)`}
@@ -27,10 +28,10 @@ for(const name of ['move','fire']){
  for(const type of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(type,e=>{if(stick.id===e.pointerId){if(type!=='pointerup'&&name==='fire')fireQueued=false;stick.id=null;stick.x=stick.y=0;pad.querySelector('span').style.transform=''}});
 }
 function reset(){
- player={x:100,hp:3,shield:0,face:1,aim:0,fire:0,dying:0,moving:false};guards=[700,1450,2200,3200,4100,5000,6000,6900,7700,8650,9600,10350,11200,12150,13200,13800].map((x,i)=>({x,home:x,hp:2,dir:i%2?1:-1,stun:0,attack:0,cooldown:1.8+i%3*.4}));
+ player={x:100,y:0,vy:0,hp:3,shield:0,face:1,aim:0,fire:0,dying:0,moving:false};guards=[700,1450,2200,3200,4100,5000,6000,6900,7700,8650,9600,10350,11200,12150,13200,13800].map((x,i)=>({x,home:x,hp:2,dir:i%2?1:-1,stun:0,attack:0,cooldown:1.8+i%3*.4}));
  shots=[];guardShots=[];particles=[];wraps=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:1600,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850,3700],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
- relays=[950,3500,6200].map(x=>({x,progress:0,done:false}));gates=[2600,5400,8100];locks=[10650,11650,12650].map(x=>({x,done:false}));terminal={x:9000};elapsed=0;camera=0;ammo=startingAmmo;shotsUsed=0;nextShot=0;transmit=0;finished=false;atSupply=-1;medicalUsed=new Set();alarmNotice=0;clearInput();updateHud();
+ relays=[950,3500,6200].map(x=>({x,progress:0,done:false}));gates=[2600,5400,8100];locks=[10650,11650,12650].map(x=>({x,done:false}));terminal={x:9000};elapsed=0;camera=0;ammo=startingAmmo;shotsUsed=0;nextShot=0;transmit=0;finished=false;atSupply=-1;medicalUsed=new Set();alarmNotice=0;for(const parcel of parcels)parcel.found=false;clearInput();updateHud();
 }
 function overlay(mode,title,brief,label){
  state=mode;clearInput();$('title').textContent=title;$('brief').textContent=brief;
@@ -69,8 +70,9 @@ function update(dt){
  if(player.dying){player.dying+=dt;if(player.dying>.8){updateHud();overlay('lost','SEASONAL SETBACK','A guard puts Sprout back on display. The label reads: “Interactive. Batteries confiscated.”','Retry the mission')}return}
  const axis=sticks.move.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
  player.moving=Math.abs(axis)>.1;
- player.hidden=!player.moving&&!keys.has(' ')&&sticks.fire.id===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
+ player.hidden=!player.moving&&player.y<=0&&!keys.has(' ')&&sticks.fire.id===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
  if(Math.abs(axis)>.1){const before=player.x;player.x=clamp(player.x+clamp(axis,-1,1)*190*dt,35,worldEnd-30);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&player.x>=gates[i]-20)player.x=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&player.x>=barrier-20)player.x=barrier-20}player.face=Math.sign(axis)}
+ const up=sticks.move.y<-.45||keys.has('w')||keys.has('arrowup');if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
  const count=relays.filter(r=>r.done).length;
  if(count<3){const doc=documents[count],r=relays[count];
   if(count===0){for(const p of doc.pages)if(!p.found&&Math.abs(player.x-p.x)<35){p.found=true;burst(p.x,360,'#f9d487',16)}if(!doc.found&&doc.pages.every(p=>p.found)){doc.found=true;raiseAlarm(0,1190)}}
@@ -84,11 +86,12 @@ function update(dt){
  if(count===3&&transmit===4&&locks.every(l=>l.done)&&player.x>14060){overlay('won','MESSAGE RECEIVED','Sprout slips out with Santa’s orders and a stolen stapler. Command calls that a successful extraction.',session?'Continue the story':'Play again');return}
  const station=supplies.findIndex(x=>Math.abs(player.x-x)<28);
  if(station!==-1&&station!==atSupply){if(startingAmmo)ammo=startingAmmo;if(player.hp<3&&!medicalUsed.has(station)){player.hp++;medicalUsed.add(station)}burst(supplies[station],390,'#c7e9ae',8)}atSupply=station;
- const wantsShot=fireQueued||sticks.fire.id!==null||keys.has(' ');fireQueued=false;
+ for(const parcel of parcels)if(!parcel.found&&Math.abs(player.x-parcel.x)<36&&player.y>=parcel.need){parcel.found=true;if(player.hp<3)player.hp++;else if(startingAmmo)ammo=Math.min(startingAmmo+6,ammo+3);burst(parcel.x,parcel.y,'#f9d487',14)}
+ const spaceDown=keys.has(' '),wantsShot=fireQueued||(spaceDown&&!spaceWasDown);spaceWasDown=spaceDown;fireQueued=false;
  if(wantsShot&&elapsed>=nextShot&&ammo>0){
   let dx=sticks.fire.x,dy=sticks.fire.y;
   if(Math.hypot(dx,dy)<.2){const target=guards.filter(q=>q.hp>0&&Math.abs(q.x-player.x)<350).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0]||(transmit===4?locks.find(l=>!l.done&&Math.abs(l.x-player.x)<400):null);dx=target?Math.sign(target.x-player.x)||player.face:player.face;dy=0;player.face=dx}else{const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face=Math.sign(dx)||player.face}
-  player.aim=Math.atan2(dy,Math.abs(dx));shots.push({x:player.x+player.face*24,y:394,vx:dx*560,vy:dy*560});ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;burst(player.x+player.face*25,394,'#ffd895',5);
+  player.aim=Math.atan2(dy,Math.abs(dx));shots.push({x:player.x+player.face*24,y:394-player.y,vx:dx*560,vy:dy*560});ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;burst(player.x+player.face*25,394-player.y,'#ffd895',5);
  }
  for(const shot of shots){
   shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;
@@ -104,9 +107,9 @@ function update(dt){
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=sector===3||!relays[sector].done;
   if(!guard.stun&&!guard.attack&&!guard.windup){const sees=!player.hidden&&distance<(alerted?350:220);if(sees){guard.dir=Math.sign(player.x-guard.x)||guard.dir;if(guard.cooldown<=0){guard.windup=alerted?.8:1.2;guard.cooldown=alerted?3.5:5}else if(distance>170)guard.moving=true}else{if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;guard.moving=(elapsed+guard.home/100)%4>.65}if(guard.moving)guard.x=clamp(guard.x+guard.dir*46*dt,35,worldEnd-30)}
-  if(!player.hidden&&distance<22&&player.shield<=0){player.hp--;player.shield=1.8;burst(player.x,380,'#f7c37a',18);if(player.hp<=0){player.dying=.001;clearInput();return}}
+  if(!player.hidden&&player.y<10&&distance<22&&player.shield<=0){player.hp--;player.shield=1.8;burst(player.x,380-player.y,'#f7c37a',18);if(player.hp<=0){player.dying=.001;clearInput();return}}
  }
- for(const bullet of guardShots){const old=bullet.x;bullet.x+=bullet.vx*dt;if(crates.some(x=>(old-x)*(bullet.x-x)<=0)){bullet.dead=true;burst(bullet.x,420,'#f4d18e',3);continue}if(!player.hidden&&player.shield<=0&&(old-player.x)*(bullet.x-player.x)<=0){bullet.dead=true;player.hp--;player.shield=1.8;burst(player.x,400,'#f7c37a',12);if(player.hp<=0){player.dying=.001;clearInput()}}}
+ for(const bullet of guardShots){const old=bullet.x;bullet.x+=bullet.vx*dt;if(crates.some(x=>(old-x)*(bullet.x-x)<=0)){bullet.dead=true;burst(bullet.x,420,'#f4d18e',3);continue}if(!player.hidden&&player.shield<=0&&player.y<10&&(old-player.x)*(bullet.x-player.x)<=0){bullet.dead=true;player.hp--;player.shield=1.8;burst(player.x,400-player.y,'#f7c37a',12);if(player.hp<=0){player.dying=.001;clearInput()}}}
  guardShots=guardShots.filter(b=>!b.dead&&b.x>0&&b.x<worldEnd);
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
  for(const w of wraps)w.age+=dt;
@@ -118,7 +121,7 @@ function sprite(name,x,y,frame,flip=false,scale=1){const img=art[name];if(!img.c
 function launcher(){
  if(player.dying)return;
  let angle=player.aim;if(sticks.fire.id!==null&&Math.hypot(sticks.fire.x,sticks.fire.y)>.2)angle=Math.atan2(sticks.fire.y,Math.abs(sticks.fire.x));
- g.save();g.translate(player.x+player.face*13,397);g.scale(player.face,1);g.rotate(angle);g.lineWidth=3;g.strokeStyle='#553e33';
+ g.save();g.translate(player.x+player.face*13,397-player.y);g.scale(player.face,1);g.rotate(angle);g.lineWidth=3;g.strokeStyle='#553e33';
  g.fillStyle='#885c3c';g.fillRect(-6,4,9,16);g.strokeRect(-6,4,9,16);
  g.fillStyle='#d9ad55';g.fillRect(-10,-8,40,17);g.strokeRect(-10,-8,40,17);
  g.fillStyle='#ba5950';g.fillRect(22,-6,12,13);g.strokeRect(22,-6,12,13);
@@ -182,6 +185,7 @@ function render(){
  for(let i=0;i<documents[2].power.length;i++){const x=documents[2].power[i];g.fillStyle=i<documents[2].step?'#528e73':'#855b55';g.strokeStyle='#e7d09b';g.lineWidth=3;g.fillRect(x-22,330,44,40);g.strokeRect(x-22,330,44,40);g.fillStyle='#f1e4b7';g.font='bold 9px system-ui';g.fillText(i?'FUSE':'POWER',x-17,354)}
  const marker=missionTarget();if(marker.x!==terminal.x&&marker.x!==14100){const markerX=marker.action==='shoot'?locks.find(l=>!l.done).x:marker.x;glow(markerX,305,50,'#ffe29166');g.fillStyle='#ffe291';g.beginPath();g.moveTo(markerX,325);g.lineTo(markerX-10,307);g.lineTo(markerX+10,307);g.closePath();g.fill()}
  for(let i=0;i<supplies.length;i++){const x=supplies[i];g.fillStyle='#3f785b';g.strokeStyle='#cbe9b7';g.lineWidth=3;g.fillRect(x-24,410,48,32);g.strokeRect(x-24,410,48,32);g.fillStyle='#ecf4c9';g.font='bold 10px system-ui';g.fillText(medicalUsed.has(i)?'AMMO':'AMMO +',x-22,430)}
+ for(const parcel of parcels)if(!parcel.found){glow(parcel.x,parcel.y,34,'#ffd27488');g.fillStyle='#f7e7c2';g.strokeStyle='#8a4b3a';g.lineWidth=3;g.fillRect(parcel.x-11,parcel.y-16,22,18);g.strokeRect(parcel.x-11,parcel.y-16,22,18);g.fillStyle='#d4534c';g.fillRect(parcel.x-11,parcel.y-8,22,4);g.fillRect(parcel.x-2,parcel.y-16,4,18)}
  for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,140);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
  glow(terminal.x,340,85,'#87eadb55');g.fillStyle='#315c62';g.fillRect(terminal.x-24,320,48,42);g.strokeStyle='#a8ddd0';g.lineWidth=3;g.strokeRect(terminal.x-24,320,48,42);g.fillStyle='#b9eedb';g.fillRect(terminal.x-15,327,30,6);
  if(relays.every(r=>r.done)&&transmit<3){for(let i=0;i<3;i++){const x=[8500,9250,9700][i],active=transmit===i;g.fillStyle=active?'#ffe291':'#8aa9a5';g.beginPath();g.moveTo(x,365);g.lineTo(x-12,346);g.lineTo(x+12,346);g.closePath();g.fill();if(active)glow(x,352,45,'#ffe29188')}}
@@ -189,7 +193,7 @@ function render(){
  g.fillStyle=transmit>=4&&locks.every(l=>l.done)?'#74c5a6':'#355b60';g.fillRect(14080,270,55,96);g.strokeStyle='#badcc4';g.lineWidth=3;g.strokeRect(14080,270,55,96);g.fillStyle='#d2e8db';g.font='bold 11px system-ui';g.fillText('MAIL',14091,291);
  for(const guard of guards){if(guard.hp<=0)continue;g.fillStyle='#071a1a77';g.beginPath();g.ellipse(guard.x,447,32,8,0,0,7);g.fill();const anim=guard.stun?'hurt':guard.attack?'attack':guard.moving?'walk':'idle';const f=guard.stun?( .35-guard.stun)*25:guard.attack?(.48-guard.attack)*20:motion*(guard.moving?9:5);sprite('guard-'+anim,guard.x,445,f,guard.dir<0,.82);if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText('!',guard.x-4,318)}}
  for(const w of wraps){if(w.age<.7){sprite('guard-die',w.x,445,Math.min(9,w.age*14),w.dir<0,.82);continue}const scale=Math.min(1,(w.age-.7)*5);g.save();g.translate(w.x,437);g.scale(scale,scale);g.fillStyle='#a73f4e';g.fillRect(-18,-31,36,31);g.fillStyle='#f0ce84';g.fillRect(-3,-31,6,31);g.fillRect(-18,-21,36,5);g.strokeStyle='#f0ce84';g.lineWidth=2;g.beginPath();g.ellipse(-6,-34,7,4,-.4,0,7);g.ellipse(6,-34,7,4,.4,0,7);g.stroke();g.restore()}
- g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,33,8,0,0,7);g.fill();const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);sprite('elf-'+pose,player.x,445,poseFrame,player.face<0,.85);launcher();
+ g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);sprite('elf-'+pose,player.x,445-player.y,poseFrame,player.face<0,.85);launcher();
  for(const x of crates){g.fillStyle='#8c5c3b';g.strokeStyle='#533c34';g.lineWidth=4;g.fillRect(x-35,406,70,42);g.strokeRect(x-35,406,70,42);g.beginPath();g.moveTo(x-30,410);g.lineTo(x+30,444);g.moveTo(x+30,410);g.lineTo(x-30,444);g.stroke();g.fillStyle='#e2f1e7';g.fillRect(x-35,402,70,5)}
  if(player.hidden){g.fillStyle='#e8f7e9';g.font='bold 12px system-ui';g.fillText('HIDDEN',player.x-25,330)}
  for(const s of shots){glow(s.x,s.y,18,'#8cf8ff88');g.fillStyle='#d8ffff';g.beginPath();g.arc(s.x,s.y,4,0,7);g.fill()}
@@ -198,7 +202,7 @@ function render(){
  g.restore();
  const vignette=g.createRadialGradient(W/2,H/2,180,W/2,H/2,600);vignette.addColorStop(0,'#0000');vignette.addColorStop(1,'#06101caa');g.fillStyle=vignette;g.fillRect(0,0,W,H);
 }
-reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; return each to its alarm relay to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; right thumb or Space fires. Pull down behind a crate to hide. Green boxes refill ammo and restore one heart once.','Begin escape');
+reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; return each to its alarm relay to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; push up, W, or Up to jump guards and ribbon parcels. Right thumb or Space fires once per tap. Pull down behind a crate to hide. Green boxes refill ammo and restore one heart once.','Begin escape');
 let last=0;
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

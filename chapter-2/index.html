@@ -7,32 +7,36 @@
 :root{color-scheme:light;--paper:#202638;--ink:#f8e7c4;--red:#e63e34;--mint:#81d3b9}
 *{box-sizing:border-box}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;margin:0;background:#241c23;color:var(--ink);font:700 15px system-ui;touch-action:manipulation;-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-main{position:fixed;inset:0;width:100%;max-width:none;height:100%;height:100dvh;margin:0;background:var(--paper);overflow:hidden;border:0}
-header{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));background:#202638e0;border-bottom:3px solid}
+body{position:fixed;inset:0;display:flex;justify-content:center;width:100%;height:100vh;height:100dvh;margin:0;background:#241c23;color:var(--ink);font:700 15px system-ui;touch-action:manipulation;-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+main{position:relative;display:flex;flex-direction:column;width:min(100%,calc(100dvh * 9 / 16));height:100%;height:100dvh;margin:0;background:var(--paper);overflow:hidden;border:0}
+header{position:relative;z-index:6;flex:none;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));background:#202638e0;border-bottom:3px solid}
 small{display:block;font-size:10px;letter-spacing:.14em}
 button,#pad{-webkit-tap-highlight-color:transparent}button{font:900 14px system-ui;color:#1e2330;background:var(--mint);border:2px solid;box-shadow:3px 3px 0 var(--ink);min-width:48px;min-height:48px;padding:8px 12px;cursor:pointer;touch-action:manipulation}
 button:active{transform:translate(2px,2px);box-shadow:1px 1px}
 #pause{background:#efbd52}
-.stage{position:absolute;inset:0}
+.stage{position:relative;flex:1;min-height:0}
 canvas{width:100%;height:100%;display:block;touch-action:none}
+.thumbs{position:relative;z-index:3;flex:none;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:8px max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:#151a28;border-top:3px solid var(--ink)}
 .panel{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:max(76px,calc(env(safe-area-inset-top) + 68px)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:#1b152f85;overflow:auto}
 .card{max-width:360px;background:var(--paper);border:1px solid #c9a67a;padding:18px;box-shadow:0 18px 50px #0009}
 .card h1{font:1000 clamp(31px,8vw,55px)/.88 Impact,system-ui;margin:10px 0;letter-spacing:-.02em;text-transform:uppercase}
 .card p{line-height:1.4}
 .card button{width:100%;background:#efbd52}
-#pad{position:absolute;z-index:3;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;border:2px solid var(--ink);background:#151a28b8;box-shadow:inset 0 0 0 10px #151a2855;touch-action:none}
+#pad{position:relative;flex:none;width:132px;height:132px;border-radius:50%;border:2px solid var(--ink);background:#151a28b8;box-shadow:inset 0 0 0 10px #151a2855;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:50%;background:var(--mint);border:2px solid #1e2330;box-shadow:3px 3px 0 var(--ink);transform:translate(-50%,-50%);pointer-events:none}
-#decoy{position:absolute;z-index:3;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));height:48px;min-width:48px;min-height:48px;padding:0 16px;background:#efbd52}
+#decoy{position:relative;flex:none;align-self:flex-end;height:64px;min-width:108px;min-height:64px;margin:0 0 8px;padding:0 16px;background:#efbd52;white-space:nowrap}
 #decoy:disabled{opacity:.45;box-shadow:none}
 [hidden]{display:none!important}
 </style>
 </head>
 <body><main>
 <header><div><small>CHAPTER 02</small>SPECIAL DELIVERY</div><div id="status">♥♥♥ · 0/3</div><button id="pause" type="button" aria-label="Pause">Ⅱ</button></header>
-<div class="stage"><canvas aria-label="Overhead rail yard"></canvas>
-<div class="panel" id="panel"><div class="card"><small>NORTH POLE FIELD DISPATCH</small><h1 id="title">Special delivery</h1><p id="copy">Sprout hid three dispatches in the freight yard. Find them and reach the mail hatch. The clockwork inspectors are under strict orders to confiscate anything with a bow.</p><p id="help">Left thumb on the pad to walk. Right thumb for a decoy. WASD or arrows, and Space, still work. Yellow discs are mines. Sweeping lights call the inspectors.</p><button id="start" type="button">Enter the freight yard</button></div></div>
+<div class="stage"><canvas aria-label="Overhead rail yard"></canvas></div>
+<div class="thumbs">
 <div class="pad" id="pad" role="application" aria-label="Move pad"><div id="knob"></div></div>
 <button id="decoy" type="button">DECOY · 3</button>
 </div>
-</main><script src="./game.js?v=yard-4"></script><script src="../game-audio.js?v=carol-metal1"></script></body></html>
+<div class="panel" id="panel"><div class="card"><small>NORTH POLE FIELD DISPATCH</small><h1 id="title">Special delivery</h1><p id="copy">Sprout hid three dispatches in the freight yard. Find them and reach the mail hatch. The clockwork inspectors are under strict orders to confiscate anything with a bow.</p><p id="help">Left thumb on the pad to walk. Right thumb for a decoy. WASD or arrows, and Space, still work. Yellow discs are mines. Sweeping lights call the inspectors.</p><button id="start" type="button">Enter the freight yard</button></div></div>
+</main>
+<div id="portrait" hidden></div>
+<script src="./game.js?v=yard-5"></script><script src="../game-audio.js?v=carol-metal1"></script></body></html>

@@ -1,8 +1,8 @@
 /* Chapter 5 — The Switch Tower.
    Side view of a small snowy yard. Three levers set the route.
-   The destination board shows the pattern with pictures: left, right, left.
-   A wrong pattern sends the train back. Three misses restart the puzzle.
-   The right pattern lets the train leave.
+   Three trains come, one after another. The board shows that train's pattern.
+   A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
+   Three correct departures win and send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/. */
 'use strict';
 
@@ -29,8 +29,19 @@
   var VIEW_W = 1280;
   var VIEW_H = 720;
 
-  /* Board icons, left to right, are lever frames 0, 1, 0. */
-  var CORRECT = [0, 1, 0];
+  /* 0 is left, 1 is right. Three patterns, one per successful departure.
+     The painted board is covered and redrawn so the current pattern shows. */
+  var PATTERNS = [
+    [0, 1, 0],
+    [1, 0, 1],
+    [0, 0, 1]
+  ];
+  /* Blue windows on board.webp, source pixels: x, y, width, height. */
+  var PANELS = [
+    [86, 108, 224, 235],
+    [368, 108, 221, 235],
+    [646, 108, 228, 235]
+  ];
   var LEVER_X = [300, 640, 980];
   var GROUND_Y = 628;
 
@@ -48,7 +59,6 @@
   var TRAIN_W = 340;
   var SWITCH_X = 520;
   var APPROACH_SPEED = 58;
-  var RETREAT_SPEED = 230;
   var DEPART_SPEED = 260;
   var TRAIN_START = -380;
 
@@ -84,8 +94,12 @@
   var pausedState = 'approach';
   var levers = [1, 1, 1];
   var activeLever = 0;
+  var patternIndex = 0;
+  var departures = 0;
   var misses = 0;
   var doomed = false;
+  var blastT = 0;
+  var blastParts = [];
   var trainX = -80;
   var trentX = LEVER_X[0] - 74;
   var pullT = 1;
@@ -164,16 +178,21 @@
     return RAIL[RAIL.length - 1][1];
   }
 
+  function currentPattern() {
+    return PATTERNS[patternIndex];
+  }
+
   function matches() {
-    return levers[0] === CORRECT[0] && levers[1] === CORRECT[1] && levers[2] === CORRECT[2];
+    var pattern = currentPattern();
+    return levers[0] === pattern[0] && levers[1] === pattern[1] && levers[2] === pattern[2];
   }
 
   function canThrow() {
-    return state === 'approach' || (state === 'retreat' && !doomed);
+    return state === 'approach';
   }
 
   function playingMotion() {
-    return state === 'approach' || state === 'retreat' || state === 'depart';
+    return state === 'approach' || state === 'blast' || state === 'depart';
   }
 
   function say(text) {
@@ -181,7 +200,7 @@
   }
 
   function renderHud() {
-    var line = misses + ' / 3';
+    var line = departures + ' / 3 · ' + misses;
     if (missesEl.textContent !== line) missesEl.textContent = line;
   }
 
@@ -204,13 +223,26 @@
   function resetPuzzle() {
     levers = [1, 1, 1];
     activeLever = 0;
+    patternIndex = 0;
+    departures = 0;
     misses = 0;
     doomed = false;
+    blastT = 0;
+    blastParts = [];
     trainX = TRAIN_START;
     trentX = LEVER_X[0] - 74;
     pullT = 1;
     shake = 0;
     refreshLevers();
+  }
+
+  function armNextTrain() {
+    levers = [1, 1, 1];
+    trainX = TRAIN_START;
+    blastT = 0;
+    blastParts = [];
+    refreshLevers();
+    state = 'approach';
   }
 
   function beginRun() {
@@ -225,7 +257,7 @@
     loseSheet.hidden = true;
     winSheet.hidden = true;
     renderHud();
-    say('The train is rolling in.');
+    say('Match the board. The first train is rolling in.');
     if (document.activeElement && document.activeElement.blur && document.activeElement !== document.body) {
       document.activeElement.blur();
     }
@@ -246,7 +278,9 @@
     state = pausedState || 'approach';
     pauseSheet.hidden = true;
     lastFrame = performance.now();
-    say('The train is rolling.');
+    if (state === 'depart') say('The route is open.');
+    else if (state === 'blast') say('The train is lost.');
+    else say('The train is rolling.');
   }
 
   function elapsedSeconds() {
@@ -258,9 +292,9 @@
     if (state === 'win' || state === 'lose') return;
     seconds = elapsedSeconds();
     state = 'win';
-    winTimeEl.textContent = 'Away in ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
+    winTimeEl.textContent = 'Three trains away in ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
-    say('The train is away. ' + seconds + ' seconds.');
+    say('Three trains are away. ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('switch-tower:complete', {
@@ -277,12 +311,33 @@
     }
   }
 
-  /* Three wrong routes restart the puzzle. No victory event. */
+  /* Three lost trains restart the puzzle. No victory event. */
   function failPuzzle() {
     if (state === 'win' || state === 'lose') return;
     state = 'lose';
     loseSheet.hidden = false;
-    say('Three wrong routes. The puzzle starts over.');
+    say('Three trains lost. The puzzle starts over.');
+  }
+
+  function boomAt(x, y) {
+    var i;
+    var angle;
+    var speed;
+    var count = reduceMotion() ? 8 : 18;
+    blastParts = [];
+    blastT = 0;
+    for (i = 0; i < count; i++) {
+      angle = (i / count) * Math.PI * 2;
+      speed = 50 + (i % 5) * 22;
+      blastParts.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed * 0.75 - 30,
+        r: 5 + (i % 3) * 3,
+        life: 1
+      });
+    }
   }
 
   function throwLever(index) {
@@ -296,8 +351,22 @@
     say('Lever ' + (index + 1) + (levers[index] === 1 ? ' right.' : ' left.'));
   }
 
+  function updateBlast(dt) {
+    var i;
+    var puff;
+    blastT += dt;
+    for (i = 0; i < blastParts.length; i++) {
+      puff = blastParts[i];
+      puff.x += puff.vx * dt;
+      puff.y += puff.vy * dt;
+      puff.vy += 90 * dt;
+      puff.life -= dt * (reduceMotion() ? 2.4 : 1.15);
+    }
+  }
+
   function updateTrain(dt) {
     var front;
+    var mid;
     if (state === 'approach') {
       trainX += APPROACH_SPEED * dt;
       front = trainX + TRAIN_W;
@@ -308,22 +377,35 @@
         } else {
           misses += 1;
           doomed = misses >= 3;
-          state = 'retreat';
-          if (!reduceMotion()) shake = 8;
+          state = 'blast';
+          mid = trainX + TRAIN_W * 0.5;
+          if (!reduceMotion()) shake = 10;
+          boomAt(mid, railY(mid) - 46);
           renderHud();
-          say('Sent back. Miss ' + misses + ' of 3.');
+          say('The train is lost. Miss ' + misses + ' of 3.');
         }
       }
-    } else if (state === 'retreat') {
-      trainX -= RETREAT_SPEED * dt;
-      if (trainX <= TRAIN_START) {
-        trainX = TRAIN_START;
+    } else if (state === 'blast') {
+      updateBlast(dt);
+      if (blastT >= (reduceMotion() ? 0.35 : 0.9)) {
         if (doomed) failPuzzle();
-        else state = 'approach';
+        else {
+          armNextTrain();
+          say('Same pattern. The next train is rolling in.');
+        }
       }
     } else if (state === 'depart') {
       trainX += DEPART_SPEED * dt;
-      if (trainX > VIEW_W + 30) win();
+      if (trainX > VIEW_W + 30) {
+        departures += 1;
+        renderHud();
+        if (departures >= 3) win();
+        else {
+          patternIndex += 1;
+          armNextTrain();
+          say('Train ' + departures + ' is away. Set pattern ' + (patternIndex + 1) + '.');
+        }
+      }
     }
   }
 
@@ -363,6 +445,45 @@
     if (!imageReady(boardImg)) return;
     dh = BOARD.dw * (BOARD.h / BOARD.w);
     ctx.drawImage(boardImg, BOARD.x, BOARD.y, BOARD.dw, dh);
+    drawPattern(BOARD.dw / BOARD.w);
+  }
+
+  function drawPattern(scale) {
+    var pattern = currentPattern();
+    var i;
+    var panel;
+    var x;
+    var y;
+    var pw;
+    var ph;
+    var lh;
+    var ls;
+    var frame;
+    for (i = 0; i < 3; i++) {
+      panel = PANELS[i];
+      x = BOARD.x + panel[0] * scale;
+      y = BOARD.y + panel[1] * scale;
+      pw = panel[2] * scale;
+      ph = panel[3] * scale;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, pw, ph);
+      ctx.clip();
+      ctx.fillStyle = '#02255b';
+      ctx.fillRect(x, y, pw, ph);
+      lh = ph * 0.86;
+      ls = lh / LEVER.h;
+      frame = pattern[i] === 1 ? 1 : 0;
+      drawImageFrame(
+        leverImg,
+        frame * LEVER.w, 0, LEVER.w, LEVER.h,
+        x + pw * 0.5 - LEVER.anchorX * ls,
+        y + ph * 0.9 - LEVER.anchorY * ls,
+        LEVER.w * ls,
+        lh
+      );
+      ctx.restore();
+    }
   }
 
   function drawTrainSprite() {
@@ -371,6 +492,7 @@
     var dw;
     var dh;
     var y;
+    if (state === 'blast') return;
     if (!imageReady(trainImg)) return;
     mid = trainX + TRAIN_W * 0.5;
     depth = clamp(1.05 - mid / 2400, 0.92, 1.06);
@@ -426,6 +548,24 @@
     );
   }
 
+  function drawBlast() {
+    var i;
+    var puff;
+    var alpha;
+    if (state !== 'blast') return;
+    for (i = 0; i < blastParts.length; i++) {
+      puff = blastParts[i];
+      if (puff.life <= 0) continue;
+      alpha = puff.life;
+      if (i % 3 === 0) ctx.fillStyle = 'rgba(255, 246, 224, ' + alpha + ')';
+      else if (i % 3 === 1) ctx.fillStyle = 'rgba(232, 120, 42, ' + alpha + ')';
+      else ctx.fillStyle = 'rgba(72, 40, 28, ' + (alpha * 0.75) + ')';
+      ctx.beginPath();
+      ctx.arc(puff.x, puff.y, puff.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   function drawSnow() {
     var i;
     var f;
@@ -444,6 +584,7 @@
     drawScene();
     drawBoard();
     drawTrainSprite();
+    drawBlast();
     for (i = 0; i < 3; i++) drawLever(i);
     drawTrent();
     drawSnow();

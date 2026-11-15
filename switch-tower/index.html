@@ -13,8 +13,8 @@
 
     <div class="hud">
       <div class="hud-block">
-        <span class="label">Misses</span>
-        <strong id="misses">0 / 3</strong>
+        <span class="label">Away · miss</span>
+        <strong id="misses">0 / 3 · 0</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -29,8 +29,8 @@
       <div class="card">
         <p class="kicker">Chapter 5</p>
         <h1>The Switch Tower</h1>
-        <p>A train is rolling into the yard. The board over the tracks shows the route with three pictures.</p>
-        <p>Throw the levers so each one matches its picture. A wrong route sends the train back.</p>
+        <p>Three trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
+        <p>Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. Three trains away wins. Three explosions start the puzzle over.</p>
         <button type="button" id="start">Open the tower</button>
       </div>
     </div>
@@ -47,7 +47,7 @@
     <div id="lose-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Back to the first throw</h1>
-        <p>Three wrong routes. The puzzle starts over.</p>
+        <p>Three trains lost. The puzzle starts over.</p>
         <button type="button" id="retry-lose">Set the route again</button>
       </div>
     </div>
@@ -55,9 +55,9 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The Switch Tower</p>
-        <h1>The train is away</h1>
-        <p id="win-time">Away in 0 seconds.</p>
-        <button type="button" id="retry">Run another train</button>
+        <h1>The trains are away</h1>
+        <p id="win-time">Three trains away in 0 seconds.</p>
+        <button type="button" id="retry">Run the yard again</button>
       </div>
     </div>
 

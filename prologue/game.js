@@ -112,6 +112,8 @@
   var shots = [];
   var hazards = [];
   var soldiers = [];
+  var soldierMask = null;
+  var soldierFrames = 0;
   var dragging = false;
   var dragId = null;
   var dragX = 0;
@@ -129,6 +131,20 @@
   /* soldier.webp: 10 equal frames, feet on one baseline.
      walk 4, fire 2, hit 2, wrap 2. Anchor is the feet. */
   var SOLDIER = { w: 516, h: 552, anchorX: 206, anchorY: 539 };
+  /* Painted bounds of each soldier frame, left top right bottom.
+     Used only when the bitmap itself cannot be read. */
+  var SOLDIER_BOX = [
+    [26, 19, 369, 539],
+    [85, 19, 354, 539],
+    [17, 19, 370, 540],
+    [89, 19, 373, 539],
+    [97, 19, 442, 539],
+    [102, 19, 478, 539],
+    [65, 19, 364, 539],
+    [101, 18, 498, 538],
+    [95, 19, 367, 539],
+    [28, 289, 381, 539]
+  ];
   var trentImg = new Image();
   var soldierImg = new Image();
   var beachImg = new Image();
@@ -137,7 +153,9 @@
   var hedgehogImg = new Image();
   var wireImg = new Image();
   trentImg.src = 'art/trent.webp';
+  soldierImg.addEventListener('load', buildSoldierMask);
   soldierImg.src = 'art/soldier.webp';
+  if (imageReady(soldierImg)) buildSoldierMask();
   beachImg.src = 'art/beach.webp';
   craftImg.src = 'art/craft.webp';
   wallImg.src = 'art/seawall.webp';
@@ -487,10 +505,24 @@
     ];
     var list = [];
     var i;
+    var home;
+    var lo;
+    var hi;
     for (i = 0; i < spots.length; i++) {
+      home = spots[i].y;
+      lo = clamp(home - 72, 18, BEACH_W - 18);
+      hi = clamp(home + 72, 18, BEACH_W - 18);
+      if (hi - lo < 88) {
+        if (lo <= 18) hi = Math.min(BEACH_W - 18, lo + 110);
+        else lo = Math.max(18, hi - 110);
+      }
       list.push({
         x: spots[i].x,
-        y: spots[i].y,
+        y: home,
+        lo: lo,
+        hi: hi,
+        vy: (i % 2 === 0 ? 1 : -1) * (44 + (i % 4) * 8),
+        walk: i * 0.17,
         wrap: spots[i].wrap,
         mode: 'stand',
         t: 0,
@@ -500,6 +532,67 @@
       });
     }
     return list;
+  }
+
+  function buildSoldierMask() {
+    var w = SOLDIER.w;
+    var h = SOLDIER.h;
+    var frames;
+    var c;
+    var g;
+    var data;
+    var bits;
+    var frame;
+    var px;
+    var py;
+    var src;
+    var idx;
+    if (soldierMask || !imageReady(soldierImg)) return;
+    frames = Math.max(1, Math.round(soldierImg.naturalWidth / w));
+    c = document.createElement('canvas');
+    c.width = w * frames;
+    c.height = h;
+    g = c.getContext('2d');
+    if (!g) return;
+    g.drawImage(soldierImg, 0, 0, c.width, c.height);
+    try {
+      data = g.getImageData(0, 0, c.width, c.height).data;
+    } catch (ignoreMask) {
+      return;
+    }
+    bits = new Uint8Array(Math.ceil((w * h * frames) / 8));
+    idx = 0;
+    for (frame = 0; frame < frames; frame++) {
+      for (py = 0; py < h; py++) {
+        for (px = 0; px < w; px++) {
+          src = py * (w * frames) + frame * w + px;
+          if (data[src * 4 + 3] > 16) bits[idx >> 3] |= 1 << (idx & 7);
+          idx += 1;
+        }
+      }
+    }
+    soldierFrames = frames;
+    soldierMask = bits;
+  }
+
+  function moveActiveSoldiers(dt) {
+    var i;
+    var s;
+    for (i = 0; i < soldiers.length; i++) {
+      s = soldiers[i];
+      if (s.mode !== 'stand') continue;
+      s.facing = player.x < s.x ? -1 : 1;
+      s.walk += dt;
+      if (s.hi - s.lo < 1) continue;
+      s.y += s.vy * dt;
+      if (s.y <= s.lo) {
+        s.y = s.lo;
+        s.vy = Math.abs(s.vy);
+      } else if (s.y >= s.hi) {
+        s.y = s.hi;
+        s.vy = -Math.abs(s.vy);
+      }
+    }
   }
 
   function aimUnit() {
@@ -638,15 +731,91 @@
         if (h.life <= 0) remove = true;
       }
       if (!remove && !h.spent && hitR > 0 && hazardHits(h, hitR)) {
-        h.spent = true;
-        if (h.kind !== 'burst') remove = true;
-        if (state === 'play') {
-          if (!reduceMotion()) shake = 7;
-          startStumble();
+        /* Brace stops rifle fire. A grenade, in the air or when it bursts, still lands. */
+        if (h.kind === 'gunfire' && isBracing()) {
+          h.spent = true;
+          remove = true;
+        } else {
+          h.spent = true;
+          if (h.kind !== 'burst') remove = true;
+          if (state === 'play') {
+            if (!reduceMotion()) shake = 7;
+            startStumble();
+          }
         }
       }
       if (remove) hazards.splice(i, 1);
     }
+  }
+
+  function soldierPixel(s, wx, wy) {
+    var destH = 112 * unit();
+    var sc = destH / SOLDIER.h;
+    var face = s.facing < 0 ? -1 : 1;
+    var lift = 14 * unit();
+    return {
+      x: (wx - s.x) * face * (scale / sc) + SOLDIER.anchorX,
+      y: ((wy - s.y) * scale - lift) / sc + SOLDIER.anchorY,
+      rad: 2.5 / sc
+    };
+  }
+
+  function soldierOpaque(frame, px, py) {
+    var ix = Math.round(px);
+    var iy = Math.round(py);
+    var idx;
+    if (!soldierMask || frame < 0 || frame >= soldierFrames) return false;
+    if (ix < 0 || iy < 0 || ix >= SOLDIER.w || iy >= SOLDIER.h) return false;
+    idx = (frame * SOLDIER.h + iy) * SOLDIER.w + ix;
+    return (soldierMask[idx >> 3] & (1 << (idx & 7))) !== 0;
+  }
+
+  function bulletStampHits(frame, px, py, rad) {
+    var r;
+    var y;
+    var x;
+    var box;
+    r = Math.ceil(rad);
+    if (soldierMask) {
+      if (px + r < 0 || py + r < 0 || px - r >= SOLDIER.w || py - r >= SOLDIER.h) return false;
+      for (y = -r; y <= r; y++) {
+        for (x = -r; x <= r; x++) {
+          if (x * x + y * y > rad * rad) continue;
+          if (soldierOpaque(frame, px + x, py + y)) return true;
+        }
+      }
+      return false;
+    }
+    box = SOLDIER_BOX[frame] || SOLDIER_BOX[0];
+    return px >= box[0] - rad && px <= box[2] + rad && py >= box[1] - rad && py <= box[3] + rad;
+  }
+
+  /* The bullet is the drawn streak. Any overlap with the painted soldier counts. */
+  function shotMeetsSoldier(x0, y0, x1, y1, s) {
+    var a;
+    var b;
+    var dist;
+    var stride;
+    var cover;
+    var steps;
+    var i;
+    var t;
+    var frame;
+    if (scale < 0.001) return false;
+    a = soldierPixel(s, x0, y0);
+    b = soldierPixel(s, x1, y1);
+    dist = Math.hypot(b.x - a.x, b.y - a.y);
+    stride = Math.max(1, a.rad * 0.85);
+    cover = Math.hypot(stride * 0.5, a.rad);
+    if (Math.max(a.x, b.x) + cover < 0 || Math.max(a.y, b.y) + cover < 0) return false;
+    if (Math.min(a.x, b.x) - cover >= SOLDIER.w || Math.min(a.y, b.y) - cover >= SOLDIER.h) return false;
+    steps = Math.max(1, Math.ceil(dist / stride));
+    frame = soldierIndex(s);
+    for (i = 0; i <= steps; i++) {
+      t = i / steps;
+      if (bulletStampHits(frame, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, cover)) return true;
+    }
+    return false;
   }
 
   function updateShots(dt) {
@@ -654,27 +823,36 @@
     var j;
     var shot;
     var s;
-    var dx;
-    var dy;
+    var k;
+    var back;
+    var x0;
+    var y0;
+    var hit;
     for (i = shots.length - 1; i >= 0; i--) {
+      hit = false;
       shot = shots[i];
       shot.life -= dt;
       shot.x += shot.vx * dt;
       shot.y += shot.vy * dt;
-      if (shot.life <= 0 || shot.y < -30 || shot.y > BEACH_W + 30 || shot.x < -200 || shot.x > WALL_X + 40) {
-        shots.splice(i, 1);
-        continue;
-      }
+      k = Math.hypot(shot.vx, shot.vy) || 1;
+      back = Math.max(12, Math.hypot(shot.vx * dt, shot.vy * dt));
+      x0 = shot.x - (shot.vx / k) * back;
+      y0 = shot.y - (shot.vy / k) * back;
       for (j = 0; j < soldiers.length; j++) {
         s = soldiers[j];
         if (s.mode !== 'stand') continue;
-        dx = shot.x - s.x;
-        dy = shot.y - s.y;
-        if (dx * dx + dy * dy < 32 * 32) {
+        if (shotMeetsSoldier(x0, y0, shot.x, shot.y, s)) {
           stopSoldier(s);
           shots.splice(i, 1);
+          hit = true;
           break;
         }
+      }
+      if (hit) continue;
+      /* The figure is drawn well above the feet, so a shot through the
+         helmet is above the sand before it leaves the picture. */
+      if (shot.life <= 0 || shot.y < -280 || shot.y > BEACH_W + 60 || shot.x < -240 || shot.x > WALL_X + 80) {
+        shots.splice(i, 1);
       }
     }
   }
@@ -726,6 +904,7 @@
     }
     tickWeapons(dt);
     tryShoot();
+    moveActiveSoldiers(dt);
     updateShots(dt);
     updateSoldiers(dt, true);
     updateHazards(dt);
@@ -735,6 +914,7 @@
   function updateStumble(dt) {
     stumbleT += dt;
     tickWeapons(dt);
+    moveActiveSoldiers(dt);
     updateShots(dt);
     updateSoldiers(dt, false);
     updateHazards(dt);
@@ -1074,7 +1254,8 @@
       n = reduceMotion() ? 0 : Math.floor(visualTime / 0.12) % 2;
       return 4 + n;
     }
-    return 0;
+    n = reduceMotion() ? 0 : Math.floor(s.walk / 0.12) % 4;
+    return n;
   }
 
   function drawSoldier(s) {
@@ -1206,20 +1387,30 @@
     x = worldToX(player.x + dir.x * 42);
     y = worldToY(player.y + dir.y * 42) - 16 * unit();
     ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.atan2(dir.y, dir.x));
     ctx.fillStyle = 'rgba(243, 239, 228, 0.95)';
     ctx.strokeStyle = '#16384c';
     ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+    ctx.moveTo(16, 0);
+    ctx.lineTo(3, 7);
+    ctx.lineTo(3, 3);
+    ctx.lineTo(-13, 3);
+    ctx.lineTo(-13, -3);
+    ctx.lineTo(3, -3);
+    ctx.lineTo(3, -7);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    ctx.restore();
     if (flash > 0) {
       ctx.fillStyle = 'rgba(244, 231, 176, 0.95)';
       ctx.beginPath();
       ctx.arc(worldToX(player.x + dir.x * 20), worldToY(player.y + dir.y * 20) - 16 * unit(), 8, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.restore();
   }
 
   function render() {
@@ -1246,8 +1437,8 @@
     drawSoldiers();
     drawHazards();
     drawShots();
-    drawAim();
     drawTrent();
+    drawAim();
   }
 
   function resize() {

@@ -9,43 +9,43 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="yard" width="844" height="390" aria-label="Trent walking Santa across a snowy camp yard to the gate"></canvas>
+    <canvas id="yard" width="844" height="390" aria-label="Santa fighting night wardens on the way to the yard gate"></canvas>
 
-    <p id="hint" class="hint">Stay with Santa</p>
+    <p id="hint" class="hint">Left thumb moves. A punches.</p>
 
     <div class="hud">
+      <div class="hud-block">
+        <span class="label">Santa</span>
+        <strong id="pips">♥♥♥♥</strong>
+      </div>
       <div class="hud-block grow">
         <span class="label">Gate</span>
-        <strong id="gate">Walk the shadow</strong>
-      </div>
-      <div class="hud-block">
-        <span class="label">Slips</span>
-        <strong id="slips">0 / 3</strong>
+        <strong id="gate">Three wardens</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
 
-    <div class="pad" aria-label="Move">
-      <button type="button" id="up" aria-label="Move up the yard">▲</button>
+    <div class="move" aria-label="Move">
       <button type="button" id="left" aria-label="Move left">◀</button>
       <button type="button" id="right" aria-label="Move right">▶</button>
-      <button type="button" id="down" aria-label="Move down the yard">▼</button>
     </div>
+    <button type="button" id="punch" aria-label="Punch">A</button>
 
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 8</p>
         <h1>The holding camp</h1>
-        <p>Santa walks the yard to the gate. Stay near him. He keeps to the shadow and waits out the lamp.</p>
-        <p>Fall too far behind, or wander into a searchlight, and that is a slip. Three slips start the walk again. Reach the gate together.</p>
-        <button type="button" id="start">Follow him</button>
+        <p>Santa is leaving the snowy yard. Three night wardens stand between him and the wreath gate.</p>
+        <p class="how">How to play</p>
+        <p>The left thumb moves. The A button punches. Arrows move, and A or Space punches. A warden blocks the path until he sits in the snow. Then walk through the gate. If Santa sits down, he gets back up and that warden is ready again. Paused time does not count.</p>
+        <button type="button" id="start">Step into the yard</button>
       </div>
     </div>
 
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
-        <p>Santa waits. The lamps hold still.</p>
+        <p>The wardens wait. The gate stays shut.</p>
         <button type="button" id="resume">Resume</button>
         <button type="button" id="give-up" class="ghost">Give up</button>
       </div>
@@ -55,9 +55,9 @@
       <div class="card">
         <p class="kicker">The holding camp</p>
         <h1>Through the gate</h1>
-        <p>Santa is out, and Trent is with him.</p>
+        <p>The wardens are sitting in the snow, and Santa is out.</p>
         <p id="win-time">Out in 0 seconds.</p>
-        <button type="button" id="retry">Walk again</button>
+        <button type="button" id="retry">Fight through again</button>
       </div>
     </div>
 

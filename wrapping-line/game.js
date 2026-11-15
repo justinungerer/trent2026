@@ -1,13 +1,15 @@
 /* Chapter 9 — The Wrapping Line.
-   Rhythm. Parcels ride a belt. Tap as each one meets the mark.
-   Early or late breaks the run. Eight bows in a row win.
-   Painted sprites live in art/. */
+   Presents ride in at different heights. A left-thumb stick moves the mark
+   up and down to meet them. Eight meets in a row clear the line.
+   A green Grinch present takes one life. Lives come from ?lives=10|9|8|7,
+   or 7 when that value is missing. Painted sprites live in art/. */
 'use strict';
 
 (function () {
   var canvas = document.getElementById('shop');
   var ctx = canvas.getContext('2d');
   var runEl = document.getElementById('run');
+  var livesEl = document.getElementById('lives');
   var lastEl = document.getElementById('last');
   var pauseBtn = document.getElementById('pause');
   var bowBtn = document.getElementById('bow');
@@ -15,9 +17,12 @@
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
   var winSheet = document.getElementById('win-sheet');
+  var outSheet = document.getElementById('out-sheet');
   var winTimeEl = document.getElementById('win-time');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
+  var stickEl = document.getElementById('stick');
+  var knobEl = document.getElementById('stick-knob');
 
   var VIEW_W = 844;
   var VIEW_H = 390;
@@ -25,10 +30,14 @@
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
   var NEED = 8;
   var TARGET = 456;
-  var HIT = 44;
+  var MEET = 26;
   var SPEED = 236;
   var INTERVAL = 0.86;
-  var BELT_Y = 232;
+  var LANES = [150, 206, 262, 318];
+  var MARK_MIN = 150;
+  var MARK_MAX = 318;
+  var MARK_SPEED = 460;
+  var STICK_TRAVEL = 46;
 
   var sceneImg = new Image();
   var trentImg = new Image();
@@ -49,14 +58,35 @@
   var lastFrame = 0;
   var shake = 0;
   var streak = 0;
+  var lives = readLives();
   var spawnIn = 0.35;
+  var spawned = 0;
   var parcels = [];
   var bowT = 0;
+  var markY = 262;
   var lastWord = 'Wait';
   var lastKind = '';
+  var stickAxis = 0;
+  var stickPointer = null;
+  var holdUp = false;
+  var holdDown = false;
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   var portraitQuery = window.matchMedia('(orientation: portrait)');
+
+  /* lives=10, 9, 8, or 7. Missing or any other value starts the run at 7. */
+  function readLives() {
+    var raw;
+    try {
+      raw = new URLSearchParams(window.location.search).get('lives');
+    } catch (ignoreLives) {
+      return 7;
+    }
+    if (raw == null) return 7;
+    raw = String(raw).trim();
+    if (raw === '10' || raw === '9' || raw === '8' || raw === '7') return Number(raw);
+    return 7;
+  }
 
   function reduceMotion() {
     return motionQuery.matches;
@@ -71,18 +101,33 @@
   }
 
   function renderHud() {
+    var heightNow = Math.round((markY - MARK_MIN) / (MARK_MAX - MARK_MIN) * 100);
     runEl.textContent = streak + ' / ' + NEED;
+    livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
     lastEl.className = lastKind;
+    if (heightNow < 0) heightNow = 0;
+    if (heightNow > 100) heightNow = 100;
+    stickEl.setAttribute('aria-valuenow', String(100 - heightNow));
+  }
+
+  function placeKnob(axis) {
+    if (axis > 1) axis = 1;
+    if (axis < -1) axis = -1;
+    stickAxis = axis;
+    knobEl.style.transform = 'translate(-50%, -50%) translateY(' + (axis * STICK_TRAVEL) + 'px)';
   }
 
   function beginRun() {
     streak = 0;
+    lives = readLives();
     played = 0;
     spawnIn = 0.45;
+    spawned = 0;
     parcels = [];
     bowT = 0;
     shake = 0;
+    markY = 262;
     lastWord = 'Wait';
     lastKind = '';
     victorySent = false;
@@ -90,9 +135,10 @@
     startSheet.hidden = true;
     pauseSheet.hidden = true;
     winSheet.hidden = true;
+    outSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('Tap as the parcel meets the mark.');
+    say('Move the mark up or down to meet each present.');
   }
 
   function openPause() {
@@ -113,6 +159,7 @@
     state = 'title';
     pauseSheet.hidden = true;
     startSheet.hidden = false;
+    lives = readLives();
     say('Gave up. The run was not finished.');
   }
 
@@ -140,7 +187,15 @@
     }
   }
 
+  function endRun() {
+    state = 'over';
+    hintEl.hidden = true;
+    outSheet.hidden = false;
+    say('Out of lives. The line was not cleared.');
+  }
+
   function miss(word) {
+    if (state !== 'play') return;
     streak = 0;
     lastWord = word;
     lastKind = 'bad';
@@ -149,60 +204,71 @@
     renderHud();
   }
 
-  function nearest() {
-    var i;
-    var best = null;
-    var d;
-    for (i = 0; i < parcels.length; i++) {
-      if (parcels[i].judged) continue;
-      d = Math.abs(parcels[i].x - TARGET);
-      if (!best || d < best.d) best = { parcel: parcels[i], d: d };
+  function loseLife() {
+    if (state !== 'play') return;
+    lives -= 1;
+    lastWord = 'Grinch';
+    lastKind = 'bad';
+    if (!reduceMotion()) shake = 6;
+    if (lives < 0) lives = 0;
+    renderHud();
+    if (lives <= 0) {
+      endRun();
+      return;
     }
-    return best;
+    say('Grinch present. ' + lives + (lives === 1 ? ' life left.' : ' lives left.'));
   }
 
-  function tap() {
-    var found;
-    var parcel;
+  function grantBow(parcel) {
     if (state !== 'play') return;
-    hintEl.hidden = true;
+    parcel.hit = true;
     bowT = 0.36;
-    found = nearest();
-    if (!found || found.d > 130) {
-      miss('Early');
-      return;
-    }
-    parcel = found.parcel;
-    parcel.judged = true;
-    if (found.d <= HIT) {
-      parcel.hit = true;
-      streak += 1;
-      lastWord = 'Bow';
-      lastKind = 'good';
-      say('Bow ' + streak + '.');
-      renderHud();
-      if (streak >= NEED) win();
-      return;
-    }
-    miss(parcel.x > TARGET ? 'Early' : 'Late');
+    streak += 1;
+    lastWord = 'Bow';
+    lastKind = 'good';
+    say('Bow ' + streak + '.');
+    renderHud();
+    if (streak >= NEED) win();
   }
 
   function update(dt) {
     var i;
     var parcel;
+    var aligned;
     if (bowT > 0) bowT -= dt;
-    if (state === 'win') return;
+    if (state === 'win' || state === 'over') return;
+    if (state === 'play') {
+      markY += stickAxis * MARK_SPEED * dt;
+      if (markY < MARK_MIN) markY = MARK_MIN;
+      if (markY > MARK_MAX) markY = MARK_MAX;
+      if (stickAxis !== 0) hintEl.hidden = true;
+    }
     spawnIn -= dt;
     if (spawnIn <= 0) {
-      parcels.push({ x: 920, judged: false, hit: false });
+      parcels.push({
+        x: 920,
+        y: LANES[(spawned * 3) % LANES.length],
+        judged: false,
+        hit: false,
+        grinch: spawned % 5 === 4
+      });
+      spawned += 1;
       spawnIn = INTERVAL;
     }
     for (i = parcels.length - 1; i >= 0; i--) {
+      if (state !== 'play') break;
       parcel = parcels[i];
       parcel.x -= SPEED * dt;
-      if (!parcel.judged && parcel.x < TARGET - HIT) {
+      if (!parcel.judged && parcel.x <= TARGET) {
         parcel.judged = true;
-        miss('Late');
+        aligned = Math.abs(parcel.y - markY) <= MEET;
+        if (parcel.grinch) {
+          if (aligned) loseLife();
+        } else if (aligned) {
+          grantBow(parcel);
+        } else {
+          miss('Miss');
+        }
       }
       if (parcel.x < -90) parcels.splice(i, 1);
     }
@@ -250,13 +316,26 @@
     var i;
     var parcel;
     var size = 78;
-    var dh;
-    if (!imageReady(parcelImg)) return;
-    dh = size * parcelImg.naturalHeight / parcelImg.naturalWidth;
+    var dh = 74;
     for (i = 0; i < parcels.length; i++) {
       parcel = parcels[i];
-      ctx.drawImage(parcelImg, parcel.x - size / 2, BELT_Y - dh / 2, size, dh);
-      if (parcel.hit) drawBow(parcel.x, BELT_Y - dh * 0.28);
+      if (imageReady(parcelImg)) {
+        dh = size * parcelImg.naturalHeight / parcelImg.naturalWidth;
+        ctx.save();
+        if (parcel.grinch) ctx.filter = 'hue-rotate(100deg) saturate(2.4) brightness(1.05)';
+        ctx.drawImage(parcelImg, parcel.x - size / 2, parcel.y - dh / 2, size, dh);
+        ctx.restore();
+      }
+      if (parcel.grinch) {
+        ctx.strokeStyle = '#39d26a';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(parcel.x - size / 2 - 4, parcel.y - dh / 2 - 4, size + 8, dh + 8);
+        ctx.fillStyle = 'rgba(40, 170, 72, 0.95)';
+        ctx.beginPath();
+        ctx.arc(parcel.x, parcel.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (parcel.hit) drawBow(parcel.x, parcel.y - dh * 0.28);
     }
   }
 
@@ -265,11 +344,11 @@
     ctx.strokeStyle = 'rgba(255, 214, 140, 0.95)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(TARGET, BELT_Y - 52);
-    ctx.lineTo(TARGET, BELT_Y + 52);
+    ctx.moveTo(TARGET, markY - 46);
+    ctx.lineTo(TARGET, markY + 46);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(TARGET, BELT_Y, 18 * pulse, 0, Math.PI * 2);
+    ctx.arc(TARGET, markY, 18 * pulse, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -302,8 +381,8 @@
       dpr * view.oy
     );
     drawCover(sceneImg);
-    drawMark();
     drawParcels();
+    drawMark();
     drawTrent();
   }
 
@@ -352,11 +431,29 @@
     }
   }
 
+  function axisFromPointer(event) {
+    var rect = stickEl.getBoundingClientRect();
+    var dy = event.clientY - (rect.top + rect.height / 2);
+    var axis = dy / STICK_TRAVEL;
+    if (axis > 1) axis = 1;
+    if (axis < -1) axis = -1;
+    if (Math.abs(axis) < 0.1) axis = 0;
+    return axis;
+  }
+
+  function releaseStick(event) {
+    if (stickPointer == null) return;
+    if (event && event.pointerId !== stickPointer) return;
+    stickPointer = null;
+    if (holdUp && !holdDown) placeKnob(-1);
+    else if (holdDown && !holdUp) placeKnob(1);
+    else placeKnob(0);
+  }
+
   bowBtn.addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     event.preventDefault();
     bowBtn.classList.add('held');
-    tap();
   });
   function releaseBow() {
     bowBtn.classList.remove('held');
@@ -364,10 +461,21 @@
   bowBtn.addEventListener('pointerup', releaseBow);
   bowBtn.addEventListener('pointercancel', releaseBow);
   bowBtn.addEventListener('contextmenu', function (event) { event.preventDefault(); });
-  canvas.addEventListener('pointerdown', function (event) {
-    if (event.button !== 0 || state !== 'play') return;
-    tap();
+
+  stickEl.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    stickPointer = event.pointerId;
+    stickEl.setPointerCapture(event.pointerId);
+    placeKnob(axisFromPointer(event));
   });
+  stickEl.addEventListener('pointermove', function (event) {
+    if (event.pointerId !== stickPointer) return;
+    placeKnob(axisFromPointer(event));
+  });
+  stickEl.addEventListener('pointerup', releaseStick);
+  stickEl.addEventListener('pointercancel', releaseStick);
+  stickEl.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
   window.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
@@ -376,10 +484,30 @@
       else if (state === 'pause') closePause();
       return;
     }
-    if (event.key !== ' ' && event.key !== 'Enter') return;
-    if (event.repeat) return;
-    event.preventDefault();
-    tap();
+    if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+      event.preventDefault();
+      holdUp = true;
+      if (stickPointer == null) placeKnob(holdDown ? 0 : -1);
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+      event.preventDefault();
+      holdDown = true;
+      if (stickPointer == null) placeKnob(holdUp ? 0 : 1);
+    }
+  });
+  window.addEventListener('keyup', function (event) {
+    if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') holdUp = false;
+    if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') holdDown = false;
+    if (stickPointer != null) return;
+    if (holdUp && !holdDown) placeKnob(-1);
+    else if (holdDown && !holdUp) placeKnob(1);
+    else placeKnob(0);
+  });
+  window.addEventListener('blur', function () {
+    holdUp = false;
+    holdDown = false;
+    if (stickPointer == null) placeKnob(0);
   });
 
   document.addEventListener('visibilitychange', function () {
@@ -391,6 +519,7 @@
   document.getElementById('resume').addEventListener('click', closePause);
   document.getElementById('give-up').addEventListener('click', giveUp);
   document.getElementById('retry').addEventListener('click', beginRun);
+  document.getElementById('out-retry').addEventListener('click', beginRun);
   pauseBtn.addEventListener('click', function () {
     if (state === 'play') openPause();
     else if (state === 'pause') closePause();
@@ -409,6 +538,7 @@
 
   resize();
   syncPortrait();
+  renderHud();
   lastFrame = performance.now();
   requestAnimationFrame(loop);
 })();

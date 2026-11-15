@@ -2,7 +2,7 @@
 const canvas = document.querySelector('canvas');
 const g = canvas.getContext('2d');
 const W = 480, H = 760;
-const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon','swap'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
 const CRAFT = {
@@ -12,7 +12,13 @@ const CRAFT = {
   wisp:   { hp: 1, speed: 146, size: 32, reload: 0.64, score: 150, hx: 14, hy: 14, touch: 17 },
   boss:   { hp: 55, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 }
 };
-const PODS = ['wide', 'rapid', 'shield'];
+const WEAPONS = {
+  ribbon: { label: 'RIBBON', mark: 'R', color: colors.ice, rate: 0.132 },
+  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.48 },
+  laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
+  explosive: { label: 'BLAST', mark: 'X', color: colors.red, rate: 0.62 }
+};
+const PODS = ['ribbon', 'missile', 'laser', 'explosive'];
 function loadArt(name) {
   const image = new Image();
   image.src = './art/' + name + '.webp';
@@ -47,12 +53,34 @@ const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, shotAt, bossSpawned, aim, drag, wraps, recoil, shake, kills;
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
-  player = { x: W / 2, y: 625, hull: 3, bank: 0, shield: 0, guard: 0, wide: false, rapid: false };
+  player = { x: W / 2, y: 625, hull: 3, bank: 0, shield: 0, stack: ['ribbon'], active: 0 };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
   wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; shotAt = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
   ui.hull.textContent = '◆◆◆';
   ui.phase.textContent = 'THE FROZEN VALLEY';
+  paintStack();
+}
+function paintStack() {
+  const kind = player.stack[player.active] || 'ribbon';
+  ui.weapon.textContent = WEAPONS[kind].label;
+  ui.stack.replaceChildren(...player.stack.map((name, index) => {
+    const spec = WEAPONS[name];
+    const slot = document.createElement('span');
+    slot.textContent = spec.mark;
+    slot.title = spec.label;
+    slot.style.color = spec.color;
+    if (index === player.active) {
+      slot.className = 'on';
+      slot.setAttribute('aria-current', 'true');
+    }
+    return slot;
+  }));
+}
+function cycleWeapon() {
+  if (state !== 'playing' || player.stack.length < 2) return;
+  player.active = (player.active + 1) % player.stack.length;
+  paintStack();
 }
 function overlay(next, title, brief, label) {
   state = next; drag = null; aim = null; keys.clear();
@@ -67,6 +95,10 @@ ui.action.onclick = () => {
   ui.sheet.hidden = true;
   canvas.focus();
 };
+ui.swap.onclick = () => {
+  cycleWeapon();
+  canvas.focus();
+};
 function pause() {
   if (state === 'playing') overlay('paused', 'HOLD POSITION', 'Quinn says this is an excellent time to check whether the fruitcake has stopped glowing.', 'Resume flight');
 }
@@ -76,6 +108,10 @@ window.addEventListener('keydown', e => {
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k) && state === 'playing') {
     e.preventDefault();
     keys.add(k);
+  }
+  if (k === 'q' && !e.repeat && state === 'playing') {
+    e.preventDefault();
+    cycleWeapon();
   }
   if (k === 'escape' && !e.repeat) {
     if (state === 'paused') ui.action.click();
@@ -109,8 +145,11 @@ function burst(x, y, color, n = 14) {
     sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .35 + Math.random() * .35, color });
   }
 }
-function cannonLanes() {
-  return player.wide ? [-30, -12, 12, 30] : [-16, 16];
+function activeKind() {
+  return player.stack[player.active] || 'ribbon';
+}
+function muzzleOffsets() {
+  return activeKind() === 'ribbon' ? [-16, 16] : [0];
 }
 function spawn() {
   const next = wave++;
@@ -180,21 +219,99 @@ function fly(enemy, dt) {
   enemy.x = clamp(enemy.base + Math.sin(enemy.age * freq) * enemy.side * amp, 22, W - 22);
 }
 function hit() {
-  if (player.guard > 0 || player.shield > 0) return;
+  if (player.shield > 0) return;
   shake = .28;
   player.hull--;
   player.shield = 1.6;
-  player.wide = false;
-  player.rapid = false;
   burst(player.x, player.y, colors.gold, 23);
   ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(3 - player.hull);
   if (!player.hull) overlay('lost', 'SLEIGH DOWN', 'The fruitcake survived. Quinn would prefer that you do likewise. Score: ' + score + '.', 'Retry the intercept');
 }
 function grant(pod) {
-  if (pod.kind === 'wide') player.wide = true;
-  else if (pod.kind === 'rapid') { player.rapid = true; shotAt = time; }
-  else player.guard = Math.max(player.guard, 4.5);
-  burst(pod.x, pod.y, pod.kind === 'wide' ? colors.gold : pod.kind === 'rapid' ? colors.ice : colors.mint, 16);
+  const kind = WEAPONS[pod.kind] ? pod.kind : 'ribbon';
+  if (player.stack.length >= 4) player.stack.shift();
+  player.stack.push(kind);
+  player.active = player.stack.length - 1;
+  shotAt = time;
+  burst(pod.x, pod.y, WEAPONS[kind].color, 16);
+  paintStack();
+}
+function fell(enemy) {
+  const boss = enemy.kind === 'boss';
+  wraps.push({ x: enemy.x, y: enemy.y, age: 0, kind: enemy.kind });
+  score += CRAFT[enemy.kind].score;
+  burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
+  if (!boss && ++kills % 3 === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / 3) - 1) % PODS.length] });
+  if (boss) {
+    overlay('won', 'SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: ' + score + '.', 'Fly again');
+    const skyDetail = { score, hull: player.hull };
+    window.dispatchEvent(new CustomEvent('frosted-skies:complete', { detail: skyDetail }));
+    if (window.parent !== window) {
+      const skyRelay = { type: 'frosted-skies:complete', detail: skyDetail };
+      try { const skyRun = new URLSearchParams(location.search).get('runId'); if (skyRun) skyRelay.runId = skyRun; } catch (ignore) {}
+      window.parent.postMessage(skyRelay, (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '*');
+    }
+  }
+  ui.score.textContent = String(score).padStart(6, '0');
+}
+function harm(enemy, dmg, x, y) {
+  if (enemy.hp <= 0) return;
+  enemy.hp -= dmg;
+  enemy.impact = .12;
+  burst(x, y, colors.ice, 4);
+  if (enemy.hp <= 0) fell(enemy);
+}
+function segmentHit(shot, enemy, pad = 0) {
+  const spec = CRAFT[enemy.kind];
+  const dist = Math.hypot(shot.x - shot.px, shot.y - shot.py);
+  const steps = Math.max(1, Math.ceil(dist / 8));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const x = shot.px + (shot.x - shot.px) * t;
+    const y = shot.py + (shot.y - shot.py) * t;
+    if (Math.abs(x - enemy.x) <= spec.hx + pad && Math.abs(y - enemy.y) <= spec.hy + pad) return { x, y };
+  }
+  return null;
+}
+function detonate(shot) {
+  shot.dead = true;
+  burst(shot.x, shot.y, colors.red, 24);
+  sparks.push({ x: shot.x, y: shot.y, vx: 0, vy: 0, life: .34, color: colors.gold, ring: shot.radius });
+  for (const enemy of enemies) {
+    if (enemy.hp <= 0 || Math.hypot(enemy.x - shot.x, enemy.y - shot.y) > shot.radius) continue;
+    harm(enemy, shot.dmg, enemy.x, enemy.y);
+    if (state !== 'playing') return;
+  }
+}
+function guideMissile(shot, dt) {
+  let target = null;
+  let best = Infinity;
+  for (const enemy of enemies) {
+    if (enemy.hp <= 0) continue;
+    const d = Math.hypot(enemy.x - shot.x, enemy.y - shot.y);
+    if (d < best) { best = d; target = enemy; }
+  }
+  const speed = shot.speed;
+  const aimX = target ? target.x : shot.x;
+  const aimY = target ? target.y : shot.y - 240;
+  const ang = Math.atan2(aimY - shot.y, aimX - shot.x);
+  const k = Math.min(1, dt * 12);
+  shot.vx += (Math.cos(ang) * speed - shot.vx) * k;
+  shot.vy += (Math.sin(ang) * speed - shot.vy) * k;
+}
+function launch() {
+  const kind = activeKind();
+  shotAt = time + WEAPONS[kind].rate;
+  recoil = kind === 'explosive' ? .16 : .1;
+  if (kind === 'ribbon') {
+    for (const lane of [-16, 16]) shots.push({ kind, x: player.x + lane, y: player.y - 17, vx: 0, vy: -710, dmg: 1 });
+  } else if (kind === 'missile') {
+    shots.push({ kind, x: player.x, y: player.y - 18, vx: 0, vy: -240, dmg: 3, speed: 440, life: 2.4 });
+  } else if (kind === 'laser') {
+    shots.push({ kind, x: player.x, y: player.y - 30, vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
+  } else {
+    shots.push({ kind, x: player.x, y: player.y - 8, vx: 0, vy: -280, dmg: 2, fuse: .78, radius: 76 });
+  }
 }
 function update(dt) {
   time += dt;
@@ -203,7 +320,6 @@ function update(dt) {
   for (const w of wraps) w.age += dt;
   wraps = wraps.filter(w => w.age < .8);
   player.shield = Math.max(0, player.shield - dt);
-  player.guard = Math.max(0, player.guard - dt);
   const down = (...names) => names.some(k => keys.has(k));
   const x0 = player.x;
   if (aim) {
@@ -216,12 +332,7 @@ function update(dt) {
   player.x = clamp(player.x, 25, W - 25);
   player.y = clamp(player.y, 315, H - 55);
   player.bank += (clamp((player.x - x0) * .12, -.65, .65) - player.bank) * Math.min(dt * 13, 1);
-  if (time >= shotAt) {
-    shotAt = time + (player.rapid ? 0.092 : 0.132);
-    recoil = .10;
-    const vy = player.rapid ? 860 : 710;
-    for (const lane of cannonLanes()) shots.push({ x: player.x + lane, y: player.y - 17, vy });
-  }
+  if (time >= shotAt) launch();
   if (wave < 9 && time >= 1.35 + wave * 5.15) spawn();
   if (time > 51 && !bossSpawned) {
     bossSpawned = true;
@@ -235,32 +346,40 @@ function update(dt) {
     if (enemy.y > 15 && enemy.y < 440 && enemy.fire <= 0) shoot(enemy);
   }
   for (const shot of shots) {
-    shot.y -= shot.vy * dt;
-    for (const enemy of enemies) {
-      const spec = CRAFT[enemy.kind];
-      if (enemy.hp <= 0 || Math.abs(shot.x - enemy.x) > spec.hx || Math.abs(shot.y - enemy.y) > spec.hy) continue;
-      shot.y = -100;
-      enemy.hp--;
-      enemy.impact = .12;
-      burst(shot.x, enemy.y, colors.ice, 3);
-      if (!enemy.hp) {
-        const boss = enemy.kind === 'boss';
-        wraps.push({ x: enemy.x, y: enemy.y, age: 0, kind: enemy.kind });
-        score += spec.score;
-        burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
-        if (!boss && ++kills % 3 === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / 3) - 1) % 3] });
-        if (boss) {
-          overlay('won', 'SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: ' + score + '.', 'Fly again');
-          const skyDetail = { score, hull: player.hull };
-          window.dispatchEvent(new CustomEvent('frosted-skies:complete', { detail: skyDetail }));
-          if (window.parent !== window) {
-            const skyRelay = { type: 'frosted-skies:complete', detail: skyDetail };
-            try { const skyRun = new URLSearchParams(location.search).get('runId'); if (skyRun) skyRelay.runId = skyRun; } catch (ignore) {}
-            window.parent.postMessage(skyRelay, (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '*');
-          }
-        }
-        ui.score.textContent = String(score).padStart(6, '0');
+    shot.px = shot.x;
+    shot.py = shot.y;
+    if (shot.kind === 'missile') {
+      guideMissile(shot, dt);
+      shot.life -= dt;
+      if (shot.life <= 0) shot.dead = true;
+    } else if (shot.kind === 'explosive') {
+      shot.fuse -= dt;
+    }
+    shot.x += shot.vx * dt;
+    shot.y += shot.vy * dt;
+    if (shot.dead) continue;
+    if (shot.kind === 'explosive') {
+      let contact = false;
+      for (const enemy of enemies) {
+        if (enemy.hp > 0 && segmentHit(shot, enemy, 4)) { contact = true; break; }
       }
+      if (contact || shot.fuse <= 0) detonate(shot);
+      if (state !== 'playing') break;
+      continue;
+    }
+    for (const enemy of enemies) {
+      if (enemy.hp <= 0) continue;
+      const hitAt = segmentHit(shot, enemy, shot.kind === 'missile' ? 6 : 0);
+      if (!hitAt) continue;
+      if (shot.pierce) {
+        if (shot.hit.includes(enemy)) continue;
+        shot.hit.push(enemy);
+        harm(enemy, shot.dmg, hitAt.x, hitAt.y);
+        if (state !== 'playing') break;
+        continue;
+      }
+      shot.dead = true;
+      harm(enemy, shot.dmg, hitAt.x, hitAt.y);
       break;
     }
     if (state !== 'playing') break;
@@ -289,7 +408,7 @@ function update(dt) {
     }
   }
   enemies = enemies.filter(e => e.hp > 0 && e.y < H + 40);
-  shots = shots.filter(s => s.y > 0);
+  shots = shots.filter(s => !s.dead && s.y > -80 && s.y < H + 60 && s.x > -50 && s.x < W + 50);
   bolts = bolts.filter(b => b.y > -30 && b.y < H + 20 && b.x > -30 && b.x < W + 30);
   parcels = parcels.filter(p => p.y < H + 25);
   for (const p of sparks) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
@@ -303,8 +422,9 @@ function polygon(color, points) {
   g.fill();
 }
 function drawPod(pod) {
-  const look = pod.kind === 'wide' ? colors.gold : pod.kind === 'rapid' ? colors.ice : colors.mint;
-  const mark = pod.kind === 'wide' ? 'W' : pod.kind === 'rapid' ? 'F' : 'S';
+  const spec = WEAPONS[pod.kind] || WEAPONS.ribbon;
+  const look = spec.color;
+  const mark = spec.mark;
   g.save();
   g.translate(pod.x, pod.y);
   g.fillStyle = '#f7fbff';
@@ -382,10 +502,44 @@ function render() {
     }
   }
   for (const s of shots) {
-    g.fillStyle = '#3eaec7';
-    g.fillRect(s.x - 3, s.y, 6, 15);
-    g.fillStyle = '#c9ffff';
-    g.fillRect(s.x - 1, s.y, 2, 11);
+    if (s.kind === 'missile') {
+      g.save();
+      g.translate(s.x, s.y);
+      g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2);
+      polygon(colors.gold, [[0, -12], [5, 7], [0, 3], [-5, 7]]);
+      g.fillStyle = '#fff4c0';
+      g.fillRect(-1.5, 3, 3, 6);
+      g.restore();
+    } else if (s.kind === 'laser') {
+      g.strokeStyle = colors.ice;
+      g.globalAlpha = .45;
+      g.lineWidth = 7;
+      g.beginPath();
+      g.moveTo(s.px, s.py);
+      g.lineTo(s.x, s.y);
+      g.stroke();
+      g.globalAlpha = 1;
+      g.strokeStyle = '#f4ffff';
+      g.lineWidth = 3;
+      g.beginPath();
+      g.moveTo(s.px, s.py);
+      g.lineTo(s.x, s.y);
+      g.stroke();
+    } else if (s.kind === 'explosive') {
+      g.fillStyle = colors.red;
+      g.beginPath();
+      g.arc(s.x, s.y, 7, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = colors.gold;
+      g.beginPath();
+      g.arc(s.x - 2, s.y - 2, 2.5, 0, Math.PI * 2);
+      g.fill();
+    } else {
+      g.fillStyle = '#3eaec7';
+      g.fillRect(s.x - 3, s.y, 6, 15);
+      g.fillStyle = '#c9ffff';
+      g.fillRect(s.x - 1, s.y, 2, 11);
+    }
   }
   for (const b of bolts) {
     g.fillStyle = '#ffad52';
@@ -413,7 +567,7 @@ function render() {
       g.ellipse(x, y, 33, 46, 0, 0, Math.PI * 2);
       g.stroke();
     }
-    if (recoil > .045) for (const dx of cannonLanes()) {
+    if (recoil > .045) for (const dx of muzzleOffsets()) {
       const flare = g.createRadialGradient(x + dx, y - 23, 0, x + dx, y - 23, 15);
       flare.addColorStop(0, '#fff');
       flare.addColorStop(.25, '#84ffff');
@@ -421,13 +575,6 @@ function render() {
       g.fillStyle = flare;
       g.fillRect(x + dx - 15, y - 38, 30, 30);
     }
-  }
-  if (player.guard > 0) {
-    g.strokeStyle = reduceMotion.matches ? colors.mint : 'rgba(185,255,228,' + (0.45 + 0.4 * Math.sin(time * 7)) + ')';
-    g.lineWidth = 3;
-    g.beginPath();
-    g.ellipse(x, y, 36, 48, 0, 0, Math.PI * 2);
-    g.stroke();
   }
   for (const w of wraps) {
     const t = w.age / .8;
@@ -471,8 +618,16 @@ function render() {
   }
   for (const p of sparks) {
     g.globalAlpha = clamp(p.life * 2, 0, 1);
-    g.fillStyle = p.color;
-    g.fillRect(p.x, p.y, 3, 3);
+    if (p.ring) {
+      g.strokeStyle = p.color;
+      g.lineWidth = 3;
+      g.beginPath();
+      g.arc(p.x, p.y, p.ring * (1.2 - p.life), 0, Math.PI * 2);
+      g.stroke();
+    } else {
+      g.fillStyle = p.color;
+      g.fillRect(p.x, p.y, 3, 3);
+    }
   }
   g.globalAlpha = 1;
   g.restore();

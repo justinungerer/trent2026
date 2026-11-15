@@ -1,14 +1,13 @@
 /* Chapter 8 — The Holding Camp.
-   Escort. Santa walks the cabin shadow to the gate.
-   Stay near him. The open snow belongs to the searchlights.
-   Painted sprites live in art/. Beams are canvas cones. */
+   Side-view fight. Santa punches the night wardens, then walks to the gate.
+   Painted frames live in art/. No blood. */
 'use strict';
 
 (function () {
   var canvas = document.getElementById('yard');
   var ctx = canvas.getContext('2d');
   var gateEl = document.getElementById('gate');
-  var slipsEl = document.getElementById('slips');
+  var pipsEl = document.getElementById('pips');
   var pauseBtn = document.getElementById('pause');
   var hintEl = document.getElementById('hint');
   var startSheet = document.getElementById('start-sheet');
@@ -20,25 +19,25 @@
 
   var VIEW_W = 844;
   var VIEW_H = 390;
-  /* Walk strips. Four equal frames, feet on one baseline. */
-  var TRENT = { w: 412, h: 628, ax: 168, ay: 618, n: 4 };
-  var SANTA = { w: 348, h: 420, ax: 201, ay: 409, n: 4 };
-  var SEGMENTS = [
-    { dur: 3.1, x0: 78, x1: 280, depth: 0.3 },
-    { dur: 1.35, x0: 280, x1: 280, depth: 0.3 },
-    { dur: 3.5, x0: 280, x1: 540, depth: 0.32 },
-    { dur: 1.25, x0: 540, x1: 540, depth: 0.32 },
-    { dur: 3.8, x0: 540, x1: 800, depth: 0.4 }
-  ];
-  var FOLLOW = 128;
-  var LIGHT_DEPTH = 0.58;
+  var GROUND = 312;
+  var SANTA_H = 214;
+  var WARDEN_H = 196;
+  var BLOCK = 74;
+  var SANTA_REACH = 112;
+  var WARDEN_REACH = 86;
+  var GATE_X = 752;
+  /* Equal frames. Anchor is the sole on the shared baseline. */
+  var SANTA = { w: 477, h: 515, ax: 210, ay: 509, lookRight: true };
+  var WARDEN = { w: 395, h: 469, ax: 162, ay: 463, lookRight: false };
+  var PUNCH_MS = 180;
+  var HIT_MS = 280;
 
-  var sceneImg = new Image();
-  var trentImg = new Image();
+  var yardImg = new Image();
   var santaImg = new Image();
-  sceneImg.src = 'art/scene.webp';
-  trentImg.src = 'art/trent.webp';
+  var wardenImg = new Image();
+  yardImg.src = 'art/yard.webp';
   santaImg.src = 'art/santa.webp';
+  wardenImg.src = 'art/warden.webp';
 
   var state = 'title';
   var cssW = 844;
@@ -46,29 +45,24 @@
   var dpr = 1;
   var view = { s: 1, ox: 0, oy: 0 };
   var played = 0;
-  var march = 0;
   var victorySent = false;
   var rotateHold = false;
   var visualTime = 0;
   var lastFrame = 0;
   var shake = 0;
-  var slips = 0;
-  var behindT = 0;
-  var lightT = 0;
-  var cool = 0;
-  var trent = { x: 78, depth: 0.3, face: 1 };
-  var walkT = 0;
-  var held = { up: false, down: false, left: false, right: false };
+  var held = { left: false, right: false };
   var pointers = {};
+  var santa;
+  var wardens;
   var flakes = [];
   var n;
 
-  for (n = 0; n < 26; n++) {
+  for (n = 0; n < 22; n++) {
     flakes.push({
       x: Math.random() * VIEW_W,
       y: Math.random() * VIEW_H,
-      v: 10 + Math.random() * 16,
-      r: 1 + Math.random() * 1.3
+      v: 12 + Math.random() * 18,
+      r: 1 + Math.random() * 1.4
     });
   }
 
@@ -87,89 +81,80 @@
     statusEl.textContent = text;
   }
 
+  function sfx(kind) {
+    if (window.TrentSfx) window.TrentSfx.play(kind);
+  }
+
   function clamp(v, a, b) {
     if (v < a) return a;
     if (v > b) return b;
     return v;
   }
 
-  function project(x, depth) {
+  function freshSanta() {
     return {
-      x: x,
-      y: 214 + depth * 155,
-      s: 0.82 + depth * 0.28
+      x: 88,
+      face: 1,
+      hp: 4,
+      punch: 0,
+      cool: 0,
+      stun: 0,
+      down: 0,
+      iframe: 0,
+      buffer: 0,
+      punched: false
     };
   }
 
-  function santaAt(elapsed) {
-    var t = elapsed;
-    var i;
-    var seg;
-    var u;
-    for (i = 0; i < SEGMENTS.length; i++) {
-      seg = SEGMENTS[i];
-      if (t <= seg.dur) {
-        u = seg.dur ? t / seg.dur : 1;
-        return {
-          x: seg.x0 + (seg.x1 - seg.x0) * u,
-          depth: seg.depth,
-          moving: seg.x0 !== seg.x1,
-          done: false
-        };
-      }
-      t -= seg.dur;
-    }
-    return { x: 800, depth: 0.4, moving: false, done: true };
-  }
-
-  function lights(time) {
+  function freshWardens() {
     return [
-      { x: 250 + (0.5 + 0.5 * Math.sin(time * 0.72)) * 220, depth: 0.74, r: 64 },
-      { x: 430 + Math.sin(time * 0.95 + 1.4) * 250, depth: 0.9, r: 72 }
+      { x: 270, hp: 3, mode: 'idle', t: 0, punched: false },
+      { x: 478, hp: 3, mode: 'idle', t: 0, punched: false },
+      { x: 668, hp: 3, mode: 'idle', t: 0, punched: false }
     ];
   }
 
-  function apart(a, b) {
-    return Math.hypot(a.x - b.x, (a.depth - b.depth) * 190);
+  function standing() {
+    var i;
+    var list = [];
+    for (i = 0; i < wardens.length; i++) {
+      if (wardens[i].hp > 0) list.push(wardens[i]);
+    }
+    return list;
   }
 
-  function inLight(body, time) {
-    var spots = lights(time);
+  function blocker() {
+    var list = standing();
     var i;
-    var spot;
-    var d;
-    if (body.depth < LIGHT_DEPTH) return false;
-    for (i = 0; i < spots.length; i++) {
-      spot = spots[i];
-      d = Math.hypot(body.x - spot.x, (body.depth - spot.depth) * 190);
-      if (d < spot.r) return true;
+    var best = null;
+    for (i = 0; i < list.length; i++) {
+      if (!best || list[i].x < best.x) best = list[i];
     }
-    return false;
+    return best;
+  }
+
+  function pipsText() {
+    var text = '';
+    var i;
+    var hp = santa.hp;
+    if (santa.down > 0) hp = 0;
+    for (i = 0; i < hp; i++) text += '♥';
+    for (; i < 4; i++) text += '♡';
+    return text;
   }
 
   function renderHud() {
-    var santa = santaAt(march);
+    var left = standing().length;
     if (state === 'win') gateEl.textContent = 'Open';
-    else if (santa.done) gateEl.textContent = 'The gate';
-    else if (santa.moving) gateEl.textContent = 'Keep up';
-    else gateEl.textContent = 'He is waiting';
-    slipsEl.textContent = slips + ' / 3';
-    slipsEl.className = slips > 0 ? 'warn' : '';
-  }
-
-  function resetBodies() {
-    march = 0;
-    trent.x = 78;
-    trent.depth = 0.3;
-    trent.face = 1;
-    behindT = 0;
-    lightT = 0;
-    cool = 0.4;
+    else if (left === 0) gateEl.textContent = 'Walk through';
+    else if (left === 1) gateEl.textContent = 'One warden';
+    else gateEl.textContent = left + ' wardens';
+    pipsEl.textContent = pipsText();
   }
 
   function beginRun() {
-    resetBodies();
-    slips = 0;
+    santa = freshSanta();
+    wardens = freshWardens();
     played = 0;
     shake = 0;
     victorySent = false;
@@ -179,7 +164,7 @@
     winSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('Stay in the shadow with Santa.');
+    say('Three wardens stand between Santa and the gate.');
   }
 
   function openPause() {
@@ -211,6 +196,7 @@
     winTimeEl.textContent = 'Out in ' + seconds + ' seconds.';
     winSheet.hidden = false;
     say('Through the gate. ' + seconds + ' seconds.');
+    sfx('right');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('holding-camp:complete', {
@@ -227,128 +213,246 @@
     }
   }
 
-  function slip(reason) {
-    cool = 1.15;
-    behindT = 0;
-    lightT = 0;
-    slips += 1;
-    if (!reduceMotion()) shake = 7;
-    if (slips >= 3) {
-      slips = 0;
-      resetBodies();
-      say('Three slips. The walk starts again.');
+  function aimFace() {
+    var foe = blocker();
+    if (held.left && !held.right) return -1;
+    if (held.right && !held.left) return 1;
+    if (foe) return foe.x < santa.x ? -1 : 1;
+    return santa.face;
+  }
+
+  function startPunch() {
+    santa.punch = PUNCH_MS / 1000;
+    santa.cool = 0.46;
+    santa.punched = false;
+    santa.buffer = 0;
+    santa.face = aimFace();
+  }
+
+  function requestPunch() {
+    if (state !== 'play') return;
+    if (santa.down > 0 || santa.stun > 0 || santa.punch > 0 || santa.cool > 0) {
+      santa.buffer = 0.14;
+      return;
+    }
+    startPunch();
+  }
+
+  function hurtWarden(w) {
+    w.hp -= 1;
+    w.x = clamp(w.x + 16, 120, 790);
+    if (w.hp <= 0) {
+      w.mode = 'down';
+      w.t = 0;
+      say('A warden sits in the snow.');
     } else {
-      say(reason);
+      w.mode = 'flinch';
+      w.t = 0.34;
+      say('The mitten lands.');
+    }
+    if (!reduceMotion()) shake = 5;
+    sfx('action');
+  }
+
+  function hurtSanta(from) {
+    if (santa.iframe > 0 || santa.down > 0) return;
+    santa.hp -= 1;
+    santa.iframe = 0.72;
+    santa.punch = 0;
+    santa.x = clamp(santa.x - 28, 56, 800);
+    if (!reduceMotion()) shake = 7;
+    sfx('wrong');
+    if (santa.hp <= 0) {
+      santa.down = 1.2;
+      santa.stun = 0;
+      santa.from = from;
+      say('Santa sits down dizzy.');
+    } else {
+      santa.stun = HIT_MS / 1000;
+      say('Santa staggers.');
     }
   }
 
-  function stick() {
-    var x = 0;
-    var y = 0;
-    if (held.left) x -= 1;
-    if (held.right) x += 1;
-    if (held.up) y -= 1;
-    if (held.down) y += 1;
-    return { x: x, y: y };
+  function recoverSanta() {
+    var foe = santa.from && santa.from.hp > 0 ? santa.from : blocker();
+    santa.hp = 4;
+    santa.down = 0;
+    santa.stun = 0;
+    santa.punch = 0;
+    santa.iframe = 0.4;
+    if (foe) {
+      foe.hp = 3;
+      foe.mode = 'idle';
+      foe.t = 0;
+      santa.x = clamp(foe.x - 168, 56, 800);
+      santa.face = 1;
+    }
+    say('Santa is up. That warden is ready again.');
+  }
+
+  function trySantaHit() {
+    var i;
+    var w;
+    var dist;
+    var best = null;
+    var bestDist = SANTA_REACH;
+    for (i = 0; i < wardens.length; i++) {
+      w = wardens[i];
+      if (w.hp <= 0) continue;
+      dist = (w.x - santa.x) * santa.face;
+      if (dist > 28 && dist < bestDist) {
+        best = w;
+        bestDist = dist;
+      }
+    }
+    if (best) hurtWarden(best);
+  }
+
+  function tryWardenHit(w) {
+    var dist = (w.x - santa.x);
+    if (dist > 22 && dist < WARDEN_REACH) hurtSanta(w);
+  }
+
+  function updateWardens(dt) {
+    var active = blocker();
+    var i;
+    var w;
+    var prev;
+    var dist;
+    for (i = 0; i < wardens.length; i++) {
+      w = wardens[i];
+      if (w.hp <= 0) {
+        w.mode = 'down';
+        continue;
+      }
+      if (w.mode === 'flinch') {
+        w.t -= dt;
+        if (w.t <= 0) w.mode = 'idle';
+        continue;
+      }
+      if (w !== active || santa.down > 0) {
+        if (w.mode !== 'punch') w.mode = 'idle';
+      }
+      if (w.mode === 'idle' && w === active) {
+        dist = w.x - santa.x;
+        if (dist > 24 && dist < 108) {
+          w.mode = 'wind';
+          w.t = 0.48;
+        }
+      } else if (w.mode === 'wind') {
+        w.t -= dt;
+        if (w.t <= 0) {
+          w.mode = 'punch';
+          w.t = 0.2;
+          w.punched = false;
+        }
+      } else if (w.mode === 'punch') {
+        prev = w.t;
+        w.t -= dt;
+        if (!w.punched && prev > 0.08 && w.t <= 0.08) {
+          w.punched = true;
+          tryWardenHit(w);
+        }
+        if (w.t <= 0) w.mode = 'idle';
+      }
+    }
   }
 
   function update(dt) {
-    var dir = stick();
-    var santa;
-    var dist;
-    var moving;
-    if (cool > 0) cool -= dt;
-    moving = dir.x !== 0 || dir.y !== 0;
-    if (dir.x < 0) trent.face = -1;
-    if (dir.x > 0) trent.face = 1;
-    trent.x = clamp(trent.x + dir.x * 165 * dt, 36, 820);
-    trent.depth = clamp(trent.depth + dir.y * 0.55 * dt, 0.16, 0.96);
-    if (moving) walkT += dt;
-    march += dt;
-    santa = santaAt(march);
-    dist = apart(trent, santa);
-    if (cool <= 0 && dist > FOLLOW) {
-      behindT += dt;
-      if (behindT > 0.55) slip('Too far from Santa.');
-    } else {
-      behindT = 0;
+    var dir = 0;
+    var prev;
+    var block;
+    if (santa.iframe > 0) santa.iframe -= dt;
+    if (santa.cool > 0) santa.cool -= dt;
+    if (santa.buffer > 0) santa.buffer -= dt;
+    if (santa.down > 0) {
+      santa.down -= dt;
+      if (santa.down <= 0) recoverSanta();
+      return;
     }
-    if (cool <= 0 && inLight(trent, visualTime)) {
-      lightT += dt;
-      if (lightT > 0.18) slip('The searchlight found Trent.');
-    } else {
-      lightT = 0;
+    if (santa.stun > 0) santa.stun -= dt;
+    if (santa.punch > 0) {
+      prev = santa.punch;
+      santa.punch -= dt;
+      if (!santa.punched && prev > 0.09 && santa.punch <= 0.09) {
+        santa.punched = true;
+        trySantaHit();
+      }
+      if (santa.punch < 0) santa.punch = 0;
+    } else if (santa.stun <= 0 && santa.buffer > 0 && santa.cool <= 0) {
+      startPunch();
     }
-    if (santa.done && dist <= 100 && trent.x > 720) win();
+    if (santa.punch <= 0 && santa.stun <= 0) {
+      if (held.left) dir -= 1;
+      if (held.right) dir += 1;
+      if (dir < 0) santa.face = -1;
+      if (dir > 0) santa.face = 1;
+      santa.x += dir * 220 * dt;
+    }
+    santa.x = clamp(santa.x, 56, 808);
+    block = blocker();
+    if (block && santa.x > block.x - BLOCK) santa.x = block.x - BLOCK;
+    updateWardens(dt);
+    block = blocker();
+    if (block && santa.x > block.x - BLOCK) santa.x = block.x - BLOCK;
+    if (!block && santa.x >= GATE_X) win();
   }
 
-  function frameOf(moving, time) {
-    if (!moving) return 0;
-    if (reduceMotion()) return 1;
-    return Math.floor(time * 1000 / 150) % 4;
-  }
-
-  function drawCover(img) {
+  function drawYard() {
     var scale;
-    var dw;
     var dh;
-    if (!imageReady(img)) return;
-    scale = Math.max(VIEW_W / img.naturalWidth, VIEW_H / img.naturalHeight);
-    dw = img.naturalWidth * scale;
-    dh = img.naturalHeight * scale;
-    ctx.drawImage(img, (VIEW_W - dw) / 2, (VIEW_H - dh) / 2, dw, dh);
+    if (!imageReady(yardImg)) {
+      ctx.fillStyle = '#16324c';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      return;
+    }
+    scale = VIEW_W / yardImg.naturalWidth;
+    dh = yardImg.naturalHeight * scale;
+    ctx.drawImage(yardImg, 0, VIEW_H - dh, VIEW_W, dh);
   }
 
-  function drawActor(img, spec, index, body, face, height) {
-    var p;
-    var destH;
+  function drawActor(img, spec, frame, x, lookRight, height, lean) {
     var s;
-    var frame = index;
+    var bob = 0;
     if (!imageReady(img)) return;
-    p = project(body.x, body.depth);
-    destH = height * p.s;
-    s = destH / spec.h;
+    s = height / spec.h;
     ctx.save();
-    ctx.translate(p.x, p.y);
-    if (face < 0) ctx.scale(-1, 1);
+    ctx.translate(x + (lean || 0), GROUND + bob);
+    if (lookRight !== spec.lookRight) ctx.scale(-1, 1);
     ctx.drawImage(
       img,
       frame * spec.w, 0, spec.w, spec.h,
       -spec.ax * s,
       -spec.ay * s,
       spec.w * s,
-      destH
+      spec.h * s
     );
     ctx.restore();
   }
 
-  function drawBeams() {
-    var spots = lights(visualTime);
-    var i;
-    var spot;
-    var p;
-    var origin;
-    for (i = 0; i < spots.length; i++) {
-      spot = spots[i];
-      p = project(spot.x, spot.depth);
-      origin = i === 0 ? { x: 560, y: 96 } : { x: 250, y: 78 };
-      ctx.fillStyle = 'rgba(255, 214, 140, 0.16)';
-      ctx.beginPath();
-      ctx.moveTo(origin.x, origin.y);
-      ctx.lineTo(p.x - spot.r, p.y);
-      ctx.lineTo(p.x + spot.r, p.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 226, 160, 0.28)';
-      ctx.beginPath();
-      ctx.ellipse(p.x, p.y, spot.r, 16 + spot.depth * 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  function shadow(x, width) {
+    ctx.fillStyle = 'rgba(20, 28, 48, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(x, GROUND + 4, width, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function santaFrame() {
+    if (santa.down > 0) return 3;
+    if (santa.stun > 0) return 2;
+    if (santa.punch > 0) return 1;
+    return 0;
+  }
+
+  function wardenFrame(w) {
+    if (w.mode === 'down' || w.hp <= 0) return 2;
+    if (w.mode === 'punch') return 1;
+    return 0;
   }
 
   function drawSnow() {
     var f;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     for (n = 0; n < flakes.length; n++) {
       f = flakes[n];
       ctx.beginPath();
@@ -358,9 +462,10 @@
   }
 
   function render() {
-    var santa = santaAt(march);
     var mag = reduceMotion() ? 0 : shake;
-    var order;
+    var i;
+    var w;
+    var lean;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
     ctx.setTransform(
@@ -368,29 +473,26 @@
       dpr * (view.ox + Math.sin(visualTime * 36) * mag),
       dpr * view.oy
     );
-    drawCover(sceneImg);
-    drawBeams();
-    order = [
-      { kind: 'santa', depth: santa.depth },
-      { kind: 'trent', depth: trent.depth }
-    ];
-    order.sort(function (a, b) { return a.depth - b.depth; });
-    for (n = 0; n < order.length; n++) {
-      if (order[n].kind === 'santa') {
-        drawActor(
-          santaImg, SANTA,
-          frameOf(santa.moving, march),
-          santa, 1, 196
-        );
-      } else {
-        drawActor(
-          trentImg, TRENT,
-          frameOf(stick().x !== 0 || stick().y !== 0, walkT),
-          trent, trent.face, 214
-        );
+    drawYard();
+    for (i = 0; i < wardens.length; i++) {
+      w = wardens[i];
+      if (w.hp <= 0) {
+        shadow(w.x, 36);
+        drawActor(wardenImg, WARDEN, 2, w.x, false, WARDEN_H, 0);
       }
     }
-    drawSnow();
+    if (santa) {
+      shadow(santa.x, 28);
+      drawActor(santaImg, SANTA, santaFrame(), santa.x, santa.face > 0, SANTA_H, 0);
+    }
+    for (i = 0; i < wardens.length; i++) {
+      w = wardens[i];
+      if (w.hp <= 0) continue;
+      lean = w.mode === 'flinch' ? 10 : 0;
+      shadow(w.x, 26);
+      drawActor(wardenImg, WARDEN, wardenFrame(w), w.x, santa.x > w.x, WARDEN_H, lean);
+    }
+    if (!reduceMotion()) drawSnow();
   }
 
   function resize() {
@@ -424,11 +526,15 @@
     lastFrame = now;
     if (dt < 0) dt = 0;
     if (dt > 0.05) dt = 0.05;
+    if (!santa) {
+      santa = freshSanta();
+      wardens = freshWardens();
+    }
     if (state !== 'pause') visualTime += dt;
     if (state === 'play') {
       played += dt;
       update(dt);
-      if (shake > 0) shake = Math.max(0, shake - dt * 16);
+      if (shake > 0) shake = Math.max(0, shake - dt * 18);
     }
     drift(dt);
     renderHud();
@@ -473,18 +579,36 @@
     button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   }
 
-  bindHold(document.getElementById('up'), 'up');
-  bindHold(document.getElementById('down'), 'down');
   bindHold(document.getElementById('left'), 'left');
   bindHold(document.getElementById('right'), 'right');
 
+  document.getElementById('punch').addEventListener('pointerdown', function (event) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.classList.add('held');
+    hintEl.hidden = true;
+    requestPunch();
+  });
+  document.getElementById('punch').addEventListener('pointerup', function (event) {
+    event.currentTarget.classList.remove('held');
+  });
+  document.getElementById('punch').addEventListener('pointercancel', function (event) {
+    event.currentTarget.classList.remove('held');
+  });
+
   window.addEventListener('keydown', function (event) {
-    var map = { arrowup: 'up', arrowdown: 'down', arrowleft: 'left', arrowright: 'right' };
+    var map = { arrowleft: 'left', arrowright: 'right' };
     var key;
     if (event.key === 'Escape') {
       event.preventDefault();
       if (state === 'play') openPause();
       else if (state === 'pause') closePause();
+      return;
+    }
+    if (!event.repeat && (event.key === 'a' || event.key === 'A' || event.key === ' ' || event.key === 'j' || event.key === 'J')) {
+      event.preventDefault();
+      hintEl.hidden = true;
+      requestPunch();
       return;
     }
     key = map[event.key.toLowerCase()];
@@ -495,14 +619,12 @@
   });
 
   window.addEventListener('keyup', function (event) {
-    var map = { arrowup: 'up', arrowdown: 'down', arrowleft: 'left', arrowright: 'right' };
+    var map = { arrowleft: 'left', arrowright: 'right' };
     var key = map[event.key.toLowerCase()];
     if (key) held[key] = false;
   });
 
   window.addEventListener('blur', function () {
-    held.up = false;
-    held.down = false;
     held.left = false;
     held.right = false;
   });
@@ -532,6 +654,8 @@
     });
   }
 
+  santa = freshSanta();
+  wardens = freshWardens();
   resize();
   syncPortrait();
   lastFrame = performance.now();

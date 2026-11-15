@@ -253,7 +253,10 @@ function drawMine(mine){
 const snow=Array.from({length:60},(_,i)=>[i*137.7%1080,i*97.3%720,1+i%3]);
 function render(){
  const width=canvas.width,height=canvas.height;
- const zoom=Math.min(width/370,height/460);
+ let zoom=Math.min(width/370,height/460);
+ if(!(zoom>0))zoom=1;
+ if(height/zoom>world.h)zoom=height/world.h;
+ if(width/zoom>world.w)zoom=width/world.w;
  const vw=width/zoom,vh=height/zoom;
  camera.x=clamp(run.player.x-vw/2,0,Math.max(0,world.w-vw));
  camera.y=clamp(run.player.y-vh/2,0,Math.max(0,world.h-vh));

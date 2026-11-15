@@ -3,7 +3,7 @@
    Pump to keep speed. Steer among three tracks.
    A crate, a gap, or a lowered signal arm is a slip, a jolt.
    Three slips restart the line. The yard mouth wins.
-   Pump rate sets the pace. Idle speed is the base; the fastest steady pump is about ten times that.
+   Pump rate sets the pace. Idle speed is the base; the fastest steady pump is about twenty times that.
    Sky, rails, handcar, and Trent are painted pictures in art/.
    Snow specks stay on the canvas. No network. */
 'use strict';
@@ -34,8 +34,9 @@
   var PX = 32;
   var CAR_X = 230;
   var FINISH = 454;
-  var DECAY = 0.62;
-  /* Resting pace. target = SPEED_FLOOR * (1 + 9 * pumpRate / PUMP_RATE_MAX). */
+  /* Slower than the old 0.62 so the climb to the doubled top takes about twice the strokes. */
+  var DECAY = 0.30;
+  /* Resting pace. target = SPEED_FLOOR * (1 + 19 * pumpRate / PUMP_RATE_MAX). Top is 9. */
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
@@ -455,7 +456,7 @@
     effort = pumpRate / PUMP_RATE_MAX;
     if (effort < 0) effort = 0;
     if (effort > 1) effort = 1;
-    target = SPEED_FLOOR * (1 + 9 * effort);
+    target = SPEED_FLOOR * (1 + 19 * effort);
     speed += (target - speed) * (1 - Math.exp(-DECAY * dt));
     if (pumpAnim < 1) pumpAnim = Math.min(1, pumpAnim + dt / 0.32);
     if (laneT < 1) {

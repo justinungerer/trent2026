@@ -104,12 +104,12 @@ button:focus-visible {
 }
 
 #gate,
-#slips {
+#pips {
   font-size: 22px;
   font-variant-numeric: tabular-nums;
 }
 
-#slips.warn { color: #ffd59a; }
+#pips { color: #ffd6d0; letter-spacing: 0.06em; }
 
 #pause {
   flex: 0 0 auto;
@@ -124,45 +124,55 @@ button:focus-visible {
 
 #pause:active { background: rgba(12, 22, 36, 0.94); }
 
-.pad {
+.move {
   position: absolute;
   z-index: 5;
   left: max(12px, env(safe-area-inset-left));
   bottom: max(12px, env(safe-area-inset-bottom));
-  width: 168px;
-  height: 168px;
+  display: flex;
+  gap: 8px;
 }
 
-.pad button {
-  position: absolute;
-  width: 64px;
-  height: 64px;
+.move button,
+#punch {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   padding: 0;
   border: 3px solid #e6c98a;
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgba(28, 22, 14, 0.88);
   color: #f6e7c4;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1;
 }
 
-.pad button.held,
-.pad button:active {
-  background: #8a6230;
-  color: #fff6e4;
+#punch {
+  position: absolute;
+  z-index: 5;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  background: #f3efe4;
+  color: #3a2a18;
+  font-size: 22px;
 }
 
-#up { left: 52px; top: 0; }
-#left { left: 0; top: 52px; }
-#right { left: 104px; top: 52px; }
-#down { left: 52px; top: 104px; }
+.move button.held,
+.move button:active,
+#punch.held,
+#punch:active {
+  background: #8a6230;
+  border-color: #f0d7a4;
+  color: #fff6e4;
+}
 
 .hint {
   position: absolute;
   z-index: 3;
   left: max(16px, env(safe-area-inset-left));
-  bottom: max(188px, calc(env(safe-area-inset-bottom) + 176px));
+  bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
   margin: 0;
   max-width: 46%;
   color: rgba(247, 244, 236, 0.95);
@@ -198,7 +208,8 @@ button:focus-visible {
   box-shadow: 0 16px 40px rgba(4, 8, 16, 0.45);
 }
 
-.kicker {
+.kicker,
+.how {
   margin: 0;
   font-size: 12px;
   font-weight: 800;
@@ -206,6 +217,8 @@ button:focus-visible {
   text-transform: uppercase;
   color: #8a6230;
 }
+
+.how { margin-bottom: 4px; }
 
 .card h1 {
   margin: 4px 0 8px;
@@ -260,4 +273,31 @@ button:focus-visible {
   }
 }
 
+@media (max-height: 480px) {
+  .sheet {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .card {
+    padding: 12px 14px 10px;
+  }
+
+  .card h1 {
+    font-size: 24px;
+    margin: 2px 0 6px;
+  }
+
+  .card p {
+    margin: 0 0 6px;
+  }
+
+  .card button {
+    margin-top: 2px;
+  }
+}
+
 .rotate-mark{width:120px;height:180px;margin:0 auto 16px;border:8px solid #f7f4ec;border-radius:18px;transform:rotate(90deg)}
+.portrait{color:#f7f4ec;text-align:center;padding:24px}
+.portrait h1{margin:0 0 8px;font-size:28px}
+.portrait p{margin:0}

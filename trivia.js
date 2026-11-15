@@ -589,7 +589,9 @@
     var token;
     var story;
     hooks = hooks || {};
-    story = typeof hooks.story === 'string' ? hooks.story : ((chapter && chapter.story) || '');
+    story = (chapter && typeof chapter.story === 'string' && chapter.story)
+      ? chapter.story
+      : (typeof hooks.story === 'string' ? hooks.story : '');
     appRoot = document.getElementById('app');
     appRoot.trentTriviaHome = hooks.onHome || function () {};
     abort();

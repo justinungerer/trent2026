@@ -3,44 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071422">
+  <meta name="theme-color" content="#141810">
   <title>The Listening Wire</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="stage">
-    <canvas id="yard" width="844" height="390" aria-label="Trent sending Morse in a snowy yard while a lamp sweeps"></canvas>
+    <canvas id="yard" aria-label="A first-person corridor. Cartoon soldiers stand between you and a green door."></canvas>
 
-    <p id="hint" class="hint">Hold Send in the gap</p>
+    <p id="hint" class="hint">Turn, walk, shoot</p>
+    <p id="toast" class="toast" hidden>Quicker shot</p>
 
     <div class="hud">
-      <div class="hud-block grow">
-        <span class="label">Pattern</span>
-        <strong id="pattern">· — · ·</strong>
+      <div class="hud-block">
+        <span class="label">Gun</span>
+        <strong id="gun">Steady</strong>
       </div>
       <div class="hud-block">
-        <span class="label">Slips</span>
-        <strong id="slips">0 / 3</strong>
+        <span class="label">In the hall</span>
+        <strong id="left">0</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
 
-    <button type="button" id="send" aria-pressed="false">Send</button>
+    <div class="controls">
+      <div class="pad">
+        <button type="button" id="turn-left" aria-label="Turn left">⟲</button>
+        <div class="stack">
+          <button type="button" id="forward" aria-label="Walk forward">▲</button>
+          <button type="button" id="back" aria-label="Walk back">▼</button>
+        </div>
+        <button type="button" id="turn-right" aria-label="Turn right">⟳</button>
+      </div>
+      <button type="button" id="fire" aria-label="Shoot">Shoot</button>
+    </div>
 
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 7</p>
         <h1>The listening wire</h1>
-        <p>A lamp sweeps the yard. The wire only takes a mark while that light sits in the safe gap.</p>
-        <p>The pattern is dot, dash, dot, dot. Tap Send for a dot. Hold it for a dash. Keying in the open light is a slip. Three slips start the pattern over.</p>
-        <button type="button" id="start">Take the key</button>
+        <p>The wire runs down a corridor. Cartoon soldiers block the way. The green door at the end is the way out.</p>
+        <p>Turn, walk, and shoot. A shot drops a soldier in a puff of dust. Farther in, the gun fires faster, then it throws a spread. Arrows or W A S D do the same. Space shoots.</p>
+        <button type="button" id="start">Start down the hall</button>
       </div>
     </div>
 
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
-        <p>The lamp keeps its place. The pattern waits.</p>
+        <p>The corridor waits. The soldiers hold still.</p>
         <button type="button" id="resume">Resume</button>
         <button type="button" id="give-up" class="ghost">Give up</button>
       </div>
@@ -49,10 +60,10 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The listening wire</p>
-        <h1>The yard heard it</h1>
-        <p>The short pattern went out while the light was in the gap.</p>
-        <p id="win-time">Sent in 0 seconds.</p>
-        <button type="button" id="retry">Send again</button>
+        <h1>The green door</h1>
+        <p>You reached the end of the corridor.</p>
+        <p id="win-time">Out in 0 seconds.</p>
+        <button type="button" id="retry">Walk it again</button>
       </div>
     </div>
 
