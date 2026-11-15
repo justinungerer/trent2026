@@ -564,6 +564,7 @@ function showRules() {
   modal.setAttribute('aria-labelledby', 'campaign-rules-title');
   modal.innerHTML = '<div class="quiz-modal-card"><h2 id="campaign-rules-title" tabindex="-1">How to play</h2>' +
     '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
+    '<p>You get two guesses per question. Afterward, you can review why each answer is right or wrong.</p>' +
     '<p>Get at least five answers right to advance. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses in the chapter’s minigame.</p>' +
     '<p>Finish a chapter to earn a password for the next chapter. That password also unlocks the earlier chapters, films, and minigames in the chapter menu.</p>' +
     '<button class="primary" type="button">Continue</button><button class="secondary" type="button">Cancel</button></div>';

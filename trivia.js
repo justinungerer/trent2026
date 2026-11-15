@@ -344,6 +344,7 @@
     var score = round.length;
     var elves = ELF_USES;
     var locked = false;
+    var struck = false;
 
     function advance() {
       if (!stillHere()) return;
@@ -381,55 +382,38 @@
       button.disabled = elves < 1 || !question.sourceUrl;
     }
 
-    function showWrong(choice, question) {
-      var modal = document.createElement('div');
-      var card = document.createElement('div');
-      var kicker = document.createElement('p');
-      var title = document.createElement('h2');
-      var picked = document.createElement('p');
-      var why = document.createElement('p');
-      var answer = document.createElement('p');
-      var penalty = document.createElement('p');
+    function showReview(question, correct) {
+      var section = document.createElement('section');
+      var title = document.createElement('h1');
+      var summary = document.createElement('p');
+      var prompt = document.createElement('p');
+      var answers = document.createElement('ol');
       var next = document.createElement('button');
-      var correct = null;
-      var n;
-      for (n = 0; n < question.choices.length; n++) {
-        if (question.choices[n].correct) correct = question.choices[n];
-      }
-      modal.className = 'quiz-modal';
-      modal.setAttribute('role', 'dialog');
-      modal.setAttribute('aria-modal', 'true');
-      modal.setAttribute('aria-labelledby', 'quiz-wrong-title');
-      card.className = 'quiz-modal-card';
-      kicker.className = 'eyebrow';
-      kicker.textContent = 'Wrong answer';
-      title.id = 'quiz-wrong-title';
+      section.className = 'campaign-start quiz-card quiz-review';
       title.tabIndex = -1;
-      title.textContent = 'That one does not hold.';
-      picked.className = 'lead';
-      picked.textContent = choice.text;
-      why.className = 'quiz-why';
-      why.textContent = choice.explanation;
-      answer.className = 'lead';
-      answer.textContent = 'Correct answer: ' + correct.text;
-      penalty.className = 'eyebrow';
-      penalty.textContent = '−1 point · ' + scoreLabel();
+      title.textContent = correct ? (struck ? 'Correct on the second guess' : 'Correct') : 'Question missed';
+      summary.className = 'eyebrow';
+      summary.textContent = (correct ? '' : '−1 point · ') + scoreLabel();
+      prompt.className = 'quiz-question';
+      prompt.textContent = question.prompt;
+      answers.className = 'quiz-review-answers';
+      answers.type = 'A';
+      question.choices.forEach(function (choice) {
+        var row = document.createElement('li');
+        var label = document.createElement('strong');
+        var reason = document.createElement('p');
+        label.textContent = (choice.correct ? 'Correct · ' : 'Incorrect · ') + choice.text;
+        reason.textContent = choice.explanation;
+        row.append(label, reason);
+        answers.appendChild(row);
+      });
       next.type = 'button';
       next.className = 'primary';
       next.textContent = index + 1 === round.length ? 'Finish quiz' : 'Next question';
-      next.addEventListener('click', function () {
-        modal.remove();
-        advance();
-      }, { once: true });
-      card.appendChild(kicker);
-      card.appendChild(title);
-      card.appendChild(picked);
-      card.appendChild(why);
-      card.appendChild(answer);
-      card.appendChild(penalty);
-      card.appendChild(next);
-      modal.appendChild(card);
-      document.body.appendChild(modal);
+      next.addEventListener('click', advance, { once: true });
+      section.append(title, summary, prompt, answers, next);
+      appRoot.replaceChildren(section);
+      window.scrollTo(0, 0);
       focus(title);
     }
 
@@ -446,10 +430,12 @@
       var topic = document.createElement('p');
       var prompt = document.createElement('p');
       var choices = document.createElement('div');
+      var strikeStatus = document.createElement('p');
       var elf = document.createElement('button');
       var n;
       if (!stillHere()) return;
       locked = false;
+      struck = false;
       showShell();
       appRoot.innerHTML = '';
       section.className = 'campaign-start quiz-card';
@@ -463,9 +449,13 @@
       prompt.className = 'quiz-question';
       prompt.tabIndex = -1;
       prompt.textContent = question.prompt;
+      strikeStatus.className = 'quiz-strike';
+      strikeStatus.setAttribute('role', 'status');
+      strikeStatus.tabIndex = -1;
+      strikeStatus.textContent = 'Two guesses available.';
       choices.className = 'choices';
       for (n = 0; n < question.choices.length; n++) {
-        choices.appendChild(choiceButton(question, question.choices[n], n, count));
+        choices.appendChild(choiceButton(question, question.choices[n], n, strikeStatus));
       }
       elf.type = 'button';
       elf.className = 'secondary elf-button';
@@ -490,6 +480,7 @@
       section.appendChild(meta);
       if (topic.textContent) section.appendChild(topic);
       section.appendChild(prompt);
+      section.appendChild(strikeStatus);
       section.appendChild(choices);
       section.appendChild(elf);
       appRoot.appendChild(section);
@@ -497,7 +488,7 @@
       focus(prompt);
     }
 
-    function choiceButton(question, choice, choiceIndex, count) {
+    function choiceButton(question, choice, choiceIndex, strikeStatus) {
       var button = document.createElement('button');
       var letter = document.createElement('span');
       var text = document.createElement(testMode && choice.correct ? 'em' : 'span');
@@ -510,20 +501,20 @@
       button.appendChild(letter);
       button.appendChild(text);
       button.onclick = function () {
-        var buttons;
-        if (!stillHere() || locked) return;
-        locked = true;
-        buttons = appRoot.querySelectorAll('.choice');
-        for (var b = 0; b < buttons.length; b++) buttons[b].disabled = true;
-        if (choice.correct) {
-          if (window.TrentSfx) window.TrentSfx.play('right');
-          advance();
+        if (!stillHere() || locked || button.disabled) return;
+        if (window.TrentSfx) window.TrentSfx.play(choice.correct ? 'right' : 'wrong');
+        if (!choice.correct && !struck) {
+          struck = true;
+          button.disabled = true;
+          text.textContent = '';
+          button.setAttribute('aria-label', letter.textContent + ', eliminated');
+          strikeStatus.textContent = 'One strike. Choose another answer.';
+          focus(strikeStatus);
           return;
         }
-        score -= 1;
-        count.textContent = scoreLabel() + ' · Question ' + (index + 1) + ' of ' + round.length;
-        if (window.TrentSfx) window.TrentSfx.play('wrong');
-        showWrong(choice, question);
+        locked = true;
+        if (!choice.correct) score -= 1;
+        showReview(question, choice.correct);
       };
       return button;
     }
