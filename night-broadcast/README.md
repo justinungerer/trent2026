@@ -24,7 +24,7 @@ Touch first. Nothing you need is hover-only.
 
 - Drag the tuning knob left or right. The painted gear on the radio is the tuner.
 - On-screen arrows tune lower and higher. Hold one to sweep. Keyboard left and right arrows tune the same way. Space is not used.
-- Each station shows a moving marker and a strong-signal wedge. Stay inside one wedge for 2 seconds. That reveals a red band on that station. The red band is hidden until the 2 second hold succeeds. Leaving the strong wedge clears the hold and hides the band.
+- Each station shows a moving marker and a strong-signal wedge. Stay inside one wedge for 1 second. That reveals a red band on that station. The red band is hidden until the 1-second hold succeeds. Leaving the strong wedge clears the hold and hides the band.
 - Hold Lock and keep the needle inside the red band for 3 seconds. Tuning still works while Lock is held, so the other hand can keep chasing. Releasing Lock, or leaving the red band while still in the strong wedge, unwinds the lock. Leaving the strong wedge hides the red band.
 - Lock works on any of the five stations. A lock on the wrong station shows the text "wrong station" and does not win. The field report is the correct station on every run.
 - Escape pauses. Pause also opens when the page is hidden. Resume continues the same tune. Give up returns to the start and does not count as a lock.
@@ -37,11 +37,11 @@ If the device asks for reduced motion, the dial lamp does not flicker and the ne
 
 There is no fail state. Missing a band does not injure anyone. The signal meter climbs near any station. Words appear when the needle is inside one: the canteen, the weather desk, the music box, the chapel, or the field report.
 
-All five markers move, faster than the old single drift, and each one reverses direction on its own. The strong wedge is the wide zone. The red band is narrower and only appears after 2 continuous seconds in that station's strong wedge.
+All five markers move and change direction on their own at 75% of their previous speed. The strong wedge is the wide zone. The red band is narrower and only appears after 1 continuous second in that station's strong wedge.
 
 The correct station is the field report. It is chosen by its id, `santa`, and it is the same every run. Nothing random picks it. Locking a different station shows "wrong station" and the tune continues.
 
-The run has no time limit. A practiced tune is a chase, a 2 second strong hold, then 3 seconds in the red band with Lock held.
+The run has no time limit. A practiced tune is a chase, a 1-second strong hold, then 3 seconds in the red band with Lock held.
 
 ## Victory event
 

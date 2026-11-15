@@ -9,9 +9,9 @@
 </head>
 <body>
   <main class="stage">
-    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night. Five stations move on the dial. Hold a strong signal for 2 seconds, then hold Lock inside the red band for 3 seconds."></canvas>
+    <canvas id="radio" width="844" height="390" aria-label="Trent tuning a field radio at night. Five stations move on the dial. Hold a strong signal for 1 second, then hold Lock inside the red band for 3 seconds."></canvas>
 
-    <p id="hint" class="hint">Hold a strong signal for 2 seconds</p>
+    <p id="hint" class="hint">Hold a strong signal for 1 second</p>
 
     <div class="hud">
       <div class="hud-block grow">
@@ -24,7 +24,7 @@
       </div>
       <div class="hud-block">
         <span class="label" id="timer-label">Hold</span>
-        <strong id="lock">0.0 / 2s</strong>
+        <strong id="lock">0.0 / 1s</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -40,7 +40,7 @@
         <p class="kicker">A few months after D-Day</p>
         <h1>The night broadcast</h1>
         <p>Near Christmas, Trent warms a field radio in the snow. Five stations move on the dial, and each one changes direction.</p>
-        <p>Keep the needle in a strong signal for 2 seconds. A red band then appears on that station. It stays hidden until that hold is done.</p>
+        <p>Keep the needle in a strong signal for 1 second. A red band then appears on that station. It stays hidden until that hold is done.</p>
         <p>Hold Lock and keep the needle inside the red band for 3 seconds. You can still tune while Lock is held. Drag the knob, or use the arrows.</p>
         <p>Any station can lock. The wrong ones do not finish the tune. Lock the field report.</p>
         <button type="button" id="start">Switch on the lamp</button>
@@ -75,6 +75,6 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=film2"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=radio-timing"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

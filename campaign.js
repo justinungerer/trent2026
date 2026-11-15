@@ -655,7 +655,7 @@ function showOpeningFilm(done) {
   openingVideo.setAttribute('aria-label', 'Opening film. Hitler orders Santa’s capture. ' +
     'Guards march him into a Nazi concentration camp, where they attack him behind a locked gate. ' +
     'The Allies pick up the first report. A rescue is still possible.');
-  openingVideo.src = './assets/opening.mp4?v=opening-blender';
+  openingVideo.src = './assets/opening.mp4?v=in-frame';
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
@@ -817,17 +817,30 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   ctx.drawImage(image, sx, 0, fw, fh, dx, dy, destW, destH);
 }
 
-function updateIntroCrawl(beats, count, elapsed, reduced) {
-  if (reduced) {
-    beats.style.transform = '';
-    return;
-  }
-  var beatDuration = INTRO_MS / count;
-  var beat = Math.min(count - 1, Math.floor(elapsed / beatDuration));
-  var transition = beat === count - 1 ? 0 :
-    Math.max(0, (elapsed - (beat + 1) * beatDuration + 1250) / 1250);
-  var offset = beat + transition * transition * (3 - 2 * transition);
-  beats.style.transform = 'translate3d(0,' + (-100 * offset / count) + '%,0)';
+function drawFallbackIntroCaption(ctx, lines, elapsed) {
+  var width = ctx.canvas.width;
+  var height = ctx.canvas.height;
+  var index = Math.min(lines.length - 1, Math.floor(elapsed * lines.length / INTRO_MS));
+  var size = Math.round(Math.min(width * 37.12 / 720, height * 0.092));
+  var rows = [''];
+  var row = 0;
+  ctx.font = size + 'px Segoe UI, sans-serif';
+  lines[index].split(/\s+/).forEach(function (word) {
+    var next = rows[row] ? rows[row] + ' ' + word : word;
+    if (rows[row] && ctx.measureText(next).width > width * 0.86) rows[++row] = word;
+    else rows[row] = next;
+  });
+  var widthOfText = Math.max.apply(null, rows.map(function (line) { return ctx.measureText(line).width; }));
+  var lineHeight = size * 1.14;
+  var block = rows.length * lineHeight;
+  var top = Math.min(height * 0.84 - block / 2, height * 0.96 - block - size * 0.16);
+  ctx.fillStyle = '#071018f3';
+  ctx.fillRect((width - widthOfText) / 2 - size * 0.32, top - size * 0.16,
+    widthOfText + size * 0.64, block + size * 0.32);
+  ctx.fillStyle = '#fff1dc';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  rows.forEach(function (line, i) { ctx.fillText(line, width / 2, top + (i + 0.5) * lineHeight); });
 }
 
 function prepareIntroVideo(chapter, getElapsed) {
@@ -862,7 +875,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=film3';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=in-frame';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -898,8 +911,6 @@ function playIntro(chapter, done) {
   var canvas = document.getElementById('intro-canvas');
   var ctx = canvas.getContext('2d');
   var spec = chapter.intro;
-  var crawl = document.getElementById('intro-crawl');
-  var beats = document.getElementById('intro-beats');
   var progress = document.getElementById('intro-progress');
   var images = [];
   var started = performance.now();
@@ -913,16 +924,10 @@ function playIntro(chapter, done) {
   spec.layers.forEach(function (layer) { images.push(loadImage(layer.src)); });
   introImages = images;
   document.getElementById('intro-kicker').textContent = chapter.kicker;
-  document.getElementById('intro-title').textContent = chapter.title;
-  beats.replaceChildren();
-  chapter.lines.forEach(function (line) {
-    var paragraph = document.createElement('p');
-    paragraph.textContent = line;
-    beats.appendChild(paragraph);
-  });
-  beats.style.transform = '';
+  var introTitle = document.getElementById('intro-title');
+  introTitle.textContent = chapter.title;
+  introTitle.setAttribute('aria-description', chapter.lines.join(' '));
   progress.style.transform = 'scaleX(0)';
-  crawl.tabIndex = reduceMotion.matches ? 0 : -1;
   cinema.dataset.chapter = chapter.id;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   cinema.hidden = false;
@@ -931,7 +936,7 @@ function playIntro(chapter, done) {
   updateVideo = prepareIntroVideo(chapter, function () { return elapsed; });
   updateVideo();
   if (window.TrentMusic) window.TrentMusic.startIntro(chapter.id);
-  document.getElementById('intro-title').focus({ preventScroll: true });
+  introTitle.focus({ preventScroll: true });
   introDone = function () {
     if (introToken !== token) return;
     stopIntro();
@@ -956,8 +961,8 @@ function playIntro(chapter, done) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       drawBackground(ctx, images[0], spec, elapsed, reduced);
       for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, reduced);
+      drawFallbackIntroCaption(ctx, chapter.lines, elapsed);
     }
-    updateIntroCrawl(beats, chapter.lines.length, elapsed, reduced);
     progress.style.transform = 'scaleX(' + Math.min(1, elapsed / INTRO_MS) + ')';
     if (elapsed >= INTRO_MS) {
       introDone();

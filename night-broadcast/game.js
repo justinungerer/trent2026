@@ -34,12 +34,13 @@
   var VIEW_H = 390;
   var START_FREQ = 0.05;
   /* Seconds of continuous strong signal before the red band is drawn. */
-  var STRONG_HOLD = 2;
+  var STRONG_HOLD = 1;
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = 3;
   var DECAY = 1;
   /* Frequency units per second. The old chase drift was 0.04. */
   var MARKER_SPEED = 0.16;
+  var STATION_SPEED_SCALE = 0.75;
   var TURN_LO = 0.85;
   var TURN_HI = 1.75;
   var EDGE_LO = 0.1;
@@ -220,7 +221,7 @@
 
   function hintText() {
     if (bandId) return 'Hold Lock inside the red band';
-    return 'Hold a strong signal for 2 seconds';
+    return 'Hold a strong signal for ' + STRONG_HOLD + ' second';
   }
 
   function renderHud() {
@@ -233,8 +234,8 @@
     var word = signalWord(sig, inside);
     var label = bandId ? 'Lock' : 'Hold';
     var lockLine = bandId
-      ? Math.min(LOCK_TIME, lockT).toFixed(1) + ' / 3s'
-      : Math.min(STRONG_HOLD, strongT).toFixed(1) + ' / 2s';
+      ? Math.min(LOCK_TIME, lockT).toFixed(1) + ' / ' + LOCK_TIME + 's'
+      : Math.min(STRONG_HOLD, strongT).toFixed(1) + ' / ' + STRONG_HOLD + 's';
     var redInside = insideHalf(stationById(bandId), freq, RED_HALF);
     var hint = hintText();
     if (hearingEl.textContent !== heard) hearingEl.textContent = heard;
@@ -422,7 +423,7 @@
     dir = tuneDirection();
     if (dir) freq += dir * KEY_RATE * dt;
     freq = clamp(freq, 0, 1);
-    updateStations(dt);
+    updateStations(dt * STATION_SPEED_SCALE);
     if (!bandId) {
       charged = stationById(chargeId);
       if (insideHalf(charged, freq, charged ? charged.half : 0)) {

@@ -37,7 +37,7 @@ def add_caption(camera, caption, ink, backdrop):
     curve.body = caption
     curve.align_x = 'CENTER'
     curve.align_y = 'CENTER'
-    curve.size = .029
+    curve.size = .0145
     curve.space_line = 1.08
     curve.materials.append(ink)
     text = bpy.data.objects.new("Story caption", curve)
@@ -46,11 +46,11 @@ def add_caption(camera, caption, ink, backdrop):
     text.location = (0, -.169, -1)
     bpy.context.view_layer.update()
     width, height, _ = text.dimensions
-    scale = min(1, .235 / width)
+    scale = min(1, .1175 / width)
     text.scale = (scale,) * 3
 
     plaque = card("Caption background", backdrop, (0, -.169, -1.005),
-                  width * scale + .028, height * scale + .028)
+                  width * scale + .014, height * scale + .014)
     plaque.parent = camera
 
 
