@@ -12,7 +12,7 @@ The depot is a landscape, side-scrolling mission in three gated yards:
 Collecting each yard's objective triggers an alarm reinforcement while its
 relay is active. Guards telegraph and fire actual projectiles. Crates block
 their shots; pull down while stationary behind one to hide. Moving or firing
-exposes Sprout. Follow the arrow and yellow marker to the current objective;
+exposes Buddy. Follow the arrow and yellow marker to the current objective;
 relays require a brief interaction by standing next to them.
 
 Serve the repository root over HTTP and open `shelf-escape/`, or play from the
@@ -49,7 +49,7 @@ transitions into an original parcel effect.
   explains the terms. The sprite sheets total approximately 0.97 MB.
 
 On a landscape phone, move with the left pad and aim/fire with the right pad.
-Push up on the move pad to jump guards, ribbon parcels, tall crates, and the alarm bells. A relay counts only when Sprout is at the top of that jump and just touches the bell. Each successful interaction brings every defeated guard back. Tap the fire pad's center to target the nearest guard. Fire is one shot per tap. On desktop use A/D or
+Push up on the move pad to jump guards, ribbon parcels, tall crates, and the alarm bells. A relay counts only when Buddy is at the top of that jump and just touches the bell. Each successful interaction brings every defeated guard back. Tap the fire pad's center to target the nearest guard. Fire is one shot per tap. On desktop use A/D or
 left/right arrows to move, W or Up to jump, S or Down to hide at a crate, and Space to fire
 once per press at the nearest guard. Green supply boxes refill the earned magazine on entry;
 each box also restores one heart once per attempt. Leave and return for another

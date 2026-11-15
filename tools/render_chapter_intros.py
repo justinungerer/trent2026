@@ -279,7 +279,7 @@ def prepare_scene(chapter, preview):
         searchlight(ratio)
 
     if name == "shelf":
-        # This painting already includes Sprout. Stage a guard further down the platform.
+        # This painting already includes Buddy. Stage a guard further down the platform.
         layers = [{"src": "shelf-escape/art/guard.webp"}]
         blocking = [(0.29, 0.90, 0.66, 0.68)]
     else:

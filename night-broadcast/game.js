@@ -45,7 +45,7 @@
   var EDGE_LO = 0.1;
   var EDGE_HI = 0.9;
   var STRONG_HALF = 0.08;
-  var RED_HALF = 0.045;
+  var RED_HALF = 0.045 + (window.TrentMissionBonus || 0) * 0.009;
   var DRAG = 0.0008;
   var KEY_STEP = 0.008;
   var KEY_RATE = 0.26;

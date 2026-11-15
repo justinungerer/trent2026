@@ -44,7 +44,7 @@ function overlay(mode,title,brief,label){
 }
 function start(){if(state==='intro'||state==='lost'||state==='won')reset();state='playing';$('sheet').hidden=true;clearInput()}
 $('action').onclick=()=>{if(state==='won'&&session){if(!finished){finished=true;parent.postMessage({type:'trent:complete',version:1,mission:'shelf-escape',runId:session.runId,seconds:Math.round(elapsed),chargesUsed:shotsUsed},session.origin)}}else start()};
-function pause(){if(state==='playing')overlay('paused','HOLD POSITION','Sprout calls this a tactical pause. The depot can wait.','Resume mission')}
+function pause(){if(state==='playing')overlay('paused','HOLD POSITION','Buddy calls this a tactical pause. The depot can wait.','Resume mission')}
 $('pause').onclick=pause;
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 window.addEventListener('keydown',e=>{const key=e.key.toLowerCase();if([' ','arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(key)){if(state==='playing')e.preventDefault();keys.add(key)}if(key==='escape'&&!e.repeat){if(state==='paused')start();else pause()}});
@@ -71,7 +71,7 @@ function updateHud(){
 }
 function update(dt){
  elapsed+=dt;alarmNotice=Math.max(0,alarmNotice-dt);player.shield=Math.max(0,player.shield-dt);player.fire=Math.max(0,player.fire-dt);
- if(player.dying){player.dying+=dt;if(player.dying>.8){updateHud();overlay('lost','SEASONAL SETBACK','A guard puts Sprout back on display. The label reads: “Interactive. Batteries confiscated.”','Retry the mission')}return}
+ if(player.dying){player.dying+=dt;if(player.dying>.8){updateHud();overlay('lost','SEASONAL SETBACK','A guard puts Buddy back on display. The label reads: “Interactive. Batteries confiscated.”','Retry the mission')}return}
  const axis=sticks.move.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
  player.moving=Math.abs(axis)>.1;
  player.hidden=!player.moving&&player.y<=0&&!keys.has(' ')&&sticks.fire.id===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
@@ -88,7 +88,7 @@ function update(dt){
   if(ready&&!r.done&&Math.abs(player.x-r.x)<34&&player.y>=108){r.done=true;r.progress=1.2;interact(r.x,bellY,'#8feafa',24)}}
  if(count===3&&transmit<3&&Math.abs(player.x-[8500,9250,9700][transmit])<28){interact(player.x,350,'#8feafa',12);transmit++}
  if(count===3&&transmit===3&&Math.abs(player.x-terminal.x)<28){transmit=4;interact(player.x,350,'#8feafa',20)}
- if(count===3&&transmit===4&&locks.every(l=>l.done)&&player.x>14060){overlay('won','MESSAGE RECEIVED','Sprout slips out with Santa’s orders and a stolen stapler. Command calls that a successful extraction.',session?'Continue the story':'Play again');return}
+ if(count===3&&transmit===4&&locks.every(l=>l.done)&&player.x>14060){overlay('won','MESSAGE RECEIVED','Buddy slips out with Santa’s orders and a stolen stapler. Command calls that a successful extraction.',session?'Continue the story':'Play again');return}
  const station=supplies.findIndex(x=>Math.abs(player.x-x)<28);
  if(station!==-1&&station!==atSupply){if(startingAmmo)ammo=startingAmmo;if(player.hp<3&&!medicalUsed.has(station)){player.hp++;medicalUsed.add(station)}interact(supplies[station],390,'#c7e9ae',8)}atSupply=station;
  for(const parcel of parcels)if(!parcel.found&&Math.abs(player.x-parcel.x)<36&&player.y>=parcel.need){parcel.found=true;if(player.hp<3)player.hp++;else if(startingAmmo)ammo=Math.min(startingAmmo+6,ammo+3);interact(parcel.x,parcel.y,'#f9d487',14)}
@@ -213,7 +213,7 @@ function render(){
  g.restore();
  const vignette=g.createRadialGradient(W/2,H/2,180,W/2,H/2,600);vignette.addColorStop(0,'#0000');vignette.addColorStop(1,'#06101caa');g.fillStyle=vignette;g.fillRect(0,0,W,H);
 }
-reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Sprout just touches each alarm bell to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; push up, W, or Up to jump guards, ribbon parcels, tall crates, and the alarm bells. Right thumb or Space fires once per tap. Pull down behind a crate to hide. Green ribbon boxes refill ammo and restore one heart once.','Begin escape');
+reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Left thumb or A / D moves; push up, W, or Up to jump guards, ribbon parcels, tall crates, and the alarm bells. Right thumb or Space fires once per tap. Pull down behind a crate to hide. Green ribbon boxes refill ammo and restore one heart once.','Begin escape');
 let last=0;
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

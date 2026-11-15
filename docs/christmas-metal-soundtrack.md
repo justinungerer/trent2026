@@ -42,7 +42,7 @@ The files in `assets/audio/christmas-metal/intros/` use the chapter IDs from `ca
 - `rail.mp3` — **Signals in Steel** · White Rail
 - `yard.mp3` — **The Penguin Diversion** · Special Delivery
 - `tower.mp3` — **Throw the Switch** · The Switch Tower
-- `shelf.mp3` — **Overture for Sprout** · The Shelf Operative
+- `shelf.mp3` — **Overture for Buddy** · The Shelf Operative
 - `wire.mp3` — **Winter Signal** · The Listening Wire
 - `camp.mp3` — **Through the Searchlights** · The Holding Camp
 - `wrap.mp3` — **Workshop Downbeat** · The Wrapping Line

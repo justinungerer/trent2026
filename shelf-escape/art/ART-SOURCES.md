@@ -23,4 +23,4 @@ The pictures were generated as paintings on a flat color field, then keyed to tr
 | `props/mail-hatch.webp` | 285 × 384 | Arched mail hatch |
 | `props/wood-crate.webp` | 384 × 353 | Roped shipping crate with holly |
 
-Cover crates and the tall boxes Sprout must jump use `wood-crate.webp`. No external license applies. No source URL applies.
+Cover crates and the tall boxes Buddy must jump use `wood-crate.webp`. No external license applies. No source URL applies.

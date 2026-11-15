@@ -2,6 +2,7 @@
 const canvas = document.querySelector('canvas');
 const g = canvas.getContext('2d');
 const W = 480, H = 760;
+const MAX_HULL = 3 + (window.TrentMissionBonus || 0);
 const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
@@ -55,11 +56,11 @@ const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, aim, drag, wraps, recoil, shake, kills;
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
-  player = { x: W / 2, y: 625, hull: 3, bank: 0, shield: 0, stack: ['flame'], cool: [0] };
+  player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['flame'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
   wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
-  ui.hull.textContent = '◆◆◆';
+  ui.hull.textContent = '◆'.repeat(MAX_HULL);
   ui.phase.textContent = 'THE FROZEN VALLEY';
   paintStack();
 }
@@ -88,7 +89,7 @@ ui.action.onclick = () => {
   canvas.focus();
 };
 function pause() {
-  if (state === 'playing') overlay('paused', 'HOLD POSITION', 'Quinn says this is an excellent time to check whether the fruitcake has stopped glowing.', 'Resume flight');
+  if (state === 'playing') overlay('paused', 'HOLD POSITION', 'The CIA says this is an excellent time to check whether the fruitcake has stopped glowing.', 'Resume flight');
 }
 ui.pause.onclick = pause;
 window.addEventListener('keydown', e => {
@@ -229,8 +230,8 @@ function hit() {
     paintStack();
   }
   burst(player.x, player.y, colors.gold, 23);
-  ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(3 - player.hull);
-  if (!player.hull) overlay('lost', 'SLEIGH DOWN', 'The fruitcake survived. Quinn would prefer that you do likewise. Score: ' + score + '.', 'Retry the intercept');
+  ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(MAX_HULL - player.hull);
+  if (!player.hull) overlay('lost', 'SLEIGH DOWN', 'The fruitcake survived. The CIA would prefer that you do likewise. Score: ' + score + '.', 'Retry the intercept');
 }
 function grant(pod) {
   const kind = WEAPONS[pod.kind] ? pod.kind : 'flame';

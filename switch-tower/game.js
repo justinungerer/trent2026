@@ -106,6 +106,7 @@
   var patternIndex = 0;
   var departures = 0;
   var misses = 0;
+  var missLimit = 3 + (window.TrentMissionBonus || 0);
   var doomed = false;
   var blastT = 0;
   var blastParts = [];
@@ -430,13 +431,13 @@
           say('The route is open.');
         } else {
           misses += 1;
-          doomed = misses >= 3;
+          doomed = misses >= missLimit;
           state = 'blast';
           mid = trainX + TRAIN_W * 0.5;
           if (!reduceMotion()) shake = 10;
           boomAt(mid, railY(mid) - 46);
           renderHud();
-          say('The train is lost. Miss ' + misses + ' of 3.');
+          say('The train is lost. Miss ' + misses + ' of ' + missLimit + '.');
         }
       }
     } else if (state === 'blast') {

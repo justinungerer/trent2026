@@ -116,6 +116,7 @@
   var distance = 0;
   var speed = 0;
   var slips = 0;
+  var slipLimit = 3 + (window.TrentMissionBonus || 0);
   var fromLane = 1;
   var toLane = 1;
   var laneT = 1;
@@ -250,7 +251,7 @@
   }
 
   function playing() {
-    return state === 'play' || (state === 'slip' && slips < 3);
+    return state === 'play' || (state === 'slip' && slips < slipLimit);
   }
 
   function say(text) {
@@ -260,7 +261,7 @@
   function renderHud() {
     var kmh = Math.round(Math.max(0, speed) * 3.6) + ' km/h';
     var left = Math.max(0, Math.ceil(FINISH - distance)) + ' m';
-    var slipLine = slips + ' / 3';
+    var slipLine = slips + ' / ' + slipLimit;
     if (speedEl.textContent !== kmh) speedEl.textContent = kmh;
     if (distanceEl.textContent !== left) distanceEl.textContent = left;
     if (slipsEl.textContent !== slipLine) slipsEl.textContent = slipLine;
@@ -401,8 +402,8 @@
   function failLine() {
     showLose(
       'Back at the start',
-      'Three slips. The handcar is at the start of the line again.',
-      'Three slips. Back at the start of the line.'
+      'Too many slips. The handcar is at the start of the line again.',
+      'Too many slips. Back at the start of the line.'
     );
   }
 
@@ -453,10 +454,10 @@
     safeUntil = ob.x + ob.w + 0.45;
     slipT = 0;
     state = 'slip';
-    if (slips >= 3) speed = 0;
+    if (slips >= slipLimit) speed = 0;
     if (!reduceMotion()) shake = 8;
     renderHud();
-    say('Slip ' + slips + ' of 3.');
+    say('Slip ' + slips + ' of ' + slipLimit + '.');
   }
 
   function hitTest(ob) {
@@ -676,7 +677,7 @@
 
   function updateSlip(dt) {
     slipT += dt;
-    if (slips >= 3) {
+    if (slips >= slipLimit) {
       speed = 0;
       if (pumpAnim < 1) pumpAnim = Math.min(1, pumpAnim + dt / 0.32);
       if (slipT >= 0.42) failLine();

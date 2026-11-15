@@ -1,7 +1,5 @@
 # Ending
 
-The ending is a video file: `assets/ending.mp4` (about 7.2 MB).
+The ending is the short illustrated flight home in `assets/ending.mp4`. The player can watch it after completing Chimney Road. The game's final completion password, `19820424`, appears on the completion card and at the end of the film. It opens the ending, the opening film, and every chapter and intro in the chapter menu.
 
-It is one short silent clip, about eight seconds, 16:9, 720p. A painted sleigh flies home over a snowy village, then Christmas morning is restored at a cottage with a lit tree. No blood and no insignia. It is not one of the chapter intros. Those stay on the existing painted sprites.
-
-Chimney Road does not issue a continue code. When that minigame is won, the page shows a card. The video source is set and playback starts only after the player taps **Play the ending**. The element uses `playsinline` and `webkit-playsinline`, is muted, and the page never calls fullscreen. A Skip control leaves the clip for the restored card.
+Playback starts after the player taps **Play the ending**. The muted film plays inline in portrait on a phone. **Skip** goes straight to the restored card.

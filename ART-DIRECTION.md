@@ -2,7 +2,7 @@
 
 ## Goal and feel
 
-Make the depot a polished, 2D, smooth, high-resolution side-scrolling action game for landscape phones. The left thumb moves Sprout; the right thumb aims and fires independently. Keep the action, hazards, objectives, and controls readable at phone size. It must remain a static GitHub Pages site, including when hosted under a repository subpath.
+Make the depot a polished, 2D, smooth, high-resolution side-scrolling action game for landscape phones. The left thumb moves Buddy; the right thumb aims and fires independently. Keep the action, hazards, objectives, and controls readable at phone size. It must remain a static GitHub Pages site, including when hosted under a repository subpath.
 
 The painted, illustrated look of **Frosted Skies** is an inspiration, not a requirement to find an exact match. The preferred result is the best available smooth cartoon art; adapt the depot scenery to harmonize with it when matching painted assets are unavailable. Avoid blocky or pixelated art, stiff flat-bobbing characters, and distracting effects that obscure gameplay.
 
@@ -10,7 +10,7 @@ The setting is a Christmas-themed WWII adventure with appealing characters and r
 
 ## Characters and animation
 
-Give Sprout and enemies coherent, full-body designs with convincing motion, consistent proportions, equipment, facing, and ground contact. Aim for distinct idle, walk, run, aim, fire, hit, defeat, and wrapping sequences where those actions actually occur. Animations should reflect the real game state and direction: moving should look like moving, aiming should follow the aim, firing should correspond to a shot, and wrapping should show the target becoming a parcel. Do not invent enemy ranged attacks or other gameplay solely to justify an animation. Avoid implying that a bow animation is a directional ribbon gun.
+Give Buddy and enemies coherent, full-body designs with convincing motion, consistent proportions, equipment, facing, and ground contact. Aim for distinct idle, walk, run, aim, fire, hit, defeat, and wrapping sequences where those actions actually occur. Animations should reflect the real game state and direction: moving should look like moving, aiming should follow the aim, firing should correspond to a shot, and wrapping should show the target becoming a parcel. Do not invent enemy ranged attacks or other gameplay solely to justify an animation. Avoid implying that a bow animation is a directional ribbon gun.
 
 Use readable silhouettes and well-separated colors against the background. Recommend transparent character backgrounds, consistent canvas sizes and anchor points across each character's frames, and enough source resolution to remain crisp at the largest intended mobile display size. Supply individual frames or a documented atlas/spritesheet, including frame dimensions, order, anchor points, and recommended timing for loops and one-shot actions. Choose dimensions and timings to suit the artwork, gameplay, memory, and mobile performance rather than treating any arbitrary size or frame rate as mandatory.
 

@@ -20,7 +20,7 @@ function game(query=''){
 }
 
 test('all reachable quiz loadouts complete through the actual mission update loop',()=>{
- for(const [charges,reload,ribbon] of [['4','fast','enchanted'],['2','fast','enchanted'],['4','slow','enchanted'],['4','fast','plain'],['2','slow','enchanted'],['2','fast','plain'],['4','slow','plain']]){
+ for(const [charges,reload,ribbon] of [['2','slow','plain'],['4','fast','enchanted'],['2','fast','enchanted'],['4','slow','enchanted'],['4','fast','plain'],['2','slow','enchanted'],['2','fast','plain'],['4','slow','plain']]){
   const {run}=game(`?charges=${charges}&reload=${reload}&ribbon=${ribbon}`);
   const result=run(`start();let steps=0;while(state==='playing'&&steps++<30000){
    keys.clear();const count=relays.filter(r=>r.done).length;

@@ -95,6 +95,7 @@
   var held = { left: false, right: false };
   var jumpQueued = 0;
   var coyote = 0;
+  var jumpBonus = (window.TrentMissionBonus || 0) * 0.04;
   var airJumps = 1;
   var airBuffer = 0;
   var hurt = 0;
@@ -340,7 +341,7 @@
 
   function requestJump() {
     if (state !== 'play') return;
-    if (body.ground || coyote > 0) jumpQueued = 0.14;
+    if (body.ground || coyote > 0) jumpQueued = 0.14 + jumpBonus;
     else airBuffer = 0.52;
   }
 
@@ -367,7 +368,7 @@
     body.vx = clamp(body.vx, -RUN, RUN);
     if (jumpQueued > 0) jumpQueued -= dt;
     if (body.ground) {
-      coyote = 0.11;
+      coyote = 0.11 + jumpBonus;
       airJumps = 1;
       airBuffer = 0;
     } else {

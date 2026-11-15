@@ -25,7 +25,7 @@
   var BUF_W = 420;
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
-  var MAX_HEALTH = 3;
+  var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
 
   var KINDS = [
     { name: 'Soldier', move: 1.05, range: 6.4, wait: 1.55, shot: 4.6, hold: 2.5, h: 0.86, tint: [1, 1, 1] },
@@ -599,7 +599,7 @@
   function paintIntro() {
     var n = readStartAmmo();
     var raw = livesQuery();
-    var line = 'Three life points, and ' + n + ' ' + bulletWord(n);
+    var line = MAX_HEALTH + ' life points, and ' + n + ' ' + bulletWord(n);
     if (raw != null && /^\d+$/.test(String(raw).trim())) line += ' from the questions';
     loadoutEl.textContent = line + '.';
   }

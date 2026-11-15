@@ -55,8 +55,8 @@ function reset(notice){
    return {x:route[0][0],y:route[0][1],route,index:1,angle,chase:false};
   }),
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
-  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3,toy:null,time:0,alarm:0,flash:notice?0.45:0,
-  notice:notice||'Find Sprout’s three dispatches',noticeUntil:notice?3.5:5};
+  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3+(window.TrentMissionBonus||0),toy:null,time:0,alarm:0,flash:notice?0.45:0,
+  notice:notice||'Find Buddy’s three dispatches',noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
 }
 function sync(){
@@ -228,7 +228,7 @@ function update(dt){
   if(!item.taken&&distance(p,item)<30){item.taken=true;run.count++;announce(run.count===3?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');sync();}
  }
  if(distance(p,depot)<40&&run.count===3){
-  show('won','Signed, sealed, escaped','Sprout’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
+  show('won','Signed, sealed, escaped','Buddy’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
   const deliveryDetail={postcards:run.count,hull:p.hull,seconds:Math.round(run.time)};
   window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:deliveryDetail}));
   if(window.parent!==window){

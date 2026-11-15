@@ -34,7 +34,7 @@
   var GATE_X = START_X + WALK;
   var WORLD_R = GATE_X + 240;
   var SANTA_H = Math.round(VIEW_H * 0.28);
-  var MAX_HP = 5;
+  var MAX_HP = 5 + (window.TrentMissionBonus || 0);
   var FR = window.CAMP_FRAMES;
 
   var KIND = {

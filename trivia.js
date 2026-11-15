@@ -11,23 +11,23 @@
 
   var FAIL_CARDS = [
     { kicker: 'Caught', title: 'Gift-wrapped', copy: 'A patrol finds Trent under the table and uses the good ribbon. The tag reads DO NOT OPEN UNTIL FURTHER NOTICE.' },
-    { kicker: 'Caught', title: 'Third place', copy: 'The colonel enters Trent in the decoration contest. Sprout places second. Trent places third. The winner is a kettle.' },
+    { kicker: 'Caught', title: 'Third place', copy: 'The colonel enters Trent in the decoration contest. Buddy places second. Trent places third. The winner is a kettle.' },
     { kicker: 'Caught', title: 'Form 12-B', copy: 'The clerk produces the form for leaving a room. It needs three stamps and a biscuit. The fruitcake has already signed.' },
     { kicker: 'Caught', title: 'Structural fruitcake', copy: 'Command deploys the fruitcake. It was rated for structural use. The table is fine. Trent now supports it.' },
     { kicker: 'Caught', title: 'Biscuit court-martial', copy: 'The biscuits outrank Trent. They hold a hearing. The verdict is crumbs, and Trent is assigned to sweep them.' },
     { kicker: 'Caught', title: 'Tea trolley escort', copy: 'Three guards form an escort around the tea trolley and collect Trent as a spare saucer.' },
     { kicker: 'Caught', title: 'Medal for the kettle', copy: 'The kettle receives another medal. Trent is asked to hold the ribbon and is still holding it.' },
     { kicker: 'Caught', title: 'Snowflakes rejected', copy: 'A clerk stamps Trent REJECTED, the same stamp used on individual snowflakes. He must wait in the out tray.' },
-    { kicker: 'Caught', title: 'Dentist extraction', copy: 'Sprout once requested extraction and they sent a dentist. This time they send the dentist for Trent. The appointment is immediate.' },
-    { kicker: 'Caught', title: 'Potato desk', copy: 'Sprout signs the ledger Father Christmas, Acting Potato. The quartermaster salutes Trent and will not let him leave the potato desk.' },
+    { kicker: 'Caught', title: 'Dentist extraction', copy: 'Buddy once requested extraction and they sent a dentist. This time they send the dentist for Trent. The appointment is immediate.' },
+    { kicker: 'Caught', title: 'Potato desk', copy: 'Buddy signs the ledger Father Christmas, Acting Potato. The quartermaster salutes Trent and will not let him leave the potato desk.' },
     { kicker: 'Caught', title: 'Gravy boat', copy: 'Half the ammunition arrives in a gravy boat. Trent is asked to taste it for the report and misses the door.' },
-    { kicker: 'Caught', title: 'Optional optimism', copy: 'Quinn bolts a spring labeled OPTIONAL OPTIMISM into the door. It only opens for people who have filed a smile.' },
+    { kicker: 'Caught', title: 'Optional optimism', copy: 'The CIA bolts a spring labeled OPTIONAL OPTIMISM into the door. It only opens for people who have filed a smile.' },
     { kicker: 'Caught', title: 'Musical gift tag', copy: 'A gift tag plays one aggressive note for eleven seconds. The guards arrive to complain about the melody and stay for Trent.' },
-    { kicker: 'Caught', title: 'Double wrapping', copy: 'Quinn says two hits per guard is double wrapping. A guard demonstrates on Trent, with a bow and no hurry.' },
+    { kicker: 'Caught', title: 'Double wrapping', copy: 'The CIA says two hits per guard is double wrapping. A guard demonstrates on Trent, with a bow and no hurry.' },
     { kicker: 'Caught', title: 'Chair on tour', copy: 'A test parcel thanks a chair for its service. The chair volunteers Trent for a second tour of the cloakroom.' },
     { kicker: 'Caught', title: 'Mrs. Claus warranty', copy: 'The ribbon gun warranty says that if it breaks, you explain it to Mrs. Claus. Trent is sent to explain a typo.' },
-    { kicker: 'Caught', title: 'Some assembly regrettable', copy: 'Sprout’s gift tag reads SOME ASSEMBLY REGRETTABLE. The guards assemble Trent into the queue instead.' },
-    { kicker: 'Caught', title: 'Stapler superiority', copy: 'Sprout will not leave the guards with air superiority, so he takes their stapler. They take Trent as a replacement stapler.' },
+    { kicker: 'Caught', title: 'Some assembly regrettable', copy: 'Buddy’s gift tag reads SOME ASSEMBLY REGRETTABLE. The guards assemble Trent into the queue instead.' },
+    { kicker: 'Caught', title: 'Stapler superiority', copy: 'Buddy will not leave the guards with air superiority, so he takes their stapler. They take Trent as a replacement stapler.' },
     { kicker: 'Caught', title: 'Holding camp stationery', copy: 'The transport order is larger than the table. Trent is filed under Appendix, Fruitcake, and cannot be retrieved.' },
     { kicker: 'Caught', title: 'Parade rest', copy: 'A parade is called for a missing mitten. Trent is placed at parade rest until the mitten apologizes.' },
     { kicker: 'Caught', title: 'Lamp inspection', copy: 'The searchlight asks Trent to state his business. His business is standing still. The light finds this insufficient.' },
@@ -275,9 +275,9 @@
     focus(title);
   }
 
-  function renderFail(onHome) {
+  function renderFail(onHome, result) {
     var openModal = document.querySelector('.quiz-modal');
-    var card = FAIL_CARDS[Math.floor(Math.random() * FAIL_CARDS.length)];
+    var card = result || FAIL_CARDS[Math.floor(Math.random() * FAIL_CARDS.length)];
     if (openModal) openModal.remove();
     var section = document.createElement('section');
     var kicker = document.createElement('p');
@@ -364,7 +364,11 @@
         appRoot.innerHTML = '';
         appRoot.hidden = true;
       }
-      onClear(score);
+      if (score >= 5) onClear(score);
+      else renderFail(appRoot.trentTriviaHome, {
+        kicker: 'Game over', title: 'Briefing failed',
+        copy: 'You got ' + score + ' of ' + round.length + ' right. You need at least five correct answers to enter the minigame.'
+      });
     }
 
     function paintElf(button, question) {

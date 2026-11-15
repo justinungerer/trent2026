@@ -34,15 +34,13 @@ window.addEventListener('message', function (event) {
 });
 
 // Score out of 10 selects the existing Ribbonfall switches: charges, reload, ribbon.
-// A finished round can earn a score from 0 to 10.
-// 0–3 correct: charges 2, slow, plain. 4–6: charges 4, slow, plain.
-// 7–8: charges 4, fast, plain. 9–10: charges 4, fast, enchanted.
+// Eight right adds ammo, nine adds faster reload, and ten adds enchanted ribbon.
 function loadoutFromScore(correct) {
   const score = Number(correct) || 0;
   return {
-    charges: score >= 4 ? '4' : '2',
-    reload: score >= 7 ? 'fast' : 'slow',
-    ribbon: score >= 9 ? 'enchanted' : 'plain'
+    charges: score >= 8 ? '4' : '2',
+    reload: score >= 9 ? 'fast' : 'slow',
+    ribbon: score >= 10 ? 'enchanted' : 'plain'
   };
 }
 

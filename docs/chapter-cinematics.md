@@ -1,25 +1,25 @@
-# Chapter cinematics
+# Chapter and opening films
 
-The prologue and all ten chapters play silent Blender renders from `assets/intro-video/`. The game layers the scene-setting crawl and the existing chapter theme over each clip. The chapter ID in `campaign.js` is the filename. Frosted Skies uses a portrait render. The other chapters use landscape renders.
+The game serves eleven 20-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. The chapter clips combine the Blender motion plates with new scene-specific detail shots, reframing, and color grading. The campaign adds the scrolling text and plays the existing chapter music. Frosted Skies uses portrait video.
 
-## Render a chapter
+The opening uses the game’s illustrated environments and animated cels to stage the fictional capture sequence. Casting cards, story captions, and matching role/name credits are HTML so they remain readable over the film. The in-game opening and the chapter films can be replayed from an unlocked chapter menu.
 
-Install [Blender 4.5 LTS](https://www.blender.org/releases/4-5/) and make Node.js and FFmpeg available on the command line. From the repository root, render a still first to check framing.
+## Render and edit
 
-```powershell
-blender --background --factory-startup --python-exit-code 1 --python tools/render_chapter_intros.py -- --preview --output .\intro-preview night
-```
-
-Render the 20-second H.264 clip at 24 frames per second after checking the still.
+Install Blender 4.5 LTS, Node.js, Python with Pillow, and FFmpeg. Run these from the repository root.
 
 ```powershell
-blender --background --factory-startup --python-exit-code 1 --python tools/render_chapter_intros.py -- --output .\intro-preview night
+blender --background --factory-startup --python-exit-code 1 --python tools/render_chapter_intros.py -- --output .\raw-intros
+python tools/edit_campaign_films.py .\raw-intros .\edited-intros
+python tools/render_opening_film.py .\edited-intros\opening.mp4
 ```
 
-Omit the chapter ID to render all scenes. Use `--save-project .\intro-preview` to save editable Blender projects with the artwork packed inside. The script skips complete MP4s already present in its output directory. Use a separate output directory when revising a shot, then copy the approved MP4 into `assets/intro-video/`.
+Review the exports before copying the eleven chapter videos into `assets/intro-video/` and the opening video into `assets/`. For a Blender still preview, add `--preview` and one chapter ID. Use `--save-project .\projects` to save editable Blender scenes with the art packed inside. The Blender renderer skips MP4s already in its output directory.
 
-The renderer reads the existing artwork and animation atlas paths from `campaign.js`. Adjust the camera travel, weather, lighting, and actor blocking in `tools/render_chapter_intros.py`. Edit the scrolling prose in the chapter's `lines` array in `campaign.js`.
+Edit chapter prose and opening captions in `campaign.js`. Update the cache version when publishing replacement media.
 
-## Playback checks
+## Campaign progression
 
-Serve the repository over HTTP and use the campaign test menu to replay introductions. Confirm that the right clip and theme start, the three text passages scroll in order, and Skip stops both the video and its theme. On a phone, check that the video pauses behind the rotate-screen prompt and continues after rotation. With reduced motion enabled or if video playback fails, the game uses its canvas artwork.
+Start opens the rules. The prologue leads to ten scored chapters with ten WWII questions apiece. Five correct answers are required to play the minigame. Scores of eight through ten apply increasingly useful bonuses, including extra hull, decoys, health, chances, or equipment improvements depending on the game.
+
+Each completion card gives the next chapter’s password and waits for the player to continue. A password opens that chapter and all prior chapters and intros. The completion password also opens the ending. The game remembers the furthest password on the device.

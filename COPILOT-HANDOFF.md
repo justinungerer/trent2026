@@ -11,7 +11,7 @@ Run from the repo root with `python -m http.server 8080` and open:
 ## What changed
 
 - **Frosted Skies:** Added the illustrated version under `frosted-skies/`, with a red rocket sleigh, painted winter valley, separate snowfall speeds, aircraft sprites, and recoil, impacts, and gift-wrap effects. It is static, with bundled WebP art and no runtime dependencies.
-- **Shelf Escape:** Added distinct illustrated sprites for Sprout, guards, and stocked shelves. Reworked the depot into cool floorboards and track lines under amber warehouse lamps. Added objective glows, muzzle flare, hit flashes, and a pop animation when a guard is wrapped. The level geometry and quiz-driven ammo, damage, and cadence still use the original mission logic. The mission continues to load Phaser 3.90.0 from its existing CDN.
+- **Shelf Escape:** Added distinct illustrated sprites for Buddy, guards, and stocked shelves. Reworked the depot into cool floorboards and track lines under amber warehouse lamps. Added objective glows, muzzle flare, hit flashes, and a pop animation when a guard is wrapped. The level geometry and quiz-driven ammo, damage, and cadence still use the original mission logic. The mission continues to load Phaser 3.90.0 from its existing CDN.
 
 Sprite motion uses transforms on illustrated frames. Fully authored movement cycles are future art work. Art under both missions is original generated artwork.
 

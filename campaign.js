@@ -24,21 +24,9 @@ var introDone = null;
 var introImages = [];
 var cleanupIntroVideo = null;
 var creditTimer = 0;
+var openingVideo = null;
 
-var CREDITS = [
-  'Trent Saves Christmas',
-  'Music by Justin Ungerer',
-  'Designer',
-  'Justin Ungerer',
-  'Producer',
-  'Justin Ungerer',
-  'Developer',
-  'Justin Ungerer',
-  'Tester',
-  'Justin Ungerer',
-  'Marketing',
-  'Justin Ungerer'
-];
+var CREDITS = ['Designer', 'Producer', 'Developer', 'Tester', 'Marketing', 'Music'];
 
 var CHAPTERS = [
   {
@@ -70,14 +58,14 @@ var CHAPTERS = [
     number: 1,
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
-    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
+    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
     lines: [
       'Months after the landing, Trent tunes a field radio in the snow. Allied intel is on a narrow band.',
-      'Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued.',
+      'Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued.',
       'The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers.',
       'Hold the dial still until the lock fills. Trent is the Allied hero who has to stop all of it.'
     ],
-    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow and holds a narrow band until it locks. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers. Trent is the Allied hero who has to carry the depot, the escape, the workshop, and the flight home.',
+    story: 'Months after the landing, Christmas is close. Trent opens a field radio in the snow and holds a narrow band until it locks. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The Luftwaffe plans to bomb Santa’s secret workshop. The enemy plans to turn Rudolph into hamburgers. Trent is the Allied hero who has to carry the depot, the escape, the workshop, and the flight home.',
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
     pin: 'NIGHT',
@@ -148,14 +136,14 @@ var CHAPTERS = [
     number: 4,
     title: 'Special Delivery',
     kicker: 'Chapter 4',
-    line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Sprout, the elf on the shelf, is held.',
+    line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Buddy, the elf on the shelf, is held.',
     lines: [
       'The race to keep Rudolph from becoming hamburgers continues in the freight yard.',
       'Inspectors walk fixed routes. Stay out of their sight.',
       'A wind-up penguin draws them away for a few seconds.',
-      'The dispatches stop that order, and they point to the depot where Sprout is held.'
+      'The dispatches stop that order, and they point to the depot where Buddy is held.'
     ],
-    story: 'Special Delivery is the rest of the race to stop the enemy from turning Rudolph into hamburgers. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers point to the depot, where Sprout, the elf on the shelf, is still held and still has to be rescued.',
+    story: 'Special Delivery is the rest of the race to stop the enemy from turning Rudolph into hamburgers. Inspectors walk fixed routes. A wind-up penguin can draw them off. Trent gathers every dispatch, then slips out through the mail hatch. The papers point to the depot, where Buddy, the elf on the shelf, is still held and still has to be rescued.',
     event: 'special-delivery:complete',
     path: './chapter-2/',
     pin: 'YARD',
@@ -174,14 +162,14 @@ var CHAPTERS = [
     number: 5,
     title: 'The Switch Tower',
     kicker: 'Chapter 5',
-    line: 'Sprout, the elf on the shelf, was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
+    line: 'Buddy, the elf on the shelf, was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
     lines: [
-      'Sprout is held at the depot. This train is the way to the elf on the shelf.',
+      'Buddy is held at the depot. This train is the way to the elf on the shelf.',
       'The destination board shows the lever order as pictures, not a speech.',
       'Trent throws each lever left or right before the train arrives.',
       'The matching pattern lets the rescue train leave the yard.'
     ],
-    story: 'Sprout, the elf on the shelf, was caught spying and is still held at the depot. The destination board shows the lever order as pictures. Trent throws each switch to match it so the train can leave and the rescue can start.',
+    story: 'Buddy, the elf on the shelf, was caught spying and is still held at the depot. The destination board shows the lever order as pictures. Trent throws each switch to match it so the train can leave and the rescue can start.',
     event: 'switch-tower:complete',
     path: './switch-tower/',
     pin: 'SWITCH',
@@ -200,14 +188,14 @@ var CHAPTERS = [
     number: 6,
     title: 'The shelf operative',
     kicker: 'Chapter 6',
-    line: 'The depot is where Sprout, the elf on the shelf, is held. The quiz builds his ribbon gun. Then Trent plays as Sprout: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
+    line: 'The depot is where Buddy, the elf on the shelf, is held. The quiz builds his ribbon gun. Then Trent plays as Buddy: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
     lines: [
-      'This is the rescue. Sprout, the elf the Allies sent to spy, is trapped in the depot.',
+      'This is the rescue. Buddy, the elf the Allies sent to spy, is trapped in the depot.',
       'The questions decide his ammunition, his reload, and his ribbon.',
       'Inside, shelves block shots. Guards can be wrapped into parcels.',
-      'Disable the alarms, get Sprout out, and take the route toward Santa.'
+      'Disable the alarms, get Buddy out, and take the route toward Santa.'
     ],
-    story: 'Trent reaches the depot to rescue Sprout, the elf on the shelf. The questions build Sprout’s ribbon gun. Then Sprout wraps the guards, quiets the alarms, and leaves through the mail hatch with the route toward Santa.',
+    story: 'Trent reaches the depot to rescue Buddy, the elf on the shelf. The questions build Buddy’s ribbon gun. Then Buddy wraps the guards, quiets the alarms, and leaves through the mail hatch with the route toward Santa.',
     event: null,
     path: './shelf-escape/',
     pin: 'DEPOT',
@@ -225,14 +213,14 @@ var CHAPTERS = [
     number: 7,
     title: 'The Corridor',
     kicker: 'Chapter 7',
-    line: 'Sprout is free, and the way to Santa is a first-person cartoon corridor maze. The enemies shoot. Trent picks up health and ammunition as he fights through to the green door.',
+    line: 'Buddy is free, and the way to Santa is a first-person cartoon corridor maze. The enemies shoot. Trent picks up health and ammunition as he fights through to the green door.',
     lines: [
-      'Sprout is out. Santa is still held. The way ahead is a cartoon corridor maze.',
+      'Buddy is out. Santa is still held. The way ahead is a cartoon corridor maze.',
       'Trent moves in first person. The enemies shoot back.',
       'Health and ammunition sit in the halls. Pick them up and keep moving.',
       'Clear the maze. The green door at the end leads on toward Santa.'
     ],
-    story: 'Sprout is free. Trent fights through a first-person cartoon corridor maze on the way to Santa. The enemies shoot. Health and ammunition pickups keep him moving. The green door at the end of the maze is the way through.',
+    story: 'Buddy is free. Trent fights through a first-person cartoon corridor maze on the way to Santa. The enemies shoot. Health and ammunition pickups keep him moving. The green door at the end of the maze is the way through.',
     event: 'listening-wire:complete',
     path: './listening-wire/',
     pin: 'WIRE',
@@ -251,14 +239,14 @@ var CHAPTERS = [
     number: 8,
     title: 'The Holding Camp',
     kicker: 'Chapter 8',
-    line: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Sprout and Rudolph are waiting beyond the gate. The secret workshop is next.',
+    line: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Buddy and Rudolph are waiting beyond the gate. The secret workshop is next.',
     lines: [
       'Santa is held here. This is a cartoon holding camp, and Trent has come to free him.',
       'Cartoon guards block the yard. Trent fights them in a brawl.',
       'When a guard sits in the snow, the path toward Santa opens.',
       'Free Santa and reach the gate. The secret workshop, and home, come next.'
     ],
-    story: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Sprout and Rudolph are waiting at the gate. Together they turn toward the workshop and the flight home.',
+    story: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Buddy and Rudolph are waiting at the gate. Together they turn toward the workshop and the flight home.',
     event: 'holding-camp:complete',
     path: './holding-camp/',
     pin: 'CAMP',
@@ -277,14 +265,14 @@ var CHAPTERS = [
     number: 9,
     title: 'The Wrapping Line',
     kicker: 'Chapter 9',
-    line: 'Santa’s secret workshop is still standing after the Luftwaffe raid. Parcels ride a belt while Trent, Sprout, Rudolph, and Santa ready the flight home. Some parcels add points. Damaged ones take points away. Thirty points before the timer ends clears the line.',
+    line: 'Santa’s secret workshop is still standing after the Luftwaffe raid. Parcels ride a belt while Trent, Buddy, Rudolph, and Santa ready the flight home. Some parcels add points. Damaged ones take points away. Thirty points before the timer ends clears the line.',
     lines: [
-      'The workshop the Luftwaffe meant to bomb is safe. Trent has Sprout, Rudolph, and Santa with him.',
+      'The workshop the Luftwaffe meant to bomb is safe. Trent has Buddy, Rudolph, and Santa with him.',
       'The four of them ready the flight home. The belt brings one parcel after another.',
       'Whole parcels add points. A torn parcel takes points away.',
       'Thirty points before the timer ends finish the line. Order does not matter.'
     ],
-    story: 'Trent has carried the rescue through the depot, the escape, and the holding camp. The workshop the Luftwaffe meant to bomb is still standing. Trent, Sprout, Rudolph, and Santa ready the flight home. Parcels ride a belt. Whole ones add points and damaged ones take points away. Thirty points before the timer ends clear the line.',
+    story: 'Trent has carried the rescue through the depot, the escape, and the holding camp. The workshop the Luftwaffe meant to bomb is still standing. Trent, Buddy, Rudolph, and Santa ready the flight home. Parcels ride a belt. Whole ones add points and damaged ones take points away. Thirty points before the timer ends clear the line.',
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
     pin: 'BOW',
@@ -303,14 +291,14 @@ var CHAPTERS = [
     number: 10,
     title: 'The Chimney Road',
     kicker: 'Chapter 10',
-    line: 'Snowy roofs lead to the waiting sleigh. Trent climbs up and down the roofs, doubles back out of dead ends, and jumps the gaps, with Sprout, Rudolph, and Santa bound for home. The flight home comes after.',
+    line: 'Snowy roofs lead to the waiting sleigh. Trent climbs up and down the roofs, doubles back out of dead ends, and jumps the gaps, with Buddy, Rudolph, and Santa bound for home. The flight home comes after.',
     lines: [
       'The sleigh is parked above the first roofs. Home is the flight after it.',
-      'Trent brings Sprout, Rudolph, and Santa from the workshop toward the sky.',
+      'Trent brings Buddy, Rudolph, and Santa from the workshop toward the sky.',
       'The road branches. Some paths climb, some drop, and some end and send him back.',
       'Jump the gaps and the moving hazards. The sleigh is the way home.'
     ],
-    story: 'The sleigh waits above the last roofs. Trent, Sprout, Rudolph, and Santa are nearly home after the depot, the escape, and the workshop. Trent climbs, drops, and doubles back through the snowy paths until he reaches the chimney. The flight home comes after the sleigh.',
+    story: 'The sleigh waits above the last roofs. Trent, Buddy, Rudolph, and Santa are nearly home after the depot, the escape, and the workshop. Trent climbs, drops, and doubles back through the snowy paths until he reaches the chimney. The flight home comes after the sleigh.',
     event: 'chimney-road:complete',
     path: './chimney-road/',
     pin: 'HOME',
@@ -340,9 +328,8 @@ var PIN_TO_ID = {
   BOW: 'wrap',
   HOME: 'chimney'
 };
-var TEST_PIN = '19820424';
+var COMPLETION_PIN = '19820424';
 var pinTimer = 0;
-var pendingTest = null;
 
 function byId(id) {
   var i;
@@ -359,7 +346,7 @@ function normalizePin(value) {
 function readStoredPin() {
   try {
     var value = normalizePin(localStorage.getItem(PIN_KEY) || '');
-    return PIN_TO_ID[value] ? value : '';
+    return value === COMPLETION_PIN || PIN_TO_ID[value] ? value : '';
   } catch (error) {
     return '';
   }
@@ -367,6 +354,9 @@ function readStoredPin() {
 
 function storePin(pin) {
   try {
+    var saved = readStoredPin();
+    if (saved === COMPLETION_PIN) return;
+    if (pin !== COMPLETION_PIN && saved && byId(PIN_TO_ID[saved]).number > byId(PIN_TO_ID[pin]).number) return;
     localStorage.setItem(PIN_KEY, pin);
   } catch (error) {}
 }
@@ -399,6 +389,12 @@ function stopIntro() {
 function clearCredits() {
   if (creditTimer) clearInterval(creditTimer);
   creditTimer = 0;
+  if (openingVideo) {
+    openingVideo.pause();
+    openingVideo.removeAttribute('src');
+    openingVideo.load();
+    openingVideo = null;
+  }
 }
 
 function closeMission() {
@@ -417,16 +413,8 @@ function stopEndingVideo() {
   endingVideo.load();
 }
 
-function showTester() {
-  var section = document.createElement('section');
-  var title = document.createElement('h1');
-  var bonusLabel = document.createElement('label');
-  var bonus = document.createElement('select');
-  var list = document.createElement('div');
-  var videos = document.createElement('div');
-  var home = document.createElement('button');
-  var scores = [10, 9, 8, 7];
-  var i;
+function showChapterMenu(lastChapter, complete) {
+  if (window.TrentTrivia) window.TrentTrivia.abort();
   clearInterval(pinTimer);
   clearCredits();
   stopIntro();
@@ -435,62 +423,68 @@ function showTester() {
   ending.hidden = true;
   campaignRoot.hidden = false;
   campaignRoot.innerHTML = '';
+
+  var section = document.createElement('section');
   section.className = 'campaign-start';
+  var title = document.createElement('h1');
   title.tabIndex = -1;
-  title.textContent = 'Test gate';
-  bonusLabel.textContent = 'Bonus';
-  bonusLabel.htmlFor = 'test-bonus';
-  bonus.id = 'test-bonus';
-  for (i = 0; i < scores.length; i++) {
-    var option = document.createElement('option');
-    option.value = String(scores[i]);
-    option.textContent = scores[i] + ' of 10';
-    bonus.appendChild(option);
-  }
-  list.className = 'choices';
-  for (i = 0; i < CHAPTERS.length; i++) {
-    (function (chapter) {
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'choice';
-      button.textContent = chapter.kicker + ' · ' + chapter.title;
-      button.onclick = function () {
-        openChapter(chapter.id, { bonus: Number(bonus.value) });
-      };
-      list.appendChild(button);
-    })(CHAPTERS[i]);
-  }
-  videos.className = 'choices';
-  for (i = 0; i < CHAPTERS.length; i++) {
-    (function (chapter) {
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'secondary';
-      button.textContent = 'Intro · ' + chapter.title;
-      button.onclick = function () {
-        playIntro(chapter, showTester);
-      };
-      videos.appendChild(button);
-    })(CHAPTERS[i]);
-  }
-  var endingButton = document.createElement('button');
-  endingButton.type = 'button';
-  endingButton.className = 'secondary';
-  endingButton.textContent = 'Ending video';
-  endingButton.onclick = showEnding;
-  videos.appendChild(endingButton);
-  home.type = 'button';
-  home.className = 'primary';
-  home.textContent = 'Start screen';
-  home.onclick = showStart;
+  title.textContent = 'Chapter menu';
   section.appendChild(title);
-  section.appendChild(bonusLabel);
-  section.appendChild(bonus);
-  section.appendChild(list);
-  section.appendChild(videos);
-  section.appendChild(home);
+
+  function button(label, handler, className) {
+    var item = document.createElement('button');
+    item.type = 'button';
+    item.className = className;
+    item.textContent = handler ? label : '—';
+    item.disabled = !handler;
+    if (handler) item.onclick = handler;
+    else item.setAttribute('aria-label', 'Locked');
+    return item;
+  }
+
+  var clips = document.createElement('div');
+  clips.className = 'choices';
+  function back() { showChapterMenu(lastChapter, complete); }
+  clips.appendChild(button('Opening film and credits', function () { showCredits(back); }, 'secondary'));
+  clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
+  section.appendChild(clips);
+
+  var chapters = document.createElement('div');
+  chapters.className = 'choices';
+  CHAPTERS.forEach(function (chapter) {
+    var unlocked = chapter.number <= lastChapter;
+    var row = document.createElement('div');
+    row.className = 'chapter-menu-row';
+    row.appendChild(button(chapter.kicker + ' · ' + chapter.title,
+      unlocked ? function () { openChapter(chapter.id); } : null, 'choice'));
+    row.appendChild(button('Watch intro · ' + chapter.title,
+      unlocked ? function () { playIntro(chapter, back); } : null, 'secondary'));
+    chapters.appendChild(row);
+  });
+  section.appendChild(chapters);
+  section.appendChild(button('Start screen', showStart, 'primary'));
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
+}
+
+function showRules() {
+  var modal = document.createElement('div');
+  modal.className = 'quiz-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'campaign-rules-title');
+  modal.innerHTML = '<div class="quiz-modal-card"><h2 id="campaign-rules-title" tabindex="-1">How to play</h2>' +
+    '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
+    '<p>Get at least five answers right to advance. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses in the chapter’s minigame.</p>' +
+    '<p>Finish a chapter to earn a password for the next chapter. That password also unlocks the earlier chapters and films in the chapter menu.</p>' +
+    '<button class="primary" type="button">Continue</button><button class="secondary" type="button">Cancel</button></div>';
+  modal.querySelector('.primary').onclick = function () { modal.remove(); showLogo(); };
+  modal.querySelector('.secondary').onclick = function () {
+    modal.remove();
+    document.getElementById('campaign-start').focus();
+  };
+  campaignRoot.appendChild(modal);
+  modal.querySelector('h2').focus();
 }
 
 function showStart() {
@@ -528,7 +522,7 @@ function showStart() {
   start.className = 'primary';
   start.id = 'campaign-start';
   start.textContent = 'Start';
-  start.onclick = showLogo;
+  start.onclick = showRules;
   form = document.createElement('form');
   form.id = 'pin-form';
   label = document.createElement('label');
@@ -546,7 +540,7 @@ function showStart() {
   open = document.createElement('button');
   open.type = 'submit';
   open.className = 'primary';
-  open.textContent = 'Open chapter';
+  open.textContent = 'Open chapter menu';
   status = document.createElement('p');
   status.id = 'pin-status';
   status.setAttribute('role', 'status');
@@ -558,8 +552,9 @@ function showStart() {
   form.onsubmit = function (event) {
     var pin = normalizePin(input.value);
     event.preventDefault();
-    if (pin === TEST_PIN) {
-      showTester();
+    if (pin === COMPLETION_PIN) {
+      storePin(pin);
+      showChapterMenu(CHAPTERS.length - 1, true);
       return;
     }
     var id = PIN_TO_ID[pin];
@@ -567,7 +562,8 @@ function showStart() {
       status.textContent = 'That code is not on the list.';
       return;
     }
-    openChapter(id);
+    storePin(pin);
+    showChapterMenu(byId(id).number, false);
   };
   section.appendChild(title);
   section.appendChild(lead);
@@ -611,27 +607,53 @@ function showLogo() {
 
 function showCredits(done) {
   var generation = ++introToken;
-  var section = document.createElement('section');
-  var reel = document.createElement('div');
-  var i;
   clearCredits();
   campaignRoot.hidden = false;
   campaignRoot.innerHTML = '';
-  section.className = 'campaign-start credit-scroll';
-  reel.className = 'credit-reel';
-  for (i = 0; i < CREDITS.length; i++) {
-    var line = document.createElement(i % 2 ? 'p' : 'h1');
-    line.textContent = CREDITS[i];
-    reel.appendChild(line);
-  }
-  section.appendChild(reel);
-  campaignRoot.appendChild(section);
-  creditTimer = schedulePortraitStep(function () {
+
+  var section = document.createElement('section');
+  section.className = 'campaign-start credit-scroll opening-film';
+  section.innerHTML = '<video muted playsinline preload="auto" aria-hidden="true"></video>' +
+    '<div class="opening-cast"><h1>Trent Saves Christmas</h1>' +
+    '<p>Starring <strong>Trent Ungerer</strong> as the Allied war hero</p>' +
+    '<p>Introducing <strong>Buddy</strong>, the notorious Elf on the Shelf</p></div>' +
+    '<dl class="credit-reel" aria-label="Opening credits"></dl><p class="opening-caption"></p>' +
+    '<button type="button" class="overlay-skip">Skip</button>';
+  var reel = section.querySelector('.credit-reel');
+  CREDITS.forEach(function (role) {
+    var credit = document.createElement('div');
+    var job = document.createElement('dt');
+    var person = document.createElement('dd');
+    job.textContent = role;
+    person.textContent = 'Justin Ungerer';
+    credit.append(job, person);
+    reel.appendChild(credit);
+  });
+
+  function finishOpening() {
     if (generation !== introToken) return;
     introToken += 1;
     clearCredits();
     done();
-  }, 14000);
+  }
+
+  openingVideo = section.querySelector('video');
+  openingVideo.src = './assets/opening.mp4?v=film2';
+  openingVideo.muted = true;
+  var caption = section.querySelector('.opening-caption');
+  openingVideo.addEventListener('timeupdate', function () {
+    var time = this.currentTime;
+    var text = time < 5 ? '' : time < 11 ? 'Hitler orders Santa’s capture.' :
+      time < 17 ? 'Guards march Santa into a Nazi concentration camp.' :
+      time < 24 ? 'The guards attack Santa behind the locked gate.' :
+      'The Allies pick up the first report. A rescue is still possible.';
+    if (caption.textContent !== text) caption.textContent = text;
+  });
+  openingVideo.addEventListener('ended', finishOpening);
+  section.querySelector('button').onclick = finishOpening;
+  campaignRoot.appendChild(section);
+  syncTurn();
+  creditTimer = schedulePortraitStep(finishOpening, 31000);
 }
 
 function wantsLandscape() {
@@ -679,6 +701,10 @@ function syncTurn() {
   });
   if (focusGate) heading.focus({ preventScroll: true });
 
+  if (openingVideo) {
+    if (needed || document.hidden) openingVideo.pause();
+    else if (openingVideo.paused && !openingVideo.ended) openingVideo.play().catch(function () {});
+  }
   if (needed && !endingVideo.hidden && !endingVideo.paused) {
     resumeEndingAfterTurn = true;
     endingVideo.pause();
@@ -696,7 +722,7 @@ function syncTurn() {
 function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
   var address = new URL(url, location.href);
-  address.searchParams.set('layout', 'rotation3');
+  address.searchParams.set('layout', 'film2');
   var game = address.pathname.split('/').filter(Boolean).pop();
   missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
   pendingMissionUrl = address.href;
@@ -824,7 +850,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=film2';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -933,36 +959,15 @@ function playIntro(chapter, done) {
 function launchGame(chapter, score) {
   var runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   var url = new URL(chapter.path, location.href);
-  var lives;
+  var bonus = score >= 8 ? score - 7 : 0;
   active = { chapter: chapter, runId: runId };
   url.searchParams.set('runId', runId);
-  if (chapter.path === './wrapping-line/') {
-    lives = (typeof score === 'number' && isFinite(score)) ? score : 7;
-    url.searchParams.set('lives', String(lives));
-  } else if (chapter.path === './listening-wire/' && typeof score === 'number' && isFinite(score)) {
-    lives = Math.max(0, Math.min(10, Math.round(score)));
-    url.searchParams.set('lives', String(lives));
-  }
+  if (bonus) url.searchParams.set('bonus', String(bonus));
+  if (chapter.path === './wrapping-line/') url.searchParams.set('lives', String(7 + bonus));
   openMissionFrame(url.href, chapter.title);
 }
 
 function afterIntro(chapter) {
-  if (pendingTest) {
-    var bonus = pendingTest.bonus;
-    pendingTest = null;
-    if (!chapter.number) {
-      launchGame(chapter);
-      return;
-    }
-    if (chapter.number === 6) {
-      active = null;
-      shelfOpen = true;
-      window.TrentChapter6.startMission(bonus);
-      return;
-    }
-    launchGame(chapter, bonus);
-    return;
-  }
   if (!chapter.number) {
     launchGame(chapter);
     return;
@@ -982,7 +987,7 @@ function afterIntro(chapter) {
   });
 }
 
-function openChapter(id, test) {
+function openChapter(id) {
   var chapter = byId(id);
   if (!chapter) {
     showStart();
@@ -990,7 +995,6 @@ function openChapter(id, test) {
   }
   clearInterval(pinTimer);
   clearCredits();
-  pendingTest = test || null;
   active = null;
   shelfOpen = false;
   closeMission();
@@ -1007,7 +1011,8 @@ function showPin(chapter) {
   var copy = document.createElement('p');
   var home = document.createElement('button');
   var nextId = chapter.nextId;
-  storePin(chapter.pin);
+  var password = nextId ? byId(nextId).pin : COMPLETION_PIN;
+  storePin(password);
   closeMission();
   ending.hidden = true;
   cinema.hidden = true;
@@ -1019,10 +1024,11 @@ function showPin(chapter) {
   title.tabIndex = -1;
   title.textContent = chapter.title;
   code.className = 'pin-code';
-  code.textContent = chapter.pin;
-  code.setAttribute('aria-label', 'Continue code ' + chapter.pin);
+  code.textContent = password;
+  code.setAttribute('aria-label', 'Continue code ' + password);
   copy.className = 'lead';
-  copy.textContent = 'Remember ' + chapter.pin + ' to return to ' + chapter.title + ' from the start screen.';
+  copy.textContent = nextId ? 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films.' :
+    'Campaign complete. This password opens every chapter and film.';
   home.type = 'button';
   home.className = 'secondary';
   home.textContent = 'Start screen';
@@ -1037,12 +1043,16 @@ function showPin(chapter) {
   section.appendChild(home);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
-  clearInterval(pinTimer);
-  pinTimer = schedulePortraitStep(function () {
+  var next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'primary';
+  next.textContent = nextId ? 'Continue' : 'Watch the ending';
+  next.onclick = function () {
     if (chapter.id === 'prologue' && nextId) showCaptureCard(nextId);
     else if (nextId) openChapter(nextId);
     else showEnding();
-  }, 4500);
+  };
+  section.insertBefore(next, home);
 }
 
 function showCaptureCard(nextId) {
@@ -1062,7 +1072,7 @@ function showCaptureCard(nextId) {
   title.tabIndex = -1;
   title.textContent = 'A report comes in';
   copy.className = 'lead';
-  copy.textContent = 'A few months have passed. Allied intel says Hitler has captured Santa and is holding him. Sprout, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught, and he has to be rescued.';
+  copy.textContent = 'A few months have passed. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught, and he has to be rescued.';
   section.appendChild(kicker);
   section.appendChild(title);
   section.appendChild(copy);
@@ -1080,7 +1090,7 @@ function showRestored() {
   document.getElementById('ending-skip').hidden = true;
   document.getElementById('ending-gate').hidden = false;
   document.querySelector('#ending-gate h1').textContent = 'Home';
-  document.getElementById('ending-copy').textContent = 'Christmas is restored.';
+  document.getElementById('ending-copy').textContent = 'Christmas is restored. Completion password: ' + COMPLETION_PIN + '.';
   document.getElementById('ending-play').hidden = true;
   document.getElementById('ending-home').hidden = false;
   document.getElementById('ending-home').focus({ preventScroll: true });
