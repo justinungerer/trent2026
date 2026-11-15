@@ -66,6 +66,10 @@
   var trentImg = new Image();
   sceneImg.src = 'art/scene.webp';
   trentImg.src = 'art/trent.webp';
+  var goodBoxImg = new Image();
+  var damagedBoxImg = new Image();
+  goodBoxImg.src = 'art/box-good.webp';
+  damagedBoxImg.src = 'art/box-damaged.webp';
   var typeIndex;
   for (typeIndex = 0; typeIndex < PRESENT_TYPES.length; typeIndex++) {
     PRESENT_TYPES[typeIndex].img = new Image();
@@ -355,6 +359,22 @@
     ctx.save();
     ctx.translate(parcel.x, parcel.y);
     if (damaged) ctx.rotate(parcel.type.id === 'crushed' ? -.17 : .12);
+    var art = damaged ? damagedBoxImg : goodBoxImg;
+    if (imageReady(art)) {
+      var h = 88 * art.naturalHeight / art.naturalWidth;
+      ctx.drawImage(art, -44, -h * .5, 88, h);
+      if (!damaged) {
+        ctx.fillStyle = accent;
+        ctx.fillRect(-13, 0, 26, 15);
+        ctx.fillStyle = '#21332c';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '700 12px system-ui';
+        ctx.fillText(String(parcel.type.points), 0, 8);
+      }
+      ctx.restore();
+      return;
+    }
     ctx.fillStyle = damaged ? '#80614d' : '#c99458';
     roundBox(-39, -25, 78, 56);
     ctx.fillStyle = damaged ? '#ae7b60' : '#e2ad6d';

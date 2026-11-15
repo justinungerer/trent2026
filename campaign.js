@@ -734,7 +734,7 @@ function openMissionFrame(url, title) {
   menuButton.hidden = !returnToMenu;
   menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
-  address.searchParams.set('layout', 'film2');
+  address.searchParams.set('layout', 'winter-tuning');
   var game = address.pathname.split('/').filter(Boolean).pop();
   missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
   pendingMissionUrl = address.href;

@@ -286,7 +286,7 @@
     for (i = 0; i < waves.length; i++) {
       if (!waveClear(waves[i])) {
         line = START_X + waves[i].at * WALK;
-        return line;
+        return Math.min(GATE_X, line + VIEW_W * 0.55);
       }
     }
     return GATE_X + 40;
@@ -526,9 +526,10 @@
     var line;
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
-      if (wave.spawned) continue;
+      if (waveClear(wave)) continue;
       line = START_X + wave.at * WALK;
-      if (santa.x >= line - 6) spawnWave(wave);
+      if (!wave.spawned && santa.x >= line - 6) spawnWave(wave);
+      return;
     }
   }
 
@@ -727,7 +728,7 @@
     }
     santa.y = clamp(santa.y, BAND_TOP + 12, BAND_BOT - 8);
     santa.x = clamp(santa.x, 48, frontX());
-    cam = santa.x - VIEW_W * 0.34;
+    cam = Math.min(santa.x - VIEW_W * 0.34, frontX() - VIEW_W + 62);
     if (cam < 0) cam = 0;
     if (cam > WORLD_R - VIEW_W) cam = WORLD_R - VIEW_W;
     considerSpawns();

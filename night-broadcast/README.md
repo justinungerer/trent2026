@@ -37,7 +37,7 @@ If the device asks for reduced motion, the dial lamp does not flicker and the ne
 
 There is no fail state. Missing a band does not injure anyone. The signal meter climbs near any station. Words appear when the needle is inside one: the canteen, the weather desk, the music box, the chapel, or the field report.
 
-All five markers move and change direction on their own at 75% of their previous speed. The strong wedge is the wide zone. The red band is narrower and only appears after 1 continuous second in that station's strong wedge.
+The markers keep their 75% drift speed. They reverse half as often and wait for the next turn if they reach an end of the dial. The strong wedge is the wide zone. The red band is narrower and only appears after 1 continuous second in that station's strong wedge.
 
 The correct station is the field report. It is chosen by its id, `santa`, and it is the same every run. Nothing random picks it. Locking a different station shows "wrong station" and the tune continues.
 

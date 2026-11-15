@@ -7,19 +7,21 @@ const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','b
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
 const CRAFT = {
-  drone:  { hp: 3, speed: 92, size: 54, reload: 2.05, score: 180, hx: 23, hy: 16, touch: 26 },
-  skiff:  { hp: 1, speed: 168, size: 38, reload: 1.02, score: 160, hx: 16, hy: 13, touch: 18 },
-  hauler: { hp: 5, speed: 50, size: 76, reload: 2.45, score: 340, hx: 34, hy: 22, touch: 34 },
-  wisp:   { hp: 1, speed: 146, size: 32, reload: 0.64, score: 150, hx: 14, hy: 14, touch: 17 },
-  boss:   { hp: 55, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 }
+  drone:  { hp: 4, speed: 92, size: 54, reload: 1.75, score: 180, hx: 23, hy: 16, touch: 26 },
+  skiff:  { hp: 2, speed: 168, size: 38, reload: 0.88, score: 160, hx: 16, hy: 13, touch: 18 },
+  hauler: { hp: 8, speed: 50, size: 76, reload: 2.05, score: 340, hx: 34, hy: 22, touch: 34 },
+  wisp:   { hp: 2, speed: 146, size: 32, reload: 0.64, score: 150, hx: 14, hy: 14, touch: 17 },
+  boss:   { hp: 70, speed: 74, size: 125, reload: 0.78, score: 2500, hx: 48, hy: 34, touch: 32 }
 };
 const WEAPONS = {
   flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
   missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.48 },
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
-  explosive: { label: 'BLAST', mark: 'X', color: colors.red, rate: 0.62 }
+  homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
-const PODS = ['flame', 'missile', 'laser', 'explosive'];
+// A full clear now yields eleven pickups, down from twenty-three.
+const KILLS_PER_DROP = 9;
+const PODS = ['flame', 'missile', 'laser', 'homing'];
 const FLAME_REACH = 0.6 * H;
 const FLAME_HALF = 46;
 function loadArt(name) {
@@ -155,11 +157,10 @@ function flameOrigin(index) {
 }
 function spawn() {
   const next = wave++;
-  const count = 5 + Math.floor(next * 0.8);
-  const pool = ['drone'];
-  if (next >= 1) pool.push('skiff');
-  if (next >= 2) pool.push('hauler');
-  if (next >= 4) pool.push('wisp');
+  const count = 7 + Math.floor(next * 1.05);
+  const pool = ['drone', 'skiff'];
+  if (next >= 1) pool.push('hauler');
+  if (next >= 3) pool.push('wisp');
   const cols = Math.min(6, count);
   const span = (W - 80) / (cols - 1);
   for (let i = 0; i < count; i++) {
@@ -250,7 +251,7 @@ function fell(enemy) {
   wraps.push({ x: enemy.x, y: enemy.y, age: 0, kind: enemy.kind });
   score += CRAFT[enemy.kind].score;
   burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
-  if (!boss && ++kills % 3 === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / 3) - 1) % PODS.length] });
+  if (!boss && ++kills % KILLS_PER_DROP === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
   if (boss) {
     overlay('won', 'SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: ' + score + '.', 'Fly again');
     const skyDetail = { score, hull: player.hull };
@@ -282,16 +283,6 @@ function segmentHit(shot, enemy, pad = 0) {
   }
   return null;
 }
-function detonate(shot) {
-  shot.dead = true;
-  burst(shot.x, shot.y, colors.red, 24);
-  sparks.push({ x: shot.x, y: shot.y, vx: 0, vy: 0, life: .34, color: colors.gold, ring: shot.radius });
-  for (const enemy of enemies) {
-    if (enemy.hp <= 0 || Math.hypot(enemy.x - shot.x, enemy.y - shot.y) > shot.radius) continue;
-    harm(enemy, shot.dmg, enemy.x, enemy.y);
-    if (state !== 'playing') return;
-  }
-}
 function guideMissile(shot, dt) {
   let target = null;
   let best = Infinity;
@@ -304,7 +295,7 @@ function guideMissile(shot, dt) {
   const aimX = target ? target.x : shot.x;
   const aimY = target ? target.y : shot.y - 240;
   const ang = Math.atan2(aimY - shot.y, aimX - shot.x);
-  const k = Math.min(1, dt * 12);
+  const k = Math.min(1, dt * (shot.kind === 'homing' ? 18 : 12));
   shot.vx += (Math.cos(ang) * speed - shot.vx) * k;
   shot.vy += (Math.sin(ang) * speed - shot.vy) * k;
 }
@@ -325,10 +316,10 @@ function fireSlot(index) {
     for (const offset of [-6, 6]) {
       shots.push({ kind, x: x + offset, y: player.y - (index === 0 ? 49 : 30), vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
     }
-  } else if (kind === 'explosive') {
-    shots.push({ kind, x, y: player.y - 8, vx: 0, vy: -280, dmg: 1, fuse: .78, radius: 76 });
+  } else if (kind === 'homing') {
+    shots.push({ kind, x, y: player.y - 24, vx: 0, vy: -300, dmg: 3, speed: 520, life: 3.1 });
   }
-  recoil = Math.max(recoil, kind === 'explosive' ? .16 : .1);
+  recoil = Math.max(recoil, kind === 'homing' ? .16 : .1);
 }
 function armWeapons(dt) {
   for (let index = 0; index < player.stack.length; index++) {
@@ -375,28 +366,17 @@ function update(dt) {
   for (const shot of shots) {
     shot.px = shot.x;
     shot.py = shot.y;
-    if (shot.kind === 'missile') {
+    if (shot.kind === 'missile' || shot.kind === 'homing') {
       guideMissile(shot, dt);
       shot.life -= dt;
       if (shot.life <= 0) shot.dead = true;
-    } else if (shot.kind === 'explosive') {
-      shot.fuse -= dt;
     }
     shot.x += shot.vx * dt;
     shot.y += shot.vy * dt;
     if (shot.dead) continue;
-    if (shot.kind === 'explosive') {
-      let contact = false;
-      for (const enemy of enemies) {
-        if (enemy.hp > 0 && segmentHit(shot, enemy, 4)) { contact = true; break; }
-      }
-      if (contact || shot.fuse <= 0) detonate(shot);
-      if (state !== 'playing') break;
-      continue;
-    }
     for (const enemy of enemies) {
       if (enemy.hp <= 0) continue;
-      const hitAt = segmentHit(shot, enemy, shot.kind === 'missile' ? 6 : 0);
+      const hitAt = segmentHit(shot, enemy, shot.kind === 'missile' || shot.kind === 'homing' ? 6 : 0);
       if (!hitAt) continue;
       if (shot.pierce) {
         if (shot.hit.includes(enemy)) continue;
@@ -531,11 +511,11 @@ function render() {
     }
   }
   for (const s of shots) {
-    if (s.kind === 'missile') {
+    if (s.kind === 'missile' || s.kind === 'homing') {
       g.save();
       g.translate(s.x, s.y);
       g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2);
-      polygon(colors.gold, [[0, -12], [5, 7], [0, 3], [-5, 7]]);
+      polygon(WEAPONS[s.kind].color, [[0, -12], [5, 7], [0, 3], [-5, 7]]);
       g.fillStyle = '#fff4c0';
       g.fillRect(-1.5, 3, 3, 6);
       g.restore();
@@ -554,15 +534,7 @@ function render() {
       g.moveTo(s.px, s.py);
       g.lineTo(s.x, s.y);
       g.stroke();
-    } else if (s.kind === 'explosive') {
-      g.fillStyle = colors.red;
-      g.beginPath();
-      g.arc(s.x, s.y, 7, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = colors.gold;
-      g.beginPath();
-      g.arc(s.x - 2, s.y - 2, 2.5, 0, Math.PI * 2);
-      g.fill();
+
     }
   }
   for (const b of bolts) {

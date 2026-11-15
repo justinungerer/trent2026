@@ -160,15 +160,6 @@
     return { x: 6360 + ping, y: roof.y - r, r: r, roofY: roof.y };
   }
 
-  function brushBox() {
-    var span = 180;
-    var travel = visualTime * 46;
-    var ping = travel % (span * 2);
-    if (ping < 0) ping += span * 2;
-    if (ping > span) ping = span * 2 - ping;
-    return { x: 6560 + ping, y: -300, w: 58, h: 378 };
-  }
-
   function icicleAt(x, roofY, phase) {
     var period = 2.9;
     var t = (visualTime + phase) % period;
@@ -354,7 +345,6 @@
     var prevY;
     var best;
     var ball;
-    var br;
     var ice;
     var bob;
     var puff;
@@ -447,28 +437,24 @@
       if (body.y > ball.roofY - 40 && body.y < ball.roofY + 24 && Math.abs(body.x - ball.x) < ball.r + 12) {
         drop('The snowball knocked you off.');
       } else {
-        br = brushBox();
-        if (overlapsBody(br.x, br.y, br.w, br.h)) drop('The brush knocked you off.');
-        else {
-          ice = icicleAt(3070, PLATFORMS[10].y, 0);
+        ice = icicleAt(3070, PLATFORMS[10].y, 0);
+        if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
+          drop('The icicle knocked you off.');
+        } else {
+          ice = icicleAt(7500, PLATFORMS[22].y, 1.3);
           if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
             drop('The icicle knocked you off.');
           } else {
-            ice = icicleAt(7500, PLATFORMS[22].y, 1.3);
-            if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
-              drop('The icicle knocked you off.');
-            } else {
-              bob = lanternBob();
-              if (hitsBob(bob)) drop('The lantern knocked you off.');
-              else {
-                puffs = smokeList();
-                for (si = 0; si < puffs.length; si++) {
-                  puff = puffs[si];
-                  if (!puff.danger) continue;
-                  if (overlapsBody(puff.x - 34, puff.y - 18 - puff.h, 68, puff.h)) {
-                    drop('The smoke knocked you off.');
-                    break;
-                  }
+            bob = lanternBob();
+            if (hitsBob(bob)) drop('The lantern knocked you off.');
+            else {
+              puffs = smokeList();
+              for (si = 0; si < puffs.length; si++) {
+                puff = puffs[si];
+                if (!puff.danger) continue;
+                if (overlapsBody(puff.x - 34, puff.y - 18 - puff.h, 68, puff.h)) {
+                  drop('The smoke knocked you off.');
+                  break;
                 }
               }
             }
@@ -658,20 +644,6 @@
     }
   }
 
-  function drawBrush() {
-    var br = brushBox();
-    var x = br.x - camX;
-    var y = br.y - camY;
-    ctx.fillStyle = '#8d6a45';
-    ctx.fillRect(x + 24, y, 10, 46);
-    ctx.fillStyle = '#2c241c';
-    ctx.fillRect(x, y + 40, br.w, br.h - 40);
-    ctx.fillStyle = '#4a3b30';
-    ctx.fillRect(x + 8, y + 52, 10, br.h - 70);
-    ctx.fillRect(x + 28, y + 52, 10, br.h - 70);
-    ctx.fillRect(x + 44, y + 52, 8, br.h - 70);
-  }
-
   function drawSleigh() {
     var w = 168;
     var h;
@@ -734,7 +706,6 @@
     drawIcicle(icicleAt(7500, PLATFORMS[22].y, 1.3));
     drawLantern();
     drawPuffs();
-    drawBrush();
     drawSleigh();
     drawTrent();
     drawSnow();

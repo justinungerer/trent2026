@@ -2,7 +2,7 @@
 
 Trent runs and jumps a long road of snowy roofs to a sleigh that is waiting on the last one. The road is about three times the old run: the world is 8580 pixels wide, and the main path is about 8820 pixels from the first roof to the sleigh. The old world was 2860 pixels wide, about 2600 pixels of running, with the camera locked to one 390-pixel-tall view. Roofs now climb above that first view and drop below it, and the camera follows Trent up and down.
 
-Some roofs are dead ends. The way on is back the way you came. A double jump, pressed again near the top of a jump, reaches the higher roofs. Hazards knock Trent off a roof if they touch him. Each one can be dodged: jump the rolling snowball, step out from under a falling icicle, time the swinging lantern, move aside from chimney smoke, drop to the lower road to pass the sweeping brush, and jump or wait out the sliding crate. A hit is a fall. There is no gore.
+Some roofs are dead ends. The way on is back the way you came. A double jump, pressed again near the top of a jump, reaches the higher roofs. Hazards knock Trent off a roof if they touch him. Each one can be dodged: jump the rolling snowball, step out from under a falling icicle, time the swinging lantern, move aside from chimney smoke, and jump or wait out the sliding crate. A hit is a fall. There is no gore.
 
 The pictures are original generated paintings in `art/`: a night rooftop panorama, roof platforms, Trent, a crate, and a small parked sleigh. The sleigh is its own painting. There are no third-party assets, no downloaded images, and no build step.
 

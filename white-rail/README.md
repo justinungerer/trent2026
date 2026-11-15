@@ -1,8 +1,8 @@
 # Chapter 3 — White Rail
 
-A side-view handcar chase along a snowy line. Trent rolls toward the yard mouth. This is not the overhead freight-yard game.
+Trent pumps his handcar toward the yard mouth. The three snowy tracks converge at the horizon, and the handcar advances down them in perspective.
 
-The sky, the rails, the handcar, and Trent are original painted pictures in `art/`. Snow specks are still drawn on the canvas. There are no third-party assets, no downloaded images, and no build step.
+The sky, handcar, and Trent use painted artwork from `art/`. The renderer projects the tracks and obstacles from their positions along the route. There are no third-party assets, no downloaded images, and no build step.
 
 A careful run that holds Pump and misses the obstacles finishes in about one minute.
 
@@ -24,12 +24,12 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Left thumb: Up and Down pick the track. Up is the upper rail, Down is the lower rail. Drag on the left half of the picture does the same: drag up for the upper rail, drag down for the lower rail.
+- Left thumb: Left and Right pick the track. Swipe sideways on the left half of the picture to change tracks.
 - Right thumb: Pump. Hold it and the lever keeps stroking. Each stroke pushes the car. Let go and the car slows.
-- Keyboard: Up or W, and Down or S, change track. Space pumps. Escape pauses.
+- Keyboard: Left and Right change track. Up/W and Down/S also work. Space pumps. Escape pauses.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the line over returns to the start and does not count as reaching the yard.
 
-Buttons are at least 48 pixels. Up, Down, and Pump are larger so a thumb can hold them.
+Buttons are at least 48 pixels. Left, Right, and Pump are larger so a thumb can hold them.
 
 If the device asks for reduced motion, a slip does not shake the picture.
 

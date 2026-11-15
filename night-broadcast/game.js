@@ -41,8 +41,8 @@
   /* Frequency units per second. The old chase drift was 0.04. */
   var MARKER_SPEED = 0.16;
   var STATION_SPEED_SCALE = 0.75;
-  var TURN_LO = 0.85;
-  var TURN_HI = 1.75;
+  var TURN_LO = 1.7;
+  var TURN_HI = 3.5;
   var EDGE_LO = 0.1;
   var EDGE_HI = 0.9;
   var STRONG_HALF = 0.08;
@@ -390,15 +390,7 @@
         station.turnIn = nextTurn();
       }
       station.center += station.dir * station.speed * dt;
-      if (station.center >= EDGE_HI) {
-        station.center = EDGE_HI;
-        station.dir = -1;
-        station.turnIn = nextTurn();
-      } else if (station.center <= EDGE_LO) {
-        station.center = EDGE_LO;
-        station.dir = 1;
-        station.turnIn = nextTurn();
-      }
+      station.center = clamp(station.center, EDGE_LO, EDGE_HI);
     }
   }
 

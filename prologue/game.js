@@ -63,13 +63,13 @@
      whole beach. Curved crests travel right to left. A crest shoves Trent
      toward the landing craft until he braces. High sand stays out of the wash. */
   var waves = [
-    { x0: 520, x1: 980, reach: 178, push: 280, offset: 0.4 },
-    { x0: 1080, x1: 1700, reach: 0, push: 360, offset: 1.5 },
-    { x0: 2140, x1: 2580, reach: 188, push: 260, offset: 0.9 },
-    { x0: 2760, x1: 3520, reach: 150, push: 320, offset: 2.0 },
-    { x0: 3920, x1: 4640, reach: 0, push: 380, offset: 0.6 },
-    { x0: 4860, x1: 5560, reach: 158, push: 300, offset: 1.8 },
-    { x0: 6120, x1: 6880, reach: 0, push: 420, offset: 1.2 }
+    { x0: 520, x1: 980, reach: 182, push: 280, offset: 0.4 },
+    { x0: 1080, x1: 1700, reach: 48, push: 360, offset: 1.5 },
+    { x0: 2140, x1: 2580, reach: 216, push: 260, offset: 0.9 },
+    { x0: 2760, x1: 3520, reach: 126, push: 320, offset: 2.0 },
+    { x0: 3920, x1: 4640, reach: 14, push: 380, offset: 0.6 },
+    { x0: 4860, x1: 5560, reach: 166, push: 300, offset: 1.8 },
+    { x0: 6120, x1: 6880, reach: 82, push: 420, offset: 1.2 }
   ];
 
   var smokes = [
@@ -253,9 +253,14 @@
     return wave.x1 - travel;
   }
 
+  function waveReach(wave) {
+    return Math.max(0, wave.reach + Math.sin(seaTime * 0.76 + wave.offset * 3) * 23);
+  }
+
   function crestShape(wave) {
-    var mid = wave.reach <= 0 ? BEACH_W * 0.58 : (wave.reach + BEACH_W) * 0.5;
-    var amp = wave.reach <= 0 ? 90 : Math.max(24, (BEACH_W - wave.reach) * 0.46);
+    var reach = waveReach(wave);
+    var mid = (reach + BEACH_W) * 0.5;
+    var amp = (BEACH_W - reach) * 0.46;
     return { mid: mid, amp: amp };
   }
 
@@ -279,7 +284,7 @@
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
       if (player.x < wave.x0 || player.x > wave.x1) continue;
-      if (player.y < wave.reach) continue;
+      if (player.y < waveReach(wave)) continue;
       shape = crestShape(wave);
       head = crestPose(wave);
       for (s = 0; s <= 12; s++) {
@@ -297,7 +302,7 @@
     var wave;
     if (surfHold < 0) return false;
     wave = waves[surfHold];
-    return player.x >= wave.x0 && player.x <= wave.x1 && player.y >= wave.reach;
+    return player.x >= wave.x0 && player.x <= wave.x1 && player.y >= waveReach(wave);
   }
 
   function phaseU(wave, time) {
@@ -545,7 +550,7 @@
   function strike(wave) {
     if (state !== 'play') return;
     if (player.x < wave.x0 || player.x > wave.x1) return;
-    if (player.y < wave.reach) return;
+    if (player.y < waveReach(wave)) return;
     if (isBracing()) {
       pushBack(wave.push * BRACED_PUSH);
       lean = 0.28;
@@ -1091,7 +1096,7 @@
     if (surfHold >= 0) return true;
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
-      if (player.y < wave.reach) continue;
+      if (player.y < waveReach(wave)) continue;
       if (player.x < wave.x0 - 20 || player.x > wave.x1 + 20) continue;
       shape = crestShape(wave);
       head = crestPose(wave);
@@ -1428,7 +1433,7 @@
       amount = foamAmount(u);
       if (amount <= 0.02) continue;
       if (worldToX(wave.x1) < -20 || worldToX(wave.x0) > cssW + 20) continue;
-      edge = BEACH_W - (BEACH_W - wave.reach) * amount;
+      edge = BEACH_W - (BEACH_W - waveReach(wave)) * amount;
       steps = 10;
       ctx.beginPath();
       for (n = 0; n <= steps; n++) {

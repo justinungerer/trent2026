@@ -1,15 +1,6 @@
-/* Chapter 3 — White Rail.
-   Side-view handcar chase along a snowy line. Not the overhead yard.
-   The handcar stays on screen. Track art, ground, and obstacles share one
-   scroll, so a crate stays planted while the line rushes past. Far scenery
-   uses that same distance at a slower rate, and speeds up when the car does.
-   Pump to build speed. Release the pump and the car coasts to a stop.
-   Steer among three tracks.
-   A crate or a lowered signal arm is a slip, a jolt. A gap ends the run.
-   A plane sometimes bombs the track the car is on.
-   Three slips, or one gap, restart the line. The yard mouth wins.
-   Sky, rails, handcar, and Trent are painted pictures in art/.
-   Snow specks stay on the canvas. No network. */
+/* Chapter 3 - White Rail.
+   Track ties, obstacles and the yard are projected from their fixed track positions.
+   Pump to advance, then move left or right to change track lanes. */
 'use strict';
 
 (function () {
@@ -37,8 +28,10 @@
 
   var VIEW_W = 844;
   var VIEW_H = 390;
-  var PX = 32;
-  var CAR_X = 230;
+  var VIEW_DEPTH = 94;
+  var TRACK_SPACING = 146;
+  var HORIZON_Y = 102;
+  var CART_Y = 322;
   var BOMBER_COUNT = 23;
   var FINISH = 454;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
@@ -47,21 +40,12 @@
   var COAST = 1.15;
   /* Full pump is SPEED_FLOOR * 40 = 18. The old full pump was 9. */
   var SPEED_FLOOR = 0.45;
-  /* Far scenery uses the same distance as the rails, at this fraction, so it speeds up with the car. */
-  var SKY_PARALLAX = 0.42;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
   var START_SPEED = 4.6;
   var SWITCH_TIME = 0.2;
   var NOSE = 1.25;
   var TAIL = 0.5;
-
-  /* y is the near rail. scale sizes the car and the furniture on that track. */
-  var LANES = [
-    { y: 164, scale: 0.78 },
-    { y: 220, scale: 0.92 },
-    { y: 276, scale: 1.05 }
-  ];
 
   var PATTERN = [
     { kind: 'crate', lane: 1, x: 34, w: 2.4 },
@@ -97,9 +81,6 @@
   /* rails.webp is 1600×900. Sky is the painting above the rails.
      The rail band is the snowy bed. RAIL_ANCHOR is the rail center. */
   var SKY_SRC_H = 668;
-  var RAIL_SRC_Y = 640;
-  var RAIL_SRC_H = 220;
-  var RAIL_ANCHOR = 0.37;
   /* trent.webp: six equal frames, feet on one baseline.
      Order: high, down, forward, low, rising, high. */
   var TRENT = { w: 459, h: 512, anchorX: 168, anchorY: 495, frames: 6 };
@@ -115,7 +96,6 @@
   var state = 'title';
   var pausedState = 'play';
   var distance = 0;
-  var followX = CAR_X;
   var flyovers = [];
   var nextFlyover = 0;
   var speed = 0;
@@ -154,7 +134,7 @@
   var pumpId = 0;
   var dragging = false;
   var dragId = 0;
-  var dragY = 0;
+  var dragX = 0;
   var dragAccum = 0;
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -169,9 +149,7 @@
     return v;
   }
 
-  function wrap(v, m) {
-    return ((v % m) + m) % m;
-  }
+
 
   function imageReady(img) {
     return !!(img && img.complete && img.naturalWidth > 0);
@@ -209,49 +187,29 @@
     return list;
   }
 
-  function wx(worldX) {
-    return followX + (worldX - distance) * PX;
+  // A shared camera projects every object from track distance into the same scene.
+  function project(worldDistance, lane, lateral) {
+    var ahead = worldDistance - distance;
+    var scale = 22 / (22 + Math.max(-8, ahead));
+    return {
+      x: VIEW_W * 0.5 + ((lane - 1) * TRACK_SPACING + (lateral || 0)) * scale,
+      y: HORIZON_Y + (CART_Y - HORIZON_Y) * scale,
+      scale: scale
+    };
   }
 
-  function viewWorldMin() {
-    return distance + (-80 - followX) / PX;
-  }
-
-  function viewWorldMax() {
-    return distance + (VIEW_W + 80 - followX) / PX;
-  }
-
-  function onScreen(worldX, worldW) {
-    var x0 = wx(worldX);
-    var x1 = wx(worldX + (worldW || 0));
-    return x1 > -60 && x0 < VIEW_W + 60;
-  }
-
-  function smooth(t) {
-    return t * t * (3 - 2 * t);
+  function inView(worldDistance) {
+    return worldDistance > distance - 8 && worldDistance <= distance + VIEW_DEPTH;
   }
 
   function visualLane() {
-    var t = laneT >= 1 ? 1 : smooth(laneT);
+    var t = laneT >= 1 ? 1 : laneT * laneT * (3 - 2 * laneT);
     return clamp(fromLane + (toLane - fromLane) * t, 0, 2);
   }
 
   function occupiedLane() {
     if (fromLane === toLane || laneT >= 0.58) return toLane;
     return fromLane;
-  }
-
-  function laneMetric(v, key) {
-    var i = Math.floor(v);
-    var f;
-    if (i < 0) return LANES[0][key];
-    if (i >= 2) return LANES[2][key];
-    f = v - i;
-    return LANES[i][key] + (LANES[i + 1][key] - LANES[i][key]) * f;
-  }
-
-  function railFarY(i) {
-    return LANES[i].y - (8 + i * 2);
   }
 
   function playing() {
@@ -289,7 +247,6 @@
 
   function resetWorld() {
     distance = 0;
-    followX = CAR_X;
     flyovers = [];
     nextFlyover = 0;
     speed = 0;
@@ -555,7 +512,7 @@
     var lane = occupiedLane();
     var w = 4.2;
     var lead = 14 + speed * 1.35;
-    var maxLead = (VIEW_W - CAR_X + 24) / PX;
+    var maxLead = VIEW_DEPTH - 10;
     var x;
     if (lead < 12) lead = 12;
     if (lead > maxLead) lead = maxLead;
@@ -649,43 +606,32 @@
   }
 
   function drawBombs() {
-    var i;
-    var puff;
-    var x0;
-    var x1;
-    var laneY;
-    var u;
-    var by;
-    var bx;
     if (strike) {
-      x0 = wx(strike.x);
-      x1 = wx(strike.x + strike.w);
-      laneY = LANES[strike.lane].y;
-      ctx.fillStyle = 'rgba(36, 44, 54, 0.38)';
-      ctx.fillRect(x0, laneY - 8, Math.max(4, x1 - x0), 16);
       if (strike.planeX > -150) drawPlaneAt(strike.planeX, 46);
-      if (strike.fall >= 0) {
-        u = strike.fall / 0.62;
-        if (u > 1) u = 1;
-        bx = wx(strike.x + strike.w * 0.5);
-        by = 46 + (laneY - 10 - 46) * u * u;
-        ctx.fillStyle = '#241c16';
-        ctx.fillRect(bx - 5, by - 12, 10, 4);
+      if (inView(strike.x)) {
+        var target = project(strike.x + strike.w * 0.5, strike.lane);
+        ctx.fillStyle = 'rgba(236, 112, 53, 0.46)';
         ctx.beginPath();
-        ctx.ellipse(bx, by, 5, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(target.x, target.y, 34 * target.scale, 9 * target.scale, 0, 0, Math.PI * 2);
         ctx.fill();
+        if (strike.fall >= 0) {
+          var u = clamp(strike.fall / 0.62, 0, 1);
+          ctx.fillStyle = '#25211f';
+          ctx.beginPath();
+          ctx.ellipse(target.x, 46 + (target.y - 46) * u * u, 4, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
-    for (i = 0; i < puffs.length; i++) {
-      puff = puffs[i];
-      u = puff.t / 0.45;
-      bx = wx(puff.x);
-      laneY = LANES[puff.lane].y - 2;
-      ctx.fillStyle = 'rgba(244, 248, 252, ' + ((1 - u) * 0.75) + ')';
+    puffs.forEach(function (puff) {
+      if (!inView(puff.x)) return;
+      var point = project(puff.x, puff.lane);
+      var u = puff.t / 0.45;
+      ctx.fillStyle = 'rgba(244,248,252,' + ((1 - u) * 0.75) + ')';
       ctx.beginPath();
-      ctx.ellipse(bx, laneY, 8 + u * 24, 5 + u * 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(point.x, point.y, (8 + u * 24) * point.scale, (5 + u * 8) * point.scale, 0, 0, Math.PI * 2);
       ctx.fill();
-    }
+    });
   }
 
   function updatePlay(dt) {
@@ -750,317 +696,139 @@
   }
 
   function drawSky() {
-    var destH;
-    var tileW;
-    var scroll;
-    var x;
-    if (!imageReady(railsImg)) return;
-    destH = VIEW_H + 28;
-    tileW = destH * (railsImg.naturalWidth / SKY_SRC_H);
-    scroll = distance * PX * SKY_PARALLAX;
-    x = -wrap(scroll, tileW);
-    while (x < VIEW_W + 1) {
-      ctx.drawImage(railsImg, 0, 0, railsImg.naturalWidth, SKY_SRC_H, x, -14, tileW + 1, destH);
-      x += tileW;
+    if (imageReady(railsImg)) {
+      ctx.drawImage(railsImg, 0, 0, railsImg.naturalWidth, SKY_SRC_H, 0, 0, VIEW_W, 170);
+    }
+    var ground = ctx.createLinearGradient(0, HORIZON_Y, 0, VIEW_H);
+    ground.addColorStop(0, 'rgba(172,197,218,0)');
+    ground.addColorStop(0.34, '#a0bbce');
+    ground.addColorStop(1, '#dae9f2');
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, HORIZON_Y, VIEW_W, VIEW_H - HORIZON_Y);
+  }
+
+  function lineAcross(p, halfWidth, color, lineWidth) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.moveTo(p.x - halfWidth * p.scale, p.y);
+    ctx.lineTo(p.x + halfWidth * p.scale, p.y);
+    ctx.stroke();
+  }
+
+  function trackStrip(lane, near, far) {
+    if (far <= near) return;
+    var a = project(near, lane);
+    var b = project(far, lane);
+    var half = 49;
+    ctx.fillStyle = '#9cafbd';
+    ctx.beginPath();
+    ctx.moveTo(a.x - half * a.scale, a.y);
+    ctx.lineTo(b.x - half * b.scale, b.y);
+    ctx.lineTo(b.x + half * b.scale, b.y);
+    ctx.lineTo(a.x + half * a.scale, a.y);
+    ctx.closePath();
+    ctx.fill();
+    for (var tie = Math.ceil(near / 2.8) * 2.8; tie < far; tie += 2.8) {
+      var p = project(tie, lane);
+      lineAcross(p, 39, '#63564f', 6 * p.scale);
+    }
+    for (var side = -1; side <= 1; side += 2) {
+      var offset = side * 28;
+      ctx.fillStyle = lane === toLane ? '#dce2d9' : '#c2d2dc';
+      ctx.beginPath();
+      ctx.moveTo(a.x + (offset - 3.2) * a.scale, a.y);
+      ctx.lineTo(b.x + (offset - 3.2) * b.scale, b.y);
+      ctx.lineTo(b.x + (offset + 3.2) * b.scale, b.y);
+      ctx.lineTo(a.x + (offset + 3.2) * a.scale, a.y);
+      ctx.closePath();
+      ctx.fill();
     }
   }
 
-  function drawShed(s) {
-    var x;
-    var w;
-    var h;
-    var y;
-    if (!onScreen(s.x, s.w)) return;
-    x = wx(s.x);
-    w = s.w * PX * 0.55;
-    h = s.h * 6.2;
-    y = 138;
-    ctx.fillStyle = '#6d4a32';
-    ctx.fillRect(x, y - h, w, h);
-    ctx.fillStyle = '#f4f7fb';
-    ctx.beginPath();
-    ctx.moveTo(x - 6, y - h + 4);
-    ctx.lineTo(x + w * 0.5, y - h - 16);
-    ctx.lineTo(x + w + 6, y - h + 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#f0c98a';
-    ctx.fillRect(x + w * 0.62, y - h * 0.62, w * 0.18, h * 0.22);
+  function drawTracks() {
+    var near = distance - 8;
+    var far = Math.min(FINISH + 12, distance + VIEW_DEPTH);
+    for (var lane = 0; lane < 3; lane++) {
+      var cursor = near;
+      var gaps = obstacles.filter(function (ob) {
+        return ob.lane === lane && ob.kind === 'gap' && ob.x + ob.w > near && ob.x < far;
+      }).sort(function (a, b) { return a.x - b.x; });
+      gaps.forEach(function (gap) {
+        trackStrip(lane, cursor, gap.x);
+        var a = project(Math.max(near, gap.x), lane);
+        var b = project(Math.min(far, gap.x + gap.w), lane);
+        ctx.fillStyle = '#1c2730';
+        ctx.beginPath();
+        ctx.moveTo(a.x - 42 * a.scale, a.y);
+        ctx.lineTo(b.x - 42 * b.scale, b.y);
+        ctx.lineTo(b.x + 42 * b.scale, b.y);
+        ctx.lineTo(a.x + 42 * a.scale, a.y);
+        ctx.fill();
+        cursor = Math.max(cursor, gap.x + gap.w);
+      });
+      trackStrip(lane, cursor, far);
+    }
   }
 
-  function drawSheds() {
-    var i;
-    for (i = 0; i < sheds.length; i++) drawShed(sheds[i]);
-  }
-
-  function drawWaterTower() {
-    var x = wx(168);
-    if (x < -40 || x > VIEW_W + 40) return;
-    ctx.strokeStyle = '#3e342c';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - 8, 132);
-    ctx.lineTo(x - 4, 96);
-    ctx.moveTo(x + 8, 132);
-    ctx.lineTo(x + 4, 96);
-    ctx.stroke();
-    ctx.fillStyle = '#6a5344';
-    ctx.beginPath();
-    ctx.ellipse(x, 92, 16, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f7fbff';
-    ctx.beginPath();
-    ctx.ellipse(x, 86, 16, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawYardGlow() {
-    var near = (distance - (FINISH - 70)) / 70;
-    var g;
-    if (near <= 0) return;
-    if (near > 1) near = 1;
-    g = ctx.createRadialGradient(VIEW_W - 30, 168, 8, VIEW_W - 10, 180, 240);
-    g.addColorStop(0, 'rgba(255, 214, 160, ' + (0.5 * near) + ')');
-    g.addColorStop(1, 'rgba(255, 214, 160, 0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-  }
-
-  function drawRailSpan(i, x0, x1) {
-    var sx0 = wx(x0);
-    var sx1 = wx(x1);
-    var sc;
-    var destH;
-    var destY;
-    var tileW;
-    var origin;
-    var x;
-    if (sx1 - sx0 < 1) return;
-    if (!imageReady(railsImg)) return;
-    sc = LANES[i].scale;
-    destH = 64 * sc;
-    destY = LANES[i].y - destH * RAIL_ANCHOR;
-    tileW = destH * (railsImg.naturalWidth / RAIL_SRC_H);
-    origin = wx(0);
+  function drawTrackObstacle(ob) {
+    if (ob.kind === 'gap' || !inView(ob.x)) return;
+    var p = project(ob.x + ob.w / 2, ob.lane);
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(sx0, destY, sx1 - sx0, destH);
-    ctx.clip();
-    x = origin - wrap(origin, tileW);
-    while (x < VIEW_W + 1) {
-      ctx.drawImage(
-        railsImg,
-        0, RAIL_SRC_Y, railsImg.naturalWidth, RAIL_SRC_H,
-        x, destY, tileW + 1, destH
-      );
-      x += tileW;
+    ctx.translate(p.x, p.y);
+    ctx.scale(p.scale, p.scale);
+    if (ob.kind === 'crate') {
+      var wood = ctx.createLinearGradient(0, -50, 0, 0);
+      wood.addColorStop(0, '#d5a36d');
+      wood.addColorStop(1, '#704425');
+      ctx.fillStyle = wood;
+      roundRect(-29, -50, 58, 50, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#644025';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = '#eef6fc';
+      ctx.fillRect(-26, -51, 52, 7);
+    } else if (ob.kind === 'arm') {
+      ctx.fillStyle = '#453934';
+      ctx.fillRect(-43, -68, 7, 68);
+      ctx.fillStyle = '#ead8bf';
+      ctx.fillRect(-42, -56, 79, 11);
+      ctx.fillStyle = '#a83e31';
+      for (var stripe = -31; stripe < 32; stripe += 22) ctx.fillRect(stripe, -56, 8, 11);
+      drawLantern(37, -50);
     }
     ctx.restore();
-    if (i === toLane) {
-      ctx.fillStyle = 'rgba(236, 196, 120, 0.2)';
-      ctx.fillRect(sx0, LANES[i].y - 3, sx1 - sx0, 7);
-    }
   }
 
-  function drawRails(i) {
-    var gaps = [];
-    var n;
-    var ob;
-    var cursor;
-    var vis0 = viewWorldMin();
-    var vis1 = viewWorldMax();
-    for (n = 0; n < obstacles.length; n++) {
-      ob = obstacles[n];
-      if (ob.lane === i && ob.kind === 'gap') gaps.push(ob);
-    }
-    gaps.sort(function (a, b) { return a.x - b.x; });
-    cursor = vis0;
-    for (n = 0; n < gaps.length; n++) {
-      ob = gaps[n];
-      if (ob.x + ob.w < vis0) continue;
-      if (ob.x > vis1) break;
-      if (ob.x > cursor) drawRailSpan(i, cursor, Math.min(ob.x, vis1));
-      cursor = Math.max(cursor, ob.x + ob.w);
-    }
-    if (cursor < vis1) drawRailSpan(i, cursor, vis1);
-  }
-
-  function drawGap(ob, i) {
-    var x0;
-    var x1;
-    var yFar;
-    var yNear;
-    if (!onScreen(ob.x, ob.w)) return;
-    x0 = wx(ob.x);
-    x1 = wx(ob.x + ob.w);
-    yFar = railFarY(i) - 4;
-    yNear = LANES[i].y + 16;
-    ctx.fillStyle = '#141a22';
-    roundRect(x0, yFar, x1 - x0, yNear - yFar, 8);
-    ctx.fill();
-    ctx.fillStyle = '#0c1016';
-    roundRect(x0 + 6, yFar + 6, Math.max(4, x1 - x0 - 12), Math.max(4, yNear - yFar - 14), 6);
-    ctx.fill();
-    ctx.fillStyle = '#f4f8fb';
+  function drawTrackside() {
+    sheds.forEach(function (shed, index) {
+      if (!inView(shed.x)) return;
+      var p = project(shed.x, index % 2 ? 2.8 : -.8);
+      var w = 64 * p.scale;
+      var h = shed.h * 7 * p.scale;
+      ctx.fillStyle = '#674833';
+      ctx.fillRect(p.x - w / 2, p.y - h, w, h);
+      ctx.fillStyle = '#e9f1f9';
+      ctx.beginPath();
+      ctx.moveTo(p.x - w * .65, p.y - h);
+      ctx.lineTo(p.x, p.y - h - 19 * p.scale);
+      ctx.lineTo(p.x + w * .65, p.y - h);
+      ctx.fill();
+      ctx.fillStyle = '#e8bf77';
+      ctx.fillRect(p.x - w * .13, p.y - h * .6, w * .26, h * .26);
+    });
+    if (!inView(FINISH)) return;
+    var gate = project(FINISH, 1);
+    ctx.strokeStyle = '#755137';
+    ctx.lineWidth = 12 * gate.scale;
     ctx.beginPath();
-    ctx.moveTo(x0 - 2, yFar + 2);
-    ctx.lineTo(x0 + 10, yFar - 5);
-    ctx.lineTo(x0 + 16, yFar + 3);
-    ctx.lineTo(x1 - 12, yFar + 2);
-    ctx.lineTo(x1, yFar - 4);
-    ctx.lineTo(x1 + 4, yFar + 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#2a3038';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x0 - 4, LANES[i].y);
-    ctx.lineTo(x0 + 8, LANES[i].y - 7);
-    ctx.moveTo(x1 + 4, LANES[i].y);
-    ctx.lineTo(x1 - 8, LANES[i].y - 6);
+    ctx.moveTo(gate.x - 206 * gate.scale, gate.y);
+    ctx.lineTo(gate.x - 206 * gate.scale, gate.y - 98 * gate.scale);
+    ctx.lineTo(gate.x + 206 * gate.scale, gate.y - 98 * gate.scale);
+    ctx.lineTo(gate.x + 206 * gate.scale, gate.y);
     ctx.stroke();
-  }
-
-  function drawCrate(ob, i) {
-    var sc;
-    var w;
-    var h;
-    var x;
-    var y;
-    var g;
-    if (!onScreen(ob.x, ob.w)) return;
-    sc = LANES[i].scale;
-    w = Math.max(ob.w * PX, 28 * sc);
-    h = 26 * sc;
-    x = wx(ob.x + ob.w * 0.5) - w / 2;
-    y = LANES[i].y - h + 2;
-    ctx.fillStyle = 'rgba(28, 36, 48, 0.25)';
-    ctx.beginPath();
-    ctx.ellipse(x + w / 2, LANES[i].y + 4, w * 0.42, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    g = ctx.createLinearGradient(x, y, x, y + h);
-    g.addColorStop(0, '#e0b276');
-    g.addColorStop(0.45, '#b4763e');
-    g.addColorStop(1, '#7a4a28');
-    ctx.fillStyle = g;
-    roundRect(x, y, w, h, 4);
-    ctx.fill();
-    ctx.strokeStyle = '#4e3018';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(92, 54, 28, 0.85)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x + 5, y + 4);
-    ctx.lineTo(x + 5, y + h - 4);
-    ctx.moveTo(x + w - 5, y + 4);
-    ctx.lineTo(x + w - 5, y + h - 4);
-    ctx.stroke();
-    ctx.fillStyle = '#f7fbff';
-    ctx.beginPath();
-    ctx.ellipse(x + w / 2, y + 2, w * 0.42, 4.5 * sc, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawArm(ob, i) {
-    var sc;
-    var x0;
-    var x1;
-    var y;
-    var post;
-    var glow;
-    if (!onScreen(ob.x, ob.w)) return;
-    sc = LANES[i].scale;
-    x0 = wx(ob.x);
-    x1 = wx(ob.x + ob.w);
-    y = LANES[i].y - 24 * sc;
-    post = x0 + 4;
-    ctx.fillStyle = '#3a322c';
-    roundRect(post - 3, y - 6, 6, LANES[i].y - y + 10, 2);
-    ctx.fill();
-    ctx.fillStyle = '#efe6d4';
-    roundRect(post, y - 4 * sc, Math.max(8, x1 - post), 8 * sc, 3);
-    ctx.fill();
-    ctx.strokeStyle = '#2c2824';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    glow = ctx.createRadialGradient(x1 - 2, y, 1, x1 - 2, y, 14 * sc);
-    glow.addColorStop(0, 'rgba(255, 176, 96, 0.95)');
-    glow.addColorStop(1, 'rgba(255, 120, 70, 0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(x1 - 2, y, 14 * sc, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#c4483a';
-    ctx.beginPath();
-    ctx.arc(x1 - 2, y, 4.2 * sc, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#6a6258';
-    ctx.beginPath();
-    ctx.arc(post - 7, y - 8 * sc, 3.2 * sc, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawObstacles(i) {
-    var n;
-    var ob;
-    for (n = 0; n < obstacles.length; n++) {
-      ob = obstacles[n];
-      if (ob.lane !== i) continue;
-      if (ob.kind === 'gap') drawGap(ob, i);
-      else if (ob.kind === 'crate') drawCrate(ob, i);
-      else if (ob.kind === 'arm') drawArm(ob, i);
-    }
-  }
-
-  function drawBumper(i) {
-    var x = wx(-1.1);
-    var y = LANES[i].y;
-    if (x < -30 || x > VIEW_W + 20) return;
-    ctx.fillStyle = '#4a3428';
-    roundRect(x - 3, y - 16, 7, 20, 2);
-    ctx.fill();
-    ctx.fillStyle = '#d7c3a4';
-    roundRect(x - 8, y - 8, 16, 6, 2);
-    ctx.fill();
-  }
-
-  function drawYard() {
-    var left = FINISH - 2.6;
-    var right = FINISH + 4.2;
-    var x0;
-    var x1;
-    var opening;
-    var g;
-    if (!onScreen(left, right - left)) return;
-    x0 = wx(left);
-    x1 = wx(right);
-    opening = wx(FINISH - 1.4);
-    g = ctx.createLinearGradient(opening, 118, x1, 250);
-    g.addColorStop(0, '#ffd7a8');
-    g.addColorStop(1, '#8a5a3c');
-    ctx.fillStyle = g;
-    ctx.fillRect(opening, 118, Math.max(8, x1 - opening), 176);
-    ctx.fillStyle = '#5c3b2a';
-    ctx.fillRect(x0, 108, 16, 186);
-    ctx.fillRect(x1 - 10, 108, 16, 186);
-    ctx.fillStyle = '#f4f7fb';
-    ctx.beginPath();
-    ctx.moveTo(x0 - 8, 116);
-    ctx.quadraticCurveTo((x0 + x1) / 2, 78, x1 + 8, 116);
-    ctx.lineTo(x1 + 8, 128);
-    ctx.quadraticCurveTo((x0 + x1) / 2, 96, x0 - 8, 128);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#6d4630';
-    ctx.fillRect(x0 - 4, 112, x1 - x0 + 18, 12);
-    ctx.fillStyle = '#f4efe4';
-    ctx.font = '700 15px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('YARD', (x0 + x1) / 2, 118);
-    drawLantern(x0 + 8, 136);
-    drawLantern(x1 - 2, 136);
+    drawLantern(gate.x, gate.y - 90 * gate.scale);
   }
 
   function drawLantern(x, y) {
@@ -1116,8 +884,8 @@
 
   function drawHandcar() {
     var v = visualLane();
-    var y = laneMetric(v, 'y');
-    var sc = laneMetric(v, 'scale');
+    var point = project(distance, v);
+    var sc = .76;
     var kick = state === 'slip' ? Math.sin(clamp(slipT / 0.42, 0, 1) * Math.PI) : 0;
     var handW = 122;
     var hs;
@@ -1127,7 +895,7 @@
     var bob = 0;
     if (!reduceMotion() && speed > 0.2) bob = Math.sin(distance * 4.6) * Math.min(1.5, speed * 0.08);
     ctx.save();
-    ctx.translate(wx(distance), y + bob);
+    ctx.translate(point.x, point.y + bob);
     ctx.rotate(slipAngle());
     ctx.scale(sc, sc);
 
@@ -1175,43 +943,17 @@
     }
   }
 
-  function drawForeground() {
-    var g = ctx.createLinearGradient(0, 318, 0, VIEW_H);
-    var spacing = 6.4;
-    var x = Math.floor(viewWorldMin() / spacing) * spacing;
-    var sx;
-    var n = 0;
-    g.addColorStop(0, 'rgba(232, 240, 247, 0)');
-    g.addColorStop(0.4, 'rgba(226, 236, 244, 0.88)');
-    g.addColorStop(1, '#d5e2ee');
-    ctx.fillStyle = g;
-    ctx.fillRect(-20, 318, VIEW_W + 40, VIEW_H - 300);
-    for (; x < viewWorldMax(); x += spacing) {
-      sx = wx(x);
-      ctx.fillStyle = n % 2 ? 'rgba(255, 255, 255, 0.55)' : 'rgba(186, 206, 220, 0.5)';
-      ctx.beginPath();
-      ctx.ellipse(sx, 346 + (n % 3) * 7, 20, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      n += 1;
-    }
-  }
-
   function drawWorld() {
-    var i;
     drawSky();
     flyovers.forEach(function (jet) { drawPlaneAt(jet.x, jet.y, .68); });
-    drawSheds();
-    drawWaterTower();
-    drawYardGlow();
-    for (i = 0; i < 3; i++) {
-      drawRails(i);
-      drawBumper(i);
-      drawObstacles(i);
-    }
-    drawYard();
+    drawTracks();
+    drawTrackside();
+    var visible = obstacles.filter(function (ob) { return inView(ob.x); })
+      .sort(function (a, b) { return b.x - a.x; });
+    visible.forEach(function (ob) { if (ob.x >= distance) drawTrackObstacle(ob); });
     drawBombs();
     drawHandcar();
-    drawForeground();
+    visible.forEach(function (ob) { if (ob.x < distance) drawTrackObstacle(ob); });
     drawSnow();
   }
 
@@ -1282,12 +1024,7 @@
     }
     if (state === 'play') updatePlay(dt);
     else if (state === 'slip') updateSlip(dt);
-    if (state === 'play' || state === 'slip') {
-      var ahead = CAR_X + clamp((speed - START_SPEED) * 9, -34, 115);
-      if (!reduceMotion()) ahead += Math.sin(distance / 23) * 42;
-      followX += (ahead - followX) * Math.min(1, dt * 2.4);
-      updateFlyovers(dt);
-    }
+    if (state === 'play' || state === 'slip') updateFlyovers(dt);
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 24);
     refreshPump();
     renderHud();
@@ -1364,7 +1101,7 @@
     event.preventDefault();
     dragging = true;
     dragId = event.pointerId;
-    dragY = p.y;
+    dragX = p.x;
     dragAccum = 0;
     if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
   });
@@ -1374,12 +1111,12 @@
     if (!dragging || event.pointerId !== dragId) return;
     p = designPoint(event);
     if (!playing()) {
-      dragY = p.y;
+      dragX = p.x;
       dragAccum = 0;
       return;
     }
-    dragAccum += p.y - dragY;
-    dragY = p.y;
+    dragAccum += p.x - dragX;
+    dragX = p.x;
     while (dragAccum >= 42) {
       dragAccum -= 42;
       changeLane(1);
@@ -1415,10 +1152,10 @@
       else if (state === 'pause') closePause();
       return;
     }
-    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'w' || key === 'W' || key === 's' || key === 'S') {
+    if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'w' || key === 'W' || key === 's' || key === 'S') {
       if (playing()) {
         event.preventDefault();
-        if (!event.repeat) changeLane(key === 'ArrowUp' || key === 'w' || key === 'W' ? -1 : 1);
+        if (!event.repeat) changeLane(key === 'ArrowLeft' || key === 'ArrowUp' || key === 'w' || key === 'W' ? -1 : 1);
       }
       return;
     }
