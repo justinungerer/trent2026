@@ -4,16 +4,37 @@ const ctx=canvas.getContext('2d');
 const pad=document.getElementById('pad');
 const knob=document.getElementById('knob');
 const ui=Object.fromEntries(['status','panel','title','copy','start','pause','decoy'].map(id=>[id,document.getElementById(id)]));
+const stage=new URLSearchParams(location.search).get('stage');
+const freight=stage==='freight-gate';
+const stable=stage==='the-stable-escape';
 const world={w:1080,h:720};
-const depot={x:981,y:94};
-const shelves=[
+const depot=stable?{x:982,y:602}:{x:981,y:94};
+const shelves=freight?[
+ {x:185,y:486,w:250,h:68},{x:528,y:468,w:261,h:72},
+ {x:343,y:225,w:170,h:72},{x:699,y:267,w:250,h:70}
+]:stable?[
+ {x:235,y:443,w:240,h:76},{x:538,y:486,w:225,h:70},
+ {x:321,y:260,w:310,h:67},{x:772,y:247,w:174,h:75}
+]:[
  {x:215,y:497,w:185,h:64},{x:450,y:465,w:180,h:64},{x:759,y:518,w:155,h:64},
  {x:129,y:267,w:215,h:64},{x:451,y:233,w:161,h:64},{x:725,y:266,w:190,h:64}
 ];
 const spawn={x:95,y:613};
-const caches=[{x:145,y:142},{x:534,y:359},{x:942,y:598}];
+const caches=freight?[{x:472,y:581},{x:818,y:201}]
+ :stable?[{x:194,y:149},{x:695,y:192}]
+ :[{x:145,y:142},{x:534,y:359},{x:942,y:598}];
 const hearts=[{x:150,y:564},{x:560,y:370},{x:935,y:510}];
-const patrols=[
+const patrols=freight?[
+ [[115,508],[115,367],[455,367],[455,508]],
+ [[520,580],[968,580],[968,388],[520,388]],
+ [[195,180],[910,180],[910,95],[195,95]],
+ [[550,236],[550,412],[647,412],[647,236]]
+]:stable?[
+ [[104,509],[104,240],[290,240],[290,416]],
+ [[370,192],[950,192],[950,98],[370,98]],
+ [[503,388],[913,388],[913,584],[503,584]],
+ [[339,585],[931,585],[931,644],[339,644]]
+]:[
  [[108,150],[108,450],[380,450],[380,150]],
  [[660,140],[660,400],[1000,400],[1000,140]],
  [[415,610],[960,610],[960,370],[672,370],[672,610]],
@@ -39,13 +60,24 @@ const lampOffset=21;
 const mineReach=26;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
-const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch'].map(name=>{
- const image=new Image();image.src='./art/'+name+'.webp';return [name,image];
+const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch',
+ 'painted-heart','painted-penguin'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
+ const image=new Image();
+ const file=name==='yard'?(stable?'stable-yard':freight?'inspection-yard':name):name;
+ image.src='./art/'+file+'.webp';return [name,image];
 }));
 const clamp=(n,low,high)=>Math.max(low,Math.min(high,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const radius=14;
 let mode='intro',run,stick,last=0;
+let escapeTime=0;
+const goal=freight?'Pass both inspection checkpoints and reach the freight office.'
+ :stable?'Find Rudolph’s stall, then take the key to the service gate.'
+ :'Find Buddy’s three dispatches';
+if(freight||stable){
+ ui.title.textContent=freight?'Freight Gate':'The Stable Escape';
+ ui.copy.textContent=goal;
+}
 function placeKnob(x,y){knob.style.transform='translate(calc(-50% + '+x+'px), calc(-50% + '+y+'px))';}
 function releaseStick(){stick=null;placeKnob(0,0);}
 function reset(notice){
@@ -58,11 +90,11 @@ function reset(notice){
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
   hearts:hearts.map(p=>({...p,taken:false})),
   mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3+(window.TrentMissionBonus||0),toy:null,time:0,alarm:0,flash:notice?0.45:0,
-  notice:notice||'Find Buddy’s three dispatches',noticeUntil:notice?3.5:5};
+  notice:notice||goal,noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
 }
 function sync(){
- ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/3';
+ ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/'+caches.length;
  ui.decoy.textContent='DECOY · '+run.charges;
  ui.decoy.disabled=mode!=='play'||run.charges===0;
 }
@@ -70,6 +102,8 @@ function announce(message){run.notice=message;run.noticeUntil=run.time+3.5;}
 function show(next,title,copy,label){
  mode=next;keys.clear();releaseStick();
  ui.title.textContent=title;ui.copy.textContent=copy;ui.start.textContent=label;ui.panel.hidden=false;sync();
+ const restart=document.getElementById('restart-sequence');
+ if(restart)restart.hidden=next!=='paused'&&next!=='lost';
 }
 function pause(){if(mode==='play')show('paused','Hold the mail','Trent stops to check whether the stamps have diplomatic immunity.','Resume');}
 ui.start.onclick=()=>{if(mode!=='paused')reset();mode='play';ui.panel.hidden=true;document.getElementById('help').hidden=true;sync();};
@@ -231,10 +265,26 @@ function update(dt){
   if(!item.taken&&p.hull<3&&distance(p,item)<25){item.taken=true;p.hull++;announce('Heart recovered');sync();}
  }
  for(const item of run.mail){
-  if(!item.taken&&distance(p,item)<30){item.taken=true;run.count++;announce(run.count===3?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');sync();}
+  if(stable&&item===run.mail[1]&&!run.mail[0].taken)continue;
+  if(!item.taken&&distance(p,item)<30){
+   item.taken=true;run.count++;
+   announce(stable?(run.count===1?'Rudolph is here. Find the gate key.':'Key found. Open the service gate.')
+    :freight?(run.count===caches.length?'Checkpoints cleared. Reach the freight office.':'Inspection checkpoint cleared.')
+    :run.count===caches.length?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');
+   sync();
+  }
  }
- if(distance(p,depot)<40&&run.count===3){
-  show('won','Signed, sealed, escaped','Buddy’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
+ if(distance(p,depot)<40&&run.count===caches.length){
+  if(stable){
+   mode='escape';escapeTime=0;keys.clear();releaseStick();sync();
+  }else finishDelivery();
+ }
+}
+function finishDelivery(){
+  show('won',stable?'Rudolph is free':freight?'Freight office reached':'Signed, sealed, escaped',
+   stable?'Rudolph clears the service gate.':freight?'The route through the inspection yard is clear.'
+    :'Buddy’s dispatches identify the depot entrance. The last one says: “If captured, tell them I’m a decorative pepper mill.”','Explore again');
+  const p=run.player;
   const deliveryDetail={postcards:run.count,hull:p.hull,seconds:Math.round(run.time)};
   window.dispatchEvent(new CustomEvent('special-delivery:complete',{detail:deliveryDetail}));
   if(window.parent!==window){
@@ -242,7 +292,6 @@ function update(dt){
     try{const deliveryRun=new URLSearchParams(location.search).get('runId');if(deliveryRun)deliveryRelay.runId=deliveryRun;}catch(ignore){}
     window.parent.postMessage(deliveryRelay,(location.protocol==='http:'||location.protocol==='https:')?location.origin:'*');
   }
- }
 }
 function sprite(name,x,y,w,h,flip=false){
  const image=art[name];
@@ -333,11 +382,14 @@ function render(){
   glow(light.x,light.y,light.r,'#fff1b8aa');
   ctx.strokeStyle='#fff6c888';ctx.lineWidth=2;ctx.beginPath();ctx.arc(light.x,light.y,light.r,0,7);ctx.stroke();
  }
- glow(depot.x,depot.y,52,run.count===3?'#72f7c8aa':'#cf903f84');
- if(!sprite('painted-mail-hatch',depot.x,depot.y,65,55)){ctx.fillStyle=run.count===3?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);}
- label(run.count===3?'MAIL HATCH OPEN':'MAIL HATCH · LOCKED',depot.x,depot.y-24);
+ const exitReady=run.count===caches.length;
+ const exitLabel=stable?'SERVICE GATE':freight?'FREIGHT OFFICE':'MAIL HATCH';
+ glow(depot.x,depot.y,52,exitReady?'#72f7c8aa':'#cf903f84');
+ if((!stable||mode!=='escape')&&!sprite(stable?'painted-stable-gate':'painted-mail-hatch',depot.x,depot.y,65,55)){ctx.fillStyle=exitReady?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);}
+ label(exitLabel+(exitReady?(stable&&mode!=='escape'?' · READY':' OPEN'):' · LOCKED'),depot.x,depot.y-24);
  for(const item of run.hearts){
   if(item.taken)continue;
+  if(sprite('painted-heart',item.x,item.y,37,34))continue;
   ctx.save();ctx.translate(item.x,item.y);
   ctx.fillStyle='#f06471';ctx.strokeStyle='#761e3c';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(0,10);ctx.bezierCurveTo(-26,-9,-8,-20,0,-9);
@@ -345,15 +397,19 @@ function render(){
  }
  for(const item of run.mail){
   if(item.taken)continue;
+  if(stable&&item===run.mail[1]&&!run.mail[0].taken)continue;
   const lift=Math.sin(run.time*5+item.x)*4;
   glow(item.x,item.y,41,'#69fbd18a');
   if(!sprite('mail',item.x,item.y+lift,36,29)){ctx.fillStyle='#96feda';ctx.fillRect(item.x-15,item.y-10,30,20);}
+  if(stable||freight)label(freight?'CHECKPOINT':item===run.mail[0]?'RUDOLPH’S STALL':'GATE KEY',item.x,item.y-24);
  }
  if(run.toy){
   glow(run.toy.x,run.toy.y,45,'#ffb96c96');
   label('♫',run.toy.x,run.toy.y-17);
-  ctx.fillStyle='#2b3447';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y,10,15,0,0,7);ctx.fill();
-  ctx.fillStyle='#ffe8bf';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y+3,6,9,0,0,7);ctx.fill();
+  if(!sprite('painted-penguin',run.toy.x,run.toy.y,31,39)){
+   ctx.fillStyle='#2b3447';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y,10,15,0,0,7);ctx.fill();
+   ctx.fillStyle='#ffe8bf';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y+3,6,9,0,0,7);ctx.fill();
+  }
  }
  for(const print of run.prints){
   ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';
@@ -368,6 +424,10 @@ function render(){
   sprite('guard',g.x,g.y-11+bob,49,55,Math.cos(g.angle)<0);
  }
  const p=run.player;
+ if(mode==='escape'){
+  const phase=escapeTime/2;
+  sprite('rudolph',depot.x-98+phase*150,depot.y-4-Math.abs(Math.sin(escapeTime*12))*8,100,67);
+ }
  if(p.shield<=run.time||reducedMotion.matches||Math.floor(run.time*12)%2===0){
   ctx.fillStyle='#13192791';ctx.beginPath();ctx.ellipse(p.x,p.y+10,18,7,0,0,7);ctx.fill();
   const step=p.moving&&!reducedMotion.matches?Math.sin(p.stride/16*Math.PI):0;
@@ -403,6 +463,10 @@ window.addEventListener('resize',resize);
 function frame(now){
  const dt=last?Math.min((now-last)/1000,.04):0;last=now;
  if(mode==='play'&&!window.TrentGameOrientation?.blocked())update(dt);
+ if(mode==='escape'&&!window.TrentGameOrientation?.blocked()){
+  escapeTime+=dt;
+  if(escapeTime>=2)finishDelivery();
+ }
  render();requestAnimationFrame(frame);
 }
 reset();resize();requestAnimationFrame(frame);

@@ -24,12 +24,16 @@
      This lane is five times that distance, in the same screen-widths. */
   var VIEW_W = 1280;
   var VIEW_H = 592;
+  var stage = new URLSearchParams(location.search).get('stage');
+  var cellPassage = stage === 'the-cell-passage';
+  var gateFight = stage === 'hold-the-gate';
+  var keyTaken = false;
   var BAND_TOP = Math.round(VIEW_H * 0.22);
   var BAND_H = Math.round(VIEW_H * 0.75);
   var BAND_BOT = BAND_TOP + BAND_H;
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
-  var WALK = Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
+  var WALK = cellPassage ? 2130 : gateFight ? 1770 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
   var START_X = 340;
   var GATE_X = START_X + WALK;
   var WORLD_R = GATE_X + 240;
@@ -93,11 +97,28 @@
     { at: 0.24, y: 0.62 },
     { at: 0.62, y: 0.4 }
   ];
+  var cellKey = { x: 995, y: BAND_TOP + BAND_H * 0.27 };
+  if (cellPassage || gateFight) {
+    document.getElementById('camp-stage-title').textContent = cellPassage ? 'The Cell Passage' : 'Hold the Gate';
+    document.getElementById('camp-goal').textContent = cellPassage
+      ? 'Take Trent’s key from the barred window, then reach the passage door.'
+      : 'Clear both gatehouse groups and reach the yard gate.';
+    WAVE_PLAN = cellPassage ? [
+      { at: 0.24, foes: [{ k: 'light', side: 'right' }] },
+      { at: 0.64, foes: [{ k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
+    ] : [
+      { at: 0.19, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
+      { at: 0.66, foes: [{ k: 'mid', side: 'left' }, { k: 'heavy', side: 'right' }, { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
+    ];
+  }
 
   var yardImg = new Image();
   var gateImg = new Image();
   var cocoaImg = new Image();
-  yardImg.src = 'art/brawl-yard.webp';
+  var keyImg = new Image();
+  if (cellPassage) keyImg.src = '../shelf-escape/art/props/depot-key.webp';
+  yardImg.src = cellPassage ? 'art/cell-passage.webp' :
+    gateFight ? 'art/gatehouse.webp' : 'art/brawl-yard.webp';
   gateImg.src = 'art/brawl-gate.webp';
   cocoaImg.src = 'art/brawl-cocoa.webp';
 
@@ -295,7 +316,7 @@
   function renderHud() {
     var left = living();
     if (state === 'win') gateEl.textContent = 'Open';
-    else if (allClear()) gateEl.textContent = 'The gate';
+    else if (allClear()) gateEl.textContent = cellPassage && !keyTaken ? 'Find the key' : 'The gate';
     else if (left === 1) gateEl.textContent = '1 guard';
     else if (left === 0) gateEl.textContent = 'Walk on';
     else gateEl.textContent = left + ' guards';
@@ -303,6 +324,7 @@
   }
 
   function beginRun() {
+    keyTaken = false;
     santa = freshSanta();
     foes = [];
     waves = makeWaves();
@@ -318,7 +340,8 @@
     loseSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('Santa has 5 hit points. The wreath gate is down the yard.');
+    say(cellPassage || gateFight ? document.getElementById('camp-goal').textContent
+      : 'Santa has ' + MAX_HP + ' hit points. The wreath gate is down the yard.');
   }
 
   function openPause() {
@@ -648,6 +671,11 @@
   }
 
   function updatePickups() {
+    if (cellPassage && !keyTaken && Math.abs(cellKey.x - santa.x) < 48 &&
+        Math.abs(cellKey.y - santa.y) < 46) {
+      keyTaken = true;
+      say('Santa recovered the cell key.');
+    }
     var i;
     var p;
     for (i = 0; i < picks.length; i++) {
@@ -744,7 +772,7 @@
       foes[i].x = clamp(foes[i].x, 20, WORLD_R);
     }
     updatePickups();
-    if (allClear() && santa.x >= GATE_X - 18) win();
+    if (allClear() && (!cellPassage || keyTaken) && santa.x >= GATE_X - 18) win();
   }
 
   function drawYard() {
@@ -802,6 +830,13 @@
   }
 
   function drawGate() {
+    if (cellPassage && !keyTaken) {
+      ctx.fillStyle = '#ffe4a3';
+      ctx.font = 'bold 21px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('CELL KEY', cellKey.x - cam, cellKey.y - 42);
+      if (keyImg.complete && keyImg.naturalWidth) ctx.drawImage(keyImg, cellKey.x - cam - 28, cellKey.y - 32, 56, 32);
+    }
     var gh;
     var gw;
     if (!imageReady(gateImg)) return;

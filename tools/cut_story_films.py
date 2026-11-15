@@ -294,6 +294,10 @@ def plate(film, key):
 
 def build_shots(film, data):
     boundaries = [*data["captionFrames"], data["filmSeconds"] * FPS]
+    if "levelPlate" in data:
+        for index, (text, image) in enumerate(zip(data["lines"], data["levelPlate"])):
+            yield text, image, boundaries[index + 1] - boundaries[index]
+        return
     assert len(PLATES[film]) == len(data["lines"]) == len(boundaries) - 1
     for i, text in enumerate(data["lines"]):
         keys = PLATES[film][i]
@@ -347,12 +351,35 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--font", type=Path, required=True)
+    parser.add_argument("--levels", action="store_true", help="Render minigame level films")
     parser.add_argument("film", nargs="*")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    films = read_films()
+    films = read_level_films() if args.levels else read_films()
     for film in args.film or films:
         render_film(film, films[film], args.output.resolve(), args.font)
+
+
+def read_level_films():
+    source = (ROOT / "levels.js").read_text(encoding="utf-8")
+    chapters = json.loads(source.split("window.TrentLevels = ", 1)[1].strip().removesuffix(";"))
+    films = {}
+    for chapter, levels in chapters.items():
+        for index, level in enumerate(levels):
+            if level is None:
+                continue
+            key = level["id"]
+            original = ROOT / "assets" / "level-film-art" / f"{key}.webp"
+            establishing = plate(chapter, "1" if index == 0 else "4")
+            if not establishing.is_file():
+                establishing = original
+            films[key] = {
+                "filmSeconds": 24,
+                "captionFrames": [0, 8 * FPS, 16 * FPS],
+                "lines": level["lines"],
+                "levelPlate": [establishing, original, original],
+            }
+    return films
 
 
 if __name__ == "__main__":

@@ -16,9 +16,15 @@
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
   var winSheet = document.getElementById('win-sheet');
+  var loseSheet = document.getElementById('lose-sheet');
   var winTimeEl = document.getElementById('win-time');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
+  var levelParams = new URLSearchParams(location.search);
+  var stage = levelParams.get('stage');
+  var eaves = stage === 'the-eaves';
+  var flags = stage === 'above-the-lanterns';
+  var objectives = [];
 
   var VIEW_W = 844;
   var VIEW_H = 390;
@@ -78,6 +84,33 @@
     { x: 7685, y: 373, w: 230, name: 'The roof below the sleigh', role: 'end' },
     { x: 8160, y: 260, w: 420, name: 'The sleigh roof', role: 'main', goal: true }
   ];
+  if (eaves || flags) {
+    WORLD_W = 2970;
+    document.getElementById('roof-stage-title').textContent = eaves ? 'The Eaves' : 'Above the Lanterns';
+    document.getElementById('roof-win-title').textContent = eaves ? 'Sleigh lantern recovered' : 'Junction roof reached';
+    document.getElementById('roof-objective').textContent = eaves
+      ? 'Recover the sleigh lantern on the lower ledge and reach the last roof.'
+      : 'Collect both markers, one on the high roofs and one below, and reach the junction roof.';
+    PLATFORMS = [
+      { x: 0, y: 300, w: 386, name: 'First roof', role: 'main' },
+      { x: 428, y: 372, w: 315, name: 'Lower gutter', role: 'main' },
+      { x: 540, y: 528, w: 335, name: 'Coach house', role: 'main' },
+      { x: 916, y: 452, w: 350, name: 'Snowbound eave', role: 'main', cap: 'right' },
+      { x: 1330, y: 338, w: 353, name: 'Covered walkway', role: 'main' },
+      { x: 1720, y: 312, w: 447, name: 'Junction approach', role: 'main' },
+      { x: 2185, y: 264, w: 335, name: 'North dormer', role: 'main', cap: 'left' },
+      { x: 2520, y: 239, w: 450, name: 'Junction roof', role: 'main', goal: true }
+    ];
+    if (eaves) objectives = [{ x: 707, y: 528 }];
+    else {
+      PLATFORMS.splice(7, 0,
+        { x: 690, y: 244, w: 297, name: 'Bell tower step', role: 'end' },
+        { x: 1035, y: 166, w: 375, name: 'Bell tower ridge', role: 'end' },
+        { x: 1485, y: 208, w: 332, name: 'Dormer walk', role: 'end' },
+        { x: 1570, y: 488, w: 466, name: 'Lower lantern walk', role: 'end' });
+      objectives = [{ x: 1185, y: 166 }, { x: 1850, y: 488 }];
+    }
+  }
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if ((index % 4 === 0 && index !== 4) || index === GOAL) return null;
@@ -105,7 +138,7 @@
   sleighImg.src = 'art/sleigh.webp';
   crateImg.src = 'art/crate.webp';
   var rooftopArt = {};
-  ['chimney', 'roof-crate', 'snowball', 'icicle', 'lantern', 'smoke'].forEach(function (name) {
+  ['chimney', 'roof-crate', 'snowball', 'icicle', 'lantern', 'smoke', 'flag', 'dormer'].forEach(function (name) {
     var image = new Image();
     image.src = 'art/painted-' + name + '.webp';
     rooftopArt[name] = image;
@@ -184,6 +217,7 @@
   }
 
   function crateBox() {
+    if (objectives.length) return { x: -1000, y: -1000, w: 0, h: 0 };
     var roof = PLATFORMS[LONG];
     var w = 112;
     var h = 74;
@@ -192,6 +226,7 @@
   }
 
   function snowball() {
+    if (objectives.length) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
     var roof = PLATFORMS[BALLS];
     var span = 120;
     var travel = visualTime * 68;
@@ -222,8 +257,8 @@
   function lanternBob() {
     var angle = Math.sin(visualTime * Math.PI * 2 / 3.15) * 0.85;
     var len = 130;
-    var pivotX = 3800;
-    var pivotY = -20;
+    var pivotX = flags ? 1680 : 3800;
+    var pivotY = flags ? 349 : -20;
     return {
       px: pivotX,
       py: pivotY,
@@ -234,6 +269,7 @@
   }
 
   function smokeList() {
+    if (objectives.length) return [];
     var y = PLATFORMS[ROW].y;
     return [
       puffAt(4810, y, 0),
@@ -251,7 +287,9 @@
   }
 
   function renderHud() {
-    roadEl.textContent = PLATFORMS[stood].name;
+    roadEl.textContent = objectives.length
+      ? PLATFORMS[stood].name + ' · ' + objectives.filter(function (item) { return item.taken; }).length + '/' + objectives.length
+      : PLATFORMS[stood].name;
     fallsEl.textContent = falls + ' / 3';
     fallsEl.className = falls ? 'warn' : '';
   }
@@ -275,6 +313,7 @@
   }
 
   function beginRun() {
+    objectives.forEach(function (item) { item.taken = false; });
     falls = 0;
     played = 0;
     shake = 0;
@@ -283,12 +322,14 @@
     airJumps = 1;
     airBuffer = 0;
     victorySent = false;
+    held.left = held.right = held.climb = false;
     placeOn(0);
     cp = 0;
     state = 'play';
     startSheet.hidden = true;
     pauseSheet.hidden = true;
     winSheet.hidden = true;
+    loseSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
     say('The sleigh is at the end of the road.');
@@ -346,6 +387,14 @@
     falls += 1;
     if (!reduceMotion()) shake = 8;
     if (falls >= 3) {
+      if (levelParams.has('sequence')) {
+        state = 'lost';
+        loseSheet.hidden = false;
+        say('Three falls. The route was not cleared.');
+        renderHud();
+        return;
+      }
+      objectives.forEach(function (item) { item.taken = false; });
       falls = 0;
       placeOn(0);
       cp = 0;
@@ -356,6 +405,8 @@
     }
     renderHud();
   }
+
+  document.getElementById('retry-lose').addEventListener('click', beginRun);
 
   function hitsBob(bob) {
     var y;
@@ -491,11 +542,11 @@
       if (body.y > ball.roofY - 40 && body.y < ball.roofY + 24 && Math.abs(body.x - ball.x) < ball.r + 12) {
         drop('The snowball knocked you off.');
       } else {
-        ice = icicleAt(3070, PLATFORMS[10].y, 0);
+        ice = firstIcicle();
         if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
           drop('The icicle knocked you off.');
         } else {
-          ice = icicleAt(7500, PLATFORMS[22].y, 1.3);
+          ice = secondIcicle();
           if (ice.mode === 'fall' && overlapsBody(ice.x - 16, ice.hang, 32, ice.tip - ice.hang)) {
             drop('The icicle knocked you off.');
           } else {
@@ -517,7 +568,21 @@
       }
     }
     if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
-    if (body.ground && stood === GOAL && body.x > SLEIGH_X - 8 && body.x < SLEIGH_X + 130) win();
+    objectives.forEach(function (item) {
+      if (item.taken || Math.abs(item.x - body.x) > 28 || Math.abs(item.y - body.y) > 40) return;
+      item.taken = true;
+      say(eaves ? 'Lantern recovered.' : 'Route marker collected.');
+    });
+    if (state === 'play' && body.ground && stood === GOAL && body.x > SLEIGH_X - 8 && body.x < SLEIGH_X + 130 &&
+        objectives.every(function (item) { return item.taken; })) win();
+  }
+
+  function firstIcicle() {
+    return objectives.length ? icicleAt(1470, PLATFORMS[4].y, 0) : icicleAt(3070, PLATFORMS[10].y, 0);
+  }
+
+  function secondIcicle() {
+    return objectives.length ? icicleAt(2300, PLATFORMS[6].y, 1.3) : icicleAt(7500, PLATFORMS[22].y, 1.3);
   }
 
   function trentFrame() {
@@ -625,7 +690,7 @@
       var x = obstacle.x - camX;
       var y = obstacle.y - camY;
       if (x > VIEW_W + 50 || x + obstacle.w < -50) return;
-      if (paintedProp('roof-crate', x - 2, y - 3, obstacle.w + 4, obstacle.h + 3)) return;
+      if (paintedProp(objectives.length ? 'dormer' : 'roof-crate', x - 2, y - 3, obstacle.w + 4, obstacle.h + 3)) return;
       ctx.fillStyle = '#614838';
       ctx.fillRect(x, y, obstacle.w, obstacle.h);
       ctx.fillStyle = '#a37c58';
@@ -818,11 +883,14 @@
     drawRoofBlocks();
     drawCrate();
     drawSnowball();
-    drawIcicle(icicleAt(3070, PLATFORMS[10].y, 0));
-    drawIcicle(icicleAt(7500, PLATFORMS[22].y, 1.3));
+    drawIcicle(firstIcicle());
+    drawIcicle(secondIcicle());
     drawLantern();
     drawPuffs();
     drawSleigh();
+    objectives.forEach(function (item) {
+      if (!item.taken) paintedProp(flags ? 'flag' : 'lantern', item.x - camX - 19, item.y - camY - 58, 38, 54);
+    });
     drawTrent();
     drawLedgeCues();
     drawSnow();

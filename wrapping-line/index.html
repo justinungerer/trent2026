@@ -44,7 +44,7 @@
 
     <div class="hud">
       <div class="hud-block grow">
-        <span class="label">Points</span>
+        <span class="label" id="wrap-score-label">Points</span>
         <strong id="run">0 / 30</strong>
       </div>
       <div class="hud-block">
@@ -71,9 +71,9 @@
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 9</p>
-        <h1>The wrapping line</h1>
+        <h1 id="wrap-stage-title">The wrapping line</h1>
         <p>Boxes arrive at different heights. Move the mark with the left stick. Tap Wrap when a good box reaches the mark. Let damaged boxes pass.</p>
-        <p>Reach 30 points before the clock runs out. A plain present is 1, a ribbon present is 3, and a gilt present is 5. A torn present takes 1 point. A crushed present takes 3. Damaged boxes explode and cost a life if you meet them. If the clock hits zero, that round starts over.</p>
+        <p id="wrap-goal">Reach 30 points before the clock runs out. A plain present is 1, a ribbon present is 3, and a gilt present is 5. A torn present takes 1 point. A crushed present takes 3. Damaged boxes explode and cost a life if you meet them. If the clock hits zero, that round starts over.</p>
         <button type="button" id="start">Start the belt</button>
       </div>
     </div>
@@ -99,7 +99,7 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The wrapping line</p>
-        <h1>Thirty points</h1>
+        <h1 id="wrap-win-title">Thirty points</h1>
         <p>The line is wrapped.</p>
         <p id="win-time">Wrapped in 0 seconds.</p>
         <button type="button" id="retry">Run the line again</button>
@@ -115,6 +115,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-obstacles"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-previews"></script>
+<script src="../level-retry.js"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

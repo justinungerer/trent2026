@@ -27,10 +27,15 @@
 
   var VIEW_W = 1280;
   var VIEW_H = 720;
+  var stage = new URLSearchParams(location.search).get('stage');
+  var inspection = stage === 'clear-the-points';
+  var rescue = stage === 'send-the-rescue-train';
+  var alignedFor = 0;
+  var spurCleared = false;
 
   /* 0 is left, 1 is right. Five patterns, one per successful departure.
      The painted board is covered and redrawn so the current pattern shows. */
-  var TRAIN_COUNT = 5;
+  var TRAIN_COUNT = inspection ? 2 : rescue ? 1 : 5;
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
   var RECOVERY_TIME = 1.8;
@@ -42,6 +47,16 @@
     [1, 1, 0, 0, 1],
     [0, 1, 1, 0, 1]
   ];
+  if (inspection || rescue) {
+    document.getElementById('tower-standard-instructions').hidden = true;
+    document.getElementById('tower-stage-title').textContent = inspection ? 'Clear the Points' : 'Send the Rescue Train';
+    document.getElementById('tower-goal').textContent = inspection
+      ? 'Set both inspection patterns and hold each until the corresponding lamps clear.'
+      : 'Match the board to clear the service spur first. Then set the new pattern for the rescue train.';
+    document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'The rescue train is away';
+    PATTERNS = inspection ? [[0, 1, 1, 0, 0], [1, 0, 0, 1, 0]]
+      : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0]];
+  }
   var LEVER_X = [210, 435, 640, 845, 1050];
   var GROUND_Y = 628;
 
@@ -84,7 +99,9 @@
   var leverImg = new Image();
   var trainImg = new Image();
   var trentImg = new Image();
-  sceneImg.src = 'art/scene.webp';
+  var signalImg = new Image();
+  if (inspection || rescue) signalImg.src = 'art/painted-signal.webp';
+  sceneImg.src = inspection ? 'art/inspection-yard.webp' : 'art/scene.webp';
   boardImg.src = 'art/board.webp';
   leverImg.src = 'art/lever.webp';
   trainImg.src = 'art/train.webp';
@@ -206,7 +223,9 @@
   }
 
   function renderHud() {
-    var line = departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
+    var line = inspection ? departures + ' / 2 · ' + Math.floor(alignedFor) + 's'
+      : rescue && !spurCleared ? 'Clear service spur'
+        : departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
     if (missesEl.textContent !== line) missesEl.textContent = line;
   }
 
@@ -227,6 +246,8 @@
   }
 
   function resetPuzzle() {
+    alignedFor = 0;
+    spurCleared = false;
     levers = LEVER_X.map(function () { return 1; });
     activeLever = 0;
     patternIndex = 0;
@@ -251,7 +272,7 @@
   function armNextTrain() {
     levers = LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
-    switchGrace = 0;
+    switchGrace = rescue ? 15 : 0;
     blastT = 0;
     blastParts = [];
     flipTimer = 0;
@@ -275,7 +296,8 @@
     loseSheet.hidden = true;
     winSheet.hidden = true;
     renderHud();
-    say('Match the board. The first train is rolling in.');
+    say(inspection || rescue ? document.getElementById('tower-goal').textContent
+      : 'Match the board. The first train is rolling in.');
     if (document.activeElement && document.activeElement.blur && document.activeElement !== document.body) {
       document.activeElement.blur();
     }
@@ -310,9 +332,10 @@
     if (state === 'win' || state === 'lose') return;
     seconds = elapsedSeconds();
     state = 'win';
-    winTimeEl.textContent = 'Five trains away in ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
+    var result = inspection ? 'Both routes cleared in ' : rescue ? 'Rescue train sent in ' : 'Five trains away in ';
+    winTimeEl.textContent = result + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
-    say('Five trains are away. ' + seconds + ' seconds.');
+    say(winTimeEl.textContent);
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('switch-tower:complete', {
@@ -387,7 +410,7 @@
   function updateSoldier(dt) {
     var index;
     var mark;
-    if (departures < SABOTEUR_AFTER) return;
+    if (rescue ? !spurCleared : inspection || departures < SABOTEUR_AFTER) return;
     if (state === 'approach' && trainX + TRAIN_W < SWITCH_X) {
       flipTimer += dt;
       if (flipTimer >= FLIP_INTERVAL) {
@@ -397,7 +420,7 @@
         soldierTarget = LEVER_X[index] + 52;
         soldierFace = -1;
         soldierFlipT = 0;
-        switchGrace = RECOVERY_TIME;
+        switchGrace = Math.max(switchGrace, RECOVERY_TIME);
         mark = soldierTarget - soldierX;
         if (mark > 160) soldierX = soldierTarget - 160;
         else if (mark < -160) soldierX = soldierTarget + 160;
@@ -463,6 +486,35 @@
           }
         }
       }
+    }
+  }
+
+  function updateObjective(dt) {
+    if (!inspection && (!rescue || spurCleared)) {
+      updateTrain(dt);
+      return;
+    }
+    if (!matches()) {
+      alignedFor = 0;
+      return;
+    }
+    alignedFor += dt;
+    if (alignedFor < (inspection ? 5 : 3)) return;
+    alignedFor = 0;
+    if (inspection) {
+      departures++;
+      if (departures === TRAIN_COUNT) {
+        win();
+        return;
+      }
+      patternIndex++;
+      say('First inspection lamp clear. Match the next pattern.');
+    } else {
+      spurCleared = true;
+      patternIndex++;
+      armNextTrain();
+      soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
+      say('The service spur is clear. Set the departure pattern.');
     }
   }
 
@@ -754,6 +806,13 @@
     var i;
     drawScene();
     drawBoard();
+    if (imageReady(signalImg)) {
+      ctx.drawImage(signalImg, 862, 301, 64, 111);
+      ctx.fillStyle = matches() ? '#9df8ad' : '#ff9b84';
+      ctx.beginPath();
+      ctx.arc(matches() ? 906 : 883, 347, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
     drawTrainSprite();
     drawBlast();
     for (i = 0; i < LEVER_X.length; i++) drawLever(i);
@@ -818,7 +877,7 @@
       if (!reduceMotion()) updateFlakes(dt);
       updateTrent(dt);
     }
-    if (playingMotion()) updateTrain(dt);
+    if (playingMotion()) updateObjective(dt);
     if (state !== 'pause') updateSoldier(dt);
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 26);
     renderHud();

@@ -2,7 +2,7 @@
 
 let activeRun = null;
 
-function launchMission(loadout) {
+function launchMission(loadout, level) {
   const url = new URL('./shelf-escape/', location.href);
   const params = {
     build: 'side6',
@@ -14,7 +14,10 @@ function launchMission(loadout) {
   Object.keys(params).forEach(function (key) {
     url.searchParams.set(key, params[key]);
   });
-  activeRun = String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+  activeRun = level.runId;
+  url.searchParams.set('runId', activeRun);
+  if (level.stage) url.searchParams.set('stage', level.stage);
+  if (level.sequence) url.searchParams.set('sequence', String(level.sequence));
   window.TrentCampaign.openMissionFrame(url.href, 'Operation Ribbonfall');
 }
 
@@ -26,9 +29,10 @@ window.addEventListener('message', function (event) {
     frame.contentWindow.postMessage({ type: 'trent:init', version: 1, runId: activeRun }, location.origin);
   }
   if (event.data.type === 'trent:complete' && event.data.runId === activeRun) {
+    const completedRun = activeRun;
     activeRun = null;
     if (window.TrentCampaign && typeof window.TrentCampaign.onShelfWon === 'function') {
-      window.TrentCampaign.onShelfWon();
+      window.TrentCampaign.onShelfWon(completedRun);
     }
   }
 });
@@ -46,7 +50,7 @@ function loadoutFromScore(correct) {
 
 window.TrentChapter6 = {
   loadoutFromScore: loadoutFromScore,
-  startMission: function (correct) {
-    launchMission(loadoutFromScore(correct));
+  startMission: function (correct, level) {
+    launchMission(loadoutFromScore(correct), level);
   }
 };

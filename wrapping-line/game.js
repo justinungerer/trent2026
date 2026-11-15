@@ -41,10 +41,16 @@
 
   var VIEW_W = 844;
   var VIEW_H = 390;
+  var stage = new URLSearchParams(location.search).get('stage');
+  var sorting = stage === 'sort-the-first-crates';
+  var loading = stage === 'load-the-sleigh';
+  var manifests = sorting ? [[1, 1, 1]] : loading ? [[7, 4, 2], [3, 6, 5]] : [];
+  var manifestIndex = 0;
+  var packed = [0, 0, 0];
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
   var NEED = 30;
-  var ROUND_SECONDS = 27;
+  var ROUND_SECONDS = loading ? 300 : sorting ? 100 : 27;
   var TARGET = 456;
   var MEET = 26;
   var SPEED = 232;
@@ -62,10 +68,20 @@
     { id: 'torn', name: 'Torn', points: -1, weight: 2, src: 'art/present-torn.webp' },
     { id: 'crushed', name: 'Crushed', points: -3, weight: 1, src: 'art/present-crushed.webp' }
   ];
+  if (manifests.length) {
+    document.getElementById('wrap-stage-title').textContent = sorting ? 'Sort the First Crates' : 'Load the Sleigh';
+    document.getElementById('wrap-goal').textContent = sorting
+      ? 'Wrap one intact box of each class (1, 3, and 5). Use the cargo counts at the top.'
+      : 'Fill the first manifest, then the second. Track the remaining boxes by their tags (1, 3, and 5).';
+    document.getElementById('wrap-score-label').textContent = sorting ? 'Boxes left' : 'Cargo left';
+    document.getElementById('wrap-win-title').textContent = sorting ? 'First crates sorted' : 'The sleigh is loaded';
+  }
 
   var sceneImg = new Image();
   var trentImg = new Image();
-  sceneImg.src = 'art/scene.webp';
+  sceneImg.src = sorting ? 'art/freight-intake.webp' : loading ? 'art/loading-bay.webp' : 'art/scene.webp';
+  var beltImg = new Image();
+  beltImg.src = 'art/painted-belt.webp';
   trentImg.src = 'art/trent.webp';
   var goodBoxImg = new Image();
   var damagedBoxImg = new Image();
@@ -137,7 +153,12 @@
     var shown = Math.ceil(timeLeft);
     if (shown < 0) shown = 0;
     if (shown > ROUND_SECONDS) shown = ROUND_SECONDS;
-    runEl.textContent = score + ' / ' + NEED;
+    runEl.textContent = manifests.length
+      ? (loading ? (manifestIndex + 1) + '/2 · ' : '') +
+        manifests[manifestIndex].map(function (need, index) {
+          return PRESENT_TYPES[index].points + '×' + Math.max(0, need - packed[index]);
+        }).join('  ')
+      : score + ' / ' + NEED;
     timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
@@ -159,9 +180,11 @@
     var n;
     var swap;
     var held;
+    if (sorting && spawned < 4) return PRESENT_TYPES[[0, 1, 3, 2][spawned]];
     if (!bag.length) {
       for (i = 0; i < PRESENT_TYPES.length; i++) {
-        for (n = 0; n < PRESENT_TYPES[i].weight; n++) bag.push(PRESENT_TYPES[i]);
+        var extra = loading && manifestIndex === 1 && (i === 1 || i === 3) ? 1 : 0;
+        for (n = 0; n < PRESENT_TYPES[i].weight + extra; n++) bag.push(PRESENT_TYPES[i]);
       }
       for (i = bag.length - 1; i > 0; i--) {
         swap = Math.floor(Math.random() * (i + 1));
@@ -174,6 +197,8 @@
   }
 
   function resetBelt(keepLives) {
+    manifestIndex = 0;
+    packed = [0, 0, 0];
     score = 0;
     timeLeft = ROUND_SECONDS;
     played = 0;
@@ -199,11 +224,16 @@
     outSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say('Move the mark. Reach 30 points before time runs out.');
+    say(manifests.length ? document.getElementById('wrap-goal').textContent :
+      'Move the mark. Reach 30 points before time runs out.');
   }
 
   function restartRound() {
     if (state !== 'play') return;
+    if (manifests.length) {
+      endRun('Time expired', 'The cargo list was still incomplete when the belt stopped.');
+      return;
+    }
     resetBelt(true);
     lastWord = 'Time';
     lastKind = 'bad';
@@ -241,7 +271,7 @@
     state = 'win';
     winTimeEl.textContent = 'Wrapped in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('30 points. ' + seconds + ' seconds.');
+    say((loading ? 'Sleigh packed.' : sorting ? 'Crates sorted.' : '30 points.') + ' ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('wrapping-line:complete', {
@@ -258,11 +288,13 @@
     }
   }
 
-  function endRun() {
+  function endRun(title, copy) {
     state = 'over';
     hintEl.hidden = true;
+    outSheet.querySelector('h1').textContent = title || 'Out of lives';
+    outSheet.querySelector('p:not(.kicker)').textContent = copy || 'A damaged present took the last life. The line was not cleared.';
     outSheet.hidden = false;
-    say('Out of lives. The line was not cleared.');
+    say((title || 'Out of lives') + '. The line was not cleared.');
   }
 
   function meetPresent(parcel) {
@@ -275,6 +307,24 @@
     lastKind = points > 0 ? 'good' : 'bad';
     if (points > 0) {
       bowT = 0.36;
+      if (manifests.length) {
+        var kind = PRESENT_TYPES.indexOf(parcel.type);
+        var need = manifests[manifestIndex];
+        if (packed[kind] < need[kind]) packed[kind]++;
+        if (need.every(function (count, index) { return packed[index] === count; })) {
+          renderHud();
+          if (manifestIndex + 1 === manifests.length) {
+            win();
+            return;
+          }
+          manifestIndex++;
+          packed = [0, 0, 0];
+          bag = [];
+          say('First cargo manifest filled. Second manifest ready.');
+        }
+        renderHud();
+        return;
+      }
       say(parcel.type.name + ' present. ' + score + (score === 1 ? ' point.' : ' points.'));
       renderHud();
       if (score >= NEED) win();
@@ -584,6 +634,7 @@
       dpr * view.oy
     );
     drawCover(sceneImg);
+    if (imageReady(beltImg)) ctx.drawImage(beltImg, 439, 320, 363, 64);
     drawParcels();
     drawMark();
     drawTrent();

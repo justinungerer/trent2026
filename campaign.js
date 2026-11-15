@@ -550,8 +550,9 @@ function showRules() {
   modal.innerHTML = '<div class="quiz-modal-card"><h2 id="campaign-rules-title" tabindex="-1">How to play</h2>' +
     '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
     '<p>You get two guesses per question. Afterward, you can review why each answer is right or wrong.</p>' +
-    '<p>Get at least five answers right to advance. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses in the chapter’s minigame.</p>' +
-    '<p>Finish a chapter to earn a password for the next chapter. That password also unlocks the earlier chapters, films, and minigames in the chapter menu.</p>' +
+    '<p>Get at least five answers right to enter the chapter’s minigame. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses. Each level starts with your full earned loadout.</p>' +
+    '<p>Play the three minigame levels in order. If you lose, you can retry the level or start that minigame over.</p>' +
+    '<p>Finish Level 3 to earn the password for the next chapter. Entering it also unlocks earlier chapters, films, and complete minigame sequences in the chapter menu.</p>' +
     '<button class="primary" type="button">Continue</button><button class="secondary" type="button">Cancel</button></div>';
   modal.querySelector('.primary').onclick = function () { modal.remove(); showLogo(); };
   modal.querySelector('.secondary').onclick = function () {
@@ -887,7 +888,8 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=current-film';
+      if (!video.hasAttribute('src')) video.src = chapter.videoPath ||
+        './assets/intro-video/' + chapter.id + '.mp4?v=current-film';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -938,6 +940,7 @@ function playIntro(chapter, done) {
   introTitle.setAttribute('aria-description', chapter.lines.join(' '));
   progress.style.transform = 'scaleX(0)';
   cinema.dataset.chapter = chapter.id;
+  document.getElementById('intro-skip').hidden = chapter.allowSkip === false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   cinema.hidden = false;
   campaignRoot.hidden = true;
@@ -979,16 +982,54 @@ function playIntro(chapter, done) {
 }
 
 function launchGame(chapter, score, returnToMenu) {
-  if (chapter.id === 'shelf') {
-    active = { chapter: chapter, returnToMenu: returnToMenu };
-    window.TrentChapter6.startMission(score);
+  active = {
+    chapter: chapter,
+    score: score,
+    returnToMenu: returnToMenu,
+    levels: window.TrentLevels[chapter.id],
+    seen: new Set(),
+    levelIndex: 0
+  };
+  launchMissionLevel(active);
+}
+
+function launchMissionLevel(run) {
+  var level = run.levels[run.levelIndex];
+  run.runId = null;
+  if (run.levels.length > 1) closeMission();
+  if (level) {
+    playIntro({
+      id: run.chapter.id,
+      kicker: run.chapter.kicker + ' · Level ' + (run.levelIndex + 1),
+      title: level.title,
+      lines: level.lines,
+      filmSeconds: 24,
+      captionFrames: [0, 192, 384],
+      videoPath: './assets/level-video/' + level.id + '.mp4',
+      allowSkip: run.seen.has(level.id)
+    }, function () {
+      run.seen.add(level.id);
+      openMissionLevel(run, level.id);
+    });
     return;
   }
-  var runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  openMissionLevel(run);
+}
+
+function openMissionLevel(run, stage) {
+  var chapter = run.chapter;
+  run.runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  if (chapter.id === 'shelf') {
+    window.TrentChapter6.startMission(run.score, {
+      runId: run.runId, stage: stage, sequence: run.levels.length > 1 ? run.levelIndex + 1 : null
+    });
+    return;
+  }
   var url = new URL(chapter.path, location.href);
-  var bonus = score >= 8 ? score - 7 : 0;
-  active = { chapter: chapter, runId: runId, returnToMenu: returnToMenu };
-  url.searchParams.set('runId', runId);
+  var bonus = run.score >= 8 ? run.score - 7 : 0;
+  url.searchParams.set('runId', run.runId);
+  if (stage) url.searchParams.set('stage', stage);
+  if (run.levels.length > 1) url.searchParams.set('sequence', String(run.levelIndex + 1));
   if (bonus) url.searchParams.set('bonus', String(bonus));
   if (chapter.path === './wrapping-line/') url.searchParams.set('lives', String(7 + bonus));
   openMissionFrame(url.href, chapter.title);
@@ -1162,6 +1203,11 @@ function playEnding() {
 
 function finishMission() {
   var run = active;
+  if (run.levelIndex + 1 < run.levels.length) {
+    run.levelIndex++;
+    launchMissionLevel(run);
+    return;
+  }
   if (run.returnToMenu) run.returnToMenu();
   else finishChapter(run.chapter);
 }
@@ -1177,8 +1223,13 @@ window.addEventListener('message', function (event) {
   var data = event.data;
   if (event.origin !== location.origin) return;
   if (!active || !frame || event.source !== frame.contentWindow) return;
-  if (!data || data.type !== active.chapter.event) return;
-  if (!data.runId || data.runId !== active.runId) return;
+  if (!data || !data.runId || data.runId !== active.runId) return;
+  if (data.type === 'trent:restart-minigame' && active.levels.length > 1) {
+    active.levelIndex = 0;
+    launchMissionLevel(active);
+    return;
+  }
+  if (data.type !== active.chapter.event) return;
   finishMission();
 });
 
@@ -1193,8 +1244,8 @@ endingVideo.addEventListener('ended', showRestored);
 
 window.TrentCampaign = {
   openMissionFrame: openMissionFrame,
-  onShelfWon: function () {
-    if (active && active.chapter.id === 'shelf') finishMission();
+  onShelfWon: function (runId) {
+    if (active && active.chapter.id === 'shelf' && active.runId === runId) finishMission();
   }
 };
 

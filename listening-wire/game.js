@@ -26,6 +26,23 @@
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
   var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
+  var stage = new URLSearchParams(location.search).get('stage');
+  var listening = stage === 'the-listening-post';
+  var gatehouse = stage === 'gatehouse-code';
+  var codeNeeded = listening ? 1 : gatehouse ? 2 : 0;
+  var codeFound = 0;
+  var codeImg = new Image();
+  var medkitImg = new Image();
+  var rifleImg = new Image();
+  medkitImg.src = 'art/painted-medkit.webp';
+  rifleImg.src = 'art/painted-rifle.webp';
+  if (codeNeeded) {
+    codeImg.src = '../chapter-2/art/mail.webp';
+    document.getElementById('corridor-stage-title').textContent = listening ? 'The Listening Post' : 'Gatehouse Code';
+    document.getElementById('corridor-stage-goal').textContent = listening
+      ? 'Recover the coded dispatch in the listening wing, then reach the green exit.'
+      : 'Recover both code slips in either order and use them at the green gatehouse exit.';
+  }
 
   var KINDS = [
     { name: 'Soldier', move: 1.05, range: 6.4, wait: 1.55, shot: 4.6, hold: 2.5, h: 0.86, hp: 1, art: 'rifleman' },
@@ -297,7 +314,7 @@
   }
 
   function makeLevel() {
-    var map = buildMaze(99);
+    var map = buildMaze(listening ? 1944 : gatehouse ? 2512 : 99);
     var dist = buildDistances(map);
     var best = -1;
     var ex = 1;
@@ -332,12 +349,21 @@
       }
     }
     cells.sort(function (a, b) { return a.d - b.d || a.x - b.x; });
+    if (codeNeeded) {
+      var codeCells = spreadTake(cells, function (cell) {
+        return cell.d > best * 0.3 && cell.d < best * 0.85;
+      }, codeNeeded, 9, placed);
+      codeCells.forEach(function (cell) {
+        placed.push(cell);
+        pickups.push({ x: cell.x, y: cell.y, kind: 'code', n: 1, bob: 0 });
+      });
+    }
     var startingAmmo = spreadTake(cells, function (c) { return c.d >= 4 && c.d <= 8; }, 2, 2, placed);
     startingAmmo.forEach(function (cell) {
       placed.push(cell);
       pickups.push({ x: cell.x, y: cell.y, kind: 'ammo', n: 4, bob: 0.4 });
     });
-    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, 120, 1.4, placed);
+    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, listening ? 26 : gatehouse ? 39 : 120, 1.4, placed);
     enemies.sort(function (a, b) { return a.d - b.d; });
     for (i = 0; i < enemies.length; i++) placed.push(enemies[i]);
     boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 12, 2.8, placed);
@@ -568,6 +594,7 @@
   }
 
   function beginRun() {
+    codeFound = 0;
     resetPlayer();
     enemies = freshEnemies();
     pickups = freshPickups();
@@ -868,6 +895,12 @@
     for (i = pickups.length - 1; i >= 0; i--) {
       p = pickups[i];
       if (Math.hypot(p.x - player.x, p.y - player.y) > 0.46) continue;
+      if (p.kind === 'code') {
+        pickups.splice(i, 1);
+        codeFound++;
+        showToast('Code slips: ' + codeFound + '/' + codeNeeded);
+        continue;
+      }
       if (p.kind === 'health') {
         if (health >= MAX_HEALTH) continue;
         health += 1;
@@ -1010,7 +1043,10 @@
       bursts[i].life -= dt;
       if (bursts[i].life <= 0) bursts.splice(i, 1);
     }
-    if (state === 'play' && atExit()) win();
+    if (state === 'play' && atExit()) {
+      if (codeFound === codeNeeded) win();
+      else if (toastT <= 0) showToast('Exit locked. Code slips: ' + codeFound + '/' + codeNeeded);
+    }
   }
 
   function sample(tex, u, v, shade, fog, di) {
@@ -1227,7 +1263,9 @@
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
       list.push({
-        img: p.kind === 'health' ? kitImg : (bulletImg.naturalWidth ? bulletImg : bulletFallback),
+        img: p.kind === 'code' && codeImg.naturalWidth ? codeImg :
+          p.kind === 'health' ? (medkitImg.naturalWidth ? medkitImg : kitImg) :
+            (bulletImg.naturalWidth ? bulletImg : bulletFallback),
         x: p.x,
         y: p.y + (bob ? Math.sin(played * 2 + p.bob) * 0.04 : 0),
         h: 0.34,
@@ -1278,6 +1316,20 @@
   function drawGun() {
     var bob = reduceMotion() ? 0 : Math.sin(walk) * 7 * moving;
     var lift = kick * 26;
+    if (rifleImg.naturalWidth) {
+      var height = cssH * 0.39;
+      var width = height * rifleImg.naturalWidth / rifleImg.naturalHeight;
+      var top = cssH - height + bob + lift;
+      var center = cssW * 0.56;
+      ctx.drawImage(rifleImg, center - width / 2, top, width, height);
+      if (flash > 0) {
+        ctx.fillStyle = 'rgba(255, 214, 120, 0.9)';
+        ctx.beginPath();
+        ctx.arc(center - width * .015, top + 4, 10 + flash * 40, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return;
+    }
     ctx.save();
     ctx.translate(cssW * 0.58, cssH * 0.98 + bob + lift);
     ctx.rotate(-0.42 - kick * 0.08);

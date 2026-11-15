@@ -38,8 +38,8 @@
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">6 June 1944</p>
-        <h1>Landing at Normandy</h1>
-        <p>Trent steps off the landing craft at Landing at Normandy. The wall is to the right.</p>
+        <h1 id="landing-title">Landing at Normandy</h1>
+        <p id="landing-goal">Trent steps off the landing craft at Normandy. The wall is to the right.</p>
         <p>Use the stick to walk. Curved waves run from right to left at different heights on the beach. A wave pushes Trent back toward the landing craft until he braces. Bracing cancels that push. Go around the wire, the hedgehogs, the craters, and the mines.</p>
         <p>Soldiers along the beach sometimes shoot. Step clear of the gunfire and the grenades. Tap Fire to stop a soldier. Aim with the stick, including while you brace. He starts with ten bullets. A crate on the sand, or a package a soldier drops, adds one.</p>
         <p>Three stumbles, and he starts again at the ramp. Touching a mine puts him back on the ramp at once.</p>
@@ -66,7 +66,7 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">Landing at Normandy</p>
-        <h1>He makes the wall</h1>
+        <h1 id="landing-win-title">He makes the wall</h1>
         <p id="win-time">Time on the sand: 0:00</p>
         <p id="win-hold" hidden>Holding the landing.</p>
         <button type="button" id="continue">Continue</button>
@@ -82,6 +82,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-obstacles"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-previews"></script>
+<script src="../level-retry.js"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

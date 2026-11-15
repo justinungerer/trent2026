@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16345c">
   <title>White Rail</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=side-by-side">
 </head>
 <body>
   <main class="stage">
@@ -38,8 +38,8 @@
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 3</p>
-        <h1>White Rail</h1>
-        <p>Trent pumps a handcar along a snowy line. The yard mouth is ahead.</p>
+        <h1 id="rail-stage-title">White Rail</h1>
+        <p id="rail-objective">Trent pumps a handcar along a snowy line. The yard mouth is ahead.</p>
         <p>Use Left and Right or swipe sideways to pick a track. Use your right thumb to pump. Let go of the pump and the car coasts to a stop.</p>
         <p>A crate or a lowered signal arm is a slip. A break in the rail ends the run. A plane may bomb the track he is on.</p>
         <p>Three slips, and he starts the line again. A slip is a jolt.</p>
@@ -67,9 +67,9 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">White Rail</p>
-        <h1>The yard mouth</h1>
+        <h1 id="rail-win-title">The yard mouth</h1>
         <p id="win-time">On the line for 0 seconds.</p>
-        <p>Lanterns mark the open mouth of the yard.</p>
+        <p id="rail-win-copy">Lanterns mark the open mouth of the yard.</p>
         <button type="button" id="retry">Ride again</button>
       </div>
     </div>
@@ -83,6 +83,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-obstacles"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-previews"></script>
+<script src="../level-retry.js"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

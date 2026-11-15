@@ -3,6 +3,11 @@ const canvas = document.querySelector('canvas');
 const g = canvas.getContext('2d');
 const W = 480, H = 760;
 const MAX_HULL = 3 + (window.TrentMissionBonus || 0);
+const stage = new URLSearchParams(location.search).get('stage');
+const scouts = stage === 'the-scout-screen';
+const workshop = stage === 'workshop-approach';
+const boundary = 545;
+const objectiveCount = scouts ? 8 : 3;
 const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
@@ -30,7 +35,9 @@ function loadArt(name) {
   image.src = './art/' + name + '.webp';
   return image;
 }
-const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp'].map(name => [name, loadArt(name)]));
+const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp']
+  .map(name => [name, loadArt(name === 'valley' && scouts ? 'scout-valley' : name === 'valley' && workshop ? 'workshop-roofs' : name)]));
+const weaponPod = loadArt('painted-pod');
 function resizeCanvas() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = W * ratio;
@@ -66,15 +73,27 @@ function craftSprite(kind, x, y, width, bank) {
 const largeCraft = kind => kind === 'boss' || kind === 'flagship';
 const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, flagshipAt, aim, drag, wraps, recoil, shake, kills;
+let intercepted = 0;
+let nextEscort = 8;
+const objectiveTimes = scouts ? [14, 92] : [16, 67, 125];
+const stageTitle = scouts ? 'The Scout Screen' : 'Workshop Approach';
+const stageBrief = scouts ? 'Stop both scout formations before they cross the valley line.'
+  : 'Stop all three marked cargo haulers before they cross the roof line. Escorts can pass.';
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
+  intercepted = 0;
+  nextEscort = 8;
   player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['laser'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
   wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; flagshipAt = null; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
   ui.hull.textContent = '◆'.repeat(MAX_HULL);
-  ui.phase.textContent = 'THE FROZEN VALLEY';
+  ui.phase.textContent = scouts || workshop ? stageTitle : 'THE FROZEN VALLEY';
   paintStack();
+}
+if (scouts || workshop) {
+  ui.title.textContent = stageTitle;
+  ui.brief.textContent = stageBrief;
 }
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
@@ -92,6 +111,8 @@ function overlay(next, title, brief, label) {
   ui.title.textContent = title;
   ui.brief.textContent = brief;
   ui.action.textContent = label;
+  const restart = document.getElementById('restart-sequence');
+  if (restart) restart.hidden = next !== 'paused' && next !== 'lost';
   ui.sheet.hidden = false;
 }
 ui.action.onclick = () => {
@@ -187,6 +208,30 @@ function spawn() {
     });
   }
 }
+function spawnIntercept() {
+  const group = wave++;
+  const markedX = [114, 350, 240][group];
+  const flight = scouts ? [0, 1, 2, 3].map(i => ({
+    kind: group === 0 ? 'drone' : 'skiff', x: 64 + i * 114, y: -46 - i * 34, objective: true
+  })) : [
+    { kind: 'hauler', x: markedX, y: -140, objective: true },
+    { kind: 'wisp', x: Math.max(32, markedX - 75), y: -40 },
+    { kind: 'drone', x: Math.min(W - 32, markedX + 75), y: -64 }
+  ];
+  for (const craft of flight) {
+    enemies.push({
+      ...craft, base: craft.x, age: 0, fire: 1.2, hp: CRAFT[craft.kind].hp,
+      mode: group % 3, side: group % 2 ? 1 : -1
+    });
+  }
+}
+function spawnEscort() {
+  const i = Math.floor(nextEscort / 8);
+  const x = 62 + (i * 147) % 356;
+  const kind = i % 4 === 0 ? 'hauler' : i % 2 ? 'wisp' : 'drone';
+  enemies.push({ kind, x, y: -70, base: x, age: 0, fire: 1.4, hp: CRAFT[kind].hp, mode: i % 3, side: i % 2 ? 1 : -1 });
+  nextEscort += 8.5;
+}
 function shoot(enemy) {
   const aim = Math.atan2(player.y - enemy.y, player.x - enemy.x);
   const bolt = (ang, speed, ox = 0, oy = 10) => {
@@ -275,21 +320,31 @@ function fell(enemy) {
   score += CRAFT[enemy.kind].score;
   burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
   if (!boss && ++kills % KILLS_PER_DROP === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
+  if (enemy.objective) {
+    intercepted++;
+    ui.phase.textContent = 'Intercepted ' + intercepted + '/' + objectiveCount;
+    if (intercepted === objectiveCount) finishFlight('Intercept complete', stageBrief + ' Clear.');
+  }
   if (enemy.kind === 'boss') {
     flagshipAt = time + 2.4;
     ui.phase.textContent = 'A HEAVIER FLAGSHIP IS APPROACHING';
   }
   if (enemy.kind === 'flagship') {
-    overlay('won', 'SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading. Score: ' + score + '.', 'Fly again');
-    const skyDetail = { score, hull: player.hull };
-    window.dispatchEvent(new CustomEvent('frosted-skies:complete', { detail: skyDetail }));
-    if (window.parent !== window) {
-      const skyRelay = { type: 'frosted-skies:complete', detail: skyDetail };
-      try { const skyRun = new URLSearchParams(location.search).get('runId'); if (skyRun) skyRelay.runId = skyRun; } catch (ignore) {}
-      window.parent.postMessage(skyRelay, (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '*');
-    }
+    finishFlight('SIGNAL RECOVERED', 'Santa’s last broadcast: “I am being kidnapped. Please bring my slippers.” Trent has a heading.');
   }
   ui.score.textContent = String(score).padStart(6, '0');
+}
+function finishFlight(title, copy) {
+  if (state !== 'playing') return;
+  overlay('won', title, copy + ' Score: ' + score + '.', 'Fly again');
+  const skyDetail = { score, hull: player.hull };
+  window.dispatchEvent(new CustomEvent('frosted-skies:complete', { detail: skyDetail }));
+  if (window.parent !== window) {
+    const skyRelay = { type: 'frosted-skies:complete', detail: skyDetail };
+    const skyRun = new URLSearchParams(location.search).get('runId');
+    if (skyRun) skyRelay.runId = skyRun;
+    window.parent.postMessage(skyRelay, (location.protocol === 'http:' || location.protocol === 'https:') ? location.origin : '*');
+  }
 }
 function harm(enemy, dmg, x, y) {
   if (enemy.hp <= 0) return;
@@ -378,8 +433,12 @@ function update(dt) {
   player.y = clamp(player.y, 315, H - 55);
   player.bank += (clamp((player.x - x0) * .12, -.65, .65) - player.bank) * Math.min(dt * 13, 1);
   armWeapons(dt);
-  if (wave < 9 && time >= 1.35 + wave * 5.15) spawn();
-  if (time > 51 && !bossSpawned) {
+  if (state !== 'playing') return;
+  if (scouts || workshop) {
+    if (wave < objectiveTimes.length && time >= objectiveTimes[wave]) spawnIntercept();
+    if (time >= nextEscort && time < objectiveTimes[objectiveTimes.length - 1]) spawnEscort();
+  } else if (wave < 9 && time >= 1.35 + wave * 5.15) spawn();
+  if (!scouts && !workshop && time > 51 && !bossSpawned) {
     bossSpawned = true;
     enemies.push({ kind: 'boss', x: 240, y: -100, base: 240, age: 0, fire: 1.2, hp: CRAFT.boss.hp, mode: 0, side: 1 });
     ui.phase.textContent = 'CONVOY FLAGSHIP / DESTROY THE SIGNAL JAMMER';
@@ -424,6 +483,10 @@ function update(dt) {
     if (state !== 'playing') break;
   }
   if (state !== 'playing') return;
+  if (enemies.some(enemy => enemy.objective && enemy.hp > 0 && enemy.y >= boundary)) {
+    overlay('lost', 'Intercept missed', 'A marked aircraft crossed the line.', 'Retry level');
+    return;
+  }
   for (const b of bolts) {
     b.x += b.vx * dt;
     b.y += b.vy * dt;
@@ -466,6 +529,19 @@ function drawPod(pod) {
   const mark = spec.mark;
   g.save();
   g.translate(pod.x, pod.y);
+  if (ready(weaponPod)) {
+    g.drawImage(weaponPod, -16, -21, 32, 42);
+    g.font = '800 14px system-ui';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.strokeStyle = '#101520';
+    g.lineWidth = 3;
+    g.strokeText(mark, 0, 0);
+    g.fillStyle = look;
+    g.fillText(mark, 0, 0);
+    g.restore();
+    return;
+  }
   g.fillStyle = '#f7fbff';
   g.beginPath();
   g.roundRect(-12, -16, 24, 32, 9);
@@ -519,11 +595,24 @@ function render() {
   }
   g.save();
   if (shake > 0 && !reduceMotion.matches) g.translate(Math.sin(time * 115) * shake * 16, Math.cos(time * 120) * shake * 12);
+  if (scouts || workshop) {
+    g.strokeStyle = '#f8c779bb';
+    g.setLineDash([14, 8]);
+    g.beginPath();
+    g.moveTo(0, boundary);
+    g.lineTo(W, boundary);
+    g.stroke();
+    g.setLineDash([]);
+  }
   for (const enemy of enemies) {
     if (enemy.hp <= 0) continue;
     const spec = CRAFT[enemy.kind];
     const bank = Math.cos(enemy.age * (largeCraft(enemy.kind) ? 1.1 : 2)) * .13;
     craftSprite(enemy.kind, enemy.x, enemy.y, spec.size, bank);
+    if (enemy.objective) {
+      g.fillStyle = '#ffcf79';
+      g.fillRect(enemy.x - 4, enemy.y - spec.hy - 12, 8, 8);
+    }
     if (enemy.impact > 0) {
       g.globalAlpha = enemy.impact * 4;
       g.strokeStyle = '#fff1b1';

@@ -30,9 +30,9 @@
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 5</p>
-        <h1>The Switch Tower</h1>
-        <p>Five trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
-        <p>Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. After two trains get away, a soldier appears and throws a random lever about every two seconds. Five trains away wins. Three explosions start the puzzle over.</p>
+        <h1 id="tower-stage-title">The Switch Tower</h1>
+        <p id="tower-goal">Five trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
+        <p id="tower-standard-instructions">Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. After two trains get away, a soldier appears and throws a random lever about every two seconds. Five trains away wins. Three explosions start the puzzle over.</p>
         <button type="button" id="start">Open the tower</button>
       </div>
     </div>
@@ -57,7 +57,7 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The Switch Tower</p>
-        <h1>The trains are away</h1>
+        <h1 id="tower-win-title">The trains are away</h1>
         <p id="win-time">Five trains away in 0 seconds.</p>
         <button type="button" id="retry">Run the yard again</button>
       </div>
@@ -72,6 +72,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=chapter-tuning"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-previews"></script>
+<script src="../level-retry.js"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>

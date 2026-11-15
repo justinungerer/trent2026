@@ -29,6 +29,11 @@
   var winTimeEl = document.getElementById('win-time');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
+  var variant = new URLSearchParams(location.search).get('stage');
+  var calibration = variant === 'find-the-carrier';
+  var confirmDispatch = variant === 'confirm-the-dispatch';
+  var targets = calibration ? ['weather', 'music'] : confirmDispatch ? ['birch', 'lantern'] : ['santa'];
+  var targetIndex = 0;
 
   var VIEW_W = 844;
   var VIEW_H = 390;
@@ -60,7 +65,10 @@
   var sceneImg = new Image();
   var radioImg = new Image();
   var trentImg = new Image();
-  sceneImg.src = 'art/scene.webp';
+  var spoolImg = new Image();
+  if (calibration || confirmDispatch) spoolImg.src = 'art/painted-spool.webp';
+  sceneImg.src = calibration ? 'art/carrier-tent.webp' :
+    confirmDispatch ? 'art/relay-shelter.webp' : 'art/scene.webp';
   radioImg.src = 'art/radio.webp';
   trentImg.src = 'art/trent.webp';
 
@@ -72,6 +80,24 @@
     { id: 'chapel', name: 'Chapel', line: 'Chapel. A hymn under the wind.', home: 0.66, homeDir: -1, speedScale: 0.95, correct: false },
     { id: 'santa', name: 'Field report', line: 'Field voice: Santa has been captured.', home: 0.84, homeDir: 1, speedScale: 1.08, correct: true }
   ];
+  if (confirmDispatch) {
+    stations.splice(2, 1,
+      { id: 'birch', name: 'Birch', line: 'Birch. Ready to authenticate.', home: 0.47, homeDir: 1, speedScale: 0.85 },
+      { id: 'lantern', name: 'Lantern', line: 'Lantern. Dispatch acknowledged.', home: 0.6, homeDir: -1, speedScale: 1.0 });
+  }
+  if (calibration || confirmDispatch) {
+    document.getElementById('radio-stage-title').textContent = calibration ? 'Find the Carrier' : 'Confirm the Dispatch';
+    var instructions = document.getElementById('radio-stage-instructions');
+    instructions.textContent = calibration
+      ? 'Tune Weather and Music box in order. Hold each strong signal until it registers.'
+      : 'Tune the call sign shown on the dispatch readout and lock it. A second call sign appears after the first lock.';
+    document.getElementById('standard-lock-instructions').hidden = calibration;
+    document.getElementById('field-report-instructions').hidden = true;
+    document.getElementById('radio-win-title').textContent = calibration ? 'Carrier calibrated' : 'Dispatch confirmed';
+    document.getElementById('radio-win-copy').textContent = calibration
+      ? 'Both calibration signals came through.' : 'Both Allied calls acknowledged the dispatch.';
+    lockBtn.hidden = calibration;
+  }
 
   var state = 'title';
   var freq = START_FREQ;
@@ -220,6 +246,10 @@
   }
 
   function hintText() {
+    if (calibration || confirmDispatch) {
+      return 'Target ' + (targetIndex + 1) + '/' + targets.length + ' · ' +
+        stationById(targets[targetIndex]).name + (bandId ? ' · Hold Lock' : '');
+    }
     if (bandId) return 'Hold Lock inside the red band';
     return 'Hold a strong signal for ' + STRONG_HOLD + ' second';
   }
@@ -227,6 +257,9 @@
   function renderHud() {
     var station = heardStation();
     var line = station ? station.line : 'Static. Snow on the aerial.';
+    if (confirmDispatch && targetIndex === 0 && station && station.id === 'lantern') {
+      line = 'An unidentified signal.';
+    }
     var showingNote = performance.now() < statusUntil;
     var heard = showingNote ? statusNote : line;
     var sig = signalAt(freq);
@@ -266,6 +299,7 @@
     var i;
     var station;
     freq = START_FREQ;
+    targetIndex = 0;
     strongT = 0;
     lockT = 0;
     chargeId = null;
@@ -276,9 +310,9 @@
       station = stations[i];
       station.center = station.home;
       station.dir = station.homeDir;
-      station.half = STRONG_HALF;
+      station.half = calibration ? STRONG_HALF * 1.35 : STRONG_HALF;
       station.redHalf = RED_HALF;
-      station.speed = MARKER_SPEED * station.speedScale;
+      station.speed = MARKER_SPEED * station.speedScale * (calibration ? 0.5 : 1);
       station.turnIn = nextTurn();
     }
   }
@@ -362,7 +396,8 @@
     keys.clear();
     winTimeEl.textContent = 'Tuned in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('Field report locked. Santa has been taken. ' + seconds + ' seconds.');
+    say((calibration ? 'Carrier calibrated.' : confirmDispatch ? 'Dispatch confirmed.' :
+      'Field report locked. Santa has been taken.') + ' ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('night-broadcast:complete', {
@@ -401,6 +436,22 @@
     lockT = 0;
   }
 
+  function confirmStation(id) {
+    if (id !== targets[targetIndex]) {
+      clearBand();
+      announce('wrong station');
+      return;
+    }
+    if (targetIndex + 1 === targets.length) {
+      win();
+      return;
+    }
+    targetIndex++;
+    lockHeld = false;
+    clearBand();
+    announce('Signal confirmed.');
+  }
+
   function updateTuning(dt) {
     var dir;
     var charged;
@@ -431,6 +482,10 @@
         }
       }
       if (strongT >= STRONG_HOLD) {
+        if (calibration) {
+          confirmStation(chargeId);
+          return;
+        }
         strongT = STRONG_HOLD;
         bandId = chargeId;
         lockT = 0;
@@ -448,11 +503,7 @@
       lockT += dt;
       if (lockT >= LOCK_TIME) {
         lockT = LOCK_TIME;
-        if (band.correct) win();
-        else {
-          clearBand();
-          announce('wrong station');
-        }
+        confirmStation(band.id);
       }
     } else {
       lockT = Math.max(0, lockT - DECAY * dt);
@@ -689,6 +740,7 @@
     ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.ox, dpr * view.oy);
     drawTrent();
     drawRadio();
+    if (imageReady(spoolImg)) ctx.drawImage(spoolImg, calibration ? 295 : 112, 241, 80, 83);
     drawStations();
     drawNeedle();
     drawMeter();

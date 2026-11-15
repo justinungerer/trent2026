@@ -33,7 +33,13 @@
   var HORIZON_Y = 102;
   var CART_Y = 322;
   var BOMBER_COUNT = 23;
-  var FINISH = 454;
+  var stage = new URLSearchParams(location.search).get('stage');
+  var siding = stage === 'siding-signals';
+  var loadingSpur = stage === 'the-loading-spur';
+  var loadingZone = { lane: 2, start: 2340, end: 2386 };
+  var markers = [{ lane: 0, x: 585, w: 5 }, { lane: 2, x: 1715, w: 5 }];
+  var markersFound = 0;
+  var FINISH = loadingSpur ? 2394 : siding ? 2320 : 454;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
@@ -75,6 +81,27 @@
     { x: 248, w: 16, h: 8.4 },
     { x: 360, w: 11, h: 6.4 }
   ];
+  if (siding || loadingSpur) {
+    var stageTitle = siding ? 'Siding Signals' : 'The Loading Spur';
+    document.getElementById('rail-stage-title').textContent = stageTitle;
+    document.getElementById('rail-win-title').textContent = siding ? 'Route marked' : 'Cart in position';
+    document.getElementById('rail-win-copy').textContent = siding
+      ? 'Both route markers came through.' : 'The cart is ready to unload.';
+    document.getElementById('rail-objective').textContent = siding
+      ? 'Pass over both lantern markers on their tracks before leaving the siding.'
+      : 'Coast to a full stop inside the marked zone on the right track. Stop pumping when you see the approach lantern.';
+    PATTERN = PATTERN.flatMap(function (ob, i) {
+      return [0, 1, 2].map(function (part) {
+        return { kind: ob.kind, lane: (ob.lane + part + (siding ? 1 : 2)) % 3,
+          x: 800 * part + ob.x * 1.65 + (i % 3) * 2, w: ob.w };
+      });
+    }).filter(function (ob) {
+      return !siding || markers.every(function (marker) { return Math.abs(ob.x - marker.x) > 22; });
+    });
+    if (loadingSpur) PATTERN = PATTERN.filter(function (ob) { return ob.x < loadingZone.start - 110; });
+    sheds = siding ? [{ x: 585, w: 11, h: 7 }, { x: 1210, w: 15, h: 8 }, { x: 1715, w: 17, h: 7 }]
+      : [{ x: 770, w: 24, h: 11 }, { x: 1380, w: 25, h: 9 }, { x: 2290, w: 23, h: 10 }, { x: 2350, w: 20, h: 9 }];
+  }
 
   var flakes = buildFlakes();
 
@@ -87,7 +114,7 @@
   var HAND = { w: 774, h: 431, axleX: 386, axleY: 426, deckY: 214 };
 
   var obstacleArt = {};
-  ['crate', 'arm', 'gap', 'lantern'].forEach(function (name) {
+  ['crate', 'arm', 'gap', 'lantern', 'hut', 'bomber'].forEach(function (name) {
     var image = new Image();
     image.src = 'art/painted-' + name + '.webp';
     obstacleArt[name] = image;
@@ -229,6 +256,7 @@
   function renderHud() {
     var kmh = Math.round(Math.max(0, speed) * 3.6) + ' km/h';
     var left = Math.max(0, Math.ceil(FINISH - distance)) + ' m';
+    if (siding) left += ' · ' + markersFound + '/2';
     var slipLine = slips + ' / ' + slipLimit;
     if (speedEl.textContent !== kmh) speedEl.textContent = kmh;
     if (distanceEl.textContent !== left) distanceEl.textContent = left;
@@ -252,6 +280,8 @@
   }
 
   function resetWorld() {
+    markersFound = 0;
+    markers.forEach(function (marker) { marker.cleared = false; });
     distance = 0;
     flyovers = [];
     nextFlyover = 0;
@@ -334,7 +364,7 @@
     if (state === 'win' || state === 'lose') return;
     seconds = Math.max(0, Math.round((performance.now() - runStart - pauseAccum) / 1000));
     state = 'win';
-    distance = FINISH;
+    if (!loadingSpur) distance = FINISH;
     speed = 0;
     strike = null;
     dragging = false;
@@ -523,6 +553,8 @@
     if (lead < 12) lead = 12;
     if (lead > maxLead) lead = maxLead;
     x = placeGapX(lane, distance + lead, w);
+    if ((siding && markers.some(function (marker) { return Math.abs(x - marker.x) < 38; })) ||
+        (loadingSpur && x >= loadingZone.start - 78)) x = -1;
     if (x < 0) {
       bombWait = 4 + Math.random() * 2;
       return;
@@ -555,7 +587,7 @@
           });
           puffs.push({ x: strike.x + strike.w * 0.5, lane: strike.lane, t: 0 });
           strike = null;
-          bombWait = 12 + Math.random() * 5;
+          bombWait = (siding || loadingSpur ? 22 : 12) + Math.random() * 5;
           nextBombDist = distance + 64;
           if (!reduceMotion()) shake = Math.max(shake, 4);
         }
@@ -583,6 +615,12 @@
     ctx.save();
     ctx.translate(px, py);
     ctx.scale(size || 1, size || 1);
+    if (imageReady(obstacleArt.bomber)) {
+      ctx.scale(-1, 1);
+      ctx.drawImage(obstacleArt.bomber, -41, -24, 82, 48);
+      ctx.restore();
+      return;
+    }
     ctx.fillStyle = '#2a3544';
     roundRect(-26, -5, 50, 10, 4);
     ctx.fill();
@@ -646,9 +684,33 @@
     if (state !== 'play') return;
     checkHits();
     if (state !== 'play') return;
-    if (distance >= FINISH) {
-      distance = FINISH;
+    checkRailObjective();
+  }
+
+  function checkRailObjective() {
+    if (siding) {
+      markers.forEach(function (marker) {
+        if (hitTest(marker)) {
+          marker.cleared = true;
+          markersFound++;
+          say('Route markers: ' + markersFound + ' of ' + markers.length);
+        }
+      });
+    }
+    if (loadingSpur && occupiedLane() === loadingZone.lane && laneT === 1 &&
+        distance >= loadingZone.start && distance <= loadingZone.end && speed === 0) {
       win();
+      return;
+    }
+    if (distance >= FINISH) {
+      if (siding && markersFound !== markers.length) {
+        showLose('Route incomplete', 'Ride over both lantern markers before the junction.', 'A route marker was missed.');
+      } else if (loadingSpur) {
+        showLose('Past the loading zone', 'Release Pump at the approach lantern and coast to a stop on the right track.', 'The loading zone was missed.');
+      } else {
+        distance = FINISH;
+        win();
+      }
     }
   }
 
@@ -665,11 +727,8 @@
     if (state !== 'slip') return;
     checkHits();
     if (state !== 'slip') return;
-    if (distance >= FINISH) {
-      distance = FINISH;
-      win();
-      return;
-    }
+    checkRailObjective();
+    if (state !== 'slip') return;
     if (slipT >= 0.42) state = 'play';
   }
 
@@ -828,6 +887,10 @@
       var p = project(shed.x, index % 2 ? 2.8 : -.8);
       var w = 64 * p.scale;
       var h = shed.h * 7 * p.scale;
+      if (imageReady(obstacleArt.hut)) {
+        ctx.drawImage(obstacleArt.hut, p.x - w * .8, p.y - h, w * 1.6, h);
+        return;
+      }
       ctx.fillStyle = '#674833';
       ctx.fillRect(p.x - w / 2, p.y - h, w, h);
       ctx.fillStyle = '#e9f1f9';
@@ -973,6 +1036,26 @@
     flyovers.forEach(function (jet) { drawPlaneAt(jet.x, jet.y, .68); });
     drawTracks();
     drawTrackside();
+    if (siding) {
+      markers.forEach(function (marker) {
+        if (!marker.cleared) drawTrackObstacle({ kind: 'lantern', lane: marker.lane, x: marker.x, w: marker.w });
+      });
+    }
+    if (loadingSpur) {
+      var near = Math.max(distance, loadingZone.start);
+      var far = Math.min(distance + VIEW_DEPTH, loadingZone.end);
+      if (far > near) {
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        for (var x = Math.ceil(near / 4) * 4; x < far; x += 4) {
+          lineAcross(project(x, loadingZone.lane), 45, '#eed389', 5);
+        }
+        ctx.restore();
+      }
+      [loadingZone.start - 13, loadingZone.start, loadingZone.end].forEach(function (x) {
+        drawTrackObstacle({ kind: 'lantern', lane: loadingZone.lane, x: x, w: 0 });
+      });
+    }
     var visible = obstacles.filter(function (ob) { return inView(ob.x); })
       .sort(function (a, b) { return b.x - a.x; });
     visible.forEach(function (ob) { if (ob.x >= distance) drawTrackObstacle(ob); });

@@ -35,6 +35,10 @@
   var FIRE_GAP = 0.42;
   var SOLDIER_RANGE = 640;
   var TOTAL_METERS = 80;
+  var stage = new URLSearchParams(location.search).get('stage');
+  var rally = stage === 'ramp-and-rally';
+  var breach = stage === 'through-the-seawall';
+  var dispatches = [];
   var STUMBLE_TIME = 1.05;
   var BRACED_PUSH = 0.18;
   var START_AMMO = 10;
@@ -90,6 +94,25 @@
     { x: 3580, y: 228, r: 14 },
     { x: 5980, y: 48, r: 14 }
   ];
+  if (rally || breach) {
+    GOAL_X = rally ? 3650 : 4380;
+    WALL_X = GOAL_X + 42;
+    TOTAL_METERS = rally ? 44 : 56;
+    dispatches = rally ? [{ x: 1935, y: 164 }] : [{ x: 1600, y: 52 }, { x: 3370, y: 221 }];
+    waves = rally ? waves.slice(0, 3) : [];
+    obstacles = rally ? obstacles.filter(function (ob) { return ob.x < GOAL_X; }) : [
+      { kind: 'wire', x: 1320, y: 128, w: 58, h: 145 },
+      { kind: 'crater', x: 2180, y: 92, r: 62 },
+      { kind: 'wire', x: 2760, y: 0, w: 54, h: 160 },
+      { kind: 'hedgehog', x: 3990, y: 195, r: 27 }
+    ];
+    mines = mines.filter(function (mine) { return mine.x < GOAL_X; });
+    document.getElementById('landing-title').textContent = rally ? 'Ramp and Rally' : 'Through the Seawall';
+    document.getElementById('landing-goal').textContent = rally
+      ? 'Recover the runner’s sealed dispatch and carry it to the shingle ridge.'
+      : 'Recover both dispatch slips from the breach and carry them to the shelter.';
+    document.getElementById('landing-win-title').textContent = rally ? 'Dispatch delivered' : 'Shelter reached';
+  }
   var puffs = buildPuffs();
 
   var state = 'title';
@@ -173,13 +196,17 @@
   soldierImg.addEventListener('load', buildSoldierMask);
   soldierImg.src = 'art/soldier.webp';
   if (imageReady(soldierImg)) buildSoldierMask();
-  beachImg.src = 'art/beach-ground.webp';
+  beachImg.src = breach ? 'art/seawall-breach.webp' : 'art/beach-ground.webp';
   craftImg.src = 'art/craft.webp';
   wallImg.src = 'art/seawall.webp';
   hedgehogImg.src = 'art/hedgehog.webp';
   wireImg.src = 'art/wire.webp';
   var mineImg = new Image();
   var crateImg = new Image();
+  var dispatchImg = new Image();
+  var craterImg = new Image();
+  craterImg.src = 'art/painted-crater.webp';
+  if (dispatches.length) dispatchImg.src = '../chapter-2/art/mail.webp';
   mineImg.src = 'art/mine.webp';
   crateImg.src = 'art/crate.webp';
 
@@ -217,6 +244,7 @@
   }
 
   function resetWorld() {
+    dispatches.forEach(function (item) { item.taken = false; });
     player.x = START_X;
     player.y = START_Y;
     player.stumbles = 0;
@@ -596,6 +624,7 @@
     var lo;
     var hi;
     for (i = 0; i < spots.length; i++) {
+      if (spots[i].x >= GOAL_X) continue;
       home = spots[i].y;
       lo = clamp(home - 72, 18, BEACH_W - 18);
       hi = clamp(home + 72, 18, BEACH_W - 18);
@@ -1053,11 +1082,17 @@
     updateSurf(dt);
     if (!bracing && surfHold < 0) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
     if (updateMinesAndPacks()) return;
+    dispatches.forEach(function (item) {
+      if (!item.taken && Math.hypot(player.x - item.x, player.y - item.y) < 36) {
+        item.taken = true;
+        say('Dispatch recovered.');
+      }
+    });
     moved = Math.hypot(player.x - beforeX, player.y - beforeY);
     moving = !bracing && moved > 0.01;
     if (moving) player.step += moved * 0.09;
     if (lean > 0) lean = Math.max(0, lean - dt);
-    if (player.x >= GOAL_X) {
+    if (player.x >= GOAL_X && dispatches.every(function (item) { return item.taken; })) {
       win();
       return;
     }
@@ -1228,7 +1263,7 @@
       if (o.kind !== 'crater') continue;
       alpha = obstacleAlpha(o.x, o.y);
       if (alpha < 0.04) continue;
-      drawCrater(o, alpha);
+      if (!drawPainted(craterImg, o.x, o.y, o.r * 2.9)) drawCrater(o, alpha);
     }
     for (i = 0; i < obstacles.length; i++) {
       o = obstacles[i];
@@ -1406,6 +1441,14 @@
       if (pack.taken) continue;
       if (!drawPainted(crateImg, pack.x, pack.y, 54)) drawCartoonCrate(pack.x, pack.y);
     }
+    dispatches.forEach(function (item) {
+      if (item.taken) return;
+      drawPainted(dispatchImg, item.x, item.y, 52);
+      ctx.fillStyle = '#fff3c7';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 13px system-ui';
+      ctx.fillText('DISPATCH', worldToX(item.x), worldToY(item.y) - 34);
+    });
   }
 
   function drawFoam() {
