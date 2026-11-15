@@ -17,6 +17,21 @@ Horizontal strip of equal frames on a transparent background. The feet share one
   - brace: 180
   - stumble: 263 (the four frames divide the 1.05 second stumble)
 
+## soldier.webp
+
+Horizontal strip of equal frames on a transparent background. The feet share one baseline. These paintings are original generated art for this game, not a third-party license.
+
+- Frame width: 516 px
+- Frame height: 552 px
+- Frame count: 10
+- Order: walk (4), fire (2), hit (2), wrap (2)
+- Anchor: (206, 539) in every frame, at the feet. X is the same body point under the helmet. Y is the shared sole baseline. The wrapped parcel sits on that same baseline.
+- Milliseconds per frame:
+  - walk: 120 while the soldier is moving. A soldier who is standing still holds the first walk frame.
+  - fire: 120
+  - hit: 120
+  - wrap: 140 (the second frame then holds on the finished parcel)
+
 ## beach.webp
 
 Painted dawn beach panorama, opaque. 1600 × 900 px. Gray-blue sea, wet sand, and sky. No text.

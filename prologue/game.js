@@ -126,13 +126,18 @@
   /* trent.webp: 14 equal frames, feet on one baseline.
      idle 2, walk 6, brace 2, stumble 4. Anchor is the feet. */
   var TRENT = { w: 539, h: 574, anchorX: 327, anchorY: 564 };
+  /* soldier.webp: 10 equal frames, feet on one baseline.
+     walk 4, fire 2, hit 2, wrap 2. Anchor is the feet. */
+  var SOLDIER = { w: 516, h: 552, anchorX: 206, anchorY: 539 };
   var trentImg = new Image();
+  var soldierImg = new Image();
   var beachImg = new Image();
   var craftImg = new Image();
   var wallImg = new Image();
   var hedgehogImg = new Image();
   var wireImg = new Image();
   trentImg.src = 'art/trent.webp';
+  soldierImg.src = 'art/soldier.webp';
   beachImg.src = 'art/beach.webp';
   craftImg.src = 'art/craft.webp';
   wallImg.src = 'art/seawall.webp';
@@ -1027,71 +1032,78 @@
     ctx.restore();
   }
 
-  function drawParcel(s) {
-    var grow = 0.75 + 0.25 * Math.min(1, s.t);
-    var w = 30 * scale * grow;
-    var h = 16 * scale * grow;
-    ctx.fillStyle = 'rgba(48, 42, 34, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(2, 2, w * 0.55, h * 0.35, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#c4a36a';
-    ctx.fillRect(-w / 2, -h, w, h);
-    ctx.strokeStyle = '#8a7048';
-    ctx.lineWidth = Math.max(1.5, 2 * scale);
-    ctx.strokeRect(-w / 2, -h, w, h);
-    ctx.strokeStyle = '#efe6d6';
-    ctx.beginPath();
-    ctx.moveTo(-w / 2, -h / 2);
-    ctx.lineTo(w / 2, -h / 2);
-    ctx.moveTo(0, -h);
-    ctx.lineTo(0, 0);
-    ctx.stroke();
+  function soldierFiring(s) {
+    var i;
+    var h;
+    var dx;
+    var dy;
+    var age;
+    for (i = 0; i < hazards.length; i++) {
+      h = hazards[i];
+      if (h.kind === 'grenade') {
+        dx = h.x0 - s.x;
+        dy = h.y0 - s.y;
+        if (dx * dx + dy * dy < 9 && h.t < 0.24) return true;
+      } else if (h.kind === 'gunfire') {
+        age = 1.45 - h.life;
+        if (age >= 0 && age < 0.24) {
+          dx = h.x - s.x;
+          dy = h.y - s.y;
+          if (dx * dx + dy * dy < 180 * 180) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function soldierIndex(s) {
+    var n;
+    if (s.mode === 'parcel') {
+      n = (!reduceMotion() && s.t < 0.14) ? 0 : 1;
+      return 8 + n;
+    }
+    if (s.mode === 'back') {
+      if (s.t < 0.24) {
+        n = reduceMotion() ? 0 : (s.t < 0.12 ? 0 : 1);
+        return 6 + n;
+      }
+      n = reduceMotion() ? 0 : Math.floor((s.t - 0.24) / 0.12) % 4;
+      return n;
+    }
+    if (soldierFiring(s)) {
+      n = reduceMotion() ? 0 : Math.floor(visualTime / 0.12) % 2;
+      return 4 + n;
+    }
+    return 0;
   }
 
   function drawSoldier(s) {
-    var x = worldToX(s.x);
-    var y = worldToY(s.y);
-    var u;
-    var fade;
-    if (x < -60 || x > cssW + 60) return;
-    fade = s.mode === 'back' ? Math.max(0, 1 - s.t / 0.62) : 1;
+    var x;
+    var y;
+    var index;
+    var destH;
+    var destW;
+    var sc;
+    var face;
+    if (!imageReady(soldierImg)) return;
+    x = worldToX(s.x);
+    y = worldToY(s.y);
+    if (x < -180 || x > cssW + 180) return;
+    index = soldierIndex(s);
+    destH = 112 * unit();
+    destW = destH * (SOLDIER.w / SOLDIER.h);
+    sc = destH / SOLDIER.h;
+    if (s.mode === 'back' && s.t >= 0.24) face = s.away < 0 ? -1 : 1;
+    else face = s.facing < 0 ? -1 : 1;
     ctx.save();
-    ctx.globalAlpha = fade;
+    ctx.globalAlpha = s.mode === 'back' ? Math.max(0, 1 - s.t / 0.62) : 1;
     ctx.translate(x, y);
-    if (s.mode === 'parcel') {
-      drawParcel(s);
-      ctx.restore();
-      return;
-    }
-    if (s.mode === 'back') ctx.rotate(0.22 * s.away);
-    u = scale * 1.45;
-    ctx.scale(s.facing < 0 ? -1 : 1, 1);
-    ctx.fillStyle = 'rgba(36, 40, 36, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(0, -2 * u, 12 * u, 4 * u, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#3a4038';
-    ctx.lineWidth = Math.max(2, 3.2 * u);
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-4 * u, -2 * u);
-    ctx.lineTo(-5 * u, -18 * u);
-    ctx.moveTo(4 * u, -2 * u);
-    ctx.lineTo(5 * u, -18 * u);
-    ctx.stroke();
-    ctx.fillStyle = '#5d6856';
-    ctx.fillRect(-9 * u, -42 * u, 18 * u, 26 * u);
-    ctx.fillStyle = '#6d7464';
-    ctx.beginPath();
-    ctx.ellipse(1 * u, -46 * u, 8.5 * u, 7 * u, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#2c3134';
-    ctx.lineWidth = Math.max(1.5, 2 * u);
-    ctx.beginPath();
-    ctx.moveTo(4 * u, -30 * u);
-    ctx.lineTo(26 * u, -33 * u);
-    ctx.stroke();
+    ctx.scale(face, 1);
+    ctx.drawImage(
+      soldierImg,
+      index * SOLDIER.w, 0, SOLDIER.w, SOLDIER.h,
+      -SOLDIER.anchorX * sc, -SOLDIER.anchorY * sc, destW, destH
+    );
     ctx.restore();
   }
 

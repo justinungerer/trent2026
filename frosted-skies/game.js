@@ -18,7 +18,7 @@ function loadArt(name) {
   image.src = './art/' + name + '.webp';
   return image;
 }
-const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss'].map(name => [name, loadArt(name)]));
+const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp'].map(name => [name, loadArt(name)]));
 function resizeCanvas() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = W * ratio;
@@ -40,54 +40,8 @@ function ship(kind, x, y, width, bank) {
   g.drawImage(sprite, -width / 2, -height / 2, width, height);
   g.restore();
 }
-function drawSkiff(w) {
-  const h = w * 1.28;
-  polygon(colors.ice, [[0, -h * .52], [w * .46, h * .08], [w * .16, h * .5], [-w * .16, h * .5], [-w * .46, h * .08]]);
-  polygon(colors.gold, [[w * .12, -h * .02], [w * .62, h * .16], [w * .18, h * .22]]);
-  polygon(colors.gold, [[-w * .12, -h * .02], [-w * .62, h * .16], [-w * .18, h * .22]]);
-  polygon('#f4fdff', [[0, -h * .28], [w * .1, h * .02], [0, h * .12], [-w * .1, h * .02]]);
-}
-function drawHauler(w) {
-  const h = w * .58;
-  g.fillStyle = colors.blue;
-  g.beginPath();
-  g.roundRect(-w / 2, -h * .42, w, h * .86, 8);
-  g.fill();
-  g.fillStyle = colors.dark;
-  g.fillRect(-w * .28, -h * .16, w * .56, h * .28);
-  g.fillStyle = colors.gold;
-  g.fillRect(-w * .42, -h * .02, w * .84, 5);
-  g.fillStyle = colors.red;
-  g.fillRect(-w * .34, -h * .5, w * .2, h * .28);
-  g.fillRect(w * .12, -h * .5, w * .2, h * .28);
-  g.fillStyle = '#d7f6ff';
-  g.fillRect(-w * .08, -h * .46, w * .16, h * .2);
-}
-function drawWisp(w) {
-  const glow = g.createRadialGradient(0, 0, 0, 0, 0, w * .85);
-  glow.addColorStop(0, '#fff6c8cc');
-  glow.addColorStop(1, '#ffce7100');
-  g.fillStyle = glow;
-  g.beginPath();
-  g.arc(0, 0, w * .85, 0, Math.PI * 2);
-  g.fill();
-  polygon(colors.gold, [[0, -w * .62], [w * .34, 0], [0, w * .72], [-w * .34, 0]]);
-  polygon('#fff8dc', [[0, -w * .28], [w * .14, 0], [0, w * .3], [-w * .14, 0]]);
-  g.fillStyle = colors.ice;
-  g.fillRect(-w * .08, w * .2, w * .16, w * .28);
-}
 function craftSprite(kind, x, y, width, bank) {
-  if (kind === 'drone' || kind === 'boss') {
-    ship(kind, x, y, width, bank);
-    return;
-  }
-  g.save();
-  g.translate(x, y);
-  g.rotate(bank || 0);
-  if (kind === 'skiff') drawSkiff(width);
-  else if (kind === 'hauler') drawHauler(width);
-  else drawWisp(width);
-  g.restore();
+  ship(kind, x, y, width, bank);
 }
 const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, shotAt, bossSpawned, aim, drag, wraps, recoil, shake, kills;
