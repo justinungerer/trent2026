@@ -27,3 +27,23 @@ The filename stem identifies both the game and the previous background-music fil
 - When porting these assets to another branch, copy the entire `assets/audio/christmas-metal/` directory and carry over the soundtrack path in `index.html` and the `Audio` path in `game-audio.js`.
 
 Serve the repository over HTTP to check playback. On the quiz screen, click or press a key to start the music, then check the music toggle. Open each minigame and interact with it. Confirm that its own MP3 loads, that quiz music pauses while it is open, and that the sound effects still play.
+
+## Chapter intro themes
+
+Each of the 11 animated chapter openings, including the prologue, has a separate full-length Christmas metal theme. The tracks run from 3:12 to 3:24. The game plays the opening of the song while the 20-second animation runs. The quiz and campaign track pauses during the intro and resumes when the player returns to the quiz or campaign screens. Intro music follows the music toggle and pauses when the tab is hidden or the game asks the player to rotate the screen.
+
+The files in `assets/audio/christmas-metal/intros/` use the chapter IDs from `campaign.js`.
+
+- `prologue.mp3` — **Iron Tide Overture** · Landing at Normandy
+- `night.mp3` — **Midnight Frequency** · The Night Broadcast
+- `frost.mp3` — **Sleighfire** · Frosted Skies
+- `rail.mp3` — **Signals in Steel** · White Rail
+- `yard.mp3` — **The Penguin Diversion** · Special Delivery
+- `tower.mp3` — **Throw the Switch** · The Switch Tower
+- `shelf.mp3` — **Overture for Sprout** · The Shelf Operative
+- `wire.mp3` — **Winter Signal** · The Listening Wire
+- `camp.mp3` — **Through the Searchlights** · The Holding Camp
+- `wrap.mp3` — **Workshop Downbeat** · The Wrapping Line
+- `chimney.mp3` — **Rooftop Fanfare** · The Chimney Road
+
+To port the intro themes, copy the `intros/` directory and carry over the `TrentMusic` controller in `music.js`, and its calls in `campaign.js`. The campaign test menu can replay each intro for a playback check.

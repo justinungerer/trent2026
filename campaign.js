@@ -391,6 +391,7 @@ function stopIntro() {
   if (introImages.length) releaseImages(introImages);
   introImages = [];
   cinema.hidden = true;
+  if (window.TrentMusic) window.TrentMusic.stopIntro();
 }
 
 function clearCredits() {
@@ -671,7 +672,7 @@ function syncTurn() {
   var needed = turnNeeded();
   var toLandscape = wantsLandscape() && isPortrait();
   if (!gate) return;
-  gate.hidden = !needed;
+  if (gate.hidden === needed) gate.hidden = !needed;
   if (!needed || !heading) return;
   heading.textContent = toLandscape ? 'Turn the screen sideways' : 'Turn the screen upright';
   note.textContent = toLandscape
@@ -771,17 +772,12 @@ function playIntro(chapter, done) {
   document.getElementById('intro-line').textContent = chapter.line;
   cinema.hidden = false;
   campaignRoot.hidden = true;
+  syncTurn();
+  if (window.TrentMusic) window.TrentMusic.startIntro(chapter.id);
   document.getElementById('intro-title').focus({ preventScroll: true });
   introDone = function () {
     if (introToken !== token) return;
-    introToken += 1;
-    if (introRaf) cancelAnimationFrame(introRaf);
-    introRaf = 0;
-    introDone = null;
-    releaseImages(images);
-    if (introImages === images) introImages = [];
-    introChapter = null;
-    cinema.hidden = true;
+    stopIntro();
     done();
   };
   function tick(now) {
