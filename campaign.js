@@ -16,6 +16,7 @@ var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 var active = null;
 var shelfOpen = false;
 var pendingMissionUrl = '';
+var missionLandscape = false;
 var resumeEndingAfterTurn = false;
 var introToken = 0;
 var introRaf = 0;
@@ -634,7 +635,7 @@ function showCredits(done) {
 }
 
 function wantsLandscape() {
-  return !document.getElementById('mission').hidden;
+  return missionLandscape && !document.getElementById('mission').hidden;
 }
 
 function turnNeeded() {
@@ -667,7 +668,8 @@ function syncTurn() {
   if (gate.hidden === needed) gate.hidden = !needed;
   if (needed) {
     heading.textContent = landscape ? 'Turn your phone sideways' : 'Turn your phone upright';
-    note.textContent = landscape ? 'Minigames play in landscape.' : 'The campaign continues in portrait.';
+    note.textContent = landscape ? 'This minigame plays in landscape.' :
+      document.getElementById('mission').hidden ? 'The campaign continues in portrait.' : 'Frosted Skies plays in portrait.';
     mark.classList.toggle('upright', !landscape);
   }
   document.body.classList.toggle('waiting-for-rotation', needed);
@@ -694,7 +696,9 @@ function syncTurn() {
 function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
   var address = new URL(url, location.href);
-  address.searchParams.set('layout', 'rotation2');
+  address.searchParams.set('layout', 'rotation3');
+  var game = address.pathname.split('/').filter(Boolean).pop();
+  missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
   pendingMissionUrl = address.href;
   campaignRoot.hidden = true;
   cinema.hidden = true;

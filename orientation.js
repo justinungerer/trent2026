@@ -42,5 +42,11 @@
     };
   }
 
-  window.TrentOrientation = { blocked: blocked, subscribe: subscribe, embedded: Boolean(host) };
+  function gameUsesLandscape(game) {
+    return game !== 'frosted-skies';
+  }
+
+  window.TrentOrientation = {
+    blocked: blocked, subscribe: subscribe, embedded: Boolean(host), gameUsesLandscape: gameUsesLandscape
+  };
 })();

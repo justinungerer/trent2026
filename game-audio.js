@@ -7,12 +7,13 @@
   var wantsMusic = false;
   var gate = null;
   var orientation = window.TrentOrientation;
+  var landscape = orientation.gameUsesLandscape(name);
   music.loop = true;
   music.volume = 0.35;
   music.preload = 'auto';
 
   function blocked() {
-    return orientation.blocked(true);
+    return orientation.blocked(landscape);
   }
   window.TrentGameOrientation = { blocked: blocked };
 
@@ -40,10 +41,12 @@
     gate.id = 'turn-gate';
     gate.hidden = true;
     gate.tabIndex = -1;
+    gate.classList.toggle('upright', !landscape);
     gate.innerHTML = '<div class="rotate-mark" aria-hidden="true"></div>' +
-      '<h1>Turn your phone sideways</h1><p>Minigames play in landscape.</p>';
+      (landscape ? '<h1>Turn your phone sideways</h1><p>This minigame plays in landscape.</p>' :
+        '<h1>Turn your phone upright</h1><p>Frosted Skies plays in portrait.</p>');
     var style = document.createElement('style');
-    style.textContent = '#turn-gate{position:fixed;inset:0;z-index:80;display:grid;place-items:center;align-content:center;gap:12px;background:#0c171e;color:#f8ecd4;text-align:center;padding:24px}#turn-gate[hidden]{display:none!important}#turn-gate h1,#turn-gate p{margin:0}#turn-gate .rotate-mark{width:92px;height:148px;border:8px solid #f8ecd4;border-radius:16px;transform:rotate(90deg)}';
+    style.textContent = '#turn-gate{position:fixed;inset:0;z-index:80;display:grid;place-items:center;align-content:center;gap:12px;background:#0c171e;color:#f8ecd4;text-align:center;padding:24px}#turn-gate[hidden]{display:none!important}#turn-gate h1,#turn-gate p{margin:0}#turn-gate .rotate-mark{width:92px;height:148px;border:8px solid #f8ecd4;border-radius:16px;transform:rotate(90deg)}#turn-gate.upright .rotate-mark{transform:none}';
     document.head.appendChild(style);
     document.body.appendChild(gate);
   }
