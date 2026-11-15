@@ -6,7 +6,7 @@
    in trivia.js. Chapter 6 then launches Ribbonfall with the score mapped in quiz.js. */
 
 var PIN_KEY = 'trent-campaign-pin';
-var INTRO_MS = 20000;
+var INTRO_MS = 30000;
 var campaignRoot = document.getElementById('app');
 var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
@@ -23,7 +23,7 @@ var introRaf = 0;
 var introDone = null;
 var introImages = [];
 var cleanupIntroVideo = null;
-var creditTimer = 0;
+var openingTimer = 0;
 var openingVideo = null;
 
 var CREDITS = ['Designer', 'Producer', 'Developer', 'Tester', 'Marketing', 'Music'];
@@ -386,9 +386,9 @@ function stopIntro() {
   if (window.TrentMusic) window.TrentMusic.stopIntro();
 }
 
-function clearCredits() {
-  if (creditTimer) clearInterval(creditTimer);
-  creditTimer = 0;
+function clearOpeningFilm() {
+  if (openingTimer) clearInterval(openingTimer);
+  openingTimer = 0;
   if (openingVideo) {
     openingVideo.pause();
     openingVideo.removeAttribute('src');
@@ -416,7 +416,7 @@ function stopEndingVideo() {
 function showChapterMenu(lastChapter, complete) {
   if (window.TrentTrivia) window.TrentTrivia.abort();
   clearInterval(pinTimer);
-  clearCredits();
+  clearOpeningFilm();
   stopIntro();
   closeMission();
   stopEndingVideo();
@@ -445,7 +445,7 @@ function showChapterMenu(lastChapter, complete) {
   var clips = document.createElement('div');
   clips.className = 'choices';
   function back() { showChapterMenu(lastChapter, complete); }
-  clips.appendChild(button('Opening film and credits', function () { showCredits(back); }, 'secondary'));
+  clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
   clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
   section.appendChild(clips);
 
@@ -499,7 +499,7 @@ function showStart() {
   var input;
   var open;
   var status;
-  clearCredits();
+  clearOpeningFilm();
   clearInterval(pinTimer);
   stopIntro();
   active = null;
@@ -578,7 +578,7 @@ function showLogo() {
   var title = document.createElement('h1');
   var begin = document.createElement('button');
   if (window.TrentTrivia) window.TrentTrivia.abort();
-  clearCredits();
+  clearOpeningFilm();
   clearInterval(pinTimer);
   stopIntro();
   active = null;
@@ -597,43 +597,49 @@ function showLogo() {
   begin.id = 'logo-begin';
   begin.textContent = 'Begin';
   begin.onclick = function () {
-    showCredits(function () { openChapter('prologue'); });
+    showOpeningFilm(function () { openChapter('prologue'); });
   };
-  section.appendChild(title);
-  section.appendChild(begin);
+  var creditWindow = document.createElement('div');
+  creditWindow.className = 'title-credit-window';
+  creditWindow.setAttribute('role', 'region');
+  creditWindow.setAttribute('aria-label', 'Opening credits');
+  creditWindow.tabIndex = 0;
+  var reel = document.createElement('dl');
+  reel.className = 'credit-reel';
+  var credits = [
+    ['Starring', 'Trent Ungerer as the Allied war hero'],
+    ['Introducing', 'Buddy, the notorious Elf on the Shelf']
+  ].concat(CREDITS.map(function (role) { return [role, 'Justin Ungerer']; }));
+  credits.forEach(function (row) {
+    var credit = document.createElement('div');
+    var role = document.createElement('dt');
+    var name = document.createElement('dd');
+    role.textContent = row[0];
+    name.textContent = row[1];
+    credit.append(role, name);
+    reel.appendChild(credit);
+  });
+  creditWindow.appendChild(reel);
+  section.append(title, creditWindow, begin);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
 }
 
-function showCredits(done) {
+function showOpeningFilm(done) {
   var generation = ++introToken;
-  clearCredits();
+  clearOpeningFilm();
   campaignRoot.hidden = false;
   campaignRoot.innerHTML = '';
 
   var section = document.createElement('section');
-  section.className = 'campaign-start credit-scroll opening-film';
+  section.className = 'campaign-start opening-film';
   section.innerHTML = '<video muted playsinline preload="auto" aria-hidden="true"></video>' +
-    '<div class="opening-cast"><h1>Trent Saves Christmas</h1>' +
-    '<p>Starring <strong>Trent Ungerer</strong> as the Allied war hero</p>' +
-    '<p>Introducing <strong>Buddy</strong>, the notorious Elf on the Shelf</p></div>' +
-    '<dl class="credit-reel" aria-label="Opening credits"></dl><p class="opening-caption"></p>' +
-    '<button type="button" class="overlay-skip">Skip</button>';
-  var reel = section.querySelector('.credit-reel');
-  CREDITS.forEach(function (role) {
-    var credit = document.createElement('div');
-    var job = document.createElement('dt');
-    var person = document.createElement('dd');
-    job.textContent = role;
-    person.textContent = 'Justin Ungerer';
-    credit.append(job, person);
-    reel.appendChild(credit);
-  });
+    '<p class="opening-caption"></p><button type="button" class="overlay-skip">Skip</button>';
 
   function finishOpening() {
     if (generation !== introToken) return;
     introToken += 1;
-    clearCredits();
+    clearOpeningFilm();
     done();
   }
 
@@ -653,7 +659,7 @@ function showCredits(done) {
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
   syncTurn();
-  creditTimer = schedulePortraitStep(finishOpening, 31000);
+  openingTimer = schedulePortraitStep(finishOpening, 31000);
 }
 
 function wantsLandscape() {
@@ -797,7 +803,7 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   }
   destH = ctx.canvas.height * actor.h;
   destW = destH * (fw / fh);
-  var travel = reduced ? 0 : Math.min(1, elapsed / 20000);
+  var travel = reduced ? 0 : Math.min(1, elapsed / INTRO_MS);
   var xPos = typeof actor.toX === 'number' ? actor.x + (actor.toX - actor.x) * travel : actor.x;
   dx = ctx.canvas.width * xPos - destW / 2;
   dy = ctx.canvas.height * actor.y - destH;
@@ -850,7 +856,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=film2';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=film3';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -994,7 +1000,7 @@ function openChapter(id) {
     return;
   }
   clearInterval(pinTimer);
-  clearCredits();
+  clearOpeningFilm();
   active = null;
   shelfOpen = false;
   closeMission();

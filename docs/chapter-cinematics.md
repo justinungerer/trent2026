@@ -1,20 +1,20 @@
 # Chapter and opening films
 
-The game serves eleven 20-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. The chapter clips combine the Blender motion plates with new scene-specific detail shots, reframing, and color grading. The campaign adds the scrolling text and plays the existing chapter music. Frosted Skies uses portrait video.
+The game serves eleven 30-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. Each chapter film uses two original pieces of realistic WWII artwork, four camera setups, and animated weather and lighting rendered in Blender. The campaign overlays the chapter text and plays the existing chapter music. Frosted Skies uses portrait video.
 
-The opening uses the game’s illustrated environments and animated cels to stage the fictional capture sequence. Casting cards, story captions, and matching role/name credits are HTML so they remain readable over the film. The in-game opening and the chapter films can be replayed from an unlocked chapter menu.
+The title screen displays artwork from Chimney Road and scrolls the cast and production credits in a window below the title. The opening film contains the fictional capture sequence with story captions. Players can replay the opening and chapter films from an unlocked chapter menu.
 
 ## Render and edit
 
-Install Blender 4.5 LTS, Node.js, Python with Pillow, and FFmpeg. Run these from the repository root.
+Install Blender 4.5 LTS and FFmpeg. Run these commands from the repository root.
 
 ```powershell
-blender --background --factory-startup --python-exit-code 1 --python tools/render_chapter_intros.py -- --output .\raw-intros
-python tools/edit_campaign_films.py .\raw-intros .\edited-intros
-python tools/render_opening_film.py .\edited-intros\opening.mp4
+blender --background --factory-startup --python-exit-code 1 --python tools/render_fresh_chapter_films.py -- --output .\new-films
 ```
 
-Review the exports before copying the eleven chapter videos into `assets/intro-video/` and the opening video into `assets/`. For a Blender still preview, add `--preview` and one chapter ID. Use `--save-project .\projects` to save editable Blender scenes with the art packed inside. The Blender renderer skips MP4s already in its output directory.
+The Blender script reads the source plates from `assets/chapter-film-art/` and skips completed exports. Add a chapter ID to render just that chapter or add `--preview` to render stills. Review the exports before copying them into `assets/intro-video/`.
+
+The opening film can be rebuilt with Python, Pillow, and FFmpeg using `python tools/render_opening_film.py .\new-films\opening.mp4`.
 
 Edit chapter prose and opening captions in `campaign.js`. Update the cache version when publishing replacement media.
 

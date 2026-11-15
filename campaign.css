@@ -20,16 +20,75 @@ body {
 }
 
 .logo-screen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: auto minmax(9rem, 1fr) auto;
+  gap: clamp(12px, 2dvh, 22px);
+  width: 100%;
+  height: calc(100dvh - 64px - env(safe-area-inset-top, 0px));
+  background: linear-gradient(180deg, #071421bb, #07142124 50%, #071421bd),
+    url('./chimney-road/art/panorama.webp') center / cover;
 }
 
 .logo-screen h1 {
   max-width: 9ch;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
   font-size: clamp(3.6rem, 14vw, 7.5rem);
   line-height: 0.9;
+  text-shadow: 0 2px 18px #061019;
+}
+
+.title-credit-window {
+  position: relative;
+  container-type: size;
+  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+  max-width: min(40rem, 100%);
+  background: #07142182;
+  mask-image: linear-gradient(transparent, #000 13%, #000 87%, transparent);
+}
+
+.title-credit-window .credit-reel {
+  position: absolute;
+  inset: 100% 16px auto;
+  margin: 0;
+  text-align: center;
+  text-shadow: 0 2px 9px #02060b;
+  animation: title-credit-rise 28s linear infinite;
+}
+
+@keyframes title-credit-rise {
+  to { transform: translateY(calc(-100% - 100cqh)); }
+}
+
+.title-credit-window dt {
+  color: #f0c98c;
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.title-credit-window dd {
+  color: #fff1d8;
+  margin: 3px 0 22px;
+  font-size: clamp(1rem, 5vw, 1.55rem);
+}
+
+.logo-screen > .primary {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-credit-window {
+    overflow: auto;
+    mask-image: none;
+  }
+  .title-credit-window .credit-reel {
+    position: static;
+    padding: 10px 16px;
+    animation: none;
+  }
 }
 
 #pin-form {
@@ -393,28 +452,6 @@ body {
   }
 }
 
-.credit-scroll {
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-}
-
-.credit-reel {
-  width: 100%;
-  animation: credit-rise 14s linear forwards;
-}
-
-.credit-reel h1,
-.credit-reel p {
-  text-align: center;
-  margin: 0.4em 0;
-}
-
-@keyframes credit-rise {
-  from { transform: translateY(70vh); }
-  to { transform: translateY(-120vh); }
-}
-
 #turn-gate {
   position: fixed;
   inset: 0;
@@ -489,8 +526,6 @@ body {
   object-fit: contain;
 }
 
-.opening-cast,
-.opening-film .credit-reel,
 .opening-caption {
   position: absolute;
   z-index: 1;
@@ -499,50 +534,6 @@ body {
   margin: 0 auto;
   text-align: center;
   text-shadow: 0 1px 12px #02060b, 0 2px 5px #02060b;
-}
-
-.opening-cast {
-  top: max(60px, 9dvh);
-  animation: opening-cast 8s both;
-}
-
-.opening-cast h1 {
-  margin: 0 auto 10px;
-  font-size: clamp(2rem, 9vw, 4.2rem);
-}
-
-.opening-cast p {
-  margin: 3px auto;
-  color: #fff1d8;
-}
-
-@keyframes opening-cast {
-  0%, 82% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.opening-film .credit-reel {
-  top: 0;
-  width: auto;
-  animation: opening-credit-rise 23s linear 8s both;
-}
-
-@keyframes opening-credit-rise {
-  from { transform: translateY(100dvh); }
-  to { transform: translateY(-100%); }
-}
-
-.opening-film dt {
-  color: #f0c98c;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  font-weight: 700;
-}
-
-.opening-film dd {
-  color: #fff1d8;
-  margin: 0 0 36px;
-  font-size: clamp(1.3rem, 6vw, 2.2rem);
 }
 
 .opening-caption {
@@ -556,22 +547,4 @@ body {
 
 .opening-caption:empty {
   display: none;
-}
-
-.waiting-for-rotation .opening-cast,
-.waiting-for-rotation .opening-film .credit-reel {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .opening-cast, .opening-film .credit-reel { animation: none; }
-  .opening-film .credit-reel {
-    top: auto;
-    bottom: 82px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    background: #071018e8;
-  }
-  .opening-film dd { margin: 0; font-size: 1rem; }
 }
