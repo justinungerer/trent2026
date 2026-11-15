@@ -1,34 +1,20 @@
 # Campaign films
 
-The game serves eleven 30-second H.264 chapter films from `assets/intro-video/` and a 31-second opening from `assets/opening.mp4`. Each chapter film uses two original pieces of realistic WWII artwork, four camera setups, and animated weather and lighting rendered in Blender. The chapter captions are part of each video. The campaign plays each chapter’s music separately. The opening and all eleven chapter films fill a portrait screen. The 22-second widescreen closing film also includes in-frame story captions.
+The game serves a 34-second opening and eleven portrait chapter films that run 28 to 43 seconds. Story captions are built into the MP4s. Captions with at least 16 words stay on screen across two shots. The campaign plays each chapter’s music separately. The 22-second widescreen closing film has its own story captions.
 
-The title screen displays artwork from Chimney Road and scrolls the cast and production credits in a window below the title. The opening film uses four portrait Blender shots with the story captions built into the frames. Players can replay the opening and chapter films from an unlocked chapter menu.
+The title screen displays artwork from Chimney Road and scrolls cast and production credits below the title. Players can replay the opening and chapter films from an unlocked chapter menu.
 
 ## Render and edit
 
-Install Blender 4.5 LTS, FFmpeg, Node.js, and Python with Pillow. Run these commands from the repository root.
+Edit the caption text, caption start frames at 24 fps, and runtimes in `campaign.js`. Shot selections are in `tools/cut_story_films.py`. The cut uses new stills in `assets/story-film-art/` and earlier Blender plates in `assets/chapter-film-art/` and `assets/opening-film-art/`.
+
+Install FFmpeg, Node.js, and Python with Pillow. Run this from the repository root.
 
 ```powershell
-blender --background --factory-startup --python-exit-code 1 --python tools/render_fresh_chapter_films.py -- --output .\new-films
+python tools/cut_story_films.py --output .\story-films --font C:/Windows/Fonts/segoeui.ttf
 ```
 
-The Blender script reads the source plates from `assets/chapter-film-art/` and skips completed exports. Add a chapter ID to render just that chapter or add `--preview` to render stills. Reframe the clean exports for portrait and burn in the story text before copying them into `assets/intro-video/`.
-
-```powershell
-python tools/burn_chapter_captions.py .\new-films .\captioned-films --font C:/Windows/Fonts/segoeui.ttf
-```
-
-All story captions are sized to half the original opening captions at the same displayed video width.
-
-Render the opening film from `assets/opening-film-art/` with the same Blender and FFmpeg setup. Edit the caption text and shot times in `tools/render_realistic_opening.py`.
-
-```powershell
-blender --background --factory-startup --python-exit-code 1 --python tools/render_realistic_opening.py -- --output .\new-films\opening.mp4
-```
-
-Add `--ending path/to/clean-ending.mp4` to the caption command to rebuild the closing film.
-
-Edit chapter prose in `campaign.js`, then rebuild the captioned exports from clean masters. Update the cache version when publishing replacement media.
+Add film IDs to the command to export specific cuts. Copy the approved opening to `assets/opening.mp4` and the eleven chapter files to `assets/intro-video/`. Update the media cache version when publishing.
 
 ## Campaign progression
 

@@ -6,7 +6,6 @@
    in trivia.js. Chapter 6 then launches Ribbonfall with the score mapped in quiz.js. */
 
 var PIN_KEY = 'trent-campaign-pin';
-var INTRO_MS = 30000;
 var campaignRoot = document.getElementById('app');
 var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
@@ -27,16 +26,40 @@ var openingVideo = null;
 
 var CREDITS = ['Designer', 'Producer', 'Developer', 'Tester', 'Marketing', 'Music'];
 
+var OPENING_FILM = {
+  "filmSeconds": 34,
+  "captionFrames": [
+    0,
+    83,
+    184,
+    376,
+    486,
+    633
+  ],
+  "lines": [
+    "Later that year…",
+    "Hitler orders Santa’s capture, hoping to demoralize the American troops.",
+    "The Nazis capture Santa and lock him in a concentration camp, where he waits his turn in the gas chamber.",
+    "Behind locked gates, the guards beat and torture Santa each day.",
+    "In early December, the Allies pick up the first report. A rescue is still possible.",
+    "The Allies pin their hopes on decorated war hero Trent Ungerer and a little-known spy named Buddy."
+  ]
+};
+
 var CHAPTERS = [
   {
     id: 'prologue',
     number: 0,
     title: 'Landing at Normandy',
     kicker: 'Prologue',
+    filmSeconds: 28,
+    captionFrames: [0, 83, 212, 368, 543],
     lines: [
-      "June 1944. At dawn, Trent’s landing craft noses into the Normandy surf.",
+      "Prologue. Six months earlier…",
+      "It’s June 1944. At dawn, Trent’s landing craft noses into the Normandy surf.",
       "The ramp drops. Cold water pours in, and a sea of wire rises beyond the breakers.",
-      "Through the smoke, Trent glimpses the seawall. For a moment it is the only solid thing in the world."
+      "Through the smoke, Trent glimpses the seawall. For a moment, it’s the only solid thing in the world.",
+      "As Trent rushes forward, bullets fly past him and bombs explode all around."
     ],
     event: 'prologue:complete',
     path: './prologue/',
@@ -58,11 +81,15 @@ var CHAPTERS = [
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
     line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
+    filmSeconds: 34,
+    captionFrames: [0, 137, 339, 485, 650, 733],
     lines: [
       "Months later, on a snowy December night, a radio lamp glows in Trent’s tent.",
-      "The signal breaks through the static. Hitler has taken Santa, and the Allies’ scout Buddy has vanished.",
+      "A garbled signal breaks through the static. Hitler has taken Santa, and Buddy has vanished while deep undercover in Hitler’s mansion.",
       "The same report names the workshop and a freight yard where Rudolph is being held.",
-      "Trent folds the message into his coat. By dawn he will be over the winter valley."
+      "Recent intelligence suggests the Nazi commanders plan to turn Rudolph into hamburgers to feed their starving troops.",
+      "Trent folds the message into his coat.",
+      "He has one mission. Save Christmas."
     ],
     story: 'A radio transmission names the workshop, a freight yard, and the scouts Trent needs to find.',
     event: 'night-broadcast:complete',
@@ -84,11 +111,15 @@ var CHAPTERS = [
     title: 'Frosted Skies',
     kicker: 'Chapter 2',
     line: 'The Luftwaffe plans to bomb Santa’s secret workshop, and this flight is what stops that bombing. Trent takes the ribbon sleigh into the winter valley, breaks the raid, and turns it back before it reaches the roof.',
+    filmSeconds: 34,
+    captionFrames: [0, 281, 417, 535, 652, 734],
     lines: [
-      "The radio warned of a raid on Santa’s hidden workshop. Now the bombers are crossing the mountains.",
-      "Trent’s sleigh climbs into the snow, its engine echoing off the frozen cliffs.",
+      "The radio warned of a raid on Santa’s hidden workshop. Now the bombers are crossing the mountains. Trent climbs into his prototype sleigh, modified for aerial combat against the Luftwaffe.",
+      "Trent’s sleigh climbs into the snow, its magic engine echoing off the frozen cliffs.",
       "Below the cloud line, the workshop’s lights shine through the fir trees.",
-      "On the other side of the valley, a dark ribbon of rail leads toward Rudolph."
+      "Just over the horizon, Trent spots the first squadron of German fighters.",
+      "Trent reaches down and arms the sleigh’s weapons.",
+      "Then he pushes the throttle to full power."
     ],
     story: "The bombers are already in the mountains. Down in the valley, Santa’s workshop is still lit.",
     event: 'frosted-skies:complete',
@@ -110,11 +141,15 @@ var CHAPTERS = [
     title: 'White Rail',
     kicker: 'Chapter 3',
     line: 'The enemy plans to turn Rudolph into meat for hamburgers. White Rail is the race to stop that. Trent pumps a handcar through the snow and shifts tracks to miss crates, gaps, and a lowered signal arm. The yard mouth is the first half of the race.',
+    filmSeconds: 43,
+    captionFrames: [0, 110, 322, 451, 682, 820],
     lines: [
+      "After saving the secret workshop, Trent resumes Operation Rescue Santa Claus.",
+      "New intelligence reveals Rudolph’s whereabouts, sending Trent on a side mission. He’ll need all the help he can get to rescue Santa.",
       "Through the trees, Trent spots the railway that leads to Rudolph’s freight yard.",
-      "A handcar waits beside the signal shed. Its iron wheels are rimmed with frost.",
+      "He can’t land the sleigh too close without being spotted. Luckily, a handcar waits beside the signal shed, its iron wheels rimmed with frost.",
       "The valley fills with the drone of bombers as snow swallows the tracks ahead.",
-      "At the yard mouth, a lantern swings in the wind. Someone is still working in there."
+      "At the yard entrance, a lantern swings in the wind. Someone is still working in there, and Trent has to get inside."
     ],
     story: "At the edge of the forest, a handcar waits on the railway to Rudolph.",
     event: 'white-rail:complete',
@@ -136,11 +171,15 @@ var CHAPTERS = [
     title: 'Special Delivery',
     kicker: 'Chapter 4',
     line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Buddy, the elf on the shelf, is held.',
+    filmSeconds: 30,
+    captionFrames: [0, 146, 255, 419, 501, 583],
     lines: [
       "Night settles over the freight yard, and the lamps cast long shadows between the wagons.",
       "Trent finds a dispatch pouch beneath a pile of freight ledgers.",
       "Inside is the order that put Rudolph in danger, along with the address of a guarded depot.",
-      "Buddy is being held at that depot. The next train is Trent’s only lead."
+      "Trent sneaks into the stables and frees Rudolph.",
+      "Rudolph knows where the guards are taking Buddy.",
+      "Buddy is being held at the depot. The next train is Trent’s only lead."
     ],
     story: "The freight yard holds the orders that could lead Trent to both Rudolph and Buddy.",
     event: 'special-delivery:complete',
@@ -162,10 +201,13 @@ var CHAPTERS = [
     title: 'The Switch Tower',
     kicker: 'Chapter 5',
     line: 'Buddy, the elf on the shelf, was caught spying and is held at the depot. A train can reach him. The destination board shows the lever order. Throw the switches to match it or the train is sent back. Three wrong routes restart the puzzle.',
+    filmSeconds: 28,
+    captionFrames: [0, 136, 272, 409, 563],
     lines: [
+      "Rudolph is injured and can’t fly. This is going to be a difficult jailbreak.",
       "At the switch tower, the station lights are the only color in the snow.",
-      "A rescue train waits on the approach. The yard’s guards are watching the points.",
-      "Inside the tower, Trent spots the depot route on the board above the levers.",
+      "A rescue train waits on the approach. The yard guards are watching the switches.",
+      "Inside the tower, Trent spots the route to the depot on the board above the levers.",
       "Steam rolls across the glass as the train starts toward Buddy."
     ],
     story: "The winter train could reach Buddy’s depot, if it leaves the switch yard.",
@@ -188,11 +230,15 @@ var CHAPTERS = [
     title: 'The shelf operative',
     kicker: 'Chapter 6',
     line: 'The depot is where Buddy, the elf on the shelf, is held. The quiz builds his ribbon gun. Then Trent plays as Buddy: wrap the guards, disable the relays, and leave through the mail hatch with the way to Santa.',
+    filmSeconds: 34,
+    captionFrames: [0, 93, 241, 399, 575, 686],
     lines: [
+      "Meanwhile, Buddy has just slipped out of his cell.",
       "Buddy hears a train pull in beyond the depot wall. Its whistle sounds like home.",
       "Hidden among the crates are the orders the guards took from him when he was caught.",
-      "A mail hatch opens onto the alley. Beyond it, a dispatch points to the camp where Santa is held.",
-      "Buddy tucks the papers under his coat and steps out of the shadows."
+      "A mail hatch opens onto the alley. A dispatch points to the camp where Santa is being held.",
+      "Buddy knows he must get a message to the Allied forces.",
+      "He tucks the papers under his coat and steps out of the shadows."
     ],
     story: "Buddy hears the rescue train. The papers hidden in the depot could lead him to Santa.",
     event: null,
@@ -213,11 +259,15 @@ var CHAPTERS = [
     title: 'The Corridor',
     kicker: 'Chapter 7',
     line: 'Buddy is free, and the way to Santa is a first-person cartoon corridor maze. The enemies shoot. Trent picks up health and ammunition as he fights through to the green door.',
+    filmSeconds: 31,
+    captionFrames: [0, 154, 272, 417, 580, 662],
     lines: [
       "Buddy is free, and the papers have led Trent to a lonely outpost beyond the depot.",
       "A searchlight washes over the yard. Inside, footsteps echo down branching corridors.",
       "From the radio room comes a burst of static and a mention of Santa’s name.",
-      "At the far end of the corridor, a green door opens onto the road to the camp."
+      "At the far end of the corridor, a green door opens onto the road to the camp.",
+      "Guards patrol the labyrinth of the concentration camp.",
+      "Trent is Santa’s only hope."
     ],
     story: "A green door at the end of the outpost corridor stands between Trent and the road to Santa.",
     event: 'listening-wire:complete',
@@ -239,11 +289,15 @@ var CHAPTERS = [
     title: 'The Holding Camp',
     kicker: 'Chapter 8',
     line: 'Santa is held in a cartoon holding camp. Trent fights the cartoon guards in a brawl and frees him. Buddy and Rudolph are waiting beyond the gate. The secret workshop is next.',
+    filmSeconds: 37,
+    captionFrames: [0, 120, 259, 398, 518, 666],
     lines: [
       "Beyond the wire, Trent finds Santa alive in the frozen holding camp.",
       "The yard falls quiet. A guard’s footsteps crunch across the snow by the gate.",
-      "Trent reaches Santa under the lamps and helps him into the shelter of the passage.",
-      "Buddy and Rudolph wait outside the fence. The workshop is still standing."
+      "Under the cover of the passage, Trent gets close enough to reach Santa’s cell.",
+      "Buddy and Rudolph wait outside the fence. The workshop is still standing.",
+      "Trent steals a guard’s key and slips it through the barred window of Santa’s cell.",
+      "This is as close as Trent can get. Santa will have to fight his way across the prison yard to the open gate."
     ],
     story: "Santa is alive behind the wire. Buddy and Rudolph are waiting beyond the gate.",
     event: 'holding-camp:complete',
@@ -265,10 +319,14 @@ var CHAPTERS = [
     title: 'The Wrapping Line',
     kicker: 'Chapter 9',
     line: 'Santa’s secret workshop is still standing after the Luftwaffe raid. Parcels ride a belt while Trent, Buddy, Rudolph, and Santa ready the flight home. Some parcels add points. Damaged ones take points away. Thirty points before the timer ends clears the line.',
+    filmSeconds: 38,
+    captionFrames: [0, 90, 207, 370, 578, 795],
     lines: [
-      "The workshop the raiders meant to destroy is still standing.",
-      "Buddy, Rudolph, Santa, and Trent gather in its warm light for the first time since the rescue.",
-      "The packing line rattles to life, and a familiar smell of paper and pine fills the room.",
+      "Santa is free, and the team is back together.",
+      "The Nazi workshop the Allied raiders meant to destroy is still standing.",
+      "Buddy, Rudolph, Santa, and Trent gather in the warm light for the first time since the rescue.",
+      "The packing line in the Nazis’ secret toy factory rattles to life. A familiar smell of paper and pine fills the room.",
+      "The plan is to infiltrate the workshop and redirect the presents to children in need on the other side of the Berlin Wall.",
       "Outside, snow settles on the rooftops that lead to the waiting sleigh."
     ],
     story: "The rescued crew gathers in the workshop to prepare for the flight home.",
@@ -291,10 +349,14 @@ var CHAPTERS = [
     title: 'The Chimney Road',
     kicker: 'Chapter 10',
     line: 'Snowy roofs lead to the waiting sleigh. Trent climbs up and down the roofs, doubles back out of dead ends, and jumps the gaps, with Buddy, Rudolph, and Santa bound for home. The flight home comes after.',
+    filmSeconds: 29,
+    captionFrames: [0, 82, 190, 307, 470, 552],
     lines: [
-      "High above the village, a sleigh waits among the chimney pots.",
+      "At last, it’s time to escape Nazi Germany.",
+      "High above the village, a sleigh waits among the chimney stacks.",
       "Trent, Buddy, Santa, and Rudolph can see its lantern through the snowfall.",
       "Below them, a few warm windows light the winding streets. Above, the clouds are beginning to clear.",
+      "Nazi patrols move through the streets below.",
       "The last chimney sends up a plume of smoke. Beyond it lies the way home."
     ],
     story: "The sleigh waits beyond the snowy roofs, and the last clouds are beginning to clear.",
@@ -674,16 +736,14 @@ function showOpeningFilm(done) {
   }
 
   openingVideo = section.querySelector('video');
-  openingVideo.setAttribute('aria-label', 'Opening film. Hitler orders Santa’s capture. ' +
-    'Guards march him into a Nazi concentration camp, where they attack him behind a locked gate. ' +
-    'The Allies pick up the first report. A rescue is still possible.');
-  openingVideo.src = './assets/opening.mp4?v=portrait-story';
+  openingVideo.setAttribute('aria-label', OPENING_FILM.lines.join(' '));
+  openingVideo.src = './assets/opening.mp4?v=story-edit';
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
   syncTurn();
   // Let the video complete naturally, with a fallback for stalled playback.
-  openingTimer = schedulePortraitStep(finishOpening, 45000);
+  openingTimer = schedulePortraitStep(finishOpening, (OPENING_FILM.filmSeconds + 12) * 1000);
 }
 
 function wantsLandscape() {
@@ -779,7 +839,7 @@ function fitCanvas(canvas) {
   }
 }
 
-function drawBackground(ctx, image, spec, elapsed, reduced) {
+function drawBackground(ctx, image, spec, elapsed, duration, reduced) {
   var cw = ctx.canvas.width;
   var ch = ctx.canvas.height;
   var scale;
@@ -799,7 +859,7 @@ function drawBackground(ctx, image, spec, elapsed, reduced) {
   dh = image.naturalHeight * scale;
   extraX = Math.max(0, dw - cw);
   extraY = Math.max(0, dh - ch);
-  p = reduced ? 0 : Math.min(1, elapsed / INTRO_MS);
+  p = reduced ? 0 : Math.min(1, elapsed / duration);
   ctx.drawImage(
     image,
     spec.pan === 'y' ? -extraX * 0.5 : -extraX * p,
@@ -809,7 +869,7 @@ function drawBackground(ctx, image, spec, elapsed, reduced) {
   );
 }
 
-function drawActor(ctx, image, actor, elapsed, reduced) {
+function drawActor(ctx, image, actor, elapsed, duration, reduced) {
   var sheet = actor.sheet;
   var fw;
   var fh;
@@ -831,7 +891,7 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   }
   destH = ctx.canvas.height * actor.h;
   destW = destH * (fw / fh);
-  var travel = reduced ? 0 : Math.min(1, elapsed / INTRO_MS);
+  var travel = reduced ? 0 : Math.min(1, elapsed / duration);
   var xPos = typeof actor.toX === 'number' ? actor.x + (actor.toX - actor.x) * travel : actor.x;
   dx = ctx.canvas.width * xPos - destW / 2;
   dy = ctx.canvas.height * actor.y - destH;
@@ -839,15 +899,17 @@ function drawActor(ctx, image, actor, elapsed, reduced) {
   ctx.drawImage(image, sx, 0, fw, fh, dx, dy, destW, destH);
 }
 
-function drawFallbackIntroCaption(ctx, lines, elapsed) {
+function drawFallbackIntroCaption(ctx, chapter, elapsed) {
   var width = ctx.canvas.width;
   var height = ctx.canvas.height;
-  var index = Math.min(lines.length - 1, Math.floor(elapsed * lines.length / INTRO_MS));
+  var index = chapter.captionFrames.length - 1;
+  while (index > 0 && chapter.captionFrames[index] * 1000 / 24 > elapsed) index -= 1;
+  var line = chapter.lines[index];
   var size = Math.round(Math.min(width * 37.12 / 720, height * 0.092));
   var rows = [''];
   var row = 0;
   ctx.font = size + 'px Segoe UI, sans-serif';
-  lines[index].split(/\s+/).forEach(function (word) {
+  line.split(/\s+/).forEach(function (word) {
     var next = rows[row] ? rows[row] + ' ' + word : word;
     if (rows[row] && ctx.measureText(next).width > width * 0.86) rows[++row] = word;
     else rows[row] = next;
@@ -897,7 +959,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=portrait-story';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=story-edit';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -933,6 +995,7 @@ function playIntro(chapter, done) {
   var canvas = document.getElementById('intro-canvas');
   var ctx = canvas.getContext('2d');
   var spec = chapter.intro;
+  var duration = chapter.filmSeconds * 1000;
   var progress = document.getElementById('intro-progress');
   var images = [];
   var started = performance.now();
@@ -981,12 +1044,12 @@ function playIntro(chapter, done) {
     if (!updateVideo()) {
       fitCanvas(canvas);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      drawBackground(ctx, images[0], spec, elapsed, reduced);
-      for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, reduced);
-      drawFallbackIntroCaption(ctx, chapter.lines, elapsed);
+      drawBackground(ctx, images[0], spec, elapsed, duration, reduced);
+      for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, duration, reduced);
+      drawFallbackIntroCaption(ctx, chapter, elapsed);
     }
-    progress.style.transform = 'scaleX(' + Math.min(1, elapsed / INTRO_MS) + ')';
-    if (elapsed >= INTRO_MS) {
+    progress.style.transform = 'scaleX(' + Math.min(1, elapsed / duration) + ')';
+    if (elapsed >= duration) {
       introDone();
       return;
     }

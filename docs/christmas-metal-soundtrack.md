@@ -32,7 +32,7 @@ Serve the repository over HTTP to check playback. On the quiz screen, click or p
 
 ## Chapter intro themes
 
-Each of the 11 animated chapter openings, including the prologue, has a separate full-length Christmas metal theme. The tracks run from 3:12 to 3:24. The game plays the opening of the song while the 30-second film runs. The quiz and campaign track pauses during the intro and resumes when the player returns to the quiz or campaign screens. Intro music follows the music toggle and pauses when the tab is hidden or the game asks the player to rotate the screen.
+Each of the 11 animated chapter openings, including the prologue, has a separate full-length Christmas metal theme. The tracks run from 3:12 to 3:24. The game plays the opening of the song while the chapter film runs. The quiz and campaign track pauses during the intro and resumes when the player returns to the quiz or campaign screens. Intro music follows the music toggle and pauses when the tab is hidden or the game asks the player to rotate the screen.
 
 The files in `assets/audio/christmas-metal/intros/` use the chapter IDs from `campaign.js`.
 
