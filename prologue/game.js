@@ -42,7 +42,7 @@
 
   /* Surf cycle, as a fraction of the period:
      calm until warnAt, foam climbs until hitAt, then the wash recedes. */
-  var SURF = { period: 4.4, warnAt: 0.5, hitAt: 0.78, washEnd: 0.92 };
+  var SURF = { period: 8.8, warnAt: 0.5, hitAt: 0.78, washEnd: 0.92 };
 
   var obstacles = [
     { kind: 'wire', x: 1160, y: 0, w: 50, h: 162 },
@@ -246,10 +246,10 @@
     renderHud();
   }
 
-  function crestPose(wave, index) {
+  function crestPose(wave) {
     var width = wave.x1 - wave.x0;
     var cycle = width + 150;
-    var travel = (seaTime * SURF_SPEED + wave.offset * 180 + index * cycle * 0.5) % cycle;
+    var travel = (seaTime * SURF_SPEED + wave.offset * 180) % cycle;
     return wave.x1 - travel;
   }
 
@@ -269,7 +269,6 @@
 
   function crestTouchIndex() {
     var i;
-    var n;
     var wave;
     var shape;
     var head;
@@ -282,15 +281,13 @@
       if (player.x < wave.x0 || player.x > wave.x1) continue;
       if (player.y < wave.reach) continue;
       shape = crestShape(wave);
-      for (n = 0; n < 2; n++) {
-        head = crestPose(wave, n);
-        for (s = 0; s <= 12; s++) {
-          p = crestPoint(head, shape.mid, shape.amp, s / 12);
-          if (p.x < wave.x0 || p.x > wave.x1) continue;
-          dx = player.x - p.x;
-          dy = player.y - p.y;
-          if (dx * dx + dy * dy < 32 * 32) return i;
-        }
+      head = crestPose(wave);
+      for (s = 0; s <= 12; s++) {
+        p = crestPoint(head, shape.mid, shape.amp, s / 12);
+        if (p.x < wave.x0 || p.x > wave.x1) continue;
+        dx = player.x - p.x;
+        dy = player.y - p.y;
+        if (dx * dx + dy * dy < 32 * 32) return i;
       }
     }
     return -1;
@@ -1083,7 +1080,6 @@
 
   function braceNeeded() {
     var i;
-    var n;
     var wave;
     var shape;
     var head;
@@ -1098,14 +1094,12 @@
       if (player.y < wave.reach) continue;
       if (player.x < wave.x0 - 20 || player.x > wave.x1 + 20) continue;
       shape = crestShape(wave);
-      for (n = 0; n < 2; n++) {
-        head = crestPose(wave, n);
-        for (s = 0; s <= 8; s++) {
-          p = crestPoint(head, shape.mid, shape.amp, s / 8);
-          dx = p.x - player.x;
-          dy = p.y - player.y;
-          if (dx > -40 && dx < 150 && dx * dx + dy * dy < 120 * 120) return true;
-        }
+      head = crestPose(wave);
+      for (s = 0; s <= 8; s++) {
+        p = crestPoint(head, shape.mid, shape.amp, s / 8);
+        dx = p.x - player.x;
+        dy = p.y - player.y;
+        if (dx > -40 && dx < 150 && dx * dx + dy * dy < 120 * 120) return true;
       }
     }
     return false;
@@ -1319,7 +1313,6 @@
 
   function drawSurf() {
     var i;
-    var n;
     var wave;
     var shape;
     var head;
@@ -1330,20 +1323,18 @@
       wave = waves[i];
       if (worldToX(wave.x1) < -50 || worldToX(wave.x0) > cssW + 50) continue;
       shape = crestShape(wave);
-      for (n = 0; n < 2; n++) {
-        head = crestPose(wave, n);
-        if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
-        ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
-        ctx.lineWidth = Math.max(8, 34 * scale);
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(248, 252, 252, 0.95)';
-        ctx.lineWidth = Math.max(2, 5 * scale);
-        ctx.stroke();
-        if (!traceCrest(wave, head + 18, shape.mid + 4, shape.amp * 0.62)) continue;
-        ctx.strokeStyle = 'rgba(232, 246, 246, 0.75)';
-        ctx.lineWidth = Math.max(1.5, 2.5 * scale);
-        ctx.stroke();
-      }
+      head = crestPose(wave);
+      if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
+      ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
+      ctx.lineWidth = Math.max(8, 34 * scale);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(248, 252, 252, 0.95)';
+      ctx.lineWidth = Math.max(2, 5 * scale);
+      ctx.stroke();
+      if (!traceCrest(wave, head + 18, shape.mid + 4, shape.amp * 0.62)) continue;
+      ctx.strokeStyle = 'rgba(232, 246, 246, 0.75)';
+      ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+      ctx.stroke();
     }
     ctx.restore();
   }

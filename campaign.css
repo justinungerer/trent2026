@@ -500,8 +500,22 @@ body {
 
 .chapter-menu-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.chapter-menu-row .choice {
+  grid-column: 1 / -1;
+}
+
+#mission-menu:not([hidden]) {
+  display: block;
+  margin: max(8px, env(safe-area-inset-top)) 0 8px max(12px, env(safe-area-inset-left));
+  min-height: 48px;
+}
+
+#mission-menu:not([hidden]) + #game {
+  height: calc(100% - 56px - max(8px, env(safe-area-inset-top)));
 }
 
 .chapter-menu-row button:disabled {

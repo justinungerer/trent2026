@@ -14,7 +14,6 @@ var endingVideo = document.getElementById('ending-video');
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 var active = null;
-var shelfOpen = false;
 var pendingMissionUrl = '';
 var missionLandscape = false;
 var resumeEndingAfterTurn = false;
@@ -399,6 +398,9 @@ function clearOpeningFilm() {
 
 function closeMission() {
   pendingMissionUrl = '';
+  var menuButton = document.getElementById('mission-menu');
+  menuButton.hidden = true;
+  menuButton.onclick = null;
   var frame = document.getElementById('game');
   if (frame) frame.src = 'about:blank';
   document.getElementById('mission').hidden = true;
@@ -414,6 +416,7 @@ function stopEndingVideo() {
 }
 
 function showChapterMenu(lastChapter, complete) {
+  active = null;
   if (window.TrentTrivia) window.TrentTrivia.abort();
   clearInterval(pinTimer);
   clearOpeningFilm();
@@ -457,8 +460,15 @@ function showChapterMenu(lastChapter, complete) {
     row.className = 'chapter-menu-row';
     row.appendChild(button(chapter.kicker + ' · ' + chapter.title,
       unlocked ? function () { openChapter(chapter.id); } : null, 'choice'));
-    row.appendChild(button('Watch intro · ' + chapter.title,
-      unlocked ? function () { playIntro(chapter, back); } : null, 'secondary'));
+    var introButton = button('Watch intro',
+      unlocked ? function () { playIntro(chapter, back); } : null, 'secondary');
+    var gameButton = button('Play minigame',
+      unlocked ? function () { launchGame(chapter, 0, back); } : null, 'secondary chapter-minigame');
+    if (unlocked) {
+      introButton.setAttribute('aria-label', 'Watch intro · ' + chapter.title);
+      gameButton.setAttribute('aria-label', 'Play minigame · ' + chapter.title);
+    }
+    row.append(introButton, gameButton);
     chapters.appendChild(row);
   });
   section.appendChild(chapters);
@@ -476,7 +486,7 @@ function showRules() {
   modal.innerHTML = '<div class="quiz-modal-card"><h2 id="campaign-rules-title" tabindex="-1">How to play</h2>' +
     '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
     '<p>Get at least five answers right to advance. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses in the chapter’s minigame.</p>' +
-    '<p>Finish a chapter to earn a password for the next chapter. That password also unlocks the earlier chapters and films in the chapter menu.</p>' +
+    '<p>Finish a chapter to earn a password for the next chapter. That password also unlocks the earlier chapters, films, and minigames in the chapter menu.</p>' +
     '<button class="primary" type="button">Continue</button><button class="secondary" type="button">Cancel</button></div>';
   modal.querySelector('.primary').onclick = function () { modal.remove(); showLogo(); };
   modal.querySelector('.secondary').onclick = function () {
@@ -503,7 +513,6 @@ function showStart() {
   clearInterval(pinTimer);
   stopIntro();
   active = null;
-  shelfOpen = false;
   closeMission();
   stopEndingVideo();
   ending.hidden = true;
@@ -582,7 +591,6 @@ function showLogo() {
   clearInterval(pinTimer);
   stopIntro();
   active = null;
-  shelfOpen = false;
   closeMission();
   stopEndingVideo();
   ending.hidden = true;
@@ -721,6 +729,10 @@ function syncTurn() {
 
 function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
+  var menuButton = document.getElementById('mission-menu');
+  var returnToMenu = active && active.returnToMenu;
+  menuButton.hidden = !returnToMenu;
+  menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
   address.searchParams.set('layout', 'film2');
   var game = address.pathname.split('/').filter(Boolean).pop();
@@ -956,11 +968,16 @@ function playIntro(chapter, done) {
   introRaf = requestAnimationFrame(tick);
 }
 
-function launchGame(chapter, score) {
+function launchGame(chapter, score, returnToMenu) {
+  if (chapter.id === 'shelf') {
+    active = { chapter: chapter, returnToMenu: returnToMenu };
+    window.TrentChapter6.startMission(score);
+    return;
+  }
   var runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   var url = new URL(chapter.path, location.href);
   var bonus = score >= 8 ? score - 7 : 0;
-  active = { chapter: chapter, runId: runId };
+  active = { chapter: chapter, runId: runId, returnToMenu: returnToMenu };
   url.searchParams.set('runId', runId);
   if (bonus) url.searchParams.set('bonus', String(bonus));
   if (chapter.path === './wrapping-line/') url.searchParams.set('lives', String(7 + bonus));
@@ -974,15 +991,7 @@ function afterIntro(chapter) {
   }
   window.TrentTrivia.start(chapter, {
     story: chapter.story,
-    onClear: function (correct) {
-      if (chapter.number === 6) {
-        active = null;
-        shelfOpen = true;
-        window.TrentChapter6.startMission(correct);
-        return;
-      }
-      launchGame(chapter, correct);
-    },
+    onClear: function (correct) { launchGame(chapter, correct); },
     onHome: showStart
   });
 }
@@ -996,7 +1005,6 @@ function openChapter(id) {
   clearInterval(pinTimer);
   clearOpeningFilm();
   active = null;
-  shelfOpen = false;
   closeMission();
   stopEndingVideo();
   ending.hidden = true;
@@ -1141,6 +1149,12 @@ function playEnding() {
   }
 }
 
+function finishMission() {
+  var run = active;
+  if (run.returnToMenu) run.returnToMenu();
+  else finishChapter(run.chapter);
+}
+
 function finishChapter(chapter) {
   active = null;
   if (chapter.pin) showPin(chapter);
@@ -1154,7 +1168,7 @@ window.addEventListener('message', function (event) {
   if (!active || !frame || event.source !== frame.contentWindow) return;
   if (!data || data.type !== active.chapter.event) return;
   if (!data.runId || data.runId !== active.runId) return;
-  finishChapter(active.chapter);
+  finishMission();
 });
 
 document.getElementById('intro-skip').onclick = function () {
@@ -1169,11 +1183,7 @@ endingVideo.addEventListener('ended', showRestored);
 window.TrentCampaign = {
   openMissionFrame: openMissionFrame,
   onShelfWon: function () {
-    var chapter;
-    if (!shelfOpen) return;
-    shelfOpen = false;
-    chapter = byId('shelf');
-    if (chapter) showPin(chapter);
+    if (active && active.chapter.id === 'shelf') finishMission();
   }
 };
 
