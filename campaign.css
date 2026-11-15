@@ -525,26 +525,3 @@ body {
   height: 100%;
   object-fit: contain;
 }
-
-.opening-caption {
-  position: absolute;
-  z-index: 1;
-  left: max(18px, env(safe-area-inset-left));
-  right: max(18px, env(safe-area-inset-right));
-  margin: 0 auto;
-  text-align: center;
-  text-shadow: 0 1px 12px #02060b, 0 2px 5px #02060b;
-}
-
-.opening-caption {
-  bottom: max(30px, env(safe-area-inset-bottom));
-  width: fit-content;
-  max-width: calc(100% - 36px);
-  padding: 8px 14px;
-  color: #fff1d8;
-  background: #071018e8;
-}
-
-.opening-caption:empty {
-  display: none;
-}

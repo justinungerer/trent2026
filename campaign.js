@@ -633,8 +633,8 @@ function showOpeningFilm(done) {
 
   var section = document.createElement('section');
   section.className = 'campaign-start opening-film';
-  section.innerHTML = '<video muted playsinline preload="auto" aria-hidden="true"></video>' +
-    '<p class="opening-caption"></p><button type="button" class="overlay-skip">Skip</button>';
+  section.innerHTML = '<video muted playsinline preload="auto"></video>' +
+    '<button type="button" class="overlay-skip">Skip</button>';
 
   function finishOpening() {
     if (generation !== introToken) return;
@@ -644,22 +644,16 @@ function showOpeningFilm(done) {
   }
 
   openingVideo = section.querySelector('video');
-  openingVideo.src = './assets/opening.mp4?v=film2';
-  openingVideo.muted = true;
-  var caption = section.querySelector('.opening-caption');
-  openingVideo.addEventListener('timeupdate', function () {
-    var time = this.currentTime;
-    var text = time < 5 ? '' : time < 11 ? 'Hitler orders Santa’s capture.' :
-      time < 17 ? 'Guards march Santa into a Nazi concentration camp.' :
-      time < 24 ? 'The guards attack Santa behind the locked gate.' :
-      'The Allies pick up the first report. A rescue is still possible.';
-    if (caption.textContent !== text) caption.textContent = text;
-  });
+  openingVideo.setAttribute('aria-label', 'Opening film. Hitler orders Santa’s capture. ' +
+    'Guards march him into a Nazi concentration camp, where they attack him behind a locked gate. ' +
+    'The Allies pick up the first report. A rescue is still possible.');
+  openingVideo.src = './assets/opening.mp4?v=opening-blender';
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
   syncTurn();
-  openingTimer = schedulePortraitStep(finishOpening, 31000);
+  // Let the video complete naturally, with a fallback for stalled playback.
+  openingTimer = schedulePortraitStep(finishOpening, 45000);
 }
 
 function wantsLandscape() {
