@@ -345,7 +345,7 @@
       placed.push(boxes[i]);
       pickups.push({ x: boxes[i].x, y: boxes[i].y, kind: 'ammo', n: 2, bob: i * 0.8 });
     }
-    kits = spreadTake(cells, function (c) { return c.d >= 10; }, 8, 4.5, placed);
+    kits = spreadTake(cells, function (c) { return c.d >= 10; }, 12, 4.5, placed);
     for (i = 0; i < kits.length; i++) {
       pickups.push({ x: kits[i].x, y: kits[i].y, kind: 'health', n: 1, bob: i * 0.6 });
     }

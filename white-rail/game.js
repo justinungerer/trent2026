@@ -86,6 +86,12 @@
   var TRENT = { w: 459, h: 512, anchorX: 168, anchorY: 495, frames: 6 };
   var HAND = { w: 774, h: 431, axleX: 386, axleY: 426, deckY: 214 };
 
+  var obstacleArt = {};
+  ['crate', 'arm', 'gap', 'lantern'].forEach(function (name) {
+    var image = new Image();
+    image.src = 'art/painted-' + name + '.webp';
+    obstacleArt[name] = image;
+  });
   var railsImg = new Image();
   var handcarImg = new Image();
   var trentImg = new Image();
@@ -758,6 +764,13 @@
         trackStrip(lane, cursor, gap.x);
         var a = project(Math.max(near, gap.x), lane);
         var b = project(Math.min(far, gap.x + gap.w), lane);
+        if (imageReady(obstacleArt.gap)) {
+          var gapScale = Math.max(a.scale, b.scale);
+          ctx.drawImage(obstacleArt.gap, Math.min(a.x, b.x) - 42 * gapScale, b.y,
+            Math.abs(a.x - b.x) + 84 * gapScale, Math.max(3, a.y - b.y));
+          cursor = Math.max(cursor, gap.x + gap.w);
+          return;
+        }
         ctx.fillStyle = '#1c2730';
         ctx.beginPath();
         ctx.moveTo(a.x - 42 * a.scale, a.y);
@@ -777,6 +790,14 @@
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.scale(p.scale, p.scale);
+    var sprite = obstacleArt[ob.kind];
+    if (imageReady(sprite)) {
+      var w = ob.kind === 'crate' ? 62 : 92;
+      var h = w * sprite.naturalHeight / sprite.naturalWidth;
+      ctx.drawImage(sprite, -w / 2, -h, w, h);
+      ctx.restore();
+      return;
+    }
     if (ob.kind === 'crate') {
       var wood = ctx.createLinearGradient(0, -50, 0, 0);
       wood.addColorStop(0, '#d5a36d');
@@ -832,6 +853,10 @@
   }
 
   function drawLantern(x, y) {
+    if (imageReady(obstacleArt.lantern)) {
+      ctx.drawImage(obstacleArt.lantern, x - 9, y - 13, 18, 27);
+      return;
+    }
     var g = ctx.createRadialGradient(x, y, 1, x, y, 16);
     g.addColorStop(0, 'rgba(255, 220, 160, 0.9)');
     g.addColorStop(1, 'rgba(255, 200, 120, 0)');

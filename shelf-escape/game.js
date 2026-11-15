@@ -13,7 +13,7 @@ const bellY=188;
 const keys=new Set(),sticks={move:{id:null,x:0,y:0}};
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
-const worldEnd=14300, crates=[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
+const worldEnd=14300,endWall=14264, crates=[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
 const supplies=[300,2900,5700,8500,10300,11400,12500];
 const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
 let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,atSupply,medicalUsed,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
@@ -104,7 +104,7 @@ function update(dt){
  const axis=sticks.move.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
  player.moving=Math.abs(axis)>.1;
  player.hidden=!player.moving&&player.y<=0&&!keys.has(' ')&&pendingFire===null&&!fireQueued&&(keys.has('s')||keys.has('arrowdown')||sticks.move.y>.5)&&crates.some(x=>Math.abs(player.x-x)<35);
- if(Math.abs(axis)>.1){const before=player.x;let next=clamp(player.x+clamp(axis,-1,1)*190*dt,35,worldEnd-30);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&next>=gates[i]-20)next=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&next>=barrier-20)next=barrier-20}for(const box of hurdles){const left=box.x-box.half-16,right=box.x+box.half+16;if(player.y<box.clear&&next>left&&next<right)next=before<box.x?Math.min(next,left):Math.max(next,right)}player.x=next;player.face=Math.sign(axis)}
+ if(Math.abs(axis)>.1){const before=player.x;let next=clamp(player.x+clamp(axis,-1,1)*190*dt,35,endWall-16);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&next>=gates[i]-20)next=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&next>=barrier-20)next=barrier-20}for(const box of hurdles){const left=box.x-box.half-16,right=box.x+box.half+16;if(player.y<box.clear&&next>left&&next<right)next=before<box.x?Math.min(next,left):Math.max(next,right)}player.x=next;player.face=Math.sign(axis)}
  const up=jumpQueued||keys.has('w')||keys.has('arrowup');jumpQueued=false;if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
  for(const box of hurdles){const reach=box.half+16;if(player.y<box.clear&&Math.abs(player.x-box.x)<reach)player.x=player.x<box.x?box.x-reach:box.x+reach}
  const count=relays.filter(r=>r.done).length;
@@ -235,6 +235,12 @@ function render(){
  for(const w of wraps){if(w.age<.7){sprite('guard-die',w.x,445,Math.min(9,w.age*14),w.dir<0,.82);continue}const scale=Math.min(1,(w.age-.7)*5);g.save();g.translate(w.x,437);g.scale(scale,scale);g.fillStyle='#a73f4e';g.fillRect(-18,-31,36,31);g.fillStyle='#f0ce84';g.fillRect(-3,-31,6,31);g.fillRect(-18,-21,36,5);g.strokeStyle='#f0ce84';g.lineWidth=2;g.beginPath();g.ellipse(-6,-34,7,4,-.4,0,7);g.ellipse(6,-34,7,4,.4,0,7);g.stroke();g.restore()}
  g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);sprite('elf-'+pose,player.x,445-player.y,poseFrame,player.face<0,.85);launcher();
  for(const x of crates){if(!painted('wood-crate',x,424,74,50)){g.fillStyle='#8c5c3b';g.strokeStyle='#533c34';g.lineWidth=4;g.fillRect(x-35,406,70,42);g.strokeRect(x-35,406,70,42);g.beginPath();g.moveTo(x-30,410);g.lineTo(x+30,444);g.moveTo(x+30,410);g.lineTo(x-30,444);g.stroke()}}
+ if(endWall-camera<W+50){
+  g.fillStyle='#352e30';g.fillRect(endWall,92,worldEnd-endWall,355);
+  g.strokeStyle='#82716a';g.lineWidth=2;
+  for(let row=0;row<15;row++){const y=96+row*23;g.beginPath();g.moveTo(endWall,y);g.lineTo(worldEnd,y);g.stroke()}
+  g.fillStyle='#242228';g.fillRect(endWall,92,5,355);
+ }
  if(player.hidden){g.fillStyle='#e8f7e9';g.font='bold 12px system-ui';g.fillText('HIDDEN',player.x-25,330)}
  for(const s of shots){glow(s.x,s.y,18,'#8cf8ff88');g.fillStyle='#d8ffff';g.beginPath();g.arc(s.x,s.y,4,0,7);g.fill()}
  for(const s of guardShots){g.fillStyle='#ffd38a';g.beginPath();g.ellipse(s.x,s.y,6,3,0,0,7);g.fill()}

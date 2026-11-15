@@ -19,7 +19,6 @@ var resumeEndingAfterTurn = false;
 var introToken = 0;
 var introRaf = 0;
 var introDone = null;
-var introImages = [];
 var cleanupIntroVideo = null;
 var openingTimer = 0;
 var openingVideo = null;
@@ -326,7 +325,7 @@ var CHAPTERS = [
       "The Nazi workshop the Allied raiders meant to destroy is still standing.",
       "Buddy, Rudolph, Santa, and Trent gather in the warm light for the first time since the rescue.",
       "The packing line in the Nazis’ secret toy factory rattles to life. A familiar smell of paper and pine fills the room.",
-      "The plan is to infiltrate the workshop and redirect the presents to children in need on the other side of the Berlin Wall.",
+      "The team packs the presents into the sleigh for the children back home.",
       "Outside, snow settles on the rooftops that lead to the waiting sleigh."
     ],
     story: "The rescued crew gathers in the workshop to prepare for the flight home.",
@@ -425,25 +424,11 @@ function storePin(pin) {
   } catch (error) {}
 }
 
-function loadImage(src) {
-  var image = new Image();
-  image.decoding = 'async';
-  image.src = src;
-  return image;
-}
-
-function releaseImages(list) {
-  var i;
-  for (i = 0; i < list.length; i++) list[i].src = '';
-}
-
 function stopIntro() {
   introToken += 1;
   if (introRaf) cancelAnimationFrame(introRaf);
   introRaf = 0;
   introDone = null;
-  if (introImages.length) releaseImages(introImages);
-  introImages = [];
   if (cleanupIntroVideo) cleanupIntroVideo();
   cleanupIntroVideo = null;
   cinema.hidden = true;
@@ -817,7 +802,7 @@ function openMissionFrame(url, title) {
   menuButton.hidden = !returnToMenu;
   menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
-  address.searchParams.set('layout', 'touch-copy');
+  address.searchParams.set('layout', 'painted-obstacles');
   var game = address.pathname.split('/').filter(Boolean).pop();
   missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
   pendingMissionUrl = address.href;
@@ -838,66 +823,6 @@ function fitCanvas(canvas) {
     canvas.width = width;
     canvas.height = height;
   }
-}
-
-function drawBackground(ctx, image, spec, elapsed, duration, reduced) {
-  var cw = ctx.canvas.width;
-  var ch = ctx.canvas.height;
-  var scale;
-  var dw;
-  var dh;
-  var extraX;
-  var extraY;
-  var p;
-  if (!image || !image.complete || !image.naturalWidth) {
-    ctx.fillStyle = '#1e3036';
-    ctx.fillRect(0, 0, cw, ch);
-    return;
-  }
-  scale = Math.max(cw / image.naturalWidth, ch / image.naturalHeight);
-  if (!reduced) scale *= 1.12;
-  dw = image.naturalWidth * scale;
-  dh = image.naturalHeight * scale;
-  extraX = Math.max(0, dw - cw);
-  extraY = Math.max(0, dh - ch);
-  p = reduced ? 0 : Math.min(1, elapsed / duration);
-  ctx.drawImage(
-    image,
-    spec.pan === 'y' ? -extraX * 0.5 : -extraX * p,
-    spec.pan === 'y' ? -extraY * p : -extraY * 0.35,
-    dw,
-    dh
-  );
-}
-
-function drawActor(ctx, image, actor, elapsed, duration, reduced) {
-  var sheet = actor.sheet;
-  var fw;
-  var fh;
-  var sx = 0;
-  var frame;
-  var destH;
-  var destW;
-  var dx;
-  var dy;
-  if (!image || !image.complete || !image.naturalWidth) return;
-  fw = image.naturalWidth;
-  fh = image.naturalHeight;
-  if (sheet) {
-    fw = sheet.fw;
-    fh = Math.min(sheet.fh || image.naturalHeight, image.naturalHeight);
-    frame = reduced ? (sheet.still || 0) : sheet.start + Math.floor(elapsed / sheet.ms) % sheet.count;
-    sx = frame * sheet.fw;
-    if (sx + fw > image.naturalWidth) return;
-  }
-  destH = ctx.canvas.height * actor.h;
-  destW = destH * (fw / fh);
-  var travel = reduced ? 0 : Math.min(1, elapsed / duration);
-  var xPos = typeof actor.toX === 'number' ? actor.x + (actor.toX - actor.x) * travel : actor.x;
-  dx = ctx.canvas.width * xPos - destW / 2;
-  dy = ctx.canvas.height * actor.y - destH;
-  if (actor.bob && !reduced) dy += Math.sin(elapsed / 380) * ctx.canvas.height * 0.015;
-  ctx.drawImage(image, sx, 0, fw, fh, dx, dy, destW, destH);
 }
 
 function drawFallbackIntroCaption(ctx, chapter, elapsed) {
@@ -929,7 +854,9 @@ function drawFallbackIntroCaption(ctx, chapter, elapsed) {
 }
 
 function prepareIntroVideo(chapter, getElapsed) {
-  var video = document.getElementById('intro-video');
+  var previous = document.getElementById('intro-video');
+  var video = previous.cloneNode(false);
+  previous.replaceWith(video);
   var showing = false;
   var requested = false;
   var failed = false;
@@ -940,7 +867,7 @@ function prepareIntroVideo(chapter, getElapsed) {
   }
 
   function showFrame() {
-    if (requested && !video.paused && !video.seeking) displayVideo(true);
+    if (requested && video.readyState >= 2 && !video.paused && !video.seeking) displayVideo(true);
   }
 
   function syncFrame() {
@@ -960,7 +887,7 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=story-edit';
+      if (!video.hasAttribute('src')) video.src = './assets/intro-video/' + chapter.id + '.mp4?v=current-film';
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -974,7 +901,7 @@ function prepareIntroVideo(chapter, getElapsed) {
   video.muted = true;
   video.onplaying = syncFrame;
   video.onseeked = showFrame;
-  video.onwaiting = function () { displayVideo(false); };
+
   video.onerror = function () {
     failed = true;
     displayVideo(false);
@@ -983,22 +910,21 @@ function prepareIntroVideo(chapter, getElapsed) {
   cleanupIntroVideo = function () {
     requested = false;
     document.removeEventListener('visibilitychange', updateVideo);
-    video.onplaying = video.onseeked = video.onwaiting = video.onerror = null;
+    video.onplaying = video.onseeked = video.onerror = null;
     video.pause();
     video.removeAttribute('src');
     video.load();
     displayVideo(false);
   };
+  updateVideo.useFallback = function () { return failed || reduceMotion.matches; };
   return updateVideo;
 }
 
 function playIntro(chapter, done) {
   var canvas = document.getElementById('intro-canvas');
   var ctx = canvas.getContext('2d');
-  var spec = chapter.intro;
   var duration = chapter.filmSeconds * 1000;
   var progress = document.getElementById('intro-progress');
-  var images = [];
   var started = performance.now();
   var elapsed = 0;
   var last = started;
@@ -1006,9 +932,6 @@ function playIntro(chapter, done) {
   var updateVideo;
   stopIntro();
   token = introToken;
-  images.push(loadImage(spec.bg));
-  spec.layers.forEach(function (layer) { images.push(loadImage(layer.src)); });
-  introImages = images;
   document.getElementById('intro-kicker').textContent = chapter.kicker;
   var introTitle = document.getElementById('intro-title');
   introTitle.textContent = chapter.title;
@@ -1029,8 +952,6 @@ function playIntro(chapter, done) {
     done();
   };
   function tick(now) {
-    var reduced;
-    var i;
     if (introToken !== token) return;
     syncTurn();
     if (document.hidden || turnNeeded()) {
@@ -1041,12 +962,10 @@ function playIntro(chapter, done) {
     }
     elapsed += Math.max(0, Math.min(80, now - last));
     last = now;
-    reduced = reduceMotion.matches;
-    if (!updateVideo()) {
+    updateVideo();
+    if (updateVideo.useFallback()) {
       fitCanvas(canvas);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      drawBackground(ctx, images[0], spec, elapsed, duration, reduced);
-      for (i = 0; i < spec.layers.length; i++) drawActor(ctx, images[i + 1], spec.layers[i], elapsed, duration, reduced);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawFallbackIntroCaption(ctx, chapter, elapsed);
     }
     progress.style.transform = 'scaleX(' + Math.min(1, elapsed / duration) + ')';

@@ -372,6 +372,7 @@
     var accent = damaged ? '#9a3538' : ({ plain: '#eee1bf', ribbon: '#44886f', gilt: '#e7b745' })[parcel.type.id];
     ctx.save();
     ctx.translate(parcel.x, parcel.y);
+    ctx.scale(0.75, 0.75);
     if (damaged) ctx.rotate(parcel.type.id === 'crushed' ? -.17 : .12);
     var art = damaged ? damagedBoxImg : goodBoxImg;
     if (imageReady(art)) {

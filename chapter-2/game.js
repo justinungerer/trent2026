@@ -39,7 +39,7 @@ const lampOffset=21;
 const mineReach=26;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
-const art=Object.fromEntries(['yard','elf','guard','shelf','mail'].map(name=>{
+const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch'].map(name=>{
  const image=new Image();image.src='./art/'+name+'.webp';return [name,image];
 }));
 const clamp=(n,low,high)=>Math.max(low,Math.min(high,n));
@@ -302,6 +302,7 @@ function drawVision(guard){
  ctx.stroke();
 }
 function drawMine(mine){
+ if(sprite('painted-mine',mine.x,mine.y,36,33))return;
  ctx.fillStyle='#24180f';ctx.beginPath();ctx.arc(mine.x,mine.y,11,0,7);ctx.fill();
  ctx.strokeStyle='#efbd52';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mine.x,mine.y,11,0,7);ctx.stroke();
  ctx.strokeStyle='#f3d48a';ctx.lineWidth=1.5;
@@ -333,7 +334,7 @@ function render(){
   ctx.strokeStyle='#fff6c888';ctx.lineWidth=2;ctx.beginPath();ctx.arc(light.x,light.y,light.r,0,7);ctx.stroke();
  }
  glow(depot.x,depot.y,52,run.count===3?'#72f7c8aa':'#cf903f84');
- ctx.fillStyle=run.count===3?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);
+ if(!sprite('painted-mail-hatch',depot.x,depot.y,65,55)){ctx.fillStyle=run.count===3?'#3c806b':'#5b4e44';ctx.fillRect(depot.x-24,depot.y-18,48,36);}
  label(run.count===3?'MAIL HATCH OPEN':'MAIL HATCH · LOCKED',depot.x,depot.y-24);
  for(const item of run.hearts){
   if(item.taken)continue;

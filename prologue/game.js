@@ -173,7 +173,7 @@
   soldierImg.addEventListener('load', buildSoldierMask);
   soldierImg.src = 'art/soldier.webp';
   if (imageReady(soldierImg)) buildSoldierMask();
-  beachImg.src = 'art/beach.webp';
+  beachImg.src = 'art/beach-ground.webp';
   craftImg.src = 'art/craft.webp';
   wallImg.src = 'art/seawall.webp';
   hedgehogImg.src = 'art/hedgehog.webp';
@@ -247,20 +247,19 @@
   }
 
   function crestPose(wave) {
-    var width = wave.x1 - wave.x0;
-    var cycle = width + 150;
-    var travel = (seaTime * SURF_SPEED + wave.offset * 180) % cycle;
-    return wave.x1 - travel;
+    var run = wave.x1 - wave.x0 + 255;
+    var age = Math.max(0, seaTime - wave.offset) % (run / SURF_SPEED + 1.05);
+    return wave.x1 + 95 - age * SURF_SPEED;
   }
 
   function waveReach(wave) {
-    return Math.max(0, wave.reach + Math.sin(seaTime * 0.76 + wave.offset * 3) * 23);
+    return Math.max(0, wave.reach + Math.sin(seaTime * 0.76 + wave.offset * 3) * 15);
   }
 
   function crestShape(wave) {
     var reach = waveReach(wave);
     var mid = (reach + BEACH_W) * 0.5;
-    var amp = (BEACH_W - reach) * 0.46;
+    var amp = (BEACH_W - reach) * 0.24;
     return { mid: mid, amp: amp };
   }
 
@@ -1142,22 +1141,15 @@
   }
 
   function drawBeach() {
-    var iw;
-    var ih;
-    var destW;
-    var destH;
-    var span;
-    var t;
-    var x;
     if (!imageReady(beachImg)) return;
-    iw = beachImg.naturalWidth;
-    ih = beachImg.naturalHeight;
-    destH = cssH;
-    destW = Math.max(cssW * 1.12, destH * (iw / ih));
-    span = Math.max(1, WALL_X + 180);
-    t = clamp((cameraX + 180) / span, 0, 1);
-    x = -(destW - cssW) * t;
-    ctx.drawImage(beachImg, x, 0, destW, destH);
+    var iw = beachImg.naturalWidth;
+    var ih = beachImg.naturalHeight;
+    var width = Math.max(cssW * 1.15, cssH * iw / ih);
+    var travel = clamp((cameraX + 180) / (WALL_X + 180), 0, 1);
+    var x = -(width - cssW) * travel;
+    var split = Math.round(ih * .24);
+    ctx.drawImage(beachImg, 0, 0, iw, split, x, 0, width, sandTop + 1);
+    ctx.drawImage(beachImg, 0, split, iw, ih - split, x, sandTop, width, cssH - sandTop);
   }
 
   function drawCraft() {
@@ -1331,10 +1323,10 @@
       head = crestPose(wave);
       if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
       ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
-      ctx.lineWidth = Math.max(8, 34 * scale);
+      ctx.lineWidth = Math.max(4, 17 * scale);
       ctx.stroke();
       ctx.strokeStyle = 'rgba(248, 252, 252, 0.95)';
-      ctx.lineWidth = Math.max(2, 5 * scale);
+      ctx.lineWidth = Math.max(1.5, 4 * scale);
       ctx.stroke();
       if (!traceCrest(wave, head + 18, shape.mid + 4, shape.amp * 0.62)) continue;
       ctx.strokeStyle = 'rgba(232, 246, 246, 0.75)';
@@ -1494,8 +1486,15 @@
     s = destH / TRENT.h;
     face = player.facing < 0 ? -1 : 1;
     ctx.save();
+    var feetX = worldToX(player.x);
+    var feetY = worldToY(player.y);
+    var depth = 0.84 + 0.18 * clamp(player.y / BEACH_W, 0, 1);
+    ctx.fillStyle = 'rgba(33, 30, 26, 0.37)';
+    ctx.beginPath();
+    ctx.ellipse(feetX, feetY + 2, Math.max(8, destW * .21 * depth), Math.max(2.5, destH * .037), 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.translate(worldToX(player.x), worldToY(player.y));
-    ctx.scale(face, 1);
+    ctx.scale(face * depth, depth);
     ctx.drawImage(
       trentImg,
       index * TRENT.w, 0, TRENT.w, TRENT.h,

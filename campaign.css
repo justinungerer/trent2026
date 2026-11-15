@@ -192,6 +192,11 @@ body {
 #intro-video {
   object-fit: contain;
   pointer-events: none;
+  visibility: hidden;
+}
+
+#cinema.has-video #intro-video {
+  visibility: visible;
 }
 
 #cinema.has-video #intro-canvas {

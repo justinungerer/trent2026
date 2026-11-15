@@ -38,15 +38,15 @@
   var FR = window.CAMP_FRAMES;
 
   var KIND = {
-    light: { hp: 1, h: 0.9, speed: 168, wind: 0.3, reach: 64, cool: 0.7, jab: 0.82 },
-    mid: { hp: 2, h: 1.02, speed: 124, wind: 0.28, reach: 74, cool: 0.78, jab: 0.55 },
-    heavy: { hp: 3, h: 1.16, speed: 86, wind: 0.4, reach: 88, cool: 0.95, jab: 0.4 }
+    light: { hp: 2, h: 0.9, speed: 168, wind: 0.3, reach: 64, cool: 0.7, jab: 0.82 },
+    mid: { hp: 4, h: 1.02, speed: 124, wind: 0.28, reach: 74, cool: 0.78, jab: 0.55 },
+    heavy: { hp: 6, h: 1.16, speed: 86, wind: 0.4, reach: 88, cool: 0.95, jab: 0.4 }
   };
 
   var CLIP = {
     santa: {
       idle: { ms: 180, loop: true },
-      walk: { ms: 105, loop: true },
+      walk: { ms: 91, loop: true },
       punch: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
       upper: { ms: 120, hit: 2, dmg: 3, reach: 84, cool: 0.26 },
       hit: { ms: 140, hold: true },
@@ -79,14 +79,14 @@
   };
 
   var WAVE_PLAN = [
-    { at: 0.08, foes: [{ k: 'light', side: 'right' }] },
-    { at: 0.18, foes: [{ k: 'light', side: 'left' }, { k: 'light', side: 'right' }] },
-    { at: 0.3, foes: [{ k: 'mid', side: 'right' }] },
-    { at: 0.42, foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
-    { at: 0.55, foes: [{ k: 'heavy', side: 'right' }, { k: 'light', side: 'left' }] },
-    { at: 0.68, foes: [{ k: 'mid', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
-    { at: 0.8, foes: [{ k: 'heavy', side: 'left' }, { k: 'mid', side: 'right' }] },
-    { at: 0.92, foes: [{ k: 'heavy', side: 'right' }, { k: 'mid', side: 'left' }, { k: 'light', side: 'right' }] }
+    { at: 0.08, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
+    { at: 0.18, foes: [{ k: 'light', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'right' }] },
+    { at: 0.3, foes: [{ k: 'mid', side: 'right' }, { k: 'mid', side: 'left' }] },
+    { at: 0.42, foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'light', side: 'right' }] },
+    { at: 0.55, foes: [{ k: 'heavy', side: 'right' }, { k: 'light', side: 'left' }, { k: 'light', side: 'left' }] },
+    { at: 0.68, foes: [{ k: 'mid', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
+    { at: 0.8, foes: [{ k: 'heavy', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'light', side: 'left' }] },
+    { at: 0.92, foes: [{ k: 'heavy', side: 'right' }, { k: 'mid', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'right' }] }
   ];
 
   var PICK_PLAN = [
@@ -491,7 +491,7 @@
   }
 
   function spawnWave(wave) {
-    var slots = [0.3, 0.55, 0.78];
+    var slots = [0.24, 0.43, 0.63, 0.81];
     var i;
     var spec;
     var e;
@@ -501,7 +501,7 @@
       spec = wave.foes[i];
       e = {
         kind: spec.k,
-        x: spec.side === 'right' ? cam + VIEW_W + 36 : cam - 36,
+        x: spec.side === 'right' ? cam + VIEW_W + 36 + i * 38 : cam - 36 - i * 38,
         y: BAND_TOP + BAND_H * slots[i % slots.length],
         face: spec.side === 'right' ? -1 : 1,
         hp: KIND[spec.k].hp,

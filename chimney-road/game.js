@@ -54,6 +54,28 @@
     { x: 7200, y: 176, w: 460, name: 'The narrow cap', role: 'main' },
     { x: 7220, y: 26, w: 120, name: 'The short stack', role: 'end', cap: 'right' },
     { x: 7780, y: 236, w: 260, name: 'The last eave', role: 'main' },
+    { x: 285, y: 166, w: 152, name: 'The upper landing', role: 'end' },
+    { x: 430, y: 458, w: 235, name: 'The garden roof', role: 'end' },
+    { x: 870, y: 88, w: 192, name: 'The frozen dormer', role: 'end', cap: 'left' },
+    { x: 980, y: 490, w: 288, name: 'The coal shed', role: 'end' },
+    { x: 1300, y: 152, w: 198, name: 'The split gable', role: 'end' },
+    { x: 1930, y: 339, w: 226, name: 'The alley crossing', role: 'end' },
+    { x: 2055, y: 94, w: 190, name: 'The watch ledge', role: 'end' },
+    { x: 2670, y: 333, w: 245, name: 'The bakery eave', role: 'end' },
+    { x: 2740, y: -86, w: 184, name: 'The high ridge', role: 'end', cap: 'right' },
+    { x: 3100, y: 142, w: 188, name: 'The narrow junction', role: 'end' },
+    { x: 3710, y: 372, w: 205, name: 'The curving gutter', role: 'end' },
+    { x: 4000, y: 58, w: 217, name: 'The lantern walk', role: 'end' },
+    { x: 4250, y: 286, w: 267, name: 'The stable roofs', role: 'end' },
+    { x: 4820, y: -91, w: 221, name: 'The shuttered loft', role: 'end', cap: 'right' },
+    { x: 5015, y: 222, w: 229, name: 'The lower crossing', role: 'end' },
+    { x: 5360, y: -52, w: 193, name: 'The high passage', role: 'end' },
+    { x: 5840, y: 139, w: 233, name: 'The winter steps', role: 'end' },
+    { x: 5900, y: -116, w: 184, name: 'The frozen crown', role: 'end', cap: 'left' },
+    { x: 6700, y: 116, w: 279, name: 'The branch roof', role: 'end' },
+    { x: 6900, y: 375, w: 314, name: 'The snowbound annex', role: 'end' },
+    { x: 7550, y: 41, w: 214, name: 'The upper run', role: 'end' },
+    { x: 7685, y: 373, w: 230, name: 'The roof below the sleigh', role: 'end' },
     { x: 8160, y: 260, w: 420, name: 'The sleigh roof', role: 'main', goal: true }
   ];
   var GOAL = PLATFORMS.length - 1;
@@ -82,6 +104,20 @@
   trentImg.src = 'art/trent.webp';
   sleighImg.src = 'art/sleigh.webp';
   crateImg.src = 'art/crate.webp';
+  var rooftopArt = {};
+  ['chimney', 'roof-crate', 'snowball', 'icicle', 'lantern', 'smoke'].forEach(function (name) {
+    var image = new Image();
+    image.src = 'art/painted-' + name + '.webp';
+    rooftopArt[name] = image;
+  });
+
+  function paintedProp(name, x, y, width, height) {
+    var image = rooftopArt[name];
+    if (!imageReady(image)) return false;
+    ctx.drawImage(image, x, y, width, height);
+    return true;
+  }
+
 
   var state = 'title';
   var cssW = 844;
@@ -565,17 +601,22 @@
     var y;
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
-      if (roof.role !== 'end') continue;
+      if (!roof.cap) continue;
       x = capX(roof) - camX;
       y = roof.y - camY;
-      ctx.fillStyle = '#5c4034';
-      ctx.fillRect(x, y - 84, 42, 84);
+      var painted = paintedProp('chimney', x - 6, y - 108, 54, 108);
+      if (!painted) {
+        ctx.fillStyle = '#5c4034';
+        ctx.fillRect(x, y - 84, 42, 84);
+      }
       ctx.fillStyle = '#b28c5c';
       for (var rung = 18; rung <= 72; rung += 18) ctx.fillRect(x + 7, y - rung, 28, 4);
-      ctx.fillStyle = '#c5d0dc';
-      ctx.fillRect(x - 6, y - 94, 54, 12);
-      ctx.fillStyle = '#241c18';
-      ctx.fillRect(x + 10, y - 108, 22, 16);
+      if (!painted) {
+        ctx.fillStyle = '#c5d0dc';
+        ctx.fillRect(x - 6, y - 94, 54, 12);
+        ctx.fillStyle = '#241c18';
+        ctx.fillRect(x + 10, y - 108, 22, 16);
+      }
     }
   }
 
@@ -584,6 +625,7 @@
       var x = obstacle.x - camX;
       var y = obstacle.y - camY;
       if (x > VIEW_W + 50 || x + obstacle.w < -50) return;
+      if (paintedProp('roof-crate', x - 2, y - 3, obstacle.w + 4, obstacle.h + 3)) return;
       ctx.fillStyle = '#614838';
       ctx.fillRect(x, y, obstacle.w, obstacle.h);
       ctx.fillStyle = '#a37c58';
@@ -607,6 +649,7 @@
     ctx.beginPath();
     ctx.ellipse(x, ball.roofY - camY + 2, ball.r * 0.85, 5, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (paintedProp('snowball', x - ball.r, y - ball.r, ball.r * 2, ball.r * 2)) return;
     ctx.fillStyle = '#f4f7fb';
     ctx.beginPath();
     ctx.arc(x, y, ball.r, 0, Math.PI * 2);
@@ -627,6 +670,7 @@
       ctx.ellipse(ice.x - camX, ice.roofY - camY + 2, 18, 4, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    if (paintedProp('icicle', x - 13, hang, 26, tip - hang)) return;
     ctx.fillStyle = ice.mode === 'warn' ? '#d7ecf6' : '#e7f3f8';
     ctx.beginPath();
     ctx.moveTo(x - 12, hang);
@@ -646,6 +690,7 @@
     ctx.moveTo(bob.px - camX, bob.py - camY);
     ctx.lineTo(bob.x - camX, bob.y - camY);
     ctx.stroke();
+    if (paintedProp('lantern', bob.x - camX - 15, bob.y - camY - 17, 30, 39)) return;
     ctx.fillStyle = '#f0d7a8';
     ctx.beginPath();
     ctx.arc(bob.x - camX, bob.y - camY, bob.r, 0, Math.PI * 2);
@@ -664,15 +709,53 @@
       p = list[i];
       x = p.x - camX;
       y = p.y - camY;
-      ctx.fillStyle = '#6a5348';
-      ctx.fillRect(x - 16, y - 28, 32, 28);
-      ctx.fillStyle = '#d5dde6';
-      ctx.fillRect(x - 20, y - 34, 40, 8);
+      if (!paintedProp('chimney', x - 20, y - 36, 40, 36)) {
+        ctx.fillStyle = '#6a5348';
+        ctx.fillRect(x - 16, y - 28, 32, 28);
+        ctx.fillStyle = '#d5dde6';
+        ctx.fillRect(x - 20, y - 34, 40, 8);
+      }
       if (p.h < 8) continue;
+      ctx.globalAlpha = p.danger ? .86 : .54;
+      var paintedSmoke = paintedProp('smoke', x - 35, y - 36 - p.h, 70, p.h + 15);
+      ctx.globalAlpha = 1;
+      if (paintedSmoke) continue;
       ctx.fillStyle = p.danger ? 'rgba(206, 214, 222, 0.72)' : 'rgba(206, 214, 222, 0.4)';
       ctx.beginPath();
       ctx.ellipse(x, y - 36 - p.h * 0.45, p.danger ? 30 : 14, Math.max(12, p.h * 0.45), 0, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  function drawLedgeCues() {
+    var above = null;
+    var below = null;
+    PLATFORMS.forEach(function (roof) {
+      var dx = Math.max(roof.x - body.x, body.x - (roof.x + roof.w), 0);
+      if (dx > 235) return;
+      var screenY = roof.y - camY;
+      if (screenY < 22 && (!above || roof.y > above.y)) above = roof;
+      if (screenY > VIEW_H - 25 && (!below || roof.y < below.y)) below = roof;
+    });
+    cue(above, 29, -1);
+    cue(below, VIEW_H - 27, 1);
+
+    function cue(roof, y, dir) {
+      if (!roof) return;
+      var x = clamp(roof.x + roof.w / 2 - camX, 120, VIEW_W - 120);
+      ctx.fillStyle = '#102b3c';
+      ctx.beginPath();
+      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd280';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y - dir * 8);
+      ctx.lineTo(x, y + dir * 7);
+      ctx.moveTo(x - 6, y + dir);
+      ctx.lineTo(x, y + dir * 7);
+      ctx.lineTo(x + 6, y + dir);
+      ctx.stroke();
     }
   }
 
@@ -741,6 +824,7 @@
     drawPuffs();
     drawSleigh();
     drawTrent();
+    drawLedgeCues();
     drawSnow();
   }
 

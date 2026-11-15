@@ -2,7 +2,7 @@ var CAMP_FRAMES = {
   yardHorizon: 0.3903,
   santa: { w: 442, h: 476, ax: 184, ay: 464,
     idle: { src: "art/brawl-santa-idle.webp", n: 3 },
-    walk: { src: "art/brawl-santa-walk.webp", n: 4 },
+    walk: { src: "art/brawl-santa-walk-painted.webp", n: 6 },
     punch: { src: "art/brawl-santa-punch.webp", n: 4 },
     upper: { src: "art/brawl-santa-upper.webp", n: 4 },
     hit: { src: "art/brawl-santa-hit.webp", n: 2 },
