@@ -1092,7 +1092,8 @@ function showPin(chapter) {
   code.textContent = password;
   code.setAttribute('aria-label', 'Continue code ' + password);
   copy.className = 'lead';
-  copy.textContent = 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films. ' +
+  copy.textContent = (nextId ? 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films. ' :
+    'This completion password opens every chapter and film. ') +
     'Trent, write it down. If you forget it, you’ll have to replay ' + chapter.title + ' to get back here.';
   home.type = 'button';
   home.className = 'secondary';
