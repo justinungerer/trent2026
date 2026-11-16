@@ -40,7 +40,7 @@
     { kicker: 'Caught', title: 'Switch left open', copy: 'A lever is left between left and right. The yardmaster declares Trent the lever until someone fetches a label.' },
     { kicker: 'Caught', title: 'Aerial three', copy: 'The radio aerials require a person to stand underneath and think helpful thoughts. Trent’s thoughts are late.' },
     { kicker: 'Caught', title: 'Mail hatch', copy: 'The mail hatch accepts parcels and, after a meeting, also accepts Trent, who is now outbound.' },
-    { kicker: 'Caught', title: 'Penguin decoy', copy: 'A wind-up penguin draws the inspectors. They follow it to Trent, who was not the distraction he hoped.' },
+    { kicker: 'Caught', title: 'Separated in the yard', copy: 'Mac sends an inspector running, but a second patrol circles the wagons and spots Trent.' },
     { kicker: 'Caught', title: 'Seawall queue', copy: 'The seawall has a queue for people who arrived without a biscuit permit. Trent is issued a number and a long view of the sand.' },
     { kicker: 'Caught', title: 'Dial stuck', copy: 'The field radio locks onto the canteen. The canteen locks onto Trent and asks him to carve.' },
     { kicker: 'Caught', title: 'Bow on the beat', copy: 'The belt does not forgive a late bow. It ties one on Trent and sends him down the line as a finished product.' },

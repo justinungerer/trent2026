@@ -24,8 +24,8 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 .card button{width:100%;background:#efbd52}
 #pad{position:relative;flex:none;width:132px;height:132px;border-radius:50%;border:2px solid var(--ink);background:#151a28b8;box-shadow:inset 0 0 0 10px #151a2855;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:50%;background:var(--mint);border:2px solid #1e2330;box-shadow:3px 3px 0 var(--ink);transform:translate(-50%,-50%);pointer-events:none}
-#decoy{position:relative;flex:none;align-self:flex-end;height:64px;min-width:108px;min-height:64px;margin:0 0 8px;padding:0 16px;background:#efbd52;white-space:nowrap}
-#decoy:disabled{opacity:.45;box-shadow:none}
+#send-mac{position:relative;flex:none;align-self:flex-end;height:64px;min-width:108px;min-height:64px;margin:0 0 8px;padding:0 16px;background:#efbd52;white-space:nowrap}
+#send-mac:disabled{opacity:.45;box-shadow:none}
 [hidden]{display:none!important}
 @media (orientation: landscape){
   main{width:100%}
@@ -41,9 +41,9 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 <div class="stage"><canvas aria-label="Overhead rail yard"></canvas></div>
 <div class="thumbs">
 <div class="pad" id="pad" role="application" aria-label="Move pad"><div id="knob"></div></div>
-<button id="decoy" type="button">DECOY · 3</button>
+<button id="send-mac" type="button">SEND MAC · 2</button>
 </div>
-<div class="panel" id="panel"><div class="card"><small>NORTH POLE FIELD DISPATCH</small><h1 id="title">Special delivery</h1><p id="copy">Buddy hid three dispatches in the freight yard. Find them and reach the mail hatch. Guards are slower than you (0.75×). They only chase if you step into their light cone or a spotlight. Mines restart the run. Three heart pickups each restore one lost life.</p><p id="help">Use the left thumb pad to walk. Tap Decoy with your right thumb.</p><button id="start" type="button">Enter the freight yard</button></div></div>
+<div class="panel" id="panel"><div class="card"><small>NORTH POLE FIELD DISPATCH</small><h1 id="title">Special delivery</h1><p id="copy">Buddy hid three dispatches in the freight yard. Find them and reach the mail hatch. Guards pursue you when they see you. Mines restart the run. Heart pickups restore one life each.</p><p id="help">Use the left thumb pad to walk. Tap Send Mac to send Trent’s bulldog after the guards. They’ll run from him. You can send him twice per level.</p><button id="start" type="button">Enter the freight yard</button></div></div>
 </main>
 <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="./game.js?v=level-previews"></script><script src="../level-retry.js"></script><script src="../game-audio.js?v=rotation3"></script></body></html>
+<script src="../mission-bonus.js?v=film2"></script><script src="./game.js?v=send-mac"></script><script src="../level-retry.js"></script><script src="../game-audio.js?v=rotation3"></script></body></html>

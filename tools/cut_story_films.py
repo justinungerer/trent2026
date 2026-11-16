@@ -12,6 +12,7 @@ FPS = 24
 SECOND_SHOT_WORDS = 16
 # Numbers refer to new art. Letters refer to earlier production plates.
 PLATES = {
+    "cast": [["1"], ["2"], ["3"]],
     "opening": [
         [
             "1"
@@ -121,7 +122,7 @@ PLATES = {
     ],
     "yard": [
         [
-            "1"
+            "5"
         ],
         [
             "2"
@@ -276,10 +277,11 @@ def read_films():
     const fs = require('node:fs'), vm = require('node:vm');
     const source = fs.readFileSync(process.argv[1], 'utf8');
     const filmData = source.slice(source.indexOf('var OPENING_FILM = '), source.indexOf('var PIN_TO_ID = '));
-    console.log(JSON.stringify(vm.runInNewContext(filmData + '({opening:OPENING_FILM, chapters:CHAPTERS})')));
+    console.log(JSON.stringify(vm.runInNewContext(filmData + '({opening:OPENING_FILM, cast:CAST_FILM, chapters:CHAPTERS})')));
     """
     data = json.loads(subprocess.check_output(["node", "-e", extract, str(ROOT / "campaign.js")]))
-    return {"opening": data["opening"], **{chapter["id"]: chapter for chapter in data["chapters"]}}
+    return {"opening": data["opening"], "cast": data["cast"],
+            **{chapter["id"]: chapter for chapter in data["chapters"]}}
 
 
 def plate(film, key):
@@ -311,29 +313,36 @@ def build_shots(film, data):
 def render_shot(image, caption, frames, output, index):
     zoom = f"1.032+0.082*on/{frames-1}"
     drift = f"0.46+0.07*on/{frames-1}" if index % 2 else f"0.54-0.07*on/{frames-1}"
-    filters = (
+    picture = (
         "[0:v]scale=1440:2560:force_original_aspect_ratio=increase,crop=1440:2560,"
         f"zoompan=z='{zoom}':x='(iw-iw/zoom)*({drift})':y='(ih-ih/zoom)*0.48':"
-        f"d={frames}:s=720x1280:fps={FPS}[picture];"
-        "[picture][1:v]overlay=x=(W-w)/2:y='min(0.81*H-h/2,0.95*H-h)',format=yuv420p"
+        f"d={frames}:s=720x1280:fps={FPS}"
     )
+    filters = picture + ("[picture];[picture][1:v]overlay=x=(W-w)/2:y='min(0.81*H-h/2,0.95*H-h)'"
+                         if caption else "") + ",format=yuv420p"
+    inputs = ["-i", str(caption)] if caption else []
     subprocess.run([
-        "ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", str(image), "-i", str(caption),
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", str(image), *inputs,
         "-filter_complex_threads", "1", "-filter_complex", filters, "-frames:v", str(frames),
         "-an", "-c:v", "libx264", "-threads", "2", "-preset", "ultrafast", "-crf", "20",
         str(output),
     ], check=True)
 
 
-def render_film(film, data, output, font):
+def render_film(film, data, output, font, blender=None):
     shots = list(build_shots(film, data))
     assert all(image.is_file() for _, image, _ in shots), (film, [str(image) for _, image, _ in shots])
     with TemporaryDirectory(dir=output) as folder:
         scratch = Path(folder)
+        if blender:
+            render_blender(shots, scratch, output / f"{film}.mp4", font, blender)
+            print(f"{film}: {data['filmSeconds']} seconds, {len(shots)} Blender shots", flush=True)
+            return
         names = []
         for index, (text, image, frames) in enumerate(shots):
-            title = scratch / "caption.png"
-            make_caption(text, 720, font).save(title)
+            title = scratch / "caption.png" if text else None
+            if title:
+                make_caption(text, 720, font).save(title)
             name = f"shot-{index}.mp4"
             render_shot(image, title, frames, scratch / name, index)
             names.append(name)
@@ -347,17 +356,43 @@ def render_film(film, data, output, font):
     print(f"{film}: {data['filmSeconds']} seconds, {len(shots)} shots", flush=True)
 
 
+def render_blender(shots, scratch, output, font, blender):
+    raw = scratch / "story.mp4"
+    manifest = {"fps": FPS, "output": str(raw), "shots": []}
+    for index, (text, image, frames) in enumerate(shots):
+        caption = scratch / f"caption-{index}.png" if text else None
+        if caption:
+            make_caption(text, 720, font).save(caption)
+        manifest["shots"].append({
+            "image": str(image), "caption": str(caption) if caption else None, "frames": frames,
+        })
+    job = scratch / "blender-story.json"
+    job.write_text(json.dumps(manifest), encoding="utf-8")
+    result = subprocess.run([
+        str(blender), "-b", "-t", "4", "--factory-startup", "--python-exit-code", "1",
+        "--python", str(Path(__file__).with_name("blender_story_sequence.py")), "--", str(job),
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if result.returncode:
+        raise RuntimeError(result.stdout)
+    subprocess.run([
+        "ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(raw),
+        "-c", "copy", "-movflags", "+faststart", str(output),
+    ], check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--font", type=Path, required=True)
     parser.add_argument("--levels", action="store_true", help="Render minigame level films")
+    parser.add_argument("--blender", type=Path, help="Assemble the film in Blender's video sequencer")
     parser.add_argument("film", nargs="*")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     films = read_level_films() if args.levels else read_films()
     for film in args.film or films:
-        render_film(film, films[film], args.output.resolve(), args.font)
+        render_film(film, films[film], args.output.resolve(), args.font,
+                    args.blender.resolve() if args.blender else None)
 
 
 def read_level_films():

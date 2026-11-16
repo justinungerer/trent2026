@@ -3,7 +3,12 @@ const canvas=document.querySelector('canvas');
 const ctx=canvas.getContext('2d');
 const pad=document.getElementById('pad');
 const knob=document.getElementById('knob');
-const ui=Object.fromEntries(['status','panel','title','copy','start','pause','decoy'].map(id=>[id,document.getElementById(id)]));
+const ui=Object.fromEntries(['status','panel','title','copy','start','pause','send-mac'].map(id=>[id,document.getElementById(id)]));
+const macButton=ui['send-mac'];
+const MAC_USES=2;
+const MAC_SECONDS=6+(window.TrentMissionBonus||0)*0.75;
+const MAC_SPEED=205;
+const FLEE_RANGE=145;
 const stage=new URLSearchParams(location.search).get('stage');
 const freight=stage==='freight-gate';
 const stable=stage==='the-stable-escape';
@@ -61,7 +66,7 @@ const mineReach=26;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
 const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch',
- 'painted-heart','painted-penguin'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
+ 'painted-heart','painted-mac'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
  const image=new Image();
  const file=name==='yard'?(stable?'stable-yard':freight?'inspection-yard':name):name;
  image.src='./art/'+file+'.webp';return [name,image];
@@ -89,14 +94,14 @@ function reset(notice){
   }),
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
   hearts:hearts.map(p=>({...p,taken:false})),
-  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,charges:3+(window.TrentMissionBonus||0),toy:null,time:0,alarm:0,flash:notice?0.45:0,
+  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,macUses:MAC_USES,mac:null,time:0,alarm:0,flash:notice?0.45:0,
   notice:notice||goal,noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
 }
 function sync(){
  ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/'+caches.length;
- ui.decoy.textContent='DECOY · '+run.charges;
- ui.decoy.disabled=mode!=='play'||run.charges===0;
+ macButton.textContent='SEND MAC · '+run.macUses;
+ macButton.disabled=mode!=='play'||run.macUses===0||Boolean(run.mac);
 }
 function announce(message){run.notice=message;run.noticeUntil=run.time+3.5;}
 function show(next,title,copy,label){
@@ -150,20 +155,32 @@ function glide(actor,speed,dt){
  actor.y+=(actor.aim.y-actor.y)/d*step;
  return true;
 }
-function decoy(){
- if(mode!=='play'||!run.charges)return;
- const p=run.player,toy={x:p.x,y:p.y,until:run.time+5};
- for(let i=0;i<12;i++)walk(toy,p.dirX*9,p.dirY*9,7);
- run.toy=toy;run.charges--;announce('Wind-up penguin deployed');sync();
+function steer(actor,heading,speed,dt,bodyRadius){
+ const step=speed*dt;
+ for(const offset of [0,.55,-.55,1.05,-1.05,1.55,-1.55,2.1,-2.1]){
+  const angle=heading+offset,dx=Math.cos(angle),dy=Math.sin(angle);
+  if(blocked(actor.x+dx*Math.max(step,13),actor.y+dy*Math.max(step,13),bodyRadius))continue;
+  actor.angle=angle;
+  walk(actor,dx*step,dy*step,bodyRadius);
+  return;
+ }
 }
-ui.decoy.onclick=decoy;
+function sendMac(){
+ if(mode!=='play'||!run.macUses||run.mac)return;
+ const p=run.player;
+ run.mac={x:p.x,y:p.y,angle:Math.atan2(p.dirY,p.dirX),until:run.time+MAC_SECONDS};
+ run.macUses--;
+ announce('Mac is after the guards.');
+ sync();
+}
+macButton.onclick=sendMac;
 const movement=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 window.addEventListener('keydown',event=>{
  const key=event.key.toLowerCase();
  if(key==='escape'&&!event.repeat){if(mode==='paused')ui.start.click();else pause();return;}
  if(mode!=='play')return;
  if(movement.includes(key)){event.preventDefault();keys.add(key);}
- if(event.code==='Space'&&!event.repeat){event.preventDefault();decoy();}
+ if(event.code==='Space'&&!event.repeat){event.preventDefault();sendMac();}
 });
 window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));
 window.addEventListener('blur',pause);
@@ -194,7 +211,7 @@ for(const name of ['pointerup','pointercancel','lostpointercapture']){
 }
 function alertHalf(){
  const quota=Math.round(run.guards.length/2);
- const idle=run.guards.filter(guard=>!guard.chase).sort((a,b)=>distance(a,run.player)-distance(b,run.player));
+ const idle=run.guards.filter(guard=>!guard.chase&&!guard.fleeing).sort((a,b)=>distance(a,run.player)-distance(b,run.player));
  idle.slice(0,quota).forEach(guard=>{guard.angle=Math.atan2(run.player.y-guard.y,run.player.x-guard.x);});
  if(idle.length)announce('Spotlight. Half the yard is looking');
 }
@@ -227,14 +244,24 @@ function update(dt){
   return;
  }
  run.prints=run.prints.filter(print=>print.until>run.time);
- if(run.toy&&run.toy.until<=run.time)run.toy=null;
+ if(run.mac&&run.mac.until<=run.time){
+  run.mac=null;
+  sync();
+ }
+ if(run.mac){
+  const mac=run.mac;
+  const closest=run.guards.reduce((best,guard)=>{
+   const score=distance(mac,guard)+(lineBlocked(mac,guard)?170:0);
+   return score<best.score?{guard,score}:best;
+  },{guard:null,score:Infinity}).guard;
+  if(closest&&distance(mac,closest)>24)steer(mac,Math.atan2(closest.y-mac.y,closest.x-mac.x),MAC_SPEED,dt,11);
+ }
  let spotted=false;
  for(const guard of run.guards){
-  const distracted=run.toy&&distance(guard,run.toy)<240;
-  if(distracted){
+  guard.fleeing=Boolean(run.mac&&distance(guard,run.mac)<FLEE_RANGE&&!lineBlocked(guard,run.mac));
+  if(guard.fleeing){
    guard.chase=false;
-   guard.aim=run.toy;
-   along(guard,96,dt,12);
+   steer(guard,Math.atan2(guard.y-run.mac.y,guard.x-run.mac.x),155,dt,12);
   }else if(sees(guard,p)){
    if(!guard.chase)spotted=true;
    guard.chase=true;
@@ -246,7 +273,7 @@ function update(dt){
    guard.aim={x,y};
    if(!along(guard,69,dt,12))guard.index=(guard.index+1)%guard.route.length;
   }
-  if(distance(guard,p)<29&&p.shield<=run.time){
+  if(!guard.fleeing&&distance(guard,p)<29&&p.shield<=run.time){
    p.hull--;p.shield=run.time+1.8;announce('Inspector citation!');sync();
    if(!p.hull){show('lost','Return to sender','The inspectors impounded Trent for unauthorized festivity.','Try again');return;}
   }
@@ -403,19 +430,17 @@ function render(){
   if(!sprite('mail',item.x,item.y+lift,36,29)){ctx.fillStyle='#96feda';ctx.fillRect(item.x-15,item.y-10,30,20);}
   if(stable||freight)label(freight?'CHECKPOINT':item===run.mail[0]?'RUDOLPH’S STALL':'GATE KEY',item.x,item.y-24);
  }
- if(run.toy){
-  glow(run.toy.x,run.toy.y,45,'#ffb96c96');
-  label('♫',run.toy.x,run.toy.y-17);
-  if(!sprite('painted-penguin',run.toy.x,run.toy.y,31,39)){
-   ctx.fillStyle='#2b3447';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y,10,15,0,0,7);ctx.fill();
-   ctx.fillStyle='#ffe8bf';ctx.beginPath();ctx.ellipse(run.toy.x,run.toy.y+3,6,9,0,0,7);ctx.fill();
-  }
+ if(run.mac){
+  const mac=run.mac;
+  const bob=reducedMotion.matches?0:Math.abs(Math.sin(run.time*21))*2.5;
+  ctx.fillStyle='#13192770';ctx.beginPath();ctx.ellipse(mac.x,mac.y+7,20,7,0,0,7);ctx.fill();
+  if(!sprite('painted-mac',mac.x,mac.y-13-bob,61,43,Math.cos(mac.angle)<0))label('MAC',mac.x,mac.y-12);
  }
  for(const print of run.prints){
   ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';
   ctx.beginPath();ctx.ellipse(print.x,print.y,5,2.8,print.angle,0,7);ctx.fill();
  }
- for(const g of run.guards)drawVision(g);
+ for(const g of run.guards)if(!g.fleeing)drawVision(g);
  for(const g of run.guards){
   const bob=reducedMotion.matches?0:Math.sin(run.time*12+g.x*.03)*1.4;
   const lamp=lampPoint(g);

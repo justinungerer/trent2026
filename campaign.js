@@ -6,6 +6,7 @@
    in trivia.js. Chapter 6 then launches Ribbonfall with the score mapped in quiz.js. */
 
 var PIN_KEY = 'trent-campaign-pin';
+var FILM_VERSION = 'trent-portrait-mac';
 var campaignRoot = document.getElementById('app');
 var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
@@ -26,6 +27,7 @@ var openingVideo = null;
 var CREDITS = ['Designer', 'Producer', 'Developer', 'Tester', 'Marketing', 'Music'];
 
 var OPENING_FILM = {
+  "id": "opening",
   "filmSeconds": 34,
   "captionFrames": [
     0,
@@ -36,12 +38,23 @@ var OPENING_FILM = {
     633
   ],
   "lines": [
-    "Later that year…",
+    "",
     "Hitler orders Santa’s capture, hoping to demoralize the American troops.",
     "The Nazis capture Santa and lock him in a concentration camp, where he waits his turn in the gas chamber.",
     "Behind locked gates, the guards beat and torture Santa each day.",
     "In early December, the Allies pick up the first report. A rescue is still possible.",
     "The Allies pin their hopes on decorated war hero Trent Ungerer and a little-known spy named Buddy."
+  ]
+};
+
+var CAST_FILM = {
+  "id": "cast",
+  "filmSeconds": 15,
+  "captionFrames": [0, 120, 240],
+  "lines": [
+    "Starring Trent Ungerer as the Allied war hero",
+    "A cameo by Mac, Trent’s faithful guardian",
+    "Introducing Buddy, the notorious Elf on the Shelf"
   ]
 };
 
@@ -169,11 +182,11 @@ var CHAPTERS = [
     number: 4,
     title: 'Special Delivery',
     kicker: 'Chapter 4',
-    line: 'The freight yard is the rest of the race to stop the enemy turning Rudolph into hamburgers. Trent avoids the inspectors, uses a wind-up penguin when a patrol gets close, and takes the dispatches. They mark the depot where Buddy, the elf on the shelf, is held.',
+    line: 'Trent and his bulldog Mac slip into the freight yard to find Rudolph and Buddy. While Mac sends the inspectors running, Trent takes the dispatches that identify Buddy’s depot.',
     filmSeconds: 30,
     captionFrames: [0, 146, 255, 419, 501, 583],
     lines: [
-      "Night settles over the freight yard, and the lamps cast long shadows between the wagons.",
+      "Trent keeps his bulldog Mac close as they slip past the freight wagons.",
       "Trent finds a dispatch pouch beneath a pile of freight ledgers.",
       "Inside is the order that put Rudolph in danger, along with the address of a guarded depot.",
       "Trent sneaks into the stables and frees Rudolph.",
@@ -629,7 +642,7 @@ function showStart() {
     var pin = normalizePin(input.value);
     event.preventDefault();
     if (!pin) {
-      showLogo();
+      showOpeningFilm(showLogo, CAST_FILM);
       return;
     }
     if (pin === TEST_PIN) {
@@ -690,10 +703,7 @@ function showLogo() {
   creditWindow.tabIndex = 0;
   var reel = document.createElement('dl');
   reel.className = 'credit-reel';
-  var credits = [
-    ['Starring', 'Trent Ungerer as the Allied war hero'],
-    ['Introducing', 'Buddy, the notorious Elf on the Shelf']
-  ].concat(CREDITS.map(function (role) { return [role, 'Justin Ungerer']; }));
+  var credits = CREDITS.map(function (role) { return [role, 'Justin Ungerer']; });
   credits.forEach(function (row) {
     var credit = document.createElement('div');
     var role = document.createElement('dt');
@@ -709,7 +719,8 @@ function showLogo() {
   title.focus({ preventScroll: true });
 }
 
-function showOpeningFilm(done) {
+function showOpeningFilm(done, film) {
+  film = film || OPENING_FILM;
   var generation = ++introToken;
   clearOpeningFilm();
   campaignRoot.hidden = false;
@@ -728,14 +739,14 @@ function showOpeningFilm(done) {
   }
 
   openingVideo = section.querySelector('video');
-  openingVideo.setAttribute('aria-label', OPENING_FILM.lines.join(' '));
-  openingVideo.src = './assets/opening.mp4?v=story-edit';
+  openingVideo.setAttribute('aria-label', film.lines.join(' ').trim());
+  openingVideo.src = './assets/' + film.id + '.mp4?v=' + FILM_VERSION;
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
   syncTurn();
   // Let the video complete naturally, with a fallback for stalled playback.
-  openingTimer = schedulePortraitStep(finishOpening, (OPENING_FILM.filmSeconds + 12) * 1000);
+  openingTimer = schedulePortraitStep(finishOpening, (film.filmSeconds + 12) * 1000);
 }
 
 function wantsLandscape() {
@@ -859,7 +870,7 @@ function drawFallbackIntroCaption(ctx, chapter, elapsed) {
   rows.forEach(function (line, i) { ctx.fillText(line, width / 2, top + (i + 0.5) * lineHeight); });
 }
 
-function prepareIntroVideo(chapter, getElapsed) {
+function prepareIntroVideo(chapter, getElapsed, resetClock) {
   var previous = document.getElementById('intro-video');
   var video = previous.cloneNode(false);
   previous.replaceWith(video);
@@ -893,8 +904,10 @@ function prepareIntroVideo(chapter, getElapsed) {
       video.pause();
       displayVideo(false);
     } else {
-      if (!video.hasAttribute('src')) video.src = chapter.videoPath ||
-        './assets/intro-video/' + chapter.id + '.mp4?v=current-film';
+      if (!video.hasAttribute('src')) {
+        var path = chapter.videoPath || './assets/intro-video/' + chapter.id + '.mp4';
+        video.src = path + '?v=' + FILM_VERSION;
+      }
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
           failed = true;
@@ -908,16 +921,23 @@ function prepareIntroVideo(chapter, getElapsed) {
   video.muted = true;
   video.onplaying = syncFrame;
   video.onseeked = showFrame;
+  video.onended = function () {
+    if (requested && introDone) introDone();
+  };
 
   video.onerror = function () {
     failed = true;
     displayVideo(false);
   };
-  document.addEventListener('visibilitychange', updateVideo);
+  function onVisibilityChange() {
+    resetClock();
+    updateVideo();
+  }
+  document.addEventListener('visibilitychange', onVisibilityChange);
   cleanupIntroVideo = function () {
     requested = false;
-    document.removeEventListener('visibilitychange', updateVideo);
-    video.onplaying = video.onseeked = video.onerror = null;
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    video.onplaying = video.onseeked = video.onended = video.onerror = null;
     video.pause();
     video.removeAttribute('src');
     video.load();
@@ -950,7 +970,9 @@ function playIntro(chapter, done) {
   cinema.hidden = false;
   campaignRoot.hidden = true;
   syncTurn();
-  updateVideo = prepareIntroVideo(chapter, function () { return elapsed; });
+  updateVideo = prepareIntroVideo(chapter, function () { return elapsed; }, function () {
+    last = performance.now();
+  });
   updateVideo();
   if (window.TrentMusic) window.TrentMusic.startIntro(chapter.id);
   introTitle.focus({ preventScroll: true });
@@ -968,7 +990,7 @@ function playIntro(chapter, done) {
       introRaf = requestAnimationFrame(tick);
       return;
     }
-    elapsed += Math.max(0, Math.min(80, now - last));
+    elapsed += Math.max(0, now - last);
     last = now;
     updateVideo();
     if (updateVideo.useFallback()) {
