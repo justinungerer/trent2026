@@ -117,6 +117,45 @@
 
   var state = 'title';
   var pausedState = 'play';
+  var expanded = !breach;
+  var hearts = [];
+  if (expanded) {
+    BEACH_W *= 3;
+    GOAL_X = START_X + 2 * (GOAL_X - START_X);
+    WALL_X = GOAL_X + 42;
+    TOTAL_METERS *= 2;
+    START_Y = 340;
+    document.getElementById('mine-instructions').textContent =
+      'Mines explode and cost one life. Painted hearts restore a life. Three stumbles send Trent back to the ramp.';
+    // Chevron routes alternate wide gaps near the sides and through the center.
+    obstacles = [];
+    for (var column = 0; column < (rally ? 9 : 16); column++) {
+      var gateX = START_X + 630 + column * 650;
+      var gapY = [140, 530, 280, 620, 390][column % 5];
+      obstacles.push(
+        { kind: 'wire', x: gateX, y: 0, w: 54, h: gapY },
+        { kind: 'wire', x: gateX, y: gapY + 160, w: 54, h: BEACH_W - gapY - 160 },
+        { kind: 'log', x: gateX + 170, y: gapY < 400 ? gapY + 245 : gapY - 165, w: 245, h: 42 },
+        { kind: 'hedgehog', x: gateX + 95, y: gapY + 20, r: 22 }
+      );
+      if (column % 2 === 0) {
+        mines.push({ x: gateX + 355, y: gapY + 18, r: 16 });
+        hearts.push({ x: gateX + 460, y: gapY + 110, r: 18 });
+      }
+      if (rally) packs.push({ x: gateX + 320, y: gapY + 103, r: 14 });
+    }
+    if (rally) {
+      dispatches = [{ x: 1940, y: 470 }, { x: 3890, y: 270 }, { x: 5970, y: 410 }];
+      document.getElementById('landing-goal').textContent =
+        'Recover all three sealed dispatches, then carry them to the shingle ridge.';
+    }
+    waves = [];
+    var placed = mines.slice();
+    packs.concat(hearts, dispatches).forEach(function (item) {
+      if (!placePickup(item, placed)) throw new Error('No open beach position for pickup');
+      placed.push(item);
+    });
+  }
   var player = { x: START_X, y: START_Y, stumbles: 0, step: 0, facing: 1 };
   var seaTime = 0;
   var visualTime = 0;
@@ -124,6 +163,9 @@
   var lean = 0;
   var shake = 0;
   var cameraX = 0;
+  var cameraY = 0;
+  var nextWave = 1.2;
+  var waveLane = 0;
   var cssW = 844;
   var cssH = 390;
   var dpr = 1;
@@ -202,6 +244,12 @@
   hedgehogImg.src = 'art/hedgehog.webp';
   wireImg.src = 'art/wire.webp';
   var mineImg = new Image();
+  var logImg = new Image();
+  var heartImg = new Image();
+  if (expanded) {
+    logImg.src = 'art/painted-log.webp';
+    heartImg.src = '../chapter-2/art/painted-heart.webp';
+  }
   var crateImg = new Image();
   var dispatchImg = new Image();
   var craterImg = new Image();
@@ -245,6 +293,9 @@
 
   function resetWorld() {
     dispatches.forEach(function (item) { item.taken = false; });
+    hearts.forEach(function (item) { item.taken = false; });
+    mines.forEach(function (mine) { mine.spent = false; });
+    if (expanded) { waves = []; nextWave = 1.2; waveLane = 0; cameraX = -180; cameraY = 0; }
     player.x = START_X;
     player.y = START_Y;
     player.stumbles = 0;
@@ -275,6 +326,7 @@
   }
 
   function crestPose(wave) {
+    if (expanded) return wave.x1 - (seaTime - wave.born) * SURF_SPEED;
     var run = wave.x1 - wave.x0 + 255;
     var age = Math.max(0, seaTime - wave.offset) % (run / SURF_SPEED + 1.05);
     return wave.x1 + 95 - age * SURF_SPEED;
@@ -285,6 +337,7 @@
   }
 
   function crestShape(wave) {
+    if (expanded) return { mid: wave.reach, amp: wave.amp };
     var reach = waveReach(wave);
     var mid = (reach + BEACH_W) * 0.5;
     var amp = (BEACH_W - reach) * 0.24;
@@ -311,7 +364,7 @@
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
       if (player.x < wave.x0 || player.x > wave.x1) continue;
-      if (player.y < waveReach(wave)) continue;
+      if (!expanded && player.y < waveReach(wave)) continue;
       shape = crestShape(wave);
       head = crestPose(wave);
       for (s = 0; s <= 12; s++) {
@@ -329,6 +382,7 @@
     var wave;
     if (surfHold < 0) return false;
     wave = waves[surfHold];
+    if (expanded) return crestTouchIndex() === surfHold;
     return player.x >= wave.x0 && player.x <= wave.x1 && player.y >= waveReach(wave);
   }
 
@@ -362,7 +416,7 @@
     var dx;
     var dy;
     var rad;
-    if (o.kind === 'wire') {
+    if (o.w !== undefined) {
       dx = x - clamp(x, o.x, o.x + o.w);
       dy = y - clamp(y, o.y, o.y + o.h);
       return dx * dx + dy * dy < RADIUS * RADIUS;
@@ -379,6 +433,27 @@
     if (y < RADIUS || y > BEACH_W - RADIUS) return true;
     for (i = 0; i < obstacles.length; i++) {
       if (hitsObstacle(obstacles[i], x, y)) return true;
+    }
+    return false;
+  }
+
+  function placePickup(item, occupied) {
+    var originX = item.x;
+    var originY = item.y;
+    for (var step = 0; step < 320; step++) {
+      var ring = step ? 30 * Math.ceil(step / 12) : 0;
+      var angle = step * Math.PI / 6;
+      var x = originX + ring * Math.cos(angle);
+      var y = originY + ring * Math.sin(angle);
+      if (x < MIN_X + 40 || x > GOAL_X - 45 || y < 44 || y > BEACH_W - 44) continue;
+      if (obstacles.some(function (ob) {
+        if (ob.w !== undefined) return Math.hypot(x - clamp(x, ob.x, ob.x + ob.w), y - clamp(y, ob.y, ob.y + ob.h)) < 52;
+        return Math.hypot(x - ob.x, y - ob.y) < ob.r + 52;
+      })) continue;
+      if (occupied.some(function (other) { return Math.hypot(x - other.x, y - other.y) < 86; })) continue;
+      item.x = x;
+      item.y = y;
+      return true;
     }
     return false;
   }
@@ -719,7 +794,8 @@
 
   function stopSoldier(s) {
     s.t = 0;
-    if (s.wrap) {
+    if (s.wrap && (!expanded || placePickup(s, mines.concat(packs, hearts, dispatches,
+      soldiers.filter(function (other) { return other !== s && other.mode === 'parcel'; }))))) {
       s.mode = 'parcel';
       return;
     }
@@ -1037,10 +1113,15 @@
     var dy;
     for (i = 0; i < mines.length; i++) {
       mine = mines[i];
+      if (mine.spent) continue;
       dx = player.x - mine.x;
       dy = player.y - mine.y;
       if (dx * dx + dy * dy > (mine.r + RADIUS) * (mine.r + RADIUS)) continue;
-      restartAtRamp();
+      if (!expanded) { restartAtRamp(); return true; }
+      mine.spent = true;
+      hazards.push({ kind: 'burst', x: mine.x, y: mine.y, r: 52, t: 0, life: .3, spent: true });
+      if (!reduceMotion()) shake = 12;
+      startStumble();
       return true;
     }
     for (i = soldiers.length - 1; i >= 0; i--) {
@@ -1067,6 +1148,7 @@
   }
 
   function updatePlay(dt) {
+    if (expanded) updateTravelingWave();
     var stick = controlVector();
     var beforeX = player.x;
     var beforeY = player.y;
@@ -1082,6 +1164,13 @@
     updateSurf(dt);
     if (!bracing && surfHold < 0) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
     if (updateMinesAndPacks()) return;
+    hearts.forEach(function (item) {
+      if (!item.taken && player.stumbles > 0 && Math.hypot(player.x - item.x, player.y - item.y) < 38) {
+        item.taken = true;
+        player.stumbles--;
+        say('Life recovered.');
+      }
+    });
     dispatches.forEach(function (item) {
       if (!item.taken && Math.hypot(player.x - item.x, player.y - item.y) < 36) {
         item.taken = true;
@@ -1117,6 +1206,21 @@
     else state = 'play';
   }
 
+  function updateTravelingWave() {
+    var wave = waves[0];
+    if (wave && crestPose(wave) + 130 < wave.x0) {
+      waves = [];
+      surfHold = -1;
+    }
+    if (waves.length || seaTime < nextWave) return;
+    var ys = [0.72, 0.27, 0.55, 0.38];
+    var reach = clamp(cameraY + (cssH * ys[waveLane % ys.length] - sandTop) / scale, 75, BEACH_W - 75);
+    waves = [{ x0: cameraX, x1: cameraX + cssW / scale + 25, born: seaTime,
+      reach: reach, amp: [94, 134, 112, 120][waveLane % 4], push: 360 }];
+    waveLane++;
+    nextWave = seaTime + cssW / scale / SURF_SPEED + 2;
+  }
+
   function braceNeeded() {
     var i;
     var wave;
@@ -1130,7 +1234,7 @@
     if (surfHold >= 0) return true;
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
-      if (player.y < waveReach(wave)) continue;
+      if (!expanded && player.y < waveReach(wave)) continue;
       if (player.x < wave.x0 - 20 || player.x > wave.x1 + 20) continue;
       shape = crestShape(wave);
       head = crestPose(wave);
@@ -1159,13 +1263,21 @@
   }
 
   function worldToX(x) { return (x - cameraX) * scale; }
-  function worldToY(y) { return sandTop + y * scale; }
+  function worldToY(y) { return sandTop + (y - cameraY) * scale; }
 
   function frameCamera() {
     var view = cssW / Math.max(scale, 0.001);
     var cam = player.x - view * 0.34;
     var minCam = -180;
     var maxCam = WALL_X + 220 - view;
+    if (expanded) {
+      cameraX = clamp(player.x - view * .75, minCam, Math.max(minCam, maxCam));
+      var screenY = worldToY(player.y);
+      if (screenY > cssH * .75) cameraY += (screenY - cssH * .75) / scale;
+      if (screenY < cssH * .25) cameraY -= (cssH * .25 - screenY) / scale;
+      cameraY = clamp(cameraY, 0, BEACH_W - (cssH - sandTop) / scale);
+      return;
+    }
     if (maxCam < minCam) cam = minCam;
     else cam = clamp(cam, minCam, maxCam);
     cameraX = cam;
@@ -1183,8 +1295,9 @@
     var travel = clamp((cameraX + 180) / (WALL_X + 180), 0, 1);
     var x = -(width - cssW) * travel;
     var split = Math.round(ih * .24);
-    ctx.drawImage(beachImg, 0, 0, iw, split, x, 0, width, sandTop + 1);
-    ctx.drawImage(beachImg, 0, split, iw, ih - split, x, sandTop, width, cssH - sandTop);
+    var top = worldToY(0);
+    if (top > 0) ctx.drawImage(beachImg, 0, 0, iw, split, x, 0, width, top + 1);
+    ctx.drawImage(beachImg, 0, split, iw, ih - split, x, top, width, expanded ? BEACH_W * scale : cssH - sandTop);
   }
 
   function drawCraft() {
@@ -1268,6 +1381,11 @@
     for (i = 0; i < obstacles.length; i++) {
       o = obstacles[i];
       if (o.kind === 'crater') continue;
+      if (o.kind === 'log') {
+        if (imageReady(logImg)) ctx.drawImage(logImg, worldToX(o.x), worldToY(o.y), o.w * scale, o.h * scale);
+        else { ctx.fillStyle = '#49382c'; ctx.fillRect(worldToX(o.x), worldToY(o.y), o.w * scale, o.h * scale); }
+        continue;
+      }
       alpha = obstacleAlpha(o.kind === 'wire' ? o.x + o.w / 2 : o.x, o.kind === 'wire' ? o.y + o.h / 2 : o.y);
       if (alpha < 0.04) continue;
       if (o.kind === 'wire') drawWire(o, alpha);
@@ -1284,7 +1402,8 @@
     h = sandH * 1.08;
     w = h * (wallImg.naturalWidth / wallImg.naturalHeight);
     x = worldToX(WALL_X) - w * 0.06;
-    y = sandTop + sandH - h + 12;
+    y = expanded ? worldToY(0) : sandTop + sandH - h + 12;
+    if (expanded) h = BEACH_W * scale;
     if (x > cssW + 40) return;
     ctx.drawImage(wallImg, x, y, w, h);
   }
@@ -1358,7 +1477,7 @@
       head = crestPose(wave);
       if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
       ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
-      ctx.lineWidth = Math.max(4, 17 * scale);
+      ctx.lineWidth = Math.max(4, (expanded ? 34 : 17) * scale);
       ctx.stroke();
       ctx.strokeStyle = 'rgba(248, 252, 252, 0.95)';
       ctx.lineWidth = Math.max(1.5, 4 * scale);
@@ -1434,6 +1553,7 @@
     var pack;
     for (i = 0; i < mines.length; i++) {
       mine = mines[i];
+      if (mine.spent) continue;
       if (!drawPainted(mineImg, mine.x, mine.y, 62)) drawCartoonMine(mine.x, mine.y);
     }
     for (i = 0; i < packs.length; i++) {
@@ -1448,6 +1568,9 @@
       ctx.textAlign = 'center';
       ctx.font = 'bold 13px system-ui';
       ctx.fillText('DISPATCH', worldToX(item.x), worldToY(item.y) - 34);
+    });
+    hearts.forEach(function (item) {
+      if (!item.taken) drawPainted(heartImg, item.x, item.y, 46);
     });
   }
 
@@ -1785,7 +1908,7 @@
     canvas.height = Math.round(cssH * dpr);
     sandTop = cssH * 0.27;
     sandH = cssH * 0.52;
-    scale = sandH / BEACH_W;
+    scale = sandH / (expanded ? 280 : BEACH_W);
   }
 
   function portraitWanted() {

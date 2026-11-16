@@ -32,19 +32,19 @@
   var TRACK_SPACING = 146;
   var HORIZON_Y = 102;
   var CART_Y = 322;
-  var BOMBER_COUNT = 23;
   var stage = new URLSearchParams(location.search).get('stage');
   var siding = stage === 'siding-signals';
   var loadingSpur = stage === 'the-loading-spur';
-  var loadingZone = { lane: 2, start: 2340, end: 2386 };
-  var markers = [{ lane: 0, x: 585, w: 5 }, { lane: 2, x: 1715, w: 5 }];
+  var BOMBER_COUNT = siding ? 16 : loadingSpur ? 36 : 26;
+  var FINISH = 1200;
+  var loadingZone = { lane: 2, start: FINISH - 32, end: FINISH };
+  var markers = [{ lane: 0, x: 305, w: 5 }, { lane: 2, x: 885, w: 5 }];
   var markersFound = 0;
-  var FINISH = loadingSpur ? 2394 : siding ? 2320 : 454;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
   var COAST = 1.15;
-  /* Full pump is SPEED_FLOOR * 40 = 18. The old full pump was 9. */
+  var MAX_SPEED = 27;
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
@@ -90,18 +90,21 @@
     document.getElementById('rail-objective').textContent = siding
       ? 'Pass over both lantern markers on their tracks before leaving the siding.'
       : 'Coast to a full stop inside the marked zone on the right track. Stop pumping when you see the approach lantern.';
-    PATTERN = PATTERN.flatMap(function (ob, i) {
-      return [0, 1, 2].map(function (part) {
-        return { kind: ob.kind, lane: (ob.lane + part + (siding ? 1 : 2)) % 3,
-          x: 800 * part + ob.x * 1.65 + (i % 3) * 2, w: ob.w };
-      });
-    }).filter(function (ob) {
-      return !siding || markers.every(function (marker) { return Math.abs(ob.x - marker.x) > 22; });
-    });
-    if (loadingSpur) PATTERN = PATTERN.filter(function (ob) { return ob.x < loadingZone.start - 110; });
-    sheds = siding ? [{ x: 585, w: 11, h: 7 }, { x: 1210, w: 15, h: 8 }, { x: 1715, w: 17, h: 7 }]
-      : [{ x: 770, w: 24, h: 11 }, { x: 1380, w: 25, h: 9 }, { x: 2290, w: 23, h: 10 }, { x: 2350, w: 20, h: 9 }];
   }
+  var route = PATTERN;
+  var sectors = siding ? 4 : loadingSpur ? 6 : 5;
+  var sectorSize = (loadingSpur ? 1090 : 1150) / sectors;
+  PATTERN = Array.from({ length: sectors }, function (_, sector) {
+    return route.filter(function (_, index) { return index % 5 !== sector % 5; }).map(function (ob) {
+      return { kind: ob.kind, lane: (ob.lane + sector) % 3,
+        x: 24 + sector * sectorSize + ob.x / 454 * (sectorSize - 16), w: ob.w };
+    });
+  }).flat().filter(function (ob) {
+    return !siding || markers.every(function (marker) { return Math.abs(ob.x - marker.x) > 11; });
+  });
+  sheds = siding ? [{ x: 305, w: 11, h: 7 }, { x: 600, w: 15, h: 8 }, { x: 885, w: 17, h: 7 }]
+    : loadingSpur ? [{ x: 390, w: 24, h: 11 }, { x: 700, w: 25, h: 9 }, { x: 1160, w: 23, h: 10 }]
+    : sheds.map(function (shed) { return { x: shed.x * 2.6, w: shed.w, h: shed.h }; });
 
   var flakes = buildFlakes();
 
@@ -146,10 +149,8 @@
   var safeLane = -1;
   var safeUntil = 0;
   var obstacles = makeObstacles();
-  var strike = null;
+  var bombs = [];
   var puffs = [];
-  var bombWait = 9;
-  var nextBombDist = 28;
   var hintDismissed = false;
   var visualTime = 0;
   var cssW = 844;
@@ -299,11 +300,9 @@
     safeLane = -1;
     safeUntil = 0;
     obstacles = makeObstacles();
-    strike = null;
+    bombs = [];
     puffs = [];
-    bombWait = 9;
-    nextBombDist = 28;
-    hintDismissed = false;
+        hintDismissed = false;
     dragging = false;
     dragAccum = 0;
     refreshTrackButtons();
@@ -366,7 +365,7 @@
     state = 'win';
     if (!loadingSpur) distance = FINISH;
     speed = 0;
-    strike = null;
+    bombs = [];
     dragging = false;
     winTimeEl.textContent = 'On the line for ' + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
@@ -500,7 +499,7 @@
     if (effort < 0.04) effort = 0;
     if (effort > 1) effort = 1;
     if (effort === 0) target = 0;
-    else target = SPEED_FLOOR * (1 + 39 * effort);
+    else target = SPEED_FLOOR + (MAX_SPEED - SPEED_FLOOR) * effort;
     rate = speed > target ? COAST : DECAY;
     speed += (target - speed) * (1 - Math.exp(-rate * dt));
     if (speed < 0.03 && target === 0) speed = 0;
@@ -544,70 +543,46 @@
     return -1;
   }
 
-  function spawnStrike() {
+  function dropBomb(jet) {
     var lane = occupiedLane();
     var w = 4.2;
-    var lead = 14 + speed * 1.35;
-    var maxLead = VIEW_DEPTH - 10;
-    var x;
-    if (lead < 12) lead = 12;
-    if (lead > maxLead) lead = maxLead;
-    x = placeGapX(lane, distance + lead, w);
-    if ((siding && markers.some(function (marker) { return Math.abs(x - marker.x) < 38; })) ||
-        (loadingSpur && x >= loadingZone.start - 78)) x = -1;
-    if (x < 0) {
-      bombWait = 4 + Math.random() * 2;
-      return;
-    }
-    strike = {
-      lane: lane,
-      x: x,
-      w: w,
-      planeX: VIEW_W + 96,
-      age: 0,
-      fall: -1
-    };
+    var lead = Math.min(VIEW_DEPTH - 32, 23 + speed);
+    var x = placeGapX(lane, distance + lead, w);
+    if ((siding && markers.some(function (marker) { return Math.abs(x - marker.x) < 23; })) ||
+        (loadingSpur && x >= loadingZone.start - 82)) x = -1;
+    bombs.push({ x: x < 0 ? distance + lead : x, lane: x < 0 ? 3.2 : lane,
+      w: w, fromX: jet.x, fromY: jet.y, fall: 0, damagesTrack: x >= 0 });
   }
 
   function updateBombs(dt) {
-    var i;
-    if (strike) {
-      strike.age += dt;
-      strike.planeX -= 340 * dt;
-      if (strike.fall < 0 && strike.age >= 0.42) strike.fall = 0;
-      if (strike.fall >= 0) {
-        strike.fall += dt;
-        if (strike.fall >= 0.62) {
-          obstacles.push({
-            kind: 'gap',
-            lane: strike.lane,
-            x: strike.x,
-            w: strike.w,
-            cleared: false
-          });
-          puffs.push({ x: strike.x + strike.w * 0.5, lane: strike.lane, t: 0 });
-          strike = null;
-          bombWait = (siding || loadingSpur ? 22 : 12) + Math.random() * 5;
-          nextBombDist = distance + 64;
-          if (!reduceMotion()) shake = Math.max(shake, 4);
-        }
+    for (var i = bombs.length - 1; i >= 0; i--) {
+      var bomb = bombs[i];
+      bomb.fall += dt;
+      if (bomb.fall < .92) continue;
+      if (bomb.damagesTrack && !stretchBlocked(bomb.lane, bomb.x, bomb.w) &&
+          [0, 1, 2].some(function (lane) { return lane !== bomb.lane && !stretchBlocked(lane, bomb.x, bomb.w); })) {
+        obstacles.push({ kind: 'gap', lane: bomb.lane, x: bomb.x, w: bomb.w, cleared: false });
       }
-    } else if (state === 'play' || state === 'slip') {
-      bombWait -= dt;
-      if (bombWait <= 0 && distance >= nextBombDist && distance < FINISH - 28) spawnStrike();
+      puffs.push({ x: bomb.x + bomb.w * .5, lane: bomb.lane, t: 0 });
+      bombs.splice(i, 1);
+      if (!reduceMotion()) shake = Math.max(shake, 4);
     }
-    for (i = puffs.length - 1; i >= 0; i--) {
-      puffs[i].t += dt;
-      if (puffs[i].t > 0.45) puffs.splice(i, 1);
-    }
+    puffs.forEach(function (puff) { puff.t += dt; });
+    puffs = puffs.filter(function (puff) { return puff.t <= .45; });
   }
 
   function updateFlyovers(dt) {
-    while (nextFlyover < BOMBER_COUNT && distance >= 12 + nextFlyover * (FINISH - 40) / (BOMBER_COUNT - 1)) {
+    while (nextFlyover < BOMBER_COUNT && distance >= 12 + nextFlyover * (FINISH - 114) / (BOMBER_COUNT - 1)) {
       flyovers.push({ x: VIEW_W + 55, y: 36 + (nextFlyover % 3) * 24, speed: 156 + (nextFlyover % 5) * 18 });
       nextFlyover += 1;
     }
-    flyovers.forEach(function (jet) { jet.x -= jet.speed * dt; });
+    flyovers.forEach(function (jet) {
+      jet.x -= jet.speed * dt;
+      if (!jet.dropped && jet.x <= VIEW_W - 96) {
+        jet.dropped = true;
+        dropBomb(jet);
+      }
+    });
     flyovers = flyovers.filter(function (jet) { return jet.x > -75; });
   }
 
@@ -650,23 +625,18 @@
   }
 
   function drawBombs() {
-    if (strike) {
-      if (strike.planeX > -150) drawPlaneAt(strike.planeX, 46);
-      if (inView(strike.x)) {
-        var target = project(strike.x + strike.w * 0.5, strike.lane);
-        ctx.fillStyle = 'rgba(236, 112, 53, 0.46)';
-        ctx.beginPath();
-        ctx.ellipse(target.x, target.y, 34 * target.scale, 9 * target.scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-        if (strike.fall >= 0) {
-          var u = clamp(strike.fall / 0.62, 0, 1);
-          ctx.fillStyle = '#25211f';
-          ctx.beginPath();
-          ctx.ellipse(target.x, 46 + (target.y - 46) * u * u, 4, 8, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
+    bombs.forEach(function (bomb) {
+      var target = project(bomb.x + bomb.w * .5, bomb.lane);
+      var u = clamp(bomb.fall / .92, 0, 1);
+      ctx.fillStyle = 'rgba(236, 112, 53, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(target.x, target.y, 34 * target.scale, 9 * target.scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#25211f';
+      ctx.beginPath();
+      ctx.ellipse(bomb.fromX + (target.x - bomb.fromX) * u, bomb.fromY + (target.y - bomb.fromY) * u * u, 4, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
     puffs.forEach(function (puff) {
       if (!inView(puff.x)) return;
       var point = project(puff.x, puff.lane);
@@ -1052,7 +1022,7 @@
         }
         ctx.restore();
       }
-      [loadingZone.start - 13, loadingZone.start, loadingZone.end].forEach(function (x) {
+      [loadingZone.start - 18, loadingZone.start, loadingZone.end].forEach(function (x) {
         drawTrackObstacle({ kind: 'lantern', lane: loadingZone.lane, x: x, w: 0 });
       });
     }

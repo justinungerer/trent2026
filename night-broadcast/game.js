@@ -1,14 +1,6 @@
-/* Chapter 1 — The Night Broadcast.
-   Five stations drift on the dial. Each signal marker moves at
-   MARKER_SPEED (4× the old 0.04 chase) and reverses on its own.
-   Stay inside a station's strong zone for STRONG_HOLD seconds and
-   a red band appears on that station. It stays hidden until then.
-   Hold Lock and keep the needle inside the red band until LOCK_TIME
-   fills. Lock works on every station. Only the field report
-   (id "santa") wins. The correct station is fixed, not rolled.
-   A lock on any other station shows "wrong station".
-   Painted sprites live in art/. The needle, meter, markers, and
-   bands are canvas overlays. No network. */
+/* Chapter 1 — The Night Broadcast. A strong signal reveals its red band.
+   Hold Lock in the band to record the requested stations in order before
+   the battery expires. Each stage has its own call signs and dial drift. */
 'use strict';
 
 (function () {
@@ -41,7 +33,11 @@
   /* Seconds of continuous strong signal before the red band is drawn. */
   var STRONG_HOLD = 1;
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
-  var LOCK_TIME = 3;
+  var LOCK_TIME = calibration ? 1.4 : confirmDispatch ? 3 : 2.1;
+  var BATTERY_SECONDS = 30;
+  var battery = document.getElementById('battery');
+  var batterySeconds = document.getElementById('battery-seconds');
+  var batterySheet = document.getElementById('battery-sheet');
   var DECAY = 1;
   /* Frequency units per second. The old chase drift was 0.04. */
   var MARKER_SPEED = 0.16;
@@ -50,8 +46,9 @@
   var TURN_HI = 3.5;
   var EDGE_LO = 0.1;
   var EDGE_HI = 0.9;
-  var STRONG_HALF = 0.08;
-  var RED_HALF = (0.045 + (window.TrentMissionBonus || 0) * 0.009) * 1.3;
+  var STRONG_HALF = calibration ? 0.105 : confirmDispatch ? 0.038 : 0.067;
+  var RED_HALF = Math.min(STRONG_HALF, (calibration ? .08 : confirmDispatch ? .025 : .047) +
+    (window.TrentMissionBonus || 0) * .004);
   var DRAG = 0.0008;
   var KEY_STEP = 0.008;
   var KEY_RATE = 0.26;
@@ -72,7 +69,6 @@
   radioImg.src = 'art/radio.webp';
   trentImg.src = 'art/trent.webp';
 
-  /* correct is only the field report. Chosen by id, every run. */
   var stations = [
     { id: 'canteen', name: 'Canteen', line: 'Canteen. Laughter and tin cups.', home: 0.16, homeDir: 1, speedScale: 1, correct: false },
     { id: 'weather', name: 'Weather', line: 'Weather. Snow overnight, roads quiet.', home: 0.34, homeDir: -1, speedScale: 0.9, correct: false },
@@ -84,19 +80,27 @@
     stations.splice(2, 1,
       { id: 'birch', name: 'Birch', line: 'Birch. Ready to authenticate.', home: 0.47, homeDir: 1, speedScale: 0.85 },
       { id: 'lantern', name: 'Lantern', line: 'Lantern. Dispatch acknowledged.', home: 0.6, homeDir: -1, speedScale: 1.0 });
+    stations.push(
+      { id: 'supply', name: 'Supply', line: 'Supply. Crates on the platform.', homeDir: 1, speedScale: 1 },
+      { id: 'harbor', name: 'Harbor', line: 'Harbor. Fog on the water.', homeDir: -1, speedScale: 1 },
+      { id: 'static', name: 'Relay', line: 'Relay. Nothing to report.', homeDir: 1, speedScale: 1 }
+    );
+  } else if (calibration) {
+    stations = stations.filter(function (station) { return ['canteen', 'weather', 'music'].includes(station.id); });
   }
+  stations.forEach(function (station, index) { station.home = .13 + index * .74 / (stations.length - 1); });
+  document.getElementById('radio-lock-instructions').textContent =
+    'Hold Lock in the red band for ' + LOCK_TIME + ' seconds. Drag the knob or use the arrows to track the station while locking.';
   if (calibration || confirmDispatch) {
     document.getElementById('radio-stage-title').textContent = calibration ? 'Find the Carrier' : 'Confirm the Dispatch';
     var instructions = document.getElementById('radio-stage-instructions');
     instructions.textContent = calibration
-      ? 'Tune Weather and Music box in order. Hold each strong signal until it registers.'
+      ? 'Lock Weather and Music Box in order. Follow each red band and hold Lock.'
       : 'Tune the call sign shown on the dispatch readout and lock it. A second call sign appears after the first lock.';
-    document.getElementById('standard-lock-instructions').hidden = calibration;
     document.getElementById('field-report-instructions').hidden = true;
     document.getElementById('radio-win-title').textContent = calibration ? 'Carrier calibrated' : 'Dispatch confirmed';
     document.getElementById('radio-win-copy').textContent = calibration
       ? 'Both calibration signals came through.' : 'Both Allied calls acknowledged the dispatch.';
-    lockBtn.hidden = calibration;
   }
 
   var state = 'title';
@@ -246,10 +250,8 @@
   }
 
   function hintText() {
-    if (calibration || confirmDispatch) {
-      return 'Target ' + (targetIndex + 1) + '/' + targets.length + ' · ' +
-        stationById(targets[targetIndex]).name + (bandId ? ' · Hold Lock' : '');
-    }
+    if (calibration || confirmDispatch) return 'Target ' + (targetIndex + 1) + '/' + targets.length + ' · ' +
+      stationById(targets[targetIndex]).name + (bandId ? ' · Hold Lock in red band' : '');
     if (bandId) return 'Hold Lock inside the red band';
     return 'Hold a strong signal for ' + STRONG_HOLD + ' second';
   }
@@ -310,9 +312,9 @@
       station = stations[i];
       station.center = station.home;
       station.dir = station.homeDir;
-      station.half = calibration ? STRONG_HALF * 1.35 : STRONG_HALF;
+      station.half = STRONG_HALF;
       station.redHalf = RED_HALF;
-      station.speed = MARKER_SPEED * station.speedScale * (calibration ? 0.5 : 1);
+      station.speed = MARKER_SPEED * station.speedScale * (calibration ? .16 : confirmDispatch ? .44 : .28);
       station.turnIn = nextTurn();
     }
   }
@@ -340,6 +342,8 @@
     startSheet.hidden = true;
     pauseSheet.hidden = true;
     winSheet.hidden = true;
+    batterySheet.hidden = true;
+    showBattery(BATTERY_SECONDS);
     hintEl.hidden = false;
     renderHud();
   }
@@ -425,7 +429,11 @@
         station.turnIn = nextTurn();
       }
       station.center += station.dir * station.speed * dt;
-      station.center = clamp(station.center, EDGE_LO, EDGE_HI);
+      var drift = calibration ? .025 : confirmDispatch ? .034 : .031;
+      var low = Math.max(EDGE_LO, station.home - drift);
+      var high = Math.min(EDGE_HI, station.home + drift);
+      if (station.center <= low || station.center >= high) station.dir = station.center <= low ? 1 : -1;
+      station.center = clamp(station.center, low, high);
     }
   }
 
@@ -468,11 +476,11 @@
     freq = clamp(freq, 0, 1);
     updateStations(dt * STATION_SPEED_SCALE);
     if (!bandId) {
+      next = strongestInside();
       charged = stationById(chargeId);
-      if (insideHalf(charged, freq, charged ? charged.half : 0)) {
+      if (next && charged === next) {
         strongT += dt;
       } else {
-        next = strongestInside();
         if (next) {
           chargeId = next.id;
           strongT = dt;
@@ -482,10 +490,6 @@
         }
       }
       if (strongT >= STRONG_HOLD) {
-        if (calibration) {
-          confirmStation(chargeId);
-          return;
-        }
         strongT = STRONG_HOLD;
         bandId = chargeId;
         lockT = 0;
@@ -778,13 +782,27 @@
     return Math.max(knobCenter().r + 22, 48 / view.s);
   }
 
+  function showBattery(seconds) {
+    battery.style.setProperty('--charge', (seconds / BATTERY_SECONDS * 100) + '%');
+    batterySeconds.textContent = Math.ceil(seconds) + 's';
+  }
+
   function loop(now) {
     var dt = (now - lastFrame) / 1000;
     lastFrame = now;
     if (dt < 0) dt = 0;
     if (dt > 0.05) dt = 0.05;
     if (!reduceMotion() && state !== 'pause') visualTime += dt;
-    if (state === 'play') updateTuning(dt);
+    if (state === 'play') {
+      var remaining = Math.max(0, BATTERY_SECONDS - (now - runStart - pauseAccum) / 1000);
+      showBattery(remaining);
+      if (remaining <= 0) {
+        state = 'battery-out';
+        lockHeld = false;
+        batterySheet.hidden = false;
+        say('Battery drained. Restart this stage.');
+      } else updateTuning(dt);
+    }
     renderHud();
     render();
     requestAnimationFrame(loop);
@@ -934,6 +952,7 @@
   document.getElementById('resume').addEventListener('click', closePause);
   document.getElementById('give-up').addEventListener('click', giveUp);
   document.getElementById('retry').addEventListener('click', beginRun);
+  document.getElementById('retry-lose').addEventListener('click', beginRun);
   pauseBtn.addEventListener('click', function () {
     if (state === 'play') openPause();
     else if (state === 'pause') closePause();

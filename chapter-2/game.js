@@ -38,7 +38,11 @@ const patrols=freight?[
  [[104,509],[104,240],[290,240],[290,416]],
  [[370,192],[950,192],[950,98],[370,98]],
  [[503,388],[913,388],[913,584],[503,584]],
- [[339,585],[931,585],[931,644],[339,644]]
+ [[339,585],[931,585],[931,644],[339,644]],
+ [[144,110],[306,110],[306,230],[144,230]],
+ [[656,230],[656,435],[778,435],[778,361]],
+ [[116,400],[209,400],[209,543],[116,543]],
+ [[866,357],[1008,357],[1008,494],[866,494]]
 ]:[
  [[108,150],[108,450],[380,450],[380,150]],
  [[660,140],[660,400],[1000,400],[1000,140]],
@@ -57,7 +61,8 @@ const beams=[
  {route:[[280,600],[860,600]],r:52,speed:90}
 ];
 const trentSpeed=178;
-const guardSpeedRatio=0.75;
+const guardPace=freight?.9:stable?1.15:1;
+const guardSpeedRatio=0.75*guardPace;
 const sightRange=200;
 const sightHalf=0.85*0.75;
 const sightDot=Math.cos(sightHalf);
@@ -168,7 +173,11 @@ function steer(actor,heading,speed,dt,bodyRadius){
 function sendMac(){
  if(mode!=='play'||!run.macUses||run.mac)return;
  const p=run.player;
- run.mac={x:p.x,y:p.y,angle:Math.atan2(p.dirY,p.dirX),until:run.time+MAC_SECONDS};
+ run.mac={x:p.x,y:p.y,angle:Math.atan2(p.dirY,p.dirX),until:run.time+MAC_SECONDS,
+  target:run.guards.reduce((best,guard)=>{
+   const score=distance(p,guard)+(lineBlocked(p,guard)?170:0);
+   return score<best.score?{guard,score}:best;
+  },{guard:null,score:Infinity}).guard};
  run.macUses--;
  announce('Mac is after the guards.');
  sync();
@@ -250,18 +259,17 @@ function update(dt){
  }
  if(run.mac){
   const mac=run.mac;
-  const closest=run.guards.reduce((best,guard)=>{
-   const score=distance(mac,guard)+(lineBlocked(mac,guard)?170:0);
-   return score<best.score?{guard,score}:best;
-  },{guard:null,score:Infinity}).guard;
-  if(closest&&distance(mac,closest)>24)steer(mac,Math.atan2(closest.y-mac.y,closest.x-mac.x),MAC_SPEED,dt,11);
+  const target=mac.target;
+  const before={x:mac.x,y:mac.y};
+  if(target&&distance(mac,target)>23)steer(mac,Math.atan2(target.y-mac.y,target.x-mac.x),MAC_SPEED,dt,11);
+  mac.running=distance(mac,before)>.1;
  }
  let spotted=false;
  for(const guard of run.guards){
   guard.fleeing=Boolean(run.mac&&distance(guard,run.mac)<FLEE_RANGE&&!lineBlocked(guard,run.mac));
   if(guard.fleeing){
    guard.chase=false;
-   steer(guard,Math.atan2(guard.y-run.mac.y,guard.x-run.mac.x),155,dt,12);
+   steer(guard,Math.atan2(guard.y-run.mac.y,guard.x-run.mac.x),155*guardPace,dt,12);
   }else if(sees(guard,p)){
    if(!guard.chase)spotted=true;
    guard.chase=true;
@@ -271,7 +279,7 @@ function update(dt){
    guard.chase=false;
    const [x,y]=guard.route[guard.index];
    guard.aim={x,y};
-   if(!along(guard,69,dt,12))guard.index=(guard.index+1)%guard.route.length;
+   if(!along(guard,69*guardPace,dt,12))guard.index=(guard.index+1)%guard.route.length;
   }
   if(!guard.fleeing&&distance(guard,p)<29&&p.shield<=run.time){
    p.hull--;p.shield=run.time+1.8;announce('Inspector citation!');sync();
@@ -392,8 +400,11 @@ function render(){
  if(height/zoom>world.h)zoom=height/world.h;
  if(width/zoom>world.w)zoom=width/world.w;
  const vw=width/zoom,vh=height/zoom;
- camera.x=clamp(run.player.x-vw/2,0,Math.max(0,world.w-vw));
- camera.y=clamp(run.player.y-vh/2,0,Math.max(0,world.h-vh));
+ const mac=run.mac;
+ const focusX=run.player.x+(mac?clamp((mac.x-run.player.x)*.5,-vw*.26,vw*.26):0);
+ const focusY=run.player.y+(mac?clamp((mac.y-run.player.y)*.5,-vh*.19,vh*.19):0);
+ camera.x=clamp(focusX-vw/2,0,Math.max(0,world.w-vw));
+ camera.y=clamp(focusY-vh/2,0,Math.max(0,world.h-vh));
  const offsetX=Math.max(0,(vw-world.w)/2),offsetY=Math.max(0,(vh-world.h)/2);
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#101624';ctx.fillRect(0,0,width,height);
  ctx.setTransform(zoom,0,0,zoom,(offsetX-camera.x)*zoom,(offsetY-camera.y)*zoom);
@@ -432,9 +443,12 @@ function render(){
  }
  if(run.mac){
   const mac=run.mac;
-  const bob=reducedMotion.matches?0:Math.abs(Math.sin(run.time*21))*2.5;
+  const stride=reducedMotion.matches||!mac.running?0:Math.sin(run.time*19);
+  const bob=Math.abs(stride)*4;
   ctx.fillStyle='#13192770';ctx.beginPath();ctx.ellipse(mac.x,mac.y+7,20,7,0,0,7);ctx.fill();
-  if(!sprite('painted-mac',mac.x,mac.y-13-bob,61,43,Math.cos(mac.angle)<0))label('MAC',mac.x,mac.y-12);
+  ctx.save();ctx.translate(mac.x,mac.y-13-bob);ctx.rotate(stride*.07);
+  if(!sprite('painted-mac',0,0,76,51,Math.cos(mac.angle)<0))label('MAC',0,0);
+  ctx.restore();
  }
  for(const print of run.prints){
   ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';

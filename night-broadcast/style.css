@@ -294,6 +294,34 @@ button:focus-visible {
 
 [hidden] { display: none !important; }
 
+.battery {
+  --charge: 100%;
+  position: absolute;
+  z-index: 3;
+  top: calc(max(8px, env(safe-area-inset-top)) + 48px);
+  right: max(12px, env(safe-area-inset-right));
+  width: 112px;
+  aspect-ratio: 3 / 1;
+  display: grid;
+  place-items: center;
+  padding-right: 10px;
+  background: url('art/painted-battery.webp') center / contain no-repeat;
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.battery::before {
+  content: '';
+  position: absolute;
+  inset: 34% 19% 34% 12%;
+  background: linear-gradient(90deg, #b96730, #82974a);
+  clip-path: inset(0 calc(100% - var(--charge)) 0 0);
+}
+
+.battery span { z-index: 1; text-shadow: 0 1px 3px #000; }
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
