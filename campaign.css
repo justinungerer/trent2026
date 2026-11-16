@@ -19,6 +19,42 @@ body {
   max-width: 16ch;
 }
 
+.start-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: linear-gradient(180deg, #071421bf, transparent 28%, transparent 48%, #071421ee 78%),
+    #101d2a url('./assets/start-trent.webp') center 41% / cover no-repeat;
+}
+
+.start-home h1 {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(2rem, 9vw, 3.9rem);
+  line-height: 1.04;
+  text-shadow: 0 2px 14px #071421;
+}
+
+.start-home #pin-form {
+  width: min(27rem, 100%);
+  margin: auto 0 0;
+  padding-top: min(41dvh, 21rem);
+}
+
+.start-home #campaign-start {
+  width: 100%;
+  margin: 0 0 12px;
+}
+
+.start-home #pin-status:empty {
+  display: none;
+}
+
+.start-home #start-rules {
+  margin-top: 12px;
+}
+
 .logo-screen {
   display: grid;
   grid-template-rows: auto minmax(9rem, 1fr) auto;

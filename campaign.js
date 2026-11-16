@@ -522,15 +522,16 @@ function showChapterMenu(lastChapter, complete, canTest) {
     var unlocked = chapter.number <= lastChapter;
     var row = document.createElement('div');
     row.className = 'chapter-menu-row';
-    row.appendChild(button(chapter.kicker + ' · ' + chapter.title,
+    var chapterAction = chapter.number === lastChapter ? 'Continue at ' : 'Replay ';
+    row.appendChild(button(chapterAction + chapter.kicker + ' · ' + chapter.title,
       unlocked ? function () { openChapter(chapter.id); } : null, 'choice'));
-    var introButton = button('Watch intro',
+    var introButton = button('Cutscene only',
       unlocked ? function () { playIntro(chapter, back); } : null, 'secondary');
-    var gameButton = button('Play minigame',
+    var gameButton = button('Minigame only',
       unlocked ? function () { launchGame(chapter, 0, back); } : null, 'secondary chapter-minigame');
     if (unlocked) {
-      introButton.setAttribute('aria-label', 'Watch intro · ' + chapter.title);
-      gameButton.setAttribute('aria-label', 'Play minigame · ' + chapter.title);
+      introButton.setAttribute('aria-label', 'Cutscene only · ' + chapter.title);
+      gameButton.setAttribute('aria-label', 'Minigame only · ' + chapter.title);
     }
     row.append(introButton, gameButton);
     chapters.appendChild(row);
@@ -553,11 +554,10 @@ function showRules() {
     '<p>Get at least five answers right to enter the chapter’s minigame. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses. Each level starts with your full earned loadout.</p>' +
     '<p>Play the three minigame levels in order. If you lose, you can retry the level or start that minigame over.</p>' +
     '<p>Finish Level 3 to earn the password for the next chapter. Entering it also unlocks earlier chapters, films, and complete minigame sequences in the chapter menu.</p>' +
-    '<button class="primary" type="button">Continue</button><button class="secondary" type="button">Cancel</button></div>';
-  modal.querySelector('.primary').onclick = function () { modal.remove(); showLogo(); };
-  modal.querySelector('.secondary').onclick = function () {
+    '<button class="primary" type="button">Close</button></div>';
+  modal.querySelector('.primary').onclick = function () {
     modal.remove();
-    document.getElementById('campaign-start').focus();
+    document.getElementById('start-rules').focus();
   };
   campaignRoot.appendChild(modal);
   modal.querySelector('h2').focus();
@@ -565,16 +565,14 @@ function showRules() {
 
 function showStart() {
   testMode = false;
-  var stored = readStoredPin();
   if (window.TrentTrivia) window.TrentTrivia.abort();
   var section;
   var title;
-  var lead;
   var start;
   var form;
   var label;
   var input;
-  var open;
+  var help;
   var status;
   clearOpeningFilm();
   clearInterval(pinTimer);
@@ -586,24 +584,20 @@ function showStart() {
   campaignRoot.hidden = false;
   campaignRoot.innerHTML = '';
   section = document.createElement('section');
-  section.className = 'campaign-start';
+  section.className = 'campaign-start start-home';
   title = document.createElement('h1');
   title.tabIndex = -1;
   title.textContent = 'Trent Saves Christmas';
-  lead = document.createElement('p');
-  lead.className = 'lead';
-  lead.textContent = 'Start at the beach, or type a continue code.';
   start = document.createElement('button');
-  start.type = 'button';
+  start.type = 'submit';
   start.className = 'primary';
   start.id = 'campaign-start';
   start.textContent = 'Start';
-  start.onclick = showRules;
   form = document.createElement('form');
   form.id = 'pin-form';
   label = document.createElement('label');
   label.htmlFor = 'pin';
-  label.textContent = 'Continue code';
+  label.textContent = 'Chapter password (optional)';
   input = document.createElement('input');
   input.id = 'pin';
   input.name = 'pin';
@@ -613,21 +607,31 @@ function showStart() {
   input.autocapitalize = 'characters';
   input.spellcheck = false;
   input.enterKeyHint = 'go';
-  open = document.createElement('button');
-  open.type = 'submit';
-  open.className = 'primary';
-  open.textContent = 'Open chapter menu';
+  help = document.createElement('button');
+  help.type = 'button';
+  help.className = 'secondary';
+  help.id = 'start-rules';
+  help.textContent = 'How to play';
+  help.onclick = showRules;
   status = document.createElement('p');
   status.id = 'pin-status';
   status.setAttribute('role', 'status');
-  if (stored) status.textContent = 'Saved on this phone: ' + stored;
+  input.setAttribute('aria-describedby', 'pin-status');
+  input.oninput = function () {
+    input.removeAttribute('aria-invalid');
+    status.textContent = '';
+  };
+  form.appendChild(start);
   form.appendChild(label);
   form.appendChild(input);
-  form.appendChild(open);
   form.appendChild(status);
   form.onsubmit = function (event) {
     var pin = normalizePin(input.value);
     event.preventDefault();
+    if (!pin) {
+      showLogo();
+      return;
+    }
     if (pin === TEST_PIN) {
       showChapterMenu(CHAPTERS.length - 1, true, true);
       return;
@@ -639,16 +643,17 @@ function showStart() {
     }
     var id = PIN_TO_ID[pin];
     if (!id) {
-      status.textContent = 'That code is not on the list.';
+      status.textContent = 'That password is not on the list.';
+      input.setAttribute('aria-invalid', 'true');
+      input.focus();
       return;
     }
     storePin(pin);
     showChapterMenu(byId(id).number, false);
   };
   section.appendChild(title);
-  section.appendChild(lead);
-  section.appendChild(start);
   section.appendChild(form);
+  section.appendChild(help);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
 }
@@ -1087,8 +1092,8 @@ function showPin(chapter) {
   code.textContent = password;
   code.setAttribute('aria-label', 'Continue code ' + password);
   copy.className = 'lead';
-  copy.textContent = nextId ? 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films.' :
-    'Campaign complete. This password opens every chapter and film.';
+  copy.textContent = 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films. ' +
+    'Trent, write it down. If you forget it, you’ll have to replay ' + chapter.title + ' to get back here.';
   home.type = 'button';
   home.className = 'secondary';
   home.textContent = 'Start screen';
@@ -1150,7 +1155,8 @@ function showRestored() {
   document.getElementById('ending-skip').hidden = true;
   document.getElementById('ending-gate').hidden = false;
   document.querySelector('#ending-gate h1').textContent = 'Home';
-  document.getElementById('ending-copy').textContent = 'Christmas is restored. Completion password: ' + COMPLETION_PIN + '.';
+  document.getElementById('ending-copy').textContent = 'Christmas is restored. Completion password: ' + COMPLETION_PIN +
+    '. Trent, write it down. If you forget it, you’ll have to replay the final chapter to get back here.';
   document.getElementById('ending-play').hidden = true;
   document.getElementById('ending-home').hidden = false;
   document.getElementById('ending-home').focus({ preventScroll: true });
