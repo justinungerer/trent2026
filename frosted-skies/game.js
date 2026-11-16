@@ -11,6 +11,7 @@ const intercept = scouts || workshop;
 const targetKind = scouts ? 'drone' : 'hauler';
 const targetName = scouts ? 'Recon drone' : 'Cargo hauler';
 const targetSeconds = 19;
+const bossDelay = 14;
 const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
@@ -76,16 +77,17 @@ function craftSprite(kind, x, y, width, bank) {
 const largeCraft = kind => kind === 'boss' || kind === 'flagship';
 const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, flagshipAt, aim, drag, wraps, recoil, shake, kills;
-let nextWave, nextTarget, bossesCleared, targetCleared, aimReleased;
+let nextWave, nextTarget, bossAt, bossesCleared, aimReleased;
 const stageTitle = scouts ? 'The Scout Screen' : 'Workshop Approach';
 const stageBrief = (scouts ? 'Intercept marked recon drones.' : 'Dodge sideways patrols and intercept marked cargo haulers.') +
-  ' Marked aircraft have five times normal hull and escape if you take too long.';
+  ' Marked aircraft have five times normal hull and escape if you take too long.' +
+  ' Destroy one to draw out the commander 14 seconds later. Defeat the commander to clear the level.';
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
   nextWave = 1.35;
   nextTarget = 14;
   bossesCleared = false;
-  targetCleared = !intercept;
+  bossAt = intercept ? null : 51;
   aimReleased = false;
   player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['laser'], cool: [0] };
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
@@ -98,6 +100,8 @@ function reset() {
 if (intercept) {
   ui.title.textContent = stageTitle;
   ui.brief.textContent = stageBrief;
+} else {
+  ui.controls.textContent += ' Defeat the bosses, then survive as long as you can. When your hull runs out, you can continue if you cleared the objectives.';
 }
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
@@ -365,13 +369,11 @@ function hit() {
   burst(player.x, player.y, colors.gold, 23);
   ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(MAX_HULL - player.hull);
   if (!player.hull) {
-    const campaign = params.has('runId') && window.parent !== window;
-    if (bossesCleared && targetCleared) {
-      const result = intercept ? 'Flight objectives complete.' : 'Santa’s last broadcast is recovered.';
-      overlay('cleared', 'LEVEL CLEARED', result + ' Final score: ' + score + '.', campaign ? 'Continue' : 'Fly again');
+    if (bossesCleared) {
+      clearFlight('Santa’s last broadcast is recovered.');
     } else {
-      const remaining = !targetCleared && !bossesCleared ? 'Destroy a marked target and the stage boss to advance.'
-        : !targetCleared ? 'Destroy a marked target to advance.' : 'Defeat the remaining boss to advance.';
+      const remaining = intercept && bossAt === null ? 'Destroy a marked target and the stage boss to advance.'
+        : 'Defeat the remaining boss to advance.';
       overlay('lost', 'SLEIGH DOWN', remaining + ' Score: ' + score + '.', 'Retry level');
     }
   }
@@ -394,19 +396,28 @@ function fell(enemy) {
   burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
   if (!boss && ++kills % KILLS_PER_DROP === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
   if (enemy.objective) {
-    targetCleared = true;
+    bossAt = time + bossDelay;
     parcels.push({ x: enemy.x, y: enemy.y, kind: scouts ? 'laser' : 'homing' });
-    ui.phase.textContent = bossesCleared ? 'OBJECTIVES COMPLETE · KEEP FLYING' : targetName.toUpperCase() + ' DOWN · WEAPON DROP';
+    ui.phase.textContent = targetName.toUpperCase() + ' DOWN · COMMANDER INBOUND';
   }
-  if (enemy.kind === 'boss' && !intercept) {
-    flagshipAt = time + 2.4;
-    ui.phase.textContent = 'A HEAVIER FLAGSHIP IS APPROACHING';
+  if (enemy.kind === 'boss') {
+    if (intercept) {
+      ui.phase.textContent = 'COMMANDER DOWN';
+      clearFlight('Flight objectives complete.');
+    } else {
+      flagshipAt = time + 2.4;
+      ui.phase.textContent = 'A HEAVIER FLAGSHIP IS APPROACHING';
+    }
   }
-  if (enemy.kind === 'flagship' || (enemy.kind === 'boss' && intercept)) {
+  if (enemy.kind === 'flagship') {
     bossesCleared = true;
-    ui.phase.textContent = targetCleared ? 'BOSS DOWN · SURVIVE AS LONG AS YOU CAN' : 'BOSS DOWN · INTERCEPT A MARKED TARGET';
+    ui.phase.textContent = 'BOSS DOWN · SURVIVE AS LONG AS YOU CAN';
   }
   ui.score.textContent = String(score).padStart(6, '0');
+}
+function clearFlight(result) {
+  const campaign = params.has('runId') && window.parent !== window;
+  overlay('cleared', 'LEVEL CLEARED', result + ' Final score: ' + score + '.', campaign ? 'Continue' : 'Fly again');
 }
 function finishFlight() {
   if (state !== 'cleared') return;
@@ -514,11 +525,11 @@ function update(dt) {
     spawn();
     nextWave = time + (bossesCleared ? 5.5 : bossSpawned ? 9 : workshop ? 6 : 5.15);
   }
-  if (intercept && time >= nextTarget) {
+  if (intercept && bossAt === null && time >= nextTarget) {
     spawnTarget();
     nextTarget += 38;
   }
-  if (!bossSpawned && time >= (scouts ? 58 : workshop ? 70 : 51)) {
+  if (!bossSpawned && bossAt !== null && time >= bossAt) {
     bossSpawned = true;
     spawnBoss('boss');
   }
