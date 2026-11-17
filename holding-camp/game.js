@@ -33,9 +33,11 @@
   var BAND_BOT = BAND_TOP + BAND_H;
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
-  var WALK = cellPassage ? 2130 : gateFight ? 1770 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
-  var START_X = 340;
-  var GATE_X = START_X + WALK;
+  var WALK = cellPassage ? 4260 : gateFight ? 1770 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
+  var START_X = cellPassage ? 340 + WALK : 340;
+  var OUTBOUND = cellPassage ? -1 : 1;
+  var GATE_X = cellPassage ? START_X : START_X + WALK;
+  var EXIT_Y = BAND_TOP + 156;
   var WORLD_R = GATE_X + 240;
   var SANTA_H = Math.round(VIEW_H * 0.28);
   var MAX_HP = 5 + (window.TrentMissionBonus || 0);
@@ -97,15 +99,19 @@
     { at: 0.24, y: 0.62 },
     { at: 0.62, y: 0.4 }
   ];
-  var cellKey = { x: 995, y: BAND_TOP + BAND_H * 0.27 };
+  var cellKey = { x: START_X - WALK, y: EXIT_Y };
   if (cellPassage || gateFight) {
     document.getElementById('camp-stage-title').textContent = cellPassage ? 'The Cell Passage' : 'Hold the Gate';
+    if (cellPassage) {
+      document.getElementById('camp-win-title').textContent = 'The exit is open';
+      document.getElementById('camp-win-copy').textContent = 'Santa brought the key back and unlocked the passage door.';
+    }
     document.getElementById('camp-goal').textContent = cellPassage
-      ? 'Take Trent’s key from the barred window, then reach the passage door.'
+      ? 'Go left to collect the key, then return to the Exit door at the right end of the passage.'
       : 'Clear both gatehouse groups and reach the yard gate.';
     WAVE_PLAN = cellPassage ? [
-      { at: 0.24, foes: [{ k: 'light', side: 'right' }] },
-      { at: 0.64, foes: [{ k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
+      { at: 0.24, foes: [{ k: 'light', side: 'left' }] },
+      { at: 0.64, foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] }
     ] : [
       { at: 0.19, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
       { at: 0.66, foes: [{ k: 'mid', side: 'left' }, { k: 'heavy', side: 'right' }, { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
@@ -122,14 +128,19 @@
   gateImg.src = 'art/brawl-gate.webp';
   cocoaImg.src = 'art/brawl-cocoa.webp';
 
+  var images = {};
   var kindName;
   var animName;
   for (kindName in FR) {
     if (!FR[kindName] || !FR[kindName].idle) continue;
     for (animName in FR[kindName]) {
       if (!FR[kindName][animName] || !FR[kindName][animName].src) continue;
-      FR[kindName][animName].img = new Image();
-      FR[kindName][animName].img.src = FR[kindName][animName].src;
+      var spec = FR[kindName][animName];
+      if (!images[spec.src]) {
+        images[spec.src] = new Image();
+        images[spec.src].src = spec.src;
+      }
+      spec.img = images[spec.src];
     }
   }
 
@@ -212,7 +223,7 @@
     for (i = 0; i < PICK_PLAN.length; i++) {
       src = PICK_PLAN[i];
       out.push({
-        x: START_X + src.at * WALK,
+        x: START_X + OUTBOUND * src.at * WALK,
         y: BAND_TOP + BAND_H * src.y,
         got: false
       });
@@ -224,7 +235,7 @@
     return {
       x: START_X,
       y: BAND_TOP + BAND_H * 0.62,
-      face: 1,
+      face: OUTBOUND,
       hp: MAX_HP,
       atk: '',
       atkT: 0,
@@ -302,21 +313,26 @@
   }
 
   function frontX() {
-    var i;
-    var line;
-    for (i = 0; i < waves.length; i++) {
-      if (!waveClear(waves[i])) {
-        line = START_X + waves[i].at * WALK;
-        return Math.min(GATE_X, line + VIEW_W * 0.55);
-      }
+    if (cellPassage) return GATE_X + 40;
+    for (var i = 0; i < waves.length; i++) {
+      if (!waveClear(waves[i])) return Math.min(GATE_X, START_X + waves[i].at * WALK + VIEW_W * 0.55);
     }
     return GATE_X + 40;
+  }
+
+  function initialCamera() {
+    return cellPassage ? WORLD_R - VIEW_W : 0;
+  }
+
+  function exitLabel() {
+    return keyTaken ? 'Exit' : 'Exit needs key';
   }
 
   function renderHud() {
     var left = living();
     if (state === 'win') gateEl.textContent = 'Open';
-    else if (allClear()) gateEl.textContent = cellPassage && !keyTaken ? 'Find the key' : 'The gate';
+    else if (cellPassage) gateEl.textContent = exitLabel();
+    else if (allClear()) gateEl.textContent = 'The gate';
     else if (left === 1) gateEl.textContent = '1 guard';
     else if (left === 0) gateEl.textContent = 'Walk on';
     else gateEl.textContent = left + ' guards';
@@ -331,7 +347,7 @@
     picks = makePicks();
     played = 0;
     shake = 0;
-    cam = 0;
+    cam = initialCamera();
     victorySent = false;
     state = 'play';
     startSheet.hidden = true;
@@ -379,7 +395,7 @@
     state = 'win';
     winTimeEl.textContent = 'Out in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('Through the gate. ' + seconds + ' seconds.');
+    say((cellPassage ? 'Exit unlocked. ' : 'Through the gate. ') + seconds + ' seconds.');
     sfx('right');
     if (!victorySent) {
       victorySent = true;
@@ -550,9 +566,9 @@
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
       if (waveClear(wave)) continue;
-      line = START_X + wave.at * WALK;
-      if (!wave.spawned && santa.x >= line - 6) spawnWave(wave);
-      return;
+      line = wave.at * WALK;
+      if (!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) spawnWave(wave);
+      if (!cellPassage) return;
     }
   }
 
@@ -674,7 +690,7 @@
     if (cellPassage && !keyTaken && Math.abs(cellKey.x - santa.x) < 48 &&
         Math.abs(cellKey.y - santa.y) < 46) {
       keyTaken = true;
-      say('Santa recovered the cell key.');
+      say('Key collected. Return to the exit on the right.');
     }
     var i;
     var p;
@@ -772,7 +788,9 @@
       foes[i].x = clamp(foes[i].x, 20, WORLD_R);
     }
     updatePickups();
-    if (allClear() && (!cellPassage || keyTaken) && santa.x >= GATE_X - 18) win();
+    if (cellPassage) {
+      if (keyTaken && Math.abs(santa.x - GATE_X) < 58 && Math.abs(santa.y - EXIT_Y) < 62) win();
+    } else if (allClear() && santa.x >= GATE_X - 18) win();
   }
 
   function drawYard() {
@@ -789,9 +807,10 @@
     drawH = (VIEW_H - BAND_TOP) / (1 - fence);
     drawW = drawH * (yardImg.naturalWidth / yardImg.naturalHeight);
     originY = BAND_TOP - fence * drawH;
-    start = Math.floor(cam / drawW) - 1;
+    var offset = cellPassage ? GATE_X - drawW * 0.745 : 0;
+    start = Math.floor((cam - offset) / drawW) - 1;
     for (i = start; i < start + 5; i++) {
-      x = Math.round(i * drawW - cam);
+      x = Math.round(offset + i * drawW - cam);
       ctx.drawImage(yardImg, x, originY, drawW + 1, drawH);
     }
   }
@@ -811,9 +830,11 @@
     ctx.globalAlpha = alpha == null ? 1 : alpha;
     ctx.translate(x, y);
     if (face < 0) ctx.scale(-1, 1);
+    var sourceFrame = i + (spec.start || 0);
+    var columns = spec.columns || spec.n;
     ctx.drawImage(
       img,
-      i * pack.w, 0, pack.w, pack.h,
+      (sourceFrame % columns) * pack.w, Math.floor(sourceFrame / columns) * pack.h, pack.w, pack.h,
       -pack.ax * s,
       -pack.ay * s,
       pack.w * s,
@@ -830,18 +851,28 @@
   }
 
   function drawGate() {
-    if (cellPassage && !keyTaken) {
-      ctx.fillStyle = '#ffe4a3';
-      ctx.font = 'bold 21px system-ui';
+    if (cellPassage) {
+      var doorX = GATE_X - cam;
+      var label = exitLabel();
+      ctx.save();
+      ctx.font = 'bold 24px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText('CELL KEY', cellKey.x - cam, cellKey.y - 42);
-      if (keyImg.complete && keyImg.naturalWidth) ctx.drawImage(keyImg, cellKey.x - cam - 28, cellKey.y - 32, 56, 32);
+      var width = ctx.measureText(label).width + 20;
+      ctx.fillStyle = '#111b25';
+      ctx.fillRect(doorX - width / 2, EXIT_Y - 156, width, 36);
+      ctx.fillStyle = keyTaken ? '#c9ffc8' : '#ffe4a3';
+      ctx.fillText(label, doorX, EXIT_Y - 130);
+      if (!keyTaken) {
+        ctx.fillStyle = '#ffe4a3';
+        ctx.fillText('Cell key', cellKey.x - cam, cellKey.y - 48);
+        if (imageReady(keyImg)) ctx.drawImage(keyImg, cellKey.x - cam - 32, cellKey.y - 42, 64, 36);
+      }
+      ctx.restore();
+      return;
     }
-    var gh;
-    var gw;
     if (!imageReady(gateImg)) return;
-    gh = VIEW_H * 0.58;
-    gw = gh * (gateImg.naturalWidth / gateImg.naturalHeight);
+    var gh = VIEW_H * 0.58;
+    var gw = gh * (gateImg.naturalWidth / gateImg.naturalHeight);
     ctx.drawImage(gateImg, GATE_X - cam - gw * 0.5, BAND_BOT - gh + 8, gw, gh);
   }
 
@@ -1137,6 +1168,7 @@
   }
 
   santa = freshSanta();
+  cam = initialCamera();
   foes = [];
   waves = makeWaves();
   picks = makePicks();
