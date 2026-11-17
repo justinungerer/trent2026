@@ -130,7 +130,7 @@
   var nextFlyover = 0;
   var speed = 0;
   var slips = 0;
-  var slipLimit = 4 + (window.TrentMissionBonus || 0);
+  var slipLimit = 3;
   var fromLane = 1;
   var toLane = 1;
   var laneT = 1;
@@ -392,16 +392,8 @@
   function failLine() {
     showLose(
       'Back at the start',
-      'Too many slips. The handcar is at the start of the line again.',
-      'Too many slips. Back at the start of the line.'
-    );
-  }
-
-  function failGap() {
-    showLose(
-      'The rail is out',
-      'A break in the track. The handcar is at the start of the line again.',
-      'The rail is out. Back at the start of the line.'
+      'The handcar took three hits and is back at the start of the line.',
+      'Three hits. Back at the start of the line.'
     );
   }
 
@@ -435,7 +427,8 @@
   }
 
   function beginSlip(ob) {
-    slips += 1;
+    var hits = ob.kind === 'gap' ? 2 : 1;
+    slips = Math.min(slipLimit, slips + hits);
     speed *= 0.5;
     if (speed < SPEED_FLOOR) speed = SPEED_FLOOR;
     distance = Math.max(0, ob.x - 1.05);
@@ -447,7 +440,7 @@
     if (slips >= slipLimit) speed = 0;
     if (!reduceMotion()) shake = 8;
     renderHud();
-    say('Slip ' + slips + ' of ' + slipLimit + '.');
+    say((hits === 2 ? 'Rail gap. Two hits. ' : 'One hit. ') + slips + ' of ' + slipLimit + '.');
   }
 
   function hitTest(ob) {
@@ -467,7 +460,7 @@
     for (i = 0; i < obstacles.length; i++) {
       if (!hitTest(obstacles[i])) continue;
       if (obstacles[i].kind === 'gap') {
-        failGap();
+        beginSlip(obstacles[i]);
         return;
       }
       if (!slip) slip = obstacles[i];
