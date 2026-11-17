@@ -76,6 +76,22 @@
     image.src = 'art/guard-' + kind.art + '.webp';
     return image;
   });
+  var guardWalk = new Image();
+  var guardFrames = [];
+  guardWalk.onload = function () {
+    var width = guardWalk.naturalWidth / 4;
+    var height = guardWalk.naturalHeight / KINDS.length;
+    guardFrames = KINDS.map(function (_, row) {
+      return [0, 1, 2, 3].map(function (col) {
+        var sprite = document.createElement('canvas');
+        sprite.width = width;
+        sprite.height = height;
+        sprite.getContext('2d').drawImage(guardWalk, col * width, row * height, width, height, 0, 0, width, height);
+        return sprite;
+      });
+    });
+  };
+  guardWalk.src = 'art/guard-walk-atlas.webp';
   var soldierFallback = makeSoldier();
   var burstImg = makeBurst();
   var kitImg = makeKit();
@@ -83,6 +99,7 @@
   bulletImg.src = 'art/ammo-bullet.webp';
   var bulletFallback = makeBullet();
   var shotImg = makeShot();
+  var alertImg = makeAlert();
 
   loadTex('art/wall.webp', function (tex) { wallTex = tex; });
   loadTex('art/floor.webp', function (tex) { floorTex = tex; });
@@ -466,17 +483,34 @@
   function makeShot() {
     var c = document.createElement('canvas');
     var g = c.getContext('2d');
-    var rad;
+    c.width = 48;
+    c.height = 48;
+    var glow = g.createRadialGradient(24, 24, 5, 24, 24, 24);
+    glow.addColorStop(0, '#fff9d4');
+    glow.addColorStop(0.36, '#ffc85a');
+    glow.addColorStop(0.64, 'rgba(249, 104, 40, 0.88)');
+    glow.addColorStop(1, 'rgba(249, 104, 40, 0)');
+    g.fillStyle = glow;
+    g.fillRect(0, 0, 48, 48);
+    g.fillStyle = '#fffceb';
+    g.beginPath();
+    g.ellipse(24, 24, 7, 5, 0, 0, Math.PI * 2);
+    g.fill();
+    return c;
+  }
+
+  function makeAlert() {
+    var c = document.createElement('canvas');
     c.width = 32;
     c.height = 32;
-    rad = g.createRadialGradient(16, 16, 1, 16, 16, 14);
-    rad.addColorStop(0, 'rgba(255, 244, 210, 1)');
-    rad.addColorStop(0.55, 'rgba(226, 168, 70, 0.95)');
-    rad.addColorStop(1, 'rgba(226, 168, 70, 0)');
-    g.fillStyle = rad;
+    var g = c.getContext('2d');
+    g.fillStyle = '#29180f';
     g.beginPath();
-    g.arc(16, 16, 14, 0, Math.PI * 2);
+    g.arc(16, 16, 15, 0, Math.PI * 2);
     g.fill();
+    g.fillStyle = '#ffda81';
+    g.fillRect(14, 6, 4, 13);
+    g.fillRect(14, 22, 4, 4);
     return c;
   }
 
@@ -531,8 +565,22 @@
     return soldierFallback;
   }
 
-  function enemyImage(kind) {
-    var image = kindSprites[kind];
+  function facingPlayer(e, dx, dy, distance) {
+    return distance < 0.01 || (e.dirX * dx + e.dirY * dy) >= distance * 0.35;
+  }
+
+  function enemyImage(e) {
+    var frames = guardFrames[e.kind];
+    if (frames) {
+      var dx = player.x - e.x;
+      var dy = player.y - e.y;
+      var back = e.dirX * dx + e.dirY * dy < 0;
+      if (back || e.moving) {
+        var stride = e.moving ? Math.floor(e.walked * 4) % 2 : 0;
+        return frames[(back ? 2 : 0) + stride];
+      }
+    }
+    var image = kindSprites[e.kind];
     return image.complete && image.naturalWidth > 0 ? image : soldierSprite();
   }
 
@@ -555,6 +603,10 @@
         bob: src.bob,
         cool: 0,
         aim: 0,
+        dirX: 0,
+        dirY: 0,
+        walked: src.bob,
+        moving: false,
         stun: 0,
         patrolTarget: null,
         patrolPrevious: null,
@@ -789,6 +841,18 @@
     });
   }
 
+  function trackGuardMovement(e, x, y) {
+    var dx = e.x - x;
+    var dy = e.y - y;
+    var length = Math.hypot(dx, dy);
+    e.moving = length > 0.0001;
+    if (e.moving) {
+      e.dirX = dx / length;
+      e.dirY = dy / length;
+      e.walked += length;
+    }
+  }
+
   function patrol(e, dt) {
     var remaining = WALK_SPEED * dt;
     if (!e.patrolTarget) {
@@ -824,55 +888,55 @@
   }
 
   function updateEnemies(dt) {
-    var i;
-    var e;
-    var kind;
-    var dx;
-    var dy;
-    var dist;
-    var visible;
-    var step;
-    var mx;
-    var my;
-    for (i = 0; i < enemies.length; i++) {
-      e = enemies[i];
+    for (var i = 0; i < enemies.length; i++) {
+      var e = enemies[i];
       if (!e.alive) continue;
-      kind = KINDS[e.kind];
-      dx = player.x - e.x;
-      dy = player.y - e.y;
-      dist = Math.hypot(dx, dy) || 0.0001;
-      if (e.stun > 0) e.stun -= dt;
+      var kind = KINDS[e.kind];
+      var x = e.x;
+      var y = e.y;
+      var dx = player.x - x;
+      var dy = player.y - y;
+      var dist = Math.hypot(dx, dy);
+      e.moving = false;
+      e.stun = Math.max(0, e.stun - dt);
+      e.cool = Math.max(0, e.cool - dt);
+
       if (dist < 0.46 && ammo > 0 && e.stun <= 0) {
         bump(dx, dy);
         e.stun = 1.05;
       }
-      visible = dist < kind.range + 1.5 && sees(e.x, e.y);
-      if (!visible) {
+      if (e.stun > 0 || dist >= kind.range + 1.5 || !facingPlayer(e, dx, dy, dist) || !sees(x, y)) {
         e.aim = 0;
-        if (e.stun <= 0) patrol(e, dt);
+        if (e.stun <= 0) {
+          patrol(e, dt);
+          trackGuardMovement(e, x, y);
+        }
         continue;
       }
+
       e.patrolTarget = null;
       e.patrolPrevious = null;
       e.aim += dt;
-      if (e.stun <= 0 && e.aim > 0.12) {
-        if (dist > kind.hold + 0.25) {
-          step = kind.move * dt;
-          mx = dx / dist * step;
-          my = dy / dist * step;
-          if (!solid(e.x + mx, e.y, 0.2)) e.x += mx;
-          if (!solid(e.x, e.y + my, 0.2)) e.y += my;
-        } else if (e.kind === 2 && dist < kind.hold - 0.7) {
-          step = kind.move * dt;
-          mx = -dx / dist * step;
-          my = -dy / dist * step;
-          if (!solid(e.x + mx, e.y, 0.2)) e.x += mx;
-          if (!solid(e.x, e.y + my, 0.2)) e.y += my;
-        }
+      if (dist > 0.01) {
+        e.dirX = dx / dist;
+        e.dirY = dy / dist;
       }
-      if (state !== 'play') return;
-      if (e.cool > 0) e.cool -= dt;
-      else if (e.aim >= 2 && dist <= kind.range) {
+      if (e.aim > 0.12) {
+        var approach = dist > kind.hold + 0.25 ? 1 : e.kind === 2 && dist < kind.hold - 0.7 ? -1 : 0;
+        var step = kind.move * dt * approach;
+        var mx = e.dirX * step;
+        var my = e.dirY * step;
+        if (step && !solid(e.x + mx, e.y, 0.2)) e.x += mx;
+        if (step && !solid(e.x, e.y + my, 0.2)) e.y += my;
+        trackGuardMovement(e, x, y);
+      }
+
+      // Movement sets the visible heading. A guard must face Trent when firing.
+      if (!facingPlayer(e, player.x - e.x, player.y - e.y, Math.hypot(player.x - e.x, player.y - e.y))) {
+        e.aim = 0;
+        continue;
+      }
+      if (e.cool <= 0 && e.aim >= 2 && dist <= kind.range && sees(e.x, e.y)) {
         e.cool = kind.wait;
         if (dist < 0.62) hurt();
         else launchShot(e, kind);
@@ -1232,7 +1296,7 @@
     bctx.putImageData(frame, 0, 0);
   }
 
-  function drawBillboard(image, wx, wy, heightScale, widthMul, alpha) {
+  function drawBillboard(image, wx, wy, heightScale, widthMul, alpha, lift) {
     var dx;
     var dy;
     var det;
@@ -1259,7 +1323,7 @@
     spriteW = spriteH * (image.width / image.height) * widthMul;
     left = screenX - spriteW / 2;
     floorY = horizon + (0.5 * BUF_H) / ty;
-    top = floorY - spriteH;
+    top = floorY - spriteH - (lift || 0) * BUF_H / ty;
     bctx.save();
     bctx.globalAlpha = alpha;
     col = Math.max(0, left) | 0;
@@ -1295,14 +1359,20 @@
       e = enemies[i];
       if (!e.alive) continue;
       list.push({
-        img: enemyImage(e.kind),
+        img: enemyImage(e),
         x: e.x,
-        y: e.y + (bob ? Math.sin(walk + e.bob) * 0.012 : 0),
+        y: e.y,
         h: KINDS[e.kind].h,
         w: 1,
         a: 1,
         d: (e.x - player.x) * (e.x - player.x) + (e.y - player.y) * (e.y - player.y)
       });
+      if (e.aim > 0) {
+        list.push({
+          img: alertImg, x: e.x, y: e.y, h: 0.14, w: 1, a: 1,
+          lift: KINDS[e.kind].h + 0.04, d: list[list.length - 1].d
+        });
+      }
     }
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
@@ -1323,7 +1393,8 @@
         img: shotImg,
         x: shots[i].x,
         y: shots[i].y,
-        h: 0.2,
+        h: 0.31,
+        lift: 0.39,
         w: 1,
         a: 1,
         d: (shots[i].x - player.x) * (shots[i].x - player.x) + (shots[i].y - player.y) * (shots[i].y - player.y)
@@ -1353,7 +1424,7 @@
     }
     list.sort(function (a, b) { return b.d - a.d; });
     for (i = 0; i < list.length; i++) {
-      drawBillboard(list[i].img, list[i].x, list[i].y, list[i].h, list[i].w, list[i].a);
+      drawBillboard(list[i].img, list[i].x, list[i].y, list[i].h, list[i].w, list[i].a, list[i].lift);
     }
   }
 
