@@ -36,7 +36,7 @@
         <p class="kicker">Chapter 10</p>
         <h1 id="roof-stage-title">The chimney road</h1>
         <p id="roof-objective">The sleigh waits at the end of a long chimney road. Roofs climb above the first street and drop below it. Some paths end. Turn around and find the way on.</p>
-        <p>Hold Jump by a chimney post to climb its rungs. Double-jump by tapping Jump again near the top of your first jump. Up and down arrows point to nearby ledges beyond the screen. Jump over the low snow-covered roof crates. A sliding crate, a rolling snowball, falling icicles, a swinging lantern, and chimney smoke can knock you off. They leave time to dodge. A hit is a fall. Three falls start the road over.</p>
+        <p id="roof-controls">Hold Jump by a chimney post to climb its rungs. Double-jump by tapping Jump again near the top of your first jump. Up and down arrows point to nearby ledges beyond the screen. Jump over the low snow-covered roof crates. A sliding crate, a rolling snowball, falling icicles, a swinging lantern, and chimney smoke can knock you off. They leave time to dodge. A hit is a fall. Three falls start the road over.</p>
         <button type="button" id="start">Step onto the roof</button>
       </div>
     </div>
@@ -55,6 +55,16 @@
         <h1>Back on the roof</h1>
         <p>Three falls. The route is still ahead.</p>
         <button type="button" id="retry-lose">Retry Level</button>
+      </div>
+    </div>
+
+    <p id="boarding-hint" class="hint" hidden>Find both route markers before boarding.</p>
+
+    <div id="boarding-sheet" class="sheet" hidden>
+      <div class="card">
+        <h1>The sleigh needs its lantern</h1>
+        <p>Recover it from the lower coach-house roof and you’ll return here to board.</p>
+        <button type="button" id="recover-lantern">Return for the lantern</button>
       </div>
     </div>
 
@@ -77,7 +87,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-previews"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=chimney-eaves-2"></script>
 <script src="../level-retry.js"></script>
 <script src="../game-audio.js?v=rotation3"></script></body>
 </html>
