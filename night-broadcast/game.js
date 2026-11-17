@@ -294,7 +294,7 @@
   }
 
   function nextTurn() {
-    return TURN_LO + Math.random() * (TURN_HI - TURN_LO);
+    return (TURN_LO + Math.random() * (TURN_HI - TURN_LO)) * (confirmDispatch ? 2 : 1);
   }
 
   function resetHunt() {
@@ -314,7 +314,9 @@
       station.dir = station.homeDir;
       station.half = STRONG_HALF;
       station.redHalf = RED_HALF;
-      station.speed = MARKER_SPEED * station.speedScale * (calibration ? .16 : confirmDispatch ? .44 : .28);
+      // Halving both the sweep speed and the scheduled reversal rate
+      // doubles time between turns even when the station hits a boundary.
+      station.speed = MARKER_SPEED * station.speedScale * (calibration ? .32 : confirmDispatch ? .22 : .28);
       station.turnIn = nextTurn();
     }
   }
@@ -429,9 +431,9 @@
         station.turnIn = nextTurn();
       }
       station.center += station.dir * station.speed * dt;
-      var drift = calibration ? .025 : confirmDispatch ? .034 : .031;
-      var low = Math.max(EDGE_LO, station.home - drift);
-      var high = Math.min(EDGE_HI, station.home + drift);
+      var drift = calibration ? .055 : confirmDispatch ? .034 : .064;
+      var low = Math.max(confirmDispatch ? EDGE_LO : .06, station.home - drift);
+      var high = Math.min(confirmDispatch ? EDGE_HI : .94, station.home + drift);
       if (station.center <= low || station.center >= high) station.dir = station.center <= low ? 1 : -1;
       station.center = clamp(station.center, low, high);
     }

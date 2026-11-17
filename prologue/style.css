@@ -226,6 +226,25 @@ button:focus-visible {
   pointer-events: none;
 }
 
+.movement-note {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 42%;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #291e17f2;
+  color: #fff1cf;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: center;
+  pointer-events: none;
+}
+
 .sheet {
   position: absolute;
   z-index: 20;

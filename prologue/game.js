@@ -14,6 +14,9 @@
   var braceBtn = document.getElementById('brace');
   var fireBtn = document.getElementById('fire');
   var hintEl = document.getElementById('hint');
+  var movementNote = document.getElementById('movement-note');
+  var contactObstacle = null;
+  var movementNotice = '';
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
   var loseSheet = document.getElementById('lose-sheet');
@@ -343,13 +346,13 @@
   }
 
   function blocked(x, y) {
-    var i;
     if (x < MIN_X) return true;
     if (y < RADIUS || y > BEACH_W - RADIUS) return true;
-    for (i = 0; i < obstacles.length; i++) {
-      if (hitsObstacle(obstacles[i], x, y)) return true;
-    }
-    return false;
+    return Boolean(blockingObstacle(x, y));
+  }
+
+  function blockingObstacle(x, y) {
+    return obstacles.find(function (obstacle) { return hitsObstacle(obstacle, x, y); });
   }
 
   function placePickup(item, occupied) {
@@ -376,12 +379,19 @@
   function tryMove(dx, dy) {
     var nx = player.x + dx;
     var ny = player.y + dy;
+    if (nx > GOAL_X) {
+      var missing = dispatches.filter(function (item) { return !item.taken; }).length;
+      if (missing) movementNotice = 'Find ' + missing + (missing === 1 ? ' more dispatch' : ' more dispatches');
+    }
     if (nx > GOAL_X) nx = GOAL_X;
     if (!blocked(nx, ny)) {
       player.x = nx;
       player.y = ny;
       return;
     }
+    contactObstacle = blockingObstacle(nx, ny) || null;
+    var names = { wire: 'Barbed wire', log: 'Fallen log', crater: 'Crater', hedgehog: 'Steel barrier' };
+    movementNotice = contactObstacle ? names[contactObstacle.kind] + ' ahead. Go around.' : 'Edge of the beach';
     if (!blocked(nx, player.y)) {
       player.x = nx;
       return;
@@ -1023,6 +1033,8 @@
   }
 
   function updatePlay(dt) {
+    contactObstacle = null;
+    movementNotice = '';
     updateTravelingWave();
     var stick = controlVector();
     var beforeX = player.x;
@@ -1037,7 +1049,13 @@
       else if (stick.x > 0.25) player.facing = 1;
     }
     updateSurf(dt);
-    if (!bracing && surfHold < 0) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
+    if (!bracing && surfHold < 0) {
+      if (stick.x || stick.y) tryMove(stick.x * SPEED * dt, stick.y * SPEED * dt);
+    } else if (surfHold >= 0) {
+      movementNotice = 'Wave pushing back. Hold Brace.';
+    } else if (stick.x || stick.y) {
+      movementNotice = 'Braced. Release Brace to walk.';
+    }
     if (updateMinesAndPacks()) return;
     hearts.forEach(function (item) {
       if (!item.taken && player.stumbles > 0 && Math.hypot(player.x - item.x, player.y - item.y) < 38) {
@@ -1208,19 +1226,39 @@
   }
 
   function drawWire(o, alpha) {
-    var dh;
-    var dw;
-    var cx;
-    var top;
     if (!imageReady(wireImg)) return;
-    dh = o.h * scale;
-    dw = dh * (wireImg.naturalWidth / wireImg.naturalHeight);
-    cx = worldToX(o.x + o.w / 2);
-    top = worldToY(o.y);
+    var x = worldToX(o.x);
+    var w = o.w * scale;
     ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.drawImage(wireImg, cx - dw / 2, top, dw, dh);
+    ctx.globalAlpha = Math.max(.75, alpha);
+    for (var y = o.y; y < o.y + o.h; y += 54) {
+      var h = Math.min(54, o.y + o.h - y) * scale;
+      var top = worldToY(y);
+      if (top + h > 0 && top < cssH) ctx.drawImage(wireImg, x, top, w, h);
+    }
     ctx.restore();
+  }
+
+  function drawBlockingGround() {
+    obstacles.forEach(function (o) {
+      var x = worldToX(o.x);
+      var y = worldToY(o.y);
+      var active = state === 'play' && contactObstacle === o;
+      var width = (o.w || o.r * 2) * scale;
+      var height = (o.h || o.r * 2) * scale;
+      if (x + width < 0 || x - width > cssW || y + height < 0 || y - height > cssH) return;
+      ctx.beginPath();
+      if (o.w !== undefined) ctx.rect(x, y, width, height);
+      else ctx.arc(x, y, o.r * scale, 0, Math.PI * 2);
+      ctx.fillStyle = active ? 'rgba(240, 153, 60, .30)' : 'rgba(47, 31, 22, .33)';
+      ctx.fill();
+      ctx.strokeStyle = active ? '#ffc16d' : 'rgba(64, 40, 28, .92)';
+      ctx.lineWidth = active ? 3 : 2;
+      ctx.stroke();
+    });
+    ctx.strokeStyle = 'rgba(81, 62, 43, .8)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(worldToX(MIN_X), worldToY(0), (GOAL_X - MIN_X) * scale, BEACH_W * scale);
   }
 
   function drawHedgehog(o, alpha) {
@@ -1711,6 +1749,7 @@
     drawWall();
     drawSmoke();
     drawSurf();
+    drawBlockingGround();
     drawMinesAndPacks();
     drawSoldiers();
     drawHazards();
@@ -1761,6 +1800,9 @@
       updateStumble(dt);
     }
     if (state === 'play' || state === 'stumble' || state === 'pause') renderHud();
+    var notice = state === 'play' ? movementNotice : '';
+    if (movementNote.textContent !== notice) movementNote.textContent = notice;
+    movementNote.hidden = !notice;
     refreshBrace();
     refreshFire();
     render();
