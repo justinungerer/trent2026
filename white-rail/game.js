@@ -130,7 +130,7 @@
   var nextFlyover = 0;
   var speed = 0;
   var slips = 0;
-  var slipLimit = 3;
+  var slipLimit = 3 + (window.TrentMissionBonus || 0);
   var fromLane = 1;
   var toLane = 1;
   var laneT = 1;
@@ -392,8 +392,8 @@
   function failLine() {
     showLose(
       'Back at the start',
-      'The handcar took three hits and is back at the start of the line.',
-      'Three hits. Back at the start of the line.'
+      'The handcar took ' + slipLimit + ' hits and is back at the start of the line.',
+      slipLimit + ' hits. Back at the start of the line.'
     );
   }
 
