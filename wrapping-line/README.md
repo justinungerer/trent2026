@@ -1,6 +1,6 @@
 # Chapter 9 — The Wrapping Line
 
-A belt brings presents through the workshop at different heights. The left stick moves a mark up and down to meet them. Only the point total matters. Thirty points clear the line.
+A belt brings presents through the workshop at different heights. The up and down buttons move a targeting line to meet them. Only the point total matters. Thirty points clear the line.
 
 The pictures are original generated paintings in `art/`: the workshop, Trent, and five presents. The mark and the bow that lands on a good present are small canvas drawings. There are no third-party assets and no build step.
 
@@ -22,12 +22,12 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Move the mark with the left stick and tap Wrap when a good box reaches it.
+- Hold the up or down button to move the line and tap Wrap when a good box reaches it.
 - Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same belt. Give up returns to the start and does not keep the run.
 
-The stick is larger than 48 pixels.
+Both movement buttons are 60 pixels tall.
 
-If the device asks for reduced motion, a bad meet does not shake the shop, and the mark does not pulse.
+If the device asks for reduced motion, a bad meet does not shake the shop.
 
 ## Win and lose
 
