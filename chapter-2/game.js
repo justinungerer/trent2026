@@ -68,10 +68,12 @@ const sightHalf=0.85*0.75;
 const sightDot=Math.cos(sightHalf);
 const lampOffset=21;
 const mineReach=26;
+const mineStunSeconds=2;
+const macRadius=11;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
 const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch',
- 'painted-heart','painted-mac'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
+ 'painted-heart','painted-mac','painted-shock'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
  const image=new Image();
  const file=name==='yard'?(stable?'stable-yard':freight?'inspection-yard':name):name;
  image.src='./art/'+file+'.webp';return [name,image];
@@ -92,7 +94,8 @@ function placeKnob(x,y){knob.style.transform='translate(calc(-50% + '+x+'px), ca
 function releaseStick(){stick=null;placeKnob(0,0);}
 function reset(notice){
  keys.clear();releaseStick();
- run={player:{...spawn,dirX:1,dirY:0,hull:3,shield:0,moving:false,stride:0},
+ run={player:{...spawn,dirX:1,dirY:0,hull:3,shield:0,stunnedUntil:0,moving:false,stride:0},
+  mines:mines.map(mine=>({...mine,spent:false})),
   guards:patrols.map(route=>{
    const angle=Math.atan2(route[1][1]-route[0][1],route[1][0]-route[0][0]);
    return {x:route[0][0],y:route[0][1],route,index:1,angle,chase:false};
@@ -173,16 +176,54 @@ function steer(actor,heading,speed,dt,bodyRadius){
 function sendMac(){
  if(mode!=='play'||!run.macUses||run.mac)return;
  const p=run.player;
- run.mac={x:p.x,y:p.y,angle:Math.atan2(p.dirY,p.dirX),until:run.time+MAC_SECONDS,
-  target:run.guards.reduce((best,guard)=>{
-   const score=distance(p,guard)+(lineBlocked(p,guard)?170:0);
-   return score<best.score?{guard,score}:best;
-  },{guard:null,score:Infinity}).guard};
+ const target=nearestGuard(p);
+ run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),until:run.time+MAC_SECONDS,
+  target, waypoint:null,pathDue:0};
  run.macUses--;
  announce('Mac is after the guards.');
  sync();
 }
 macButton.onclick=sendMac;
+
+function nearestGuard(actor){
+ return run.guards.reduce((nearest,guard)=>distance(actor,guard)<distance(actor,nearest)?guard:nearest);
+}
+
+function clearDogPath(a,b){
+ const steps=Math.max(1,Math.ceil(distance(a,b)/8));
+ for(let i=1;i<=steps;i++){
+  const t=i/steps;
+  if(blocked(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,macRadius))return false;
+ }
+ return true;
+}
+
+function nextDogWaypoint(mac,target){
+ const pad=macRadius+4;
+ const nodes=[mac,target,...shelves.flatMap(({x,y,w,h})=>[
+  {x:x-pad,y:y-pad},{x:x+w+pad,y:y-pad},
+  {x:x-pad,y:y+h+pad},{x:x+w+pad,y:y+h+pad}
+ ].filter(point=>!blocked(point.x,point.y,macRadius)))];
+ const costs=nodes.map(()=>Infinity), firstHop=[], visited=new Set();
+ costs[0]=0;
+ for(let step=0;step<nodes.length;step++){
+  let current=-1;
+  for(let i=0;i<nodes.length;i++){
+   if(!visited.has(i)&&costs[i]<(current<0?Infinity:costs[current]))current=i;
+  }
+  if(current===1)return firstHop[current];
+  if(current<0)break;
+  visited.add(current);
+  for(let i=1;i<nodes.length;i++){
+   const cost=costs[current]+distance(nodes[current],nodes[i]);
+   if(!visited.has(i)&&cost<costs[i]&&clearDogPath(nodes[current],nodes[i])){
+    costs[i]=cost;
+    firstHop[i]=current===0?nodes[i]:firstHop[current];
+   }
+  }
+ }
+ return target;
+}
 const movement=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 window.addEventListener('keydown',event=>{
  const key=event.key.toLowerCase();
@@ -235,7 +276,7 @@ function update(dt){
   dy=Math.hypot(stick.dx,stick.dy)>0.2?stick.dy:0;
  }
  const magnitude=Math.hypot(dx,dy);
- p.moving=magnitude>0;
+ p.moving=magnitude>0&&p.stunnedUntil<=run.time;
  if(p.moving){
   const before={x:p.x,y:p.y};
   p.dirX=dx/magnitude;p.dirY=dy/magnitude;
@@ -248,9 +289,15 @@ function update(dt){
    run.prints.push({x:p.x-p.dirY*side*5,y:p.y+p.dirX*side*5,angle:Math.atan2(p.dirY,p.dirX),until:run.time+3});
   }
  }
- if(mines.some(mine=>distance(p,mine)<mineReach)){
-  reset('A yard mine popped. Back to the gate.');
-  return;
+ const mine=p.stunnedUntil<=run.time&&run.mines.find(item=>!item.spent&&distance(p,item)<mineReach);
+ if(mine){
+  mine.spent=true;
+  p.stunnedUntil=run.time+mineStunSeconds;
+  p.moving=false;
+  keys.clear();
+  releaseStick();
+  run.flash=.16;
+  announce('Mine shock. Stunned for two seconds.');
  }
  run.prints=run.prints.filter(print=>print.until>run.time);
  if(run.mac&&run.mac.until<=run.time){
@@ -259,9 +306,24 @@ function update(dt){
  }
  if(run.mac){
   const mac=run.mac;
-  const target=mac.target;
+  const target=nearestGuard(mac);
   const before={x:mac.x,y:mac.y};
-  if(target&&distance(mac,target)>23)steer(mac,Math.atan2(target.y-mac.y,target.x-mac.x),MAC_SPEED,dt,11);
+  if(clearDogPath(mac,target))mac.waypoint=null;
+  else if(target!==mac.target||!mac.waypoint||run.time>=mac.pathDue||distance(mac,mac.waypoint)<7){
+   mac.waypoint=nextDogWaypoint(mac,target);
+   mac.pathDue=run.time+.25;
+  }
+  mac.target=target;
+  const aim=mac.waypoint||target;
+  const gap=distance(mac,aim);
+  if(gap>(mac.waypoint?3:23)){
+   const heading=Math.atan2(aim.y-mac.y,aim.x-mac.x);
+   if(clearDogPath(mac,aim)){
+    const step=Math.min(MAC_SPEED*dt,gap);
+    mac.angle=heading;
+    walk(mac,Math.cos(heading)*step,Math.sin(heading)*step,macRadius);
+   }else steer(mac,heading,MAC_SPEED,dt,macRadius);
+  }
   mac.running=distance(mac,before)>.1;
  }
  let spotted=false;
@@ -415,7 +477,7 @@ function render(){
   ctx.fillStyle='#10162475';ctx.fillRect(s.x+4,s.y+9,s.w,s.h);
   if(!sprite('shelf',s.x+s.w/2,s.y+s.h/2,s.w,s.h)){ctx.fillStyle='#774b34';ctx.fillRect(s.x,s.y,s.w,s.h);}
  }
- for(const mine of mines)drawMine(mine);
+ for(const mine of run.mines)if(!mine.spent)drawMine(mine);
  for(const light of run.lights){
   glow(light.x,light.y,light.r,'#fff1b8aa');
   ctx.strokeStyle='#fff6c888';ctx.lineWidth=2;ctx.beginPath();ctx.arc(light.x,light.y,light.r,0,7);ctx.stroke();
@@ -467,11 +529,14 @@ function render(){
   const phase=escapeTime/2;
   sprite('rudolph',depot.x-98+phase*150,depot.y-4-Math.abs(Math.sin(escapeTime*12))*8,100,67);
  }
- if(p.shield<=run.time||reducedMotion.matches||Math.floor(run.time*12)%2===0){
+ const stunned=p.stunnedUntil>run.time;
+ if(stunned||p.shield<=run.time||reducedMotion.matches||Math.floor(run.time*12)%2===0){
   ctx.fillStyle='#13192791';ctx.beginPath();ctx.ellipse(p.x,p.y+10,18,7,0,0,7);ctx.fill();
   const step=p.moving&&!reducedMotion.matches?Math.sin(p.stride/16*Math.PI):0;
   ctx.save();ctx.translate(p.x,p.y+8);ctx.rotate(step*.07);
-  sprite('elf',0,-22+step*2,68,45,p.dirX<0);
+  if(!stunned||!sprite('painted-shock',0,-26,59,68,p.dirX<0)){
+   sprite('elf',0,-22+step*2,68,45,p.dirX<0);
+  }
   ctx.restore();
   if(reducedMotion.matches&&p.shield>run.time){
    ctx.strokeStyle='#ffce8b';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+10,20,9,0,0,7);ctx.stroke();

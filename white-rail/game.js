@@ -37,9 +37,6 @@
   var loadingSpur = stage === 'the-loading-spur';
   var BOMBER_COUNT = siding ? 16 : loadingSpur ? 36 : 26;
   var FINISH = 1200;
-  var loadingZone = { lane: 2, start: FINISH - 32, end: FINISH };
-  var markers = [{ lane: 0, x: 305, w: 5 }, { lane: 2, x: 885, w: 5 }];
-  var markersFound = 0;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
@@ -84,12 +81,6 @@
   if (siding || loadingSpur) {
     var stageTitle = siding ? 'Siding Signals' : 'The Loading Spur';
     document.getElementById('rail-stage-title').textContent = stageTitle;
-    document.getElementById('rail-win-title').textContent = siding ? 'Route marked' : 'Cart in position';
-    document.getElementById('rail-win-copy').textContent = siding
-      ? 'Both route markers came through.' : 'The cart is ready to unload.';
-    document.getElementById('rail-objective').textContent = siding
-      ? 'Pass over both lantern markers on their tracks before leaving the siding.'
-      : 'Coast to a full stop inside the marked zone on the right track. Stop pumping when you see the approach lantern.';
   }
   var route = PATTERN;
   var sectors = siding ? 4 : loadingSpur ? 6 : 5;
@@ -99,8 +90,11 @@
       return { kind: ob.kind, lane: (ob.lane + sector) % 3,
         x: 24 + sector * sectorSize + ob.x / 454 * (sectorSize - 16), w: ob.w };
     });
-  }).flat().filter(function (ob) {
-    return !siding || markers.every(function (marker) { return Math.abs(ob.x - marker.x) > 11; });
+  }).flat();
+  var obstacleCount = Math.round(PATTERN.length * .9);
+  PATTERN = PATTERN.filter(function (_, index, obstacles) {
+    return Math.floor((index + 1) * obstacleCount / obstacles.length) >
+      Math.floor(index * obstacleCount / obstacles.length);
   });
   sheds = siding ? [{ x: 305, w: 11, h: 7 }, { x: 600, w: 15, h: 8 }, { x: 885, w: 17, h: 7 }]
     : loadingSpur ? [{ x: 390, w: 24, h: 11 }, { x: 700, w: 25, h: 9 }, { x: 1160, w: 23, h: 10 }]
@@ -136,7 +130,7 @@
   var nextFlyover = 0;
   var speed = 0;
   var slips = 0;
-  var slipLimit = 3 + (window.TrentMissionBonus || 0);
+  var slipLimit = 4 + (window.TrentMissionBonus || 0);
   var fromLane = 1;
   var toLane = 1;
   var laneT = 1;
@@ -257,7 +251,6 @@
   function renderHud() {
     var kmh = Math.round(Math.max(0, speed) * 3.6) + ' km/h';
     var left = Math.max(0, Math.ceil(FINISH - distance)) + ' m';
-    if (siding) left += ' · ' + markersFound + '/2';
     var slipLine = slips + ' / ' + slipLimit;
     if (speedEl.textContent !== kmh) speedEl.textContent = kmh;
     if (distanceEl.textContent !== left) distanceEl.textContent = left;
@@ -281,8 +274,6 @@
   }
 
   function resetWorld() {
-    markersFound = 0;
-    markers.forEach(function (marker) { marker.cleared = false; });
     distance = 0;
     flyovers = [];
     nextFlyover = 0;
@@ -363,7 +354,7 @@
     if (state === 'win' || state === 'lose') return;
     seconds = Math.max(0, Math.round((performance.now() - runStart - pauseAccum) / 1000));
     state = 'win';
-    if (!loadingSpur) distance = FINISH;
+    distance = FINISH;
     speed = 0;
     bombs = [];
     dragging = false;
@@ -548,9 +539,7 @@
     var w = 4.2;
     var lead = Math.min(VIEW_DEPTH - 32, 23 + speed);
     var x = placeGapX(lane, distance + lead, w);
-    if ((siding && markers.some(function (marker) { return Math.abs(x - marker.x) < 23; })) ||
-        (loadingSpur && x >= loadingZone.start - 82)) x = -1;
-    bombs.push({ x: x < 0 ? distance + lead : x, lane: x < 0 ? 3.2 : lane,
+    bombs.push({ x: x < 0 ? Math.min(distance + lead, FINISH - w) : x, lane: lane,
       w: w, fromX: jet.x, fromY: jet.y, fall: 0, damagesTrack: x >= 0 });
   }
 
@@ -658,30 +647,7 @@
   }
 
   function checkRailObjective() {
-    if (siding) {
-      markers.forEach(function (marker) {
-        if (hitTest(marker)) {
-          marker.cleared = true;
-          markersFound++;
-          say('Route markers: ' + markersFound + ' of ' + markers.length);
-        }
-      });
-    }
-    if (loadingSpur && occupiedLane() === loadingZone.lane && laneT === 1 &&
-        distance >= loadingZone.start && distance <= loadingZone.end && speed === 0) {
-      win();
-      return;
-    }
-    if (distance >= FINISH) {
-      if (siding && markersFound !== markers.length) {
-        showLose('Route incomplete', 'Ride over both lantern markers before the junction.', 'A route marker was missed.');
-      } else if (loadingSpur) {
-        showLose('Past the loading zone', 'Release Pump at the approach lantern and coast to a stop on the right track.', 'The loading zone was missed.');
-      } else {
-        distance = FINISH;
-        win();
-      }
-    }
+    if (distance >= FINISH) win();
   }
 
   function updateSlip(dt) {
@@ -1006,26 +972,6 @@
     flyovers.forEach(function (jet) { drawPlaneAt(jet.x, jet.y, .68); });
     drawTracks();
     drawTrackside();
-    if (siding) {
-      markers.forEach(function (marker) {
-        if (!marker.cleared) drawTrackObstacle({ kind: 'lantern', lane: marker.lane, x: marker.x, w: marker.w });
-      });
-    }
-    if (loadingSpur) {
-      var near = Math.max(distance, loadingZone.start);
-      var far = Math.min(distance + VIEW_DEPTH, loadingZone.end);
-      if (far > near) {
-        ctx.save();
-        ctx.globalAlpha = 0.55;
-        for (var x = Math.ceil(near / 4) * 4; x < far; x += 4) {
-          lineAcross(project(x, loadingZone.lane), 45, '#eed389', 5);
-        }
-        ctx.restore();
-      }
-      [loadingZone.start - 18, loadingZone.start, loadingZone.end].forEach(function (x) {
-        drawTrackObstacle({ kind: 'lantern', lane: loadingZone.lane, x: x, w: 0 });
-      });
-    }
     var visible = obstacles.filter(function (ob) { return inView(ob.x); })
       .sort(function (a, b) { return b.x - a.x; });
     visible.forEach(function (ob) { if (ob.x >= distance) drawTrackObstacle(ob); });
