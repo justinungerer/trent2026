@@ -25,6 +25,8 @@
   var BUF_W = 420;
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
+  var WALK_SPEED = 2.55;
+  var PATROL_STEPS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
   var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
   var stage = new URLSearchParams(location.search).get('stage');
   var listening = stage === 'the-listening-post';
@@ -375,6 +377,8 @@
     for (i = 0; i < kits.length; i++) {
       pickups.push({ x: kits[i].x, y: kits[i].y, kind: 'health', n: 1, bob: i * 0.6 });
     }
+    enemies = enemies.concat(spreadTake(cells, function (c) { return c.d >= 9; }, enemies.length, 1.4, []));
+    enemies.sort(function (a, b) { return a.d - b.d; });
     if (map[1][2] === 1 && map[2][1] !== 1) {
       faceX = 0;
       faceY = 1;
@@ -551,7 +555,10 @@
         bob: src.bob,
         cool: 0,
         aim: 0,
-        stun: 0
+        stun: 0,
+        patrolTarget: null,
+        patrolPrevious: null,
+        patrolRandom: mulberry32(i + 1)
       });
     }
     return list;
@@ -782,6 +789,40 @@
     });
   }
 
+  function patrol(e, dt) {
+    var remaining = WALK_SPEED * dt;
+    if (!e.patrolTarget) {
+      e.patrolTarget = { x: Math.floor(e.x) + 0.5, y: Math.floor(e.y) + 0.5 };
+    }
+    while (remaining > 0) {
+      var target = e.patrolTarget;
+      var dx = target.x - e.x;
+      var dy = target.y - e.y;
+      var distance = Math.hypot(dx, dy);
+      if (distance > remaining) {
+        e.x += dx / distance * remaining;
+        e.y += dy / distance * remaining;
+        return;
+      }
+      e.x = target.x;
+      e.y = target.y;
+      remaining -= distance;
+      var exits = PATROL_STEPS.map(function (step) {
+        return { x: e.x + step[0], y: e.y + step[1] };
+      }).filter(function (next) {
+        return !cellSolid(next.x, next.y) && (next.x !== EXIT_X || next.y !== EXIT_Y);
+      });
+      var previous = e.patrolPrevious;
+      var forward = exits.filter(function (next) {
+        return !previous || next.x !== previous.x || next.y !== previous.y;
+      });
+      if (forward.length) exits = forward;
+      if (!exits.length) return;
+      e.patrolPrevious = target;
+      e.patrolTarget = exits[Math.floor(e.patrolRandom() * exits.length)];
+    }
+  }
+
   function updateEnemies(dt) {
     var i;
     var e;
@@ -808,8 +849,11 @@
       visible = dist < kind.range + 1.5 && sees(e.x, e.y);
       if (!visible) {
         e.aim = 0;
+        if (e.stun <= 0) patrol(e, dt);
         continue;
       }
+      e.patrolTarget = null;
+      e.patrolPrevious = null;
       e.aim += dt;
       if (e.stun <= 0 && e.aim > 0.12) {
         if (dist > kind.hold + 0.25) {
@@ -998,7 +1042,7 @@
   }
 
   function update(dt) {
-    var speed = 2.55 * dt;
+    var speed = WALK_SPEED * dt;
     var turned = false;
     var walked = false;
     var i;
