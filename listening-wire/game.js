@@ -365,7 +365,7 @@
       placed.push(cell);
       pickups.push({ x: cell.x, y: cell.y, kind: 'ammo', n: 4, bob: 0.4 });
     });
-    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, listening ? 26 : gatehouse ? 39 : 120, 1.4, placed);
+    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, listening ? 26 : gatehouse ? 39 : 30, 1.4, placed);
     enemies.sort(function (a, b) { return a.d - b.d; });
     for (i = 0; i < enemies.length; i++) placed.push(enemies[i]);
     boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 12, 2.8, placed);
