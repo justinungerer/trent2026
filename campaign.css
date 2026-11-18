@@ -512,6 +512,11 @@ body {
   grid-column: 1 / -1;
 }
 
+.chapter-menu-row:not(:last-child) {
+  padding-bottom: 18px;
+  border-bottom: 2px solid #8d7b61;
+}
+
 .chapter-level {
   grid-column: 1 / -1;
   grid-row: 2;

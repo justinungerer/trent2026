@@ -26,3 +26,16 @@ Horizontal strip of equal frames on a transparent background. The feet share one
 - Order, left to right: high, down, forward, low, rising, high
 - Foot anchor: (168, 495) in every frame. X is the center of the soles. Y is the shared sole baseline.
 - Milliseconds per frame: about 53. One pump stroke moves the animation from 0 to 1 in 320 ms, and the six frames play in that order across the stroke. Holding Pump starts the stroke again whenever the pump cooldown allows. When the stroke is finished, frame 0 holds.
+
+
+## Painted tank and track additions
+
+Generated with the built-in image generation tool on November 18, 2026.
+
+`painted-tank.webp` is a 1024 × 936 transparent tank sprite used beside the tracks in levels 2 and 3.
+
+The tank prompt was “A single WWII German heavy tank as a high resolution painted game sprite, semi realistic hand painted texture matching a snowy Christmas WWII action game. Front three quarter view seen slightly from above, tank facing the viewer with its long cannon pointing toward the bottom of the image, olive grey battered armor, snow resting on turret and tracks, dark steel treads, tiny warm headlamp, closed hatch and no people. Full tank silhouette including gun and tracks inside the frame. True transparent background, no ground plane, no floor shadow, no scenery, no text, no insignia. Detailed metal panels and snow accents, easy to recognize at small game sizes.”
+
+`painted-track.webp` is a 1024 × 1536 overhead rail painting. The game projects its texture from fixed world positions, including breaks in the rail.
+
+The track prompt was “High resolution painted game texture, one straight railway track viewed perfectly from directly overhead, flat orthographic top down view. Portrait canvas. Exactly two straight parallel steel rails running vertically from top edge to bottom edge, evenly spaced weathered wooden sleepers between and beyond the rails, iron bolts and rail clips, gravel ballast with soft powder snow along the sides and on the wood, dark steel and brown timber with cold winter blue snow. The rails and sleeper pattern must be parallel throughout with no perspective or vanishing point. Seamless continuous vertical repeating texture so the top and bottom edges join. One track centered with generous ballast edges. No train, no tank, no characters, no text, no buildings, no horizon, no shadows cast from objects outside the texture. Semi realistic rich hand painted game art, crisp detailed wood grain and metal texture.”

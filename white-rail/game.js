@@ -13,6 +13,8 @@
   var trackUpBtn = document.getElementById('track-up');
   var trackDownBtn = document.getElementById('track-down');
   var pumpBtn = document.getElementById('pump');
+  var brakeBtn = document.getElementById('brake');
+  var tankWarning = document.getElementById('tank-warning');
   var hintEl = document.getElementById('hint');
   var startSheet = document.getElementById('start-sheet');
   var pauseSheet = document.getElementById('pause-sheet');
@@ -30,18 +32,25 @@
   var VIEW_H = 390;
   var VIEW_DEPTH = 94;
   var TRACK_SPACING = 146;
-  var HORIZON_Y = 102;
+  var HORIZON_Y = 40;
   var CART_Y = 322;
   var stage = new URLSearchParams(location.search).get('stage');
   var siding = stage === 'siding-signals';
   var loadingSpur = stage === 'the-loading-spur';
-  var BOMBER_COUNT = siding ? 16 : loadingSpur ? 36 : 26;
-  var FINISH = 1200;
+  var TRACK_COUNT = loadingSpur ? 5 : 3;
+  var CENTER_LANE = (TRACK_COUNT - 1) / 2;
+  var FINISH = 1560;
+  var DENSITY_SCALE = FINISH / 1200 * TRACK_COUNT / 3;
+  var BOMBER_COUNT = Math.round((siding ? 16 : loadingSpur ? 36 : 26) * DENSITY_SCALE);
+  var TANK_COUNT = siding ? 0 : 3 * TRACK_COUNT;
+  var SHELL_TIME = 1.25;
+  document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line across ' + TRACK_COUNT + ' tracks to win. Any track will do.';
+  document.getElementById('tank-help').hidden = TANK_COUNT === 0;
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
   var COAST = 1.15;
-  var MAX_SPEED = 27;
+  var MAX_SPEED = 40.5;
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
@@ -96,6 +105,17 @@
     return Math.floor((index + 1) * obstacleCount / obstacles.length) >
       Math.floor(index * obstacleCount / obstacles.length);
   });
+  var sourcePattern = PATTERN;
+  var scaledCount = Math.round(sourcePattern.length * DENSITY_SCALE);
+  PATTERN = Array.from({ length: scaledCount }, function (_, index) {
+    var source = sourcePattern[index % sourcePattern.length];
+    return {
+      kind: source.kind,
+      lane: (index * 2 + Math.floor(index / TRACK_COUNT)) % TRACK_COUNT,
+      x: 32 + index * (FINISH - 70) / (scaledCount - 1),
+      w: source.w
+    };
+  });
   sheds = siding ? [{ x: 305, w: 11, h: 7 }, { x: 600, w: 15, h: 8 }, { x: 885, w: 17, h: 7 }]
     : loadingSpur ? [{ x: 390, w: 24, h: 11 }, { x: 700, w: 25, h: 9 }, { x: 1160, w: 23, h: 10 }]
     : sheds.map(function (shed) { return { x: shed.x * 2.6, w: shed.w, h: shed.h }; });
@@ -111,7 +131,7 @@
   var HAND = { w: 774, h: 431, axleX: 386, axleY: 426, deckY: 214 };
 
   var obstacleArt = {};
-  ['crate', 'arm', 'gap', 'lantern', 'hut', 'bomber'].forEach(function (name) {
+  ['crate', 'arm', 'gap', 'lantern', 'hut', 'bomber', 'tank', 'track'].forEach(function (name) {
     var image = new Image();
     image.src = 'art/painted-' + name + '.webp';
     obstacleArt[name] = image;
@@ -131,8 +151,8 @@
   var speed = 0;
   var slips = 0;
   var slipLimit = 3 + (window.TrentMissionBonus || 0);
-  var fromLane = 1;
-  var toLane = 1;
+  var fromLane = CENTER_LANE;
+  var toLane = CENTER_LANE;
   var laneT = 1;
   var pumpCool = 0;
   var pumpRate = 0;
@@ -145,6 +165,8 @@
   var obstacles = makeObstacles();
   var bombs = [];
   var puffs = [];
+  var tanks = makeTanks();
+  var tankShots = [];
   var hintDismissed = false;
   var visualTime = 0;
   var cssW = 844;
@@ -160,6 +182,8 @@
   var pumpHeld = false;
   var spaceHeld = false;
   var pumpId = 0;
+  var brakeHeld = false;
+  var brakeId = 0;
   var dragging = false;
   var dragId = 0;
   var dragX = 0;
@@ -220,7 +244,7 @@
     var ahead = worldDistance - distance;
     var scale = 22 / (22 + Math.max(-8, ahead));
     return {
-      x: VIEW_W * 0.5 + ((lane - 1) * TRACK_SPACING + (lateral || 0)) * scale,
+      x: VIEW_W * 0.5 + ((lane - CENTER_LANE) * TRACK_SPACING + (lateral || 0)) * scale,
       y: HORIZON_Y + (CART_Y - HORIZON_Y) * scale,
       scale: scale
     };
@@ -232,7 +256,7 @@
 
   function visualLane() {
     var t = laneT >= 1 ? 1 : laneT * laneT * (3 - 2 * laneT);
-    return clamp(fromLane + (toLane - fromLane) * t, 0, 2);
+    return clamp(fromLane + (toLane - fromLane) * t, 0, TRACK_COUNT - 1);
   }
 
   function occupiedLane() {
@@ -260,7 +284,7 @@
 
   function refreshTrackButtons() {
     var upLimit = toLane <= 0;
-    var downLimit = toLane >= 2;
+    var downLimit = toLane >= TRACK_COUNT - 1;
     trackUpBtn.classList.toggle('limit', upLimit);
     trackDownBtn.classList.toggle('limit', downLimit);
     trackUpBtn.setAttribute('aria-disabled', upLimit ? 'true' : 'false');
@@ -271,6 +295,8 @@
     var held = (pumpHeld || spaceHeld) && playing();
     pumpBtn.classList.toggle('held', held);
     pumpBtn.setAttribute('aria-pressed', held ? 'true' : 'false');
+    brakeBtn.classList.toggle('held', brakeHeld && playing());
+    brakeBtn.setAttribute('aria-pressed', String(brakeHeld && playing()));
   }
 
   function resetWorld() {
@@ -279,8 +305,8 @@
     nextFlyover = 0;
     speed = 0;
     slips = 0;
-    fromLane = 1;
-    toLane = 1;
+    fromLane = CENTER_LANE;
+    toLane = CENTER_LANE;
     laneT = 1;
     pumpCool = 0;
     pumpRate = 0;
@@ -293,6 +319,10 @@
     obstacles = makeObstacles();
     bombs = [];
     puffs = [];
+    tanks = makeTanks();
+    tankShots = [];
+    brakeHeld = false;
+    brakeId = 0;
         hintDismissed = false;
     dragging = false;
     dragAccum = 0;
@@ -330,6 +360,8 @@
     pauseSheet.hidden = false;
     dragging = false;
     dragAccum = 0;
+    brakeHeld = false;
+    brakeId = 0;
     say('Paused.');
   }
 
@@ -417,7 +449,7 @@
     var next;
     if (!playing()) return;
     next = toLane + dir;
-    if (next < 0 || next > 2) return;
+    if (next < 0 || next >= TRACK_COUNT) return;
     if (next === toLane && laneT >= 1) return;
     fromLane = occupiedLane();
     toLane = next;
@@ -469,7 +501,7 @@
   }
 
   function integrate(dt) {
-    var pumping = pumpHeld || spaceHeld;
+    var pumping = (pumpHeld || spaceHeld) && !brakeHeld;
     var effort;
     var target;
     var rate;
@@ -482,9 +514,9 @@
     effort = pumpRate / PUMP_RATE_MAX;
     if (effort < 0.04) effort = 0;
     if (effort > 1) effort = 1;
-    if (effort === 0) target = 0;
+    if (!pumping || effort === 0) target = 0;
     else target = SPEED_FLOOR + (MAX_SPEED - SPEED_FLOOR) * effort;
-    rate = speed > target ? COAST : DECAY;
+    rate = speed > target ? COAST * (brakeHeld ? 2 : 1) : DECAY;
     speed += (target - speed) * (1 - Math.exp(-rate * dt));
     if (speed < 0.03 && target === 0) speed = 0;
     if (speed < 0) speed = 0;
@@ -497,32 +529,21 @@
     if (distance < 0) distance = 0;
   }
 
-  function stretchBlocked(lane, x, w) {
-    var i;
-    var ob;
-    for (i = 0; i < obstacles.length; i++) {
-      ob = obstacles[i];
-      if (ob.lane !== lane) continue;
-      if (x < ob.x + ob.w + 0.8 && x + w > ob.x - 0.8) return true;
-    }
-    return false;
+  function stretchBlocked(x, w, ignore) {
+    var clearance = NOSE + TAIL + .25;
+    return obstacles.concat(bombs, tankShots).some(function (ob) {
+      return ob !== ignore && ob.damagesTrack !== false &&
+        x < ob.x + ob.w + clearance && x + w > ob.x - clearance;
+    });
   }
 
-  /* Nudge forward until the bombed lane is clear and some other lane is open. */
-  function placeGapX(lane, x, w) {
+  /* Keep every new hazard away from obstacles and reservations on every track. */
+  function placeGapX(x, w) {
     var tries;
-    var other;
-    var open;
-    for (tries = 0; tries < 7; tries++) {
+    for (tries = 0; tries < 24; tries++) {
       if (x + w > FINISH - 4) return -1;
-      if (!stretchBlocked(lane, x, w)) {
-        open = false;
-        for (other = 0; other < 3; other++) {
-          if (other !== lane && !stretchBlocked(other, x, w)) open = true;
-        }
-        if (open) return x;
-      }
-      x += 4.5;
+      if (!stretchBlocked(x, w)) return x;
+      x += 1.5;
     }
     return -1;
   }
@@ -531,7 +552,7 @@
     var lane = occupiedLane();
     var w = 4.2;
     var lead = Math.min(VIEW_DEPTH - 32, 23 + speed);
-    var x = placeGapX(lane, distance + lead, w);
+    var x = placeGapX(distance + lead, w);
     bombs.push({ x: x < 0 ? Math.min(distance + lead, FINISH - w) : x, lane: lane,
       w: w, fromX: jet.x, fromY: jet.y, fall: 0, damagesTrack: x >= 0 });
   }
@@ -541,8 +562,7 @@
       var bomb = bombs[i];
       bomb.fall += dt;
       if (bomb.fall < .92) continue;
-      if (bomb.damagesTrack && !stretchBlocked(bomb.lane, bomb.x, bomb.w) &&
-          [0, 1, 2].some(function (lane) { return lane !== bomb.lane && !stretchBlocked(lane, bomb.x, bomb.w); })) {
+      if (bomb.damagesTrack && !stretchBlocked(bomb.x, bomb.w, bomb)) {
         obstacles.push({ kind: 'gap', lane: bomb.lane, x: bomb.x, w: bomb.w, cleared: false });
       }
       puffs.push({ x: bomb.x + bomb.w * .5, lane: bomb.lane, t: 0 });
@@ -566,6 +586,70 @@
       }
     });
     flyovers = flyovers.filter(function (jet) { return jet.x > -75; });
+  }
+
+  function makeTanks() {
+    return Array.from({ length: TANK_COUNT }, function (_, index) {
+      return {
+        x: 190 + index * (FINISH - 300) / Math.max(1, TANK_COUNT - 1),
+        side: index % 2 ? 1 : -1,
+        fired: false
+      };
+    });
+  }
+
+  function tankPoint(tank) {
+    return project(tank.x, tank.side < 0 ? -.95 : TRACK_COUNT - .05);
+  }
+
+  function updateTanks(dt) {
+    if (!playing()) return;
+    tanks.forEach(function (tank) {
+      var point = tankPoint(tank);
+      if (tank.fired || tank.x < distance || point.y - 80 * point.scale < VIEW_H * .2) return;
+      var impactX = placeGapX(distance + Math.max(12, speed * SHELL_TIME), .2);
+      if (impactX < 0) return;
+      tank.fired = true;
+      tankShots.push({ x: impactX, w: .2, lane: occupiedLane(), tank: tank, t: 0, evaded: false });
+      say('Tank fired. Change tracks to dodge its shell.');
+    });
+    for (var index = tankShots.length - 1; index >= 0; index--) {
+      var shot = tankShots[index];
+      if (shot.lane !== occupiedLane()) shot.evaded = true;
+      shot.t += dt;
+      if (shot.t < SHELL_TIME) continue;
+      tankShots.splice(index, 1);
+      if (!shot.evaded && playing()) {
+        beginSlip({ kind: 'shell', lane: shot.lane, x: distance + 1.05, w: .2 });
+      }
+    }
+  }
+
+  function drawTanks() {
+    tanks.forEach(function (tank) {
+      if (tank.x < distance - 12 || tank.x > distance + VIEW_DEPTH + 40) return;
+      var point = tankPoint(tank);
+      var image = obstacleArt.tank;
+      if (!imageReady(image)) return;
+      var width = 190 * point.scale;
+      var height = width * image.naturalHeight / image.naturalWidth;
+      ctx.drawImage(image, point.x - width / 2, point.y - height, width, height);
+    });
+    tankShots.forEach(function (shot) {
+      var source = tankPoint(shot.tank);
+      var target = project(distance, shot.lane);
+      var progress = clamp(shot.t / SHELL_TIME, 0, 1);
+      ctx.fillStyle = shot.evaded ? '#ffe2a3' : '#ff5745';
+      ctx.beginPath();
+      ctx.ellipse(target.x, target.y + 3, 38, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      var x = source.x + (target.x - source.x) * progress;
+      var y = source.y - 8 * source.scale + (target.y - source.y + 8 * source.scale) * progress;
+      ctx.fillStyle = '#fff1ad';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 4, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
 
   function drawPlaneAt(px, py, size) {
@@ -633,6 +717,7 @@
   function updatePlay(dt) {
     integrate(dt);
     updateBombs(dt);
+    updateTanks(dt);
     if (state !== 'play') return;
     checkHits();
     if (state !== 'play') return;
@@ -653,6 +738,7 @@
     }
     integrate(dt);
     updateBombs(dt);
+    updateTanks(dt);
     if (state !== 'slip') return;
     checkHits();
     if (state !== 'slip') return;
@@ -712,6 +798,10 @@
 
   function trackStrip(lane, near, far) {
     if (far <= near) return;
+    if (imageReady(obstacleArt.track)) {
+      drawPaintedTrack(lane, near, far);
+      return;
+    }
     var a = project(near, lane);
     var b = project(far, lane);
     var half = 49;
@@ -740,10 +830,36 @@
     }
   }
 
+  function drawPaintedTrack(lane, near, far) {
+    var image = obstacleArt.track;
+    for (var cursor = near; cursor < far;) {
+      var tile = Math.floor(cursor / 18);
+      var end = Math.min(far, cursor + 1.4, (tile + 1) * 18);
+      var a = project(cursor, lane);
+      var b = project(end, lane);
+      var left = Math.min(a.x - 49 * a.scale, b.x - 49 * b.scale);
+      var right = Math.max(a.x + 49 * a.scale, b.x + 49 * b.scale);
+      var sourceY = image.naturalHeight * (1 - (end - tile * 18) / 18);
+      var sourceHeight = image.naturalHeight * (end - cursor) / 18;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(a.x - 49 * a.scale, a.y);
+      ctx.lineTo(b.x - 49 * b.scale, b.y);
+      ctx.lineTo(b.x + 49 * b.scale, b.y);
+      ctx.lineTo(a.x + 49 * a.scale, a.y);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(image, 0, sourceY, image.naturalWidth, sourceHeight,
+        left, b.y, right - left, a.y - b.y + 1);
+      ctx.restore();
+      cursor = end;
+    }
+  }
+
   function drawTracks() {
     var near = distance - 8;
     var far = Math.min(FINISH + 12, distance + VIEW_DEPTH);
-    for (var lane = 0; lane < 3; lane++) {
+    for (var lane = 0; lane < TRACK_COUNT; lane++) {
       var cursor = near;
       var gaps = obstacles.filter(function (ob) {
         return ob.lane === lane && ob.kind === 'gap' && ob.x + ob.w > near && ob.x < far;
@@ -813,7 +929,7 @@
   function drawTrackside() {
     sheds.forEach(function (shed, index) {
       if (!inView(shed.x)) return;
-      var p = project(shed.x, index % 2 ? 2.8 : -.8);
+      var p = project(shed.x, index % 2 ? TRACK_COUNT - .2 : -.8);
       var w = 64 * p.scale;
       var h = shed.h * 7 * p.scale;
       if (imageReady(obstacleArt.hut)) {
@@ -969,6 +1085,7 @@
       .sort(function (a, b) { return b.x - a.x; });
     visible.forEach(function (ob) { if (ob.x >= distance) drawTrackObstacle(ob); });
     drawBombs();
+    drawTanks();
     drawHandcar();
     visible.forEach(function (ob) { if (ob.x < distance) drawTrackObstacle(ob); });
     drawSnow();
@@ -991,6 +1108,7 @@
   }
 
   function render() {
+    tankWarning.hidden = !playing() || !tankShots.some(function (shot) { return !shot.evaded; });
     var jog = shakeOffset();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#16345c';
@@ -1109,6 +1227,26 @@
   pumpBtn.addEventListener('pointercancel', endPump);
   pumpBtn.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
+  brakeBtn.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0 || !playing()) return;
+    event.preventDefault();
+    brakeHeld = true;
+    brakeId = event.pointerId;
+    hintDismissed = true;
+    if (brakeBtn.setPointerCapture) brakeBtn.setPointerCapture(event.pointerId);
+  });
+
+  function endBrake(event) {
+    if (event.pointerId !== brakeId) return;
+    brakeHeld = false;
+    brakeId = 0;
+  }
+
+  brakeBtn.addEventListener('pointerup', endBrake);
+  brakeBtn.addEventListener('pointercancel', endBrake);
+  brakeBtn.addEventListener('lostpointercapture', endBrake);
+  brakeBtn.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+
   canvas.addEventListener('pointerdown', function (event) {
     var p;
     if (event.button !== 0) return;
@@ -1153,10 +1291,12 @@
 
   window.addEventListener('pointerup', function (event) {
     endPump(event);
+    endBrake(event);
     endDrag(event);
   });
   window.addEventListener('pointercancel', function (event) {
     endPump(event);
+    endBrake(event);
     endDrag(event);
   });
   canvas.addEventListener('contextmenu', function (event) { event.preventDefault(); });
@@ -1189,6 +1329,8 @@
   });
 
   window.addEventListener('blur', function () {
+    brakeHeld = false;
+    brakeId = 0;
     pumpHeld = false;
     spaceHeld = false;
     dragging = false;

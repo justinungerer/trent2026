@@ -146,7 +146,8 @@ button:focus-visible {
   opacity: 0.45;
 }
 
-#pump {
+#pump,
+#brake {
   position: absolute;
   z-index: 5;
   right: max(16px, env(safe-area-inset-right));
@@ -169,6 +170,37 @@ button:focus-visible {
   background: #8a6230;
   border-color: #f0d7a4;
   color: #fff6e4;
+}
+
+#brake {
+  bottom: max(100px, calc(env(safe-area-inset-bottom) + 100px));
+  height: 60px;
+  min-height: 60px;
+  padding: 12px 22px;
+  background: #612d2a;
+  color: #fff1df;
+  font-size: 18px;
+}
+
+#brake.held,
+#brake:active {
+  background: #a33e35;
+}
+
+#tank-warning {
+  position: absolute;
+  z-index: 4;
+  top: max(132px, calc(env(safe-area-inset-top) + 124px));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #64251fe8;
+  color: #fff1df;
+  font-weight: 800;
+  text-align: center;
+  pointer-events: none;
 }
 
 .hint {

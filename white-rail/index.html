@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16345c">
   <title>White Rail</title>
-  <link rel="stylesheet" href="style.css?v=side-by-side">
+  <link rel="stylesheet" href="style.css?v=rail-tanks-brake">
 </head>
 <body>
   <main class="stage">
@@ -24,7 +24,7 @@
       </div>
       <div class="hud-block">
         <span class="label">Distance</span>
-        <strong id="distance">1200 m</strong>
+        <strong id="distance">1560 m</strong>
       </div>
       <button type="button" id="pause">Pause</button>
     </div>
@@ -34,15 +34,18 @@
       <button type="button" id="track-down" aria-label="Track right">Right</button>
     </div>
     <button type="button" id="pump" aria-pressed="false">Pump</button>
+    <button type="button" id="brake" aria-pressed="false">Brake</button>
+    <p id="tank-warning" role="status" hidden>Tank fired! Change tracks.</p>
 
     <div id="start-sheet" class="sheet">
       <div class="card">
         <p class="kicker">Chapter 3</p>
         <h1 id="rail-stage-title">White Rail</h1>
-        <p>Reach the end of the 1,200 m line to win. Any track will do.</p>
-        <p>Use Left and Right or swipe sideways to pick a track. Use your right thumb to pump. Let go of the pump and the car coasts to a stop.</p>
+        <p id="rail-goal">Reach the end of the 1,560 m line to win. Any track will do.</p>
+        <p>Use Left and Right or swipe sideways to pick a track. Use your right thumb to pump. Let go to coast, or hold Brake above Pump to slow down twice as fast. Brake takes priority while held.</p>
         <p>Every plane bombs the rail you are on when it drops its bomb. Switch tracks when you see the orange impact marker. Slow down when you need time to pick a safe track.</p>
         <p>You start with a three-hit limit. Each quiz bonus adds one extra hit to your limit. Crates and lowered signal arms count as one hit each. Rail gaps count as two.</p>
+        <p id="tank-help">Distant tanks fire at your current track. Change tracks after a tank fires to dodge its shell. A shell counts as one hit.</p>
         <button type="button" id="start">Roll out</button>
       </div>
     </div>
@@ -83,7 +86,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rail-quiz-hits"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rail-tanks-brake"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=random17"></script><script src="../game-audio.js?v=random17"></script></body>
 </html>

@@ -1,6 +1,6 @@
 # Chapter 3 — White Rail
 
-Trent pumps his handcar toward the yard mouth. The three snowy tracks converge at the horizon, and the handcar advances down them in perspective.
+Trent pumps his handcar toward the yard mouth over 1,560 meters. Levels 1 and 2 have three tracks, and level 3 has five. The top speed is 40.5 meters per second.
 
 The sky, handcar, and Trent use painted artwork from `art/`. The renderer projects the tracks and obstacles from their positions along the route. There are no third-party assets, no downloaded images, and no build step.
 
@@ -26,6 +26,9 @@ Touch first. Nothing you need is hover-only.
 
 - Left thumb: Left and Right pick the track. Swipe sideways on the left half of the picture to change tracks.
 - Right thumb: Pump. Hold it and the lever keeps stroking. Each stroke pushes the car. Let go and the car slows.
+- Hold Brake above Pump to slow at twice the coasting rate. Brake takes priority over Pump.
+
+Levels 2 and 3 have painted roadside tanks. Each tank fires when its center reaches about 20% of the screen height and targets the player's current track. Changing tracks after the shot avoids it. Tank shells count as one hit. New bomb gaps and shell markers reserve clear stretches across every track.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the line over returns to the start and does not count as reaching the yard.
 
 Buttons are at least 48 pixels. Left, Right, and Pump are larger so a thumb can hold them.
