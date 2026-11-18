@@ -25,6 +25,8 @@
   var eaves = stage === 'the-eaves';
   var flags = stage === 'above-the-lanterns';
   var objectives = [];
+  var objectiveNoticeUntil = 0;
+  var objectiveNotice = '';
 
   var VIEW_W = 844;
   var VIEW_H = 390;
@@ -110,6 +112,15 @@
         { x: 1570, y: 488, w: 466, name: 'Lower lantern walk', role: 'end' });
       objectives = [{ x: 1185, y: 166 }, { x: 1850, y: 488 }];
     }
+  }
+  if (flags) {
+    var extension = PLATFORMS.map(function (roof) {
+      return Object.assign({}, roof, { x: roof.x + WORLD_W, name: 'Far ' + roof.name });
+    });
+    PLATFORMS[PLATFORMS.length - 1].goal = false;
+    PLATFORMS = PLATFORMS.concat(extension);
+    objectives[1].x += WORLD_W;
+    WORLD_W *= 2;
   }
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
@@ -313,6 +324,8 @@
   }
 
   function beginRun() {
+    objectiveNoticeUntil = 0;
+    objectiveNotice = '';
     objectives.forEach(function (item) { item.taken = false; });
     falls = 0;
     played = 0;
@@ -573,8 +586,16 @@
       item.taken = true;
       say(eaves ? 'Lantern recovered.' : 'Route marker collected.');
     });
-    if (state === 'play' && body.ground && stood === GOAL && body.x > SLEIGH_X - 8 && body.x < SLEIGH_X + 130 &&
-        objectives.every(function (item) { return item.taken; })) win();
+    if (state === 'play' && body.ground && stood === GOAL && body.x > SLEIGH_X - 8 && body.x < SLEIGH_X + 130) {
+      if (objectives.every(function (item) { return item.taken; })) win();
+      else {
+        var missing = objectives.filter(function (item) { return !item.taken; }).length;
+        var message = flags ? 'You still need to collect ' + missing + (missing === 1 ? ' flag.' : ' flags.') : 'Collect the lantern before leaving.';
+        objectiveNoticeUntil = played + 4;
+        objectiveNotice = message;
+        say(message);
+      }
+    }
   }
 
   function firstIcicle() {
@@ -802,24 +823,24 @@
       if (screenY < 22 && (!above || roof.y > above.y)) above = roof;
       if (screenY > VIEW_H - 25 && (!below || roof.y < below.y)) below = roof;
     });
-    cue(above, 29, -1);
-    cue(below, VIEW_H - 27, 1);
+    cue(above, 40, -1);
+    cue(below, VIEW_H - 40, 1);
 
     function cue(roof, y, dir) {
       if (!roof) return;
       var x = clamp(roof.x + roof.w / 2 - camX, 120, VIEW_W - 120);
       ctx.fillStyle = '#102b3c';
       ctx.beginPath();
-      ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.arc(x, y, 30, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#ffd280';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ff3030';
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(x, y - dir * 8);
-      ctx.lineTo(x, y + dir * 7);
-      ctx.moveTo(x - 6, y + dir);
-      ctx.lineTo(x, y + dir * 7);
-      ctx.lineTo(x + 6, y + dir);
+      ctx.moveTo(x, y - dir * 16);
+      ctx.lineTo(x, y + dir * 14);
+      ctx.moveTo(x - 12, y + dir * 2);
+      ctx.lineTo(x, y + dir * 14);
+      ctx.lineTo(x + 12, y + dir * 2);
       ctx.stroke();
     }
   }
@@ -894,6 +915,14 @@
     drawTrent();
     drawLedgeCues();
     drawSnow();
+    if (state === 'play' && objectiveNoticeUntil > played) {
+      ctx.fillStyle = '#102b3cf2';
+      ctx.fillRect(VIEW_W / 2 - 240, 64, 480, 46);
+      ctx.fillStyle = '#fff1df';
+      ctx.font = 'bold 20px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(objectiveNotice, VIEW_W / 2, 94);
+    }
   }
 
   function resize() {

@@ -1704,7 +1704,8 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(Math.atan2(dir.y, dir.x));
-    ctx.fillStyle = 'rgba(243, 239, 228, 0.95)';
+    ctx.scale(2, 2);
+    ctx.fillStyle = '#ff3030';
     ctx.strokeStyle = '#16384c';
     ctx.lineWidth = 2;
     ctx.lineJoin = 'round';

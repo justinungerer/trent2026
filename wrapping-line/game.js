@@ -1,21 +1,6 @@
 /* Chapter 9 — The Wrapping Line.
-   Presents ride in at different heights. A left-thumb stick moves the mark
-   up and down to meet them. The point total wins the line at 30. There is
-   no streak to keep.
-   A shuffled bag of 12 is 4 plain (+1), 3 ribbon (+3), 2 gilt (+5),
-   2 torn (-1), and 1 crushed (-3). A random meet is worth
-   (4 + 9 + 10 - 2 - 3) / 12 = 1.5 points.
-   The clock is 27 seconds. Spawn x is 920, the mark is 456, and speed is
-   232 px/s, so a present reaches the mark in 2.00 seconds. The first spawn
-   waits 0.40 seconds and the rest arrive every 0.80 seconds, so present k
-   is judged at 2.40 + 0.80k. k = 0..30 are judged by 26.40 seconds. k = 31
-   would be 27.20 seconds, after the clock. That is 31 presents.
-   0.65 * 1.5 * 31 = 30.225, so meeting about 65% of them reaches 30 as the
-   clock ends. A present that passes the mark scores nothing. Time running
-   out restarts the round. Across the 844px view the belt holds about
-   844 / 232 / 0.80 = 4.6 presents.
-   Torn and crushed presents also spend one life. Lives come from
-   ?lives=10|9|8|7, or 7 when that value is missing. At 0 lives the run ends.
+   Thirty percent round times and proportionally faster belt arrivals.
+   Wrap intact boxes, avoid damaged boxes, and fill the level objective.
    Painted sprites live in art/. */
 'use strict';
 
@@ -50,12 +35,13 @@
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
   var NEED = 30;
-  var ROUND_SECONDS = loading ? 300 : sorting ? 100 : 27;
+  var ROUND_SECONDS = (loading ? 300 : sorting ? 100 : 27) * 0.3;
+  document.getElementById('round-limit').textContent = 'You have ' + ROUND_SECONDS + ' seconds per round.';
   var TARGET = 456;
   var MEET = 26;
-  var SPEED = 232;
-  var INTERVAL = 0.8;
-  var FIRST_SPAWN = 0.4;
+  var SPEED = 232 / 0.3;
+  var INTERVAL = 0.8 * 0.3;
+  var FIRST_SPAWN = 0.4 * 0.3;
   var LANES = [150, 206, 262, 318];
   var MARK_MIN = 150;
   var MARK_MAX = 318;
@@ -152,7 +138,7 @@
     var heightNow = Math.round((markY - MARK_MIN) / (MARK_MAX - MARK_MIN) * 100);
     var shown = Math.ceil(timeLeft);
     if (shown < 0) shown = 0;
-    if (shown > ROUND_SECONDS) shown = ROUND_SECONDS;
+    if (shown > Math.ceil(ROUND_SECONDS)) shown = Math.ceil(ROUND_SECONDS);
     runEl.textContent = manifests.length
       ? (loading ? (manifestIndex + 1) + '/2 · ' : '') +
         manifests[manifestIndex].map(function (need, index) {

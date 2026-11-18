@@ -36,6 +36,7 @@
   var WALK = cellPassage ? 2130 : gateFight ? 1770 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
   var START_X = 340;
   var GATE_X = START_X + WALK;
+  var EXIT_X = cellPassage ? START_X - 160 : GATE_X;
   var WORLD_R = GATE_X + 240;
   var SANTA_H = Math.round(VIEW_H * 0.28);
   var MAX_HP = 5 + (window.TrentMissionBonus || 0);
@@ -97,11 +98,11 @@
     { at: 0.24, y: 0.62 },
     { at: 0.62, y: 0.4 }
   ];
-  var cellKey = { x: 995, y: BAND_TOP + BAND_H * 0.27 };
+  var cellKey = { x: GATE_X - 80, y: BAND_TOP + BAND_H * 0.27 };
   if (cellPassage || gateFight) {
     document.getElementById('camp-stage-title').textContent = cellPassage ? 'The Cell Passage' : 'Hold the Gate';
     document.getElementById('camp-goal').textContent = cellPassage
-      ? 'Take Trent’s key from the barred window, then reach the passage door.'
+      ? 'Start beside the passage door on the left. Fight across the passage to collect Trent’s key at the far right, then return to the door on the left.'
       : 'Clear both gatehouse groups and reach the yard gate.';
     WAVE_PLAN = cellPassage ? [
       { at: 0.24, foes: [{ k: 'light', side: 'right' }] },
@@ -772,7 +773,7 @@
       foes[i].x = clamp(foes[i].x, 20, WORLD_R);
     }
     updatePickups();
-    if (allClear() && (!cellPassage || keyTaken) && santa.x >= GATE_X - 18) win();
+    if (allClear() && (!cellPassage || keyTaken) && (cellPassage ? Math.abs(santa.x - EXIT_X) <= 60 : santa.x >= EXIT_X - 18)) win();
   }
 
   function drawYard() {
@@ -842,7 +843,7 @@
     if (!imageReady(gateImg)) return;
     gh = VIEW_H * 0.58;
     gw = gh * (gateImg.naturalWidth / gateImg.naturalHeight);
-    ctx.drawImage(gateImg, GATE_X - cam - gw * 0.5, BAND_BOT - gh + 8, gw, gh);
+    ctx.drawImage(gateImg, EXIT_X - cam - gw * 0.5, BAND_BOT - gh + 8, gw, gh);
   }
 
   function drawCocoa(p) {

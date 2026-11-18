@@ -159,6 +159,11 @@ button:focus-visible {
   line-height: 1;
 }
 
+.tune-pad button {
+  color: #ff3030;
+  font-size: 56px;
+}
+
 .tune-pad button:active {
   background: #8a6230;
   color: #fff6e4;

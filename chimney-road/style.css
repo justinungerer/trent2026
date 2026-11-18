@@ -147,6 +147,11 @@ button:focus-visible {
   line-height: 1;
 }
 
+.move button {
+  color: #ff3030;
+  font-size: 56px;
+}
+
 #jump {
   position: absolute;
   z-index: 5;

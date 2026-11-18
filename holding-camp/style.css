@@ -154,6 +154,11 @@ button:focus-visible {
   line-height: 1;
 }
 
+.pad button {
+  color: #ff3030;
+  font-size: 40px;
+}
+
 #up { left: 60px; top: 0; }
 #left { left: 0; top: 60px; }
 #down { left: 60px; top: 120px; }
