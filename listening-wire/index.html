@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#141810">
   <title>The Listening Wire</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=exploration-map">
 </head>
 <body>
   <main class="stage">
@@ -35,7 +35,7 @@
         </div>
         <button type="button" id="turn-right" aria-label="Turn right">⟳</button>
       </div>
-      <button type="button" id="fire" aria-label="Shoot">Shoot</button>
+      <div class="action-stack"><button type="button" id="map">Map</button><button type="button" id="fire" aria-label="Shoot">Shoot</button></div>
     </div>
 
     <div id="start-sheet" class="sheet">
@@ -44,11 +44,17 @@
         <h1 id="corridor-stage-title">The listening wire</h1>
         <p id="corridor-stage-goal">Trent is in the enemy wire room. The listening post is the green door at the end of the maze.</p>
         <p>An exclamation mark shows when a soldier has spotted you. Watch for bright incoming shots. Health and spare bullets are on the floor. A soldier who goes down leaves one bullet.</p>
+        <p>Two maps are hidden in each maze. Collect one to open your map, then use Map above Shoot to pause and review it. Only the tiles you visit and their bordering walls are revealed.</p>
         <p id="loadout">Three life points, and 10 bullets.</p>
         <button type="button" id="start">Into the wire room</button>
       </div>
     </div>
 
+    <section id="map-sheet" class="sheet map-sheet" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
+      <header><h2 id="map-title">Explored passages</h2><button type="button" id="close-map">Return to game</button></header>
+      <canvas id="maze-map" aria-label="Explored maze. Pale passages, stone walls, red player arrow, green exit. Dark areas are unexplored."></canvas>
+      <p>Red arrow: you · Green: discovered exit · Dark: unexplored</p>
+    </section>
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
@@ -86,7 +92,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=guard-patrols"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=exploration-map"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=random17"></script><script src="../game-audio.js?v=random17"></script></body>
 </html>

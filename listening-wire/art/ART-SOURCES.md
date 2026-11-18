@@ -47,3 +47,30 @@ Painted snowy night yard, opaque. 1280 × 720 px. Pines, a fence, a crate, and a
 ### lamp.webp
 
 A searchlight head on a transparent background, 360 × 470 px. The yoke sits about 48% across and 78% down the bitmap. No beam is painted into the sprite.
+
+
+## November 18 maze and boss art
+
+Generated with the built-in image generation tool. Original output inspected, alpha preserved, cropped into texture tiles or converted to WebP.
+
+Prompt (listening):
+
+High resolution hand painted realistic WWII game material atlas 1536 by 1024, exactly 3 columns by 2 rows equal square tiles. Top row THREE similar yet distinct worn green-grey plaster brick walls. Bottom row THREE similar yet distinct slate stone floors. Flat orthographic seamless material squares, detailed texture, subtle neutral lighting, no perspective, no bevels no gutters no text no borders no objects, full opaque coverage. These are wall and ground texture maps for a first person maze.
+
+Prompt (bunker):
+
+High resolution hand painted realistic WWII game material atlas 1536 by 1024, exactly 3 columns by 2 rows equal square tiles. Top row THREE similar yet distinct dark concrete walls with restrained rust seams. Bottom row THREE similar yet distinct worn concrete floor slabs. Flat orthographic seamless material squares, detailed texture, subtle neutral lighting, no perspective, no bevels no gutters no text no borders no objects, full opaque coverage. These are wall and ground texture maps for a first person maze.
+
+Prompt (gatehouse):
+
+High resolution hand painted realistic WWII game material atlas 1536 by 1024, exactly 3 columns by 2 rows equal square tiles. Top row THREE similar yet distinct weathered red-brown brick walls. Bottom row THREE similar yet distinct terracotta stone floors. Flat orthographic seamless material squares, detailed texture, subtle neutral lighting, no perspective, no bevels no gutters no text no borders no objects, full opaque coverage. These are wall and ground texture maps for a first person maze.
+
+Assets: `listening-wall-0..2.webp`, `listening-floor-0..2.webp`, matching `bunker-*` and `gatehouse-*` tiles. Each tile is 512 square.
+
+Map collectible: `painted-map.webp`. Built-in image generation, transparent background, converted to WebP preserving alpha.
+
+Prompt:
+
+A single collectible WWII folded paper maze map for a realistic hand painted game. A worn cream paper sheet partly unfolded, clearly visible dark corridor lines, a small red compass marking, olive canvas band. No words no labels no letters. Three quarter top view isolated item fully inside frame with generous transparent margin. Highly detailed painted art, genuinely transparent background, no cast shadow or backdrop.
+
+Cleanup prompt: Remove the entire brown glowing haze and all background from this folded paper map collectible, leaving only the actual paper map and canvas strap as a crisp isolated cutout on fully transparent alpha zero background. Preserve the painted map and strap exactly. No shadow no glow no vignette. Keep generous transparent margins.

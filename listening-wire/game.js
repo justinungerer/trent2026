@@ -26,6 +26,13 @@
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
   var WALK_SPEED = 2.55;
+  var ENEMY_SPEED_SCALE = 0.75;
+  var hasMap = false;
+  var discovered = new Set();
+  var mapSheet = document.getElementById('map-sheet');
+  var mapCanvas = document.getElementById('maze-map');
+  var wallTiles = [];
+  var floorTiles = [];
   var PATROL_STEPS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
   var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
   var stage = new URLSearchParams(location.search).get('stage');
@@ -33,6 +40,8 @@
   var gatehouse = stage === 'gatehouse-code';
   var codeNeeded = listening ? 1 : gatehouse ? 2 : 0;
   var codeFound = 0;
+  var mapImg = new Image();
+  mapImg.src = 'art/painted-map.webp';
   var codeImg = new Image();
   var medkitImg = new Image();
   var rifleImg = new Image();
@@ -101,6 +110,13 @@
   var shotImg = makeShot();
   var alertImg = makeAlert();
 
+  var textureTheme = listening ? 'listening' : gatehouse ? 'gatehouse' : 'bunker';
+  for (var tile = 0; tile < 3; tile++) {
+    (function (index) {
+      loadTex('art/' + textureTheme + '-wall-' + index + '.webp', function (tex) { wallTiles[index] = tex; });
+      loadTex('art/' + textureTheme + '-floor-' + index + '.webp', function (tex) { floorTiles[index] = tex; });
+    })(tile);
+  }
   loadTex('art/wall.webp', function (tex) { wallTex = tex; });
   loadTex('art/floor.webp', function (tex) { floorTex = tex; });
   loadTex('art/ceiling.webp', function (tex) { ceilTex = tex; });
@@ -377,6 +393,11 @@
         pickups.push({ x: cell.x, y: cell.y, kind: 'code', n: 1, bob: 0 });
       });
     }
+    var mapCells = spreadTake(cells, function (c) { return c.d >= 6 && c.d < best * 0.8; }, 2, 8, placed);
+    mapCells.forEach(function (cell) {
+      placed.push(cell);
+      pickups.push({ x: cell.x, y: cell.y, kind: 'map', n: 1, bob: 0 });
+    });
     var startingAmmo = spreadTake(cells, function (c) { return c.d >= 4 && c.d <= 8; }, 2, 2, placed);
     startingAmmo.forEach(function (cell) {
       placed.push(cell);
@@ -411,6 +432,60 @@
       }),
       pickups: pickups
     };
+  }
+
+  function tileVariant(x, y) {
+    return ((x * 17 + y * 31) % 3 + 3) % 3;
+  }
+
+  function discoverTile() {
+    var x = Math.floor(player.x), y = Math.floor(player.y);
+    discovered.add(x + ',' + y);
+    PATROL_STEPS.forEach(function (step) {
+      var nx = x + step[0], ny = y + step[1];
+      if (MAP[ny] && MAP[ny][nx] === 1) discovered.add(nx + ',' + ny);
+    });
+  }
+
+  function paintMap() {
+    var g = mapCanvas.getContext('2d');
+    var size = 24;
+    mapCanvas.width = MAP_W * size;
+    mapCanvas.height = MAP_H * size;
+    g.fillStyle = '#101820';
+    g.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+    discovered.forEach(function (key) {
+      var xy = key.split(',').map(Number), x = xy[0], y = xy[1];
+      g.fillStyle = MAP[y][x] === 1 ? '#a99c83' : '#e8d7b6';
+      g.fillRect(x * size, y * size, size, size);
+      if (MAP[y][x] === 2) {
+        g.fillStyle = '#368f54';
+        g.fillRect(x * size + 4, y * size + 4, size - 8, size - 8);
+      }
+    });
+    g.save();
+    g.translate((Math.floor(player.x) + 0.5) * size, (Math.floor(player.y) + 0.5) * size);
+    g.rotate(Math.atan2(player.dirY, player.dirX));
+    g.fillStyle = '#e63131';
+    g.beginPath(); g.moveTo(10, 0); g.lineTo(-7, -7); g.lineTo(-7, 7); g.closePath(); g.fill();
+    g.restore();
+  }
+
+  function openMap() {
+    if (state !== 'play') return;
+    if (!hasMap) { showToast('Find a hidden map first.'); say('Find a hidden map first.'); return; }
+    releasePad();
+    state = 'map';
+    paintMap();
+    mapSheet.hidden = false;
+    document.getElementById('close-map').focus();
+  }
+
+  function closeMap() {
+    if (state !== 'map' || portraitWanted()) return;
+    mapSheet.hidden = true;
+    state = 'play';
+    lastFrame = performance.now();
   }
 
   function loadTex(src, done) {
@@ -654,7 +729,11 @@
 
   function beginRun() {
     codeFound = 0;
+    hasMap = false;
+    discovered.clear();
+    mapSheet.hidden = true;
     resetPlayer();
+    discoverTile();
     enemies = freshEnemies();
     pickups = freshPickups();
     shots = [];
@@ -854,7 +933,7 @@
   }
 
   function patrol(e, dt) {
-    var remaining = WALK_SPEED * dt;
+    var remaining = WALK_SPEED * ENEMY_SPEED_SCALE * dt;
     if (!e.patrolTarget) {
       e.patrolTarget = { x: Math.floor(e.x) + 0.5, y: Math.floor(e.y) + 0.5 };
     }
@@ -923,7 +1002,7 @@
       }
       if (e.aim > 0.12) {
         var approach = dist > kind.hold + 0.25 ? 1 : e.kind === 2 && dist < kind.hold - 0.7 ? -1 : 0;
-        var step = kind.move * dt * approach;
+        var step = kind.move * ENEMY_SPEED_SCALE * dt * approach;
         var mx = e.dirX * step;
         var my = e.dirY * step;
         if (step && !solid(e.x + mx, e.y, 0.2)) e.x += mx;
@@ -1003,6 +1082,13 @@
     for (i = pickups.length - 1; i >= 0; i--) {
       p = pickups[i];
       if (Math.hypot(p.x - player.x, p.y - player.y) > 0.46) continue;
+      if (p.kind === 'map') {
+        pickups.splice(i, 1);
+        hasMap = true;
+        showToast('Map found. Explored passages are recorded.');
+        openMap();
+        return;
+      }
       if (p.kind === 'code') {
         pickups.splice(i, 1);
         codeFound++;
@@ -1126,6 +1212,7 @@
       tryMove(-player.dirX * speed * 0.82, -player.dirY * speed * 0.82);
       walked = true;
     }
+    discoverTile();
     moving = walked ? 1 : 0;
     if (walked && !reduceMotion()) walk += dt * 9;
     if (turned || walked) hintEl.hidden = true;
@@ -1222,7 +1309,7 @@
         if (cx < 0) cx += 1;
         if (cy < 0) cy += 1;
         var di = (y * BUF_W + x) * 4;
-        sample(ceiling ? ceilTex : floorTex, cx, cy, ceiling ? 0.92 : 1, fog, di);
+        sample(ceiling ? ceilTex : (floorTiles[tileVariant(Math.floor(fx), Math.floor(fy))] || floorTex), cx, cy, ceiling ? 0.92 : 1, fog, di);
         pix[di + 4] = pix[di];
         pix[di + 5] = pix[di + 1];
         pix[di + 6] = pix[di + 2];
@@ -1290,7 +1377,7 @@
         if (v < 0) v = 0;
         if (v > 0.999) v = 0.999;
         texPos += texStep;
-        sample(wallTex, wallX, v, shade, fog, (y * BUF_W + x) * 4);
+        sample(wallTiles[tileVariant(mapX, mapY)] || wallTex, wallX, v, shade, fog, (y * BUF_W + x) * 4);
       }
     }
     bctx.putImageData(frame, 0, 0);
@@ -1377,7 +1464,7 @@
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
       list.push({
-        img: p.kind === 'code' && codeImg.naturalWidth ? codeImg :
+        img: p.kind === 'map' ? mapImg : p.kind === 'code' && codeImg.naturalWidth ? codeImg :
           p.kind === 'health' ? (medkitImg.naturalWidth ? medkitImg : kitImg) :
             (bulletImg.naturalWidth ? bulletImg : bulletFallback),
         x: p.x,
@@ -1588,6 +1675,7 @@
       event.preventDefault();
       if (state === 'play') openPause();
       else if (state === 'pause') closePause();
+      else if (state === 'map') closeMap();
       return;
     }
     if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') key.forward = true;
@@ -1613,6 +1701,8 @@
   });
   window.addEventListener('pagehide', function () { openPause(); });
 
+  document.getElementById('map').addEventListener('click', openMap);
+  document.getElementById('close-map').addEventListener('click', closeMap);
   document.getElementById('start').addEventListener('click', beginRun);
   document.getElementById('resume').addEventListener('click', closePause);
   document.getElementById('give-up').addEventListener('click', giveUp);

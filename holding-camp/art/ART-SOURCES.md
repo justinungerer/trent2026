@@ -250,3 +250,22 @@ Earlier night-watchman strip, kept in the folder. It is not used by the brawler.
 ## yard.webp
 
 Earlier painted side view of the snowy yard, opaque, 1280 × 720. Kept in the folder. The brawler uses `brawl-yard.webp` so the open snow matches the taller movement band.
+
+
+## November 18 maze and boss art
+
+Generated with the built-in image generation tool. Original output inspected, alpha preserved, cropped into texture tiles or converted to WebP.
+
+Prompt (boss1):
+
+High resolution painted game sprite atlas exactly 2 columns by 2 rows, four equal cells. One unique fictional WWII prison key warden, bulky man in dark olive winter officer coat, brass keyring at belt, grey moustache, boots, no insignia or text. Side view facing right full body with feet near bottom of each cell, same scale and position. Top left standing defensive, top right walking forward left leg, bottom left walking forward right leg, bottom right punching right arm forward. Realistic detailed hand painted storybook action game art. No blood. Isolated on genuinely transparent background. All four separate poses fully within cells.
+
+Prompt (boss2):
+
+High resolution painted game sprite atlas exactly 2 columns by 2 rows four equal cells. One unique fictional WWII yard enforcer, tall broad man in charcoal winter greatcoat with steel helmet and burgundy scarf, no insignia or text. Side view facing right full body with feet near bottom of each cell, same scale and position. Top left standing defensive, top right walking forward left leg, bottom left walking forward right leg, bottom right powerful punching right arm forward. Realistic detailed hand painted storybook action game art. No blood. Isolated on genuinely transparent background. All four separate poses fully within cells.
+
+Prompt (cleanup):
+
+Edit the provided sprite atlas. Preserve exactly the same four characters, poses, colours, detailed painted artwork and 2 by 2 layout. Remove ALL background, checker pattern, divider lines, borders, ground shadows, and grid seams, leaving only the four character cutouts on genuinely fully transparent alpha zero background. Nothing may touch the outer or center edges. No white matte. Keep all boots and hands within their individual equal cells. Output square atlas.
+
+Assets: `boss-warden-painted.webp` and `boss-enforcer-painted.webp`, four 627-square poses each, animated for walking and strikes.

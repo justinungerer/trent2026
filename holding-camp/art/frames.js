@@ -33,3 +33,12 @@ var CAMP_FRAMES = {
     defeat: { src: "art/brawl-heavy-defeat.webp", n: 2 },
   },
 };
+
+// Painted four-pose boss atlases: idle, two walking poses, striking pose.
+['warden', 'enforcer'].forEach(function (kind) {
+  var src = 'art/boss-' + kind + '-painted.webp';
+  function clip(frames) { return { src: src, n: frames.length, columns: 2, frames: frames }; }
+  CAMP_FRAMES[kind] = { w: 627, h: 627, ax: 313.5, ay: 620,
+    idle: clip([0]), walk: clip([1, 2]), punch: clip([0, 0, 3, 3]),
+    upper: clip([0, 0, 3, 3]), hit: clip([0]), defeat: clip([0]) };
+});

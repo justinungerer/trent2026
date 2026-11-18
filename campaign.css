@@ -508,6 +508,10 @@ body {
   gap: 8px;
 }
 
+.chapter-menu-row + .chapter-menu-row {
+  padding-top: 12px;
+}
+
 .chapter-menu-row .choice {
   grid-column: 1 / -1;
 }

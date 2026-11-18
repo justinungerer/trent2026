@@ -33,7 +33,7 @@
   var BAND_BOT = BAND_TOP + BAND_H;
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
-  var WALK = cellPassage ? 4260 : gateFight ? 1770 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW));
+  var WALK = cellPassage ? 4260 : gateFight ? 1770 * 3 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW)) * 3;
   var START_X = 340;
   var OUTBOUND = 1;
   var GATE_X = START_X + WALK;
@@ -47,7 +47,9 @@
   var KIND = {
     light: { hp: 2, h: 0.9, speed: 168, wind: 0.3, reach: 64, cool: 0.7, jab: 0.82 },
     mid: { hp: 4, h: 1.02, speed: 124, wind: 0.28, reach: 74, cool: 0.78, jab: 0.55 },
-    heavy: { hp: 6, h: 1.16, speed: 86, wind: 0.4, reach: 88, cool: 0.95, jab: 0.4 }
+    heavy: { hp: 6, h: 1.16, speed: 86, wind: 0.4, reach: 88, cool: 0.95, jab: 0.4 },
+    warden: { hp: 10, h: 1.24, speed: 112, wind: 0.48, reach: 94, cool: 0.9, jab: 0.65, boss: 'Key Warden' },
+    enforcer: { hp: 12, h: 1.34, speed: 98, wind: 0.62, reach: 108, cool: 1.05, jab: 0.35, boss: 'Yard Enforcer' }
   };
 
   var CLIP = {
@@ -85,6 +87,9 @@
     }
   };
 
+  CLIP.warden = CLIP.mid;
+  CLIP.enforcer = CLIP.heavy;
+
   var WAVE_PLAN = [
     { at: 0.08, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
     { at: 0.18, foes: [{ k: 'light', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'right' }] },
@@ -118,6 +123,30 @@
       { at: 0.66, foes: [{ k: 'mid', side: 'left' }, { k: 'heavy', side: 'right' }, { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
     ];
   }
+
+  // Repeat the authored encounters over three times the route, preserving density.
+  var originalPlan = WAVE_PLAN;
+  if (cellPassage) {
+    WAVE_PLAN = originalPlan.map(function (wave) {
+      return { at: wave.at, foes: wave.foes.concat(wave.foes) };
+    });
+    WAVE_PLAN.push({ at: 0.94, foes: [{ k: 'warden', side: 'right' }] });
+  } else {
+    WAVE_PLAN = [];
+    for (var section = 0; section < 3; section++) {
+      originalPlan.forEach(function (wave) {
+        WAVE_PLAN.push({ at: (section + wave.at) / 3, foes: wave.foes, batches: gateFight ? 3 : 1 });
+      });
+    }
+    WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
+      { k: 'warden', side: 'left' }, { k: 'enforcer', side: 'right' },
+      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }
+    ] : [{ k: 'enforcer', side: 'right' }] });
+  }
+  document.getElementById('camp-goal').textContent = cellPassage
+    ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the Exit door on the left.'
+    : gateFight ? 'Fight through three waves at each position, arriving five seconds apart. At the gate, defeat both bosses and their three guards.'
+    : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
   var gateImg = new Image();
@@ -212,7 +241,7 @@
       for (j = 0; j < src.foes.length; j++) {
         foesPlan.push({ k: src.foes[j].k, side: src.foes[j].side });
       }
-      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [] });
+      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], batches: src.batches || 1, sent: 0, nextAt: 0 });
     }
     return out;
   }
@@ -298,7 +327,7 @@
 
   function waveClear(wave) {
     var i;
-    if (!wave.spawned) return false;
+    if (!wave.spawned || wave.sent < wave.batches) return false;
     for (i = 0; i < wave.members.length; i++) {
       if (wave.members[i].state !== 'gone') return false;
     }
@@ -335,7 +364,10 @@
     else if (cellPassage) gateEl.textContent = exitLabel();
     else if (allClear()) gateEl.textContent = 'The gate';
     else if (left === 1) gateEl.textContent = '1 guard';
-    else if (left === 0) gateEl.textContent = 'Walk on';
+    else if (left === 0) {
+      var pending = waves.find(function (wave) { return wave.spawned && wave.sent < wave.batches; });
+      gateEl.textContent = pending ? 'Reinforcements ' + Math.max(0, Math.ceil(pending.nextAt - played)) + 's' : 'Walk on';
+    }
     else gateEl.textContent = left + ' guards';
     pipsEl.textContent = pipsText();
   }
@@ -536,7 +568,8 @@
     var spec;
     var e;
     wave.spawned = true;
-    wave.members = [];
+    wave.sent++;
+    wave.nextAt = played + 5;
     for (i = 0; i < wave.foes.length; i++) {
       spec = wave.foes[i];
       e = {
@@ -568,7 +601,8 @@
       wave = waves[i];
       if (waveClear(wave)) continue;
       line = wave.at * WALK;
-      if (!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) spawnWave(wave);
+      if ((!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) ||
+          (wave.spawned && wave.sent < wave.batches && played >= wave.nextAt)) spawnWave(wave);
       if (!cellPassage) return;
     }
   }
@@ -688,7 +722,7 @@
   }
 
   function updatePickups() {
-    if (cellPassage && !keyTaken && Math.abs(cellKey.x - santa.x) < 48 &&
+    if (cellPassage && !keyTaken && waveClear(waves[waves.length - 1]) && Math.abs(cellKey.x - santa.x) < 48 &&
         Math.abs(cellKey.y - santa.y) < 46) {
       keyTaken = true;
       say('Key collected. Return to the exit on the left.');
@@ -837,7 +871,7 @@
     ctx.globalAlpha = alpha == null ? 1 : alpha;
     ctx.translate(x, y);
     if (face < 0) ctx.scale(-1, 1);
-    var sourceFrame = i + (spec.start || 0);
+    var sourceFrame = spec.frames ? spec.frames[i] : i + (spec.start || 0);
     var columns = spec.columns || spec.n;
     ctx.drawImage(
       img,
@@ -871,7 +905,7 @@
       ctx.fillText(label, doorX, EXIT_Y - 130);
       if (!keyTaken) {
         ctx.fillStyle = '#ffe4a3';
-        ctx.fillText('Cell key', cellKey.x - cam, cellKey.y - 48);
+        ctx.fillText(waveClear(waves[waves.length - 1]) ? 'Cell key' : 'Defeat the Key Warden', cellKey.x - cam, cellKey.y - 48);
         if (imageReady(keyImg)) ctx.drawImage(keyImg, cellKey.x - cam - 32, cellKey.y - 42, 64, 36);
       }
       ctx.restore();
@@ -955,7 +989,13 @@
         h = SANTA_H * KIND[e.kind].h * depthMul(e.y);
         far = e.y < BAND_TOP + BAND_H * 0.45;
         shadow(e.x - cam, e.y, h * 0.22, far);
-        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, e.kind === 'heavy' ? e.face : -e.face, h, e.alpha);
+        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, (e.kind === 'heavy' || KIND[e.kind].boss) ? e.face : -e.face, h, e.alpha);
+        if (KIND[e.kind].boss && e.state !== 'gone' && e.state !== 'out') {
+          ctx.fillStyle = '#291a1a'; ctx.fillRect(e.x - cam - 60, e.y - h - 22, 120, 10);
+          ctx.fillStyle = '#ef5247'; ctx.fillRect(e.x - cam - 60, e.y - h - 22, 120 * Math.max(0, e.hp) / KIND[e.kind].hp, 10);
+          ctx.fillStyle = '#fff4d9'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(KIND[e.kind].boss + ' ' + Math.max(0, e.hp) + '/' + KIND[e.kind].hp, e.x - cam, e.y - h - 28);
+        }
         drawDots(e, h);
         continue;
       }
