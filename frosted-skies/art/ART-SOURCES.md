@@ -11,3 +11,11 @@ These three files are original generated paintings made for this game. They are 
 Each file is a single still frame on a transparent background. The game already turns a defeated craft into a parcel; these sprites do not include a defeat animation.
 
 No license name or external source URL applies. `sleigh.webp`, `drone.webp`, `boss.webp`, and `valley.webp` were left unchanged.
+
+## Final aircraft added November 18, 2026
+
+Both assets were generated with the built-in image generation tool and saved as WebP images with transparency.
+
+`scout-command-aircraft.webp` uses the prompt “High resolution semi realistic painted WWII dieselpunk aircraft game sprite, true transparent background, top down view with nose pointing down. A unique immense Luftwaffe reconnaissance command aircraft, long twin fuselages with a central glazed observation cockpit, broad angular silver grey wings, dark charcoal engines and red navigation lamps, multiple clearly visible gun turrets. Full aircraft centered, silhouette fully included, no cast shadow, no text, no insignia, no background. Detailed hand painted metal panels, weathered winter camouflage, suitable for a portrait overhead action shooter final boss.”
+
+`workshop-siege-bomber.webp` uses the prompt “High resolution semi realistic painted WWII dieselpunk aircraft game sprite, true transparent background, top down view with nose pointing down. A unique massive Luftwaffe siege bomber threatening Santa's workshop, triangular reinforced dark olive fuselage, six engines across wide swept wings, two large external armored weapon pods with red hot exhausts, rear stabilizers. Distinctive broad heavy silhouette. Full aircraft centered and included, no cast shadow, no text, no insignia, no background. Detailed hand painted metal panels, weathered winter camouflage, suitable for a portrait overhead action shooter final boss.”

@@ -44,3 +44,9 @@ Transparent backgrounds.
 - seawall.webp: concrete seawall, 675 × 657 px
 - hedgehog.webp: steel hedgehog, 787 × 805 px
 - wire.webp: barbed wire, 633 × 861 px
+
+## Shingle staging ground
+
+`shingle-staging.webp` was generated with the built-in image generation tool for prologue level 2 on November 18, 2026. It shows the inland shingle ground between the landing beach and the breached defenses.
+
+The generation prompt was “High resolution painted semi-realistic WWII game environment, landscape 1536x1024. A shingle staging ground just inland of Normandy beach between the sand landing and the breached coastal defenses. Near top 24 percent distant grey cloudy sky, earth berms and concrete fortifications at horizon. Lower 76 percent expansive nearly top-down gravel shingle and flattened grass paths, scattered subtle rubble and footprints, enough clear walking space to move vertically and horizontally. Cool subdued realistic oil painted game-art texture, readable ground plane, no people, no text, no pickup objects, no vehicles, no isolated foreground obstacles. Context is transition from the beach seawall to inland shelter.”

@@ -42,6 +42,24 @@ function loadArt(name) {
 const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp']
   .map(name => [name, loadArt(name === 'valley' && scouts ? 'scout-valley' : name === 'valley' && workshop ? 'workshop-roofs' : name)]));
 const weaponPod = loadArt('painted-pod');
+const finalBossArt = intercept ? loadArt(scouts ? 'scout-command-aircraft' : 'workshop-siege-bomber') : null;
+let valleyTile = null;
+function backgroundTile() {
+  if (valleyTile || !ready(art.valley)) return valleyTile;
+  const tile = document.createElement('canvas');
+  tile.width = W;
+  tile.height = Math.ceil(W * art.valley.naturalHeight / art.valley.naturalWidth) + 100;
+  const context = tile.getContext('2d');
+  context.drawImage(art.valley, 0, 0, W, tile.height);
+  context.globalCompositeOperation = 'destination-in';
+  const edge = context.createLinearGradient(0, 0, 0, 100);
+  edge.addColorStop(0, 'transparent');
+  edge.addColorStop(1, '#fff');
+  context.fillStyle = edge;
+  context.fillRect(0, 0, W, tile.height);
+  valleyTile = tile;
+  return tile;
+}
 function resizeCanvas() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = W * ratio;
@@ -51,7 +69,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const ready = image => image.complete && image.naturalWidth > 0;
+const ready = image => !!image && image.complete && image.naturalWidth > 0;
 function ship(kind, x, y, width, bank) {
   const sprite = art[kind];
   if (!ready(sprite)) return;
@@ -64,6 +82,14 @@ function ship(kind, x, y, width, bank) {
   g.restore();
 }
 function craftSprite(kind, x, y, width, bank) {
+  if (kind === 'flagship' && ready(finalBossArt)) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(bank);
+    g.drawImage(finalBossArt, -width / 2, -width * .34, width, width * .68);
+    g.restore();
+    return;
+  }
   ship(kind === 'flagship' ? 'boss' : kind, x, y, width, bank);
   if (kind === 'flagship') {
     g.fillStyle = '#ffc681';
@@ -78,15 +104,19 @@ const largeCraft = kind => kind === 'boss' || kind === 'flagship';
 const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, flagshipAt, aim, drag, wraps, recoil, shake, kills;
 let nextWave, nextTarget, bossAt, bossesCleared, aimReleased;
+let finalSpawned, clearAt;
 const stageTitle = scouts ? 'The Scout Screen' : 'Workshop Approach';
 const stageBrief = (scouts ? 'Intercept marked recon drones.' : 'Dodge sideways patrols and intercept marked cargo haulers.') +
-  ' Marked aircraft have five times normal hull and escape if you take too long.' +
-  ' Destroy one to draw out the commander 14 seconds later. Defeat the commander to clear the level.';
+  ' Marked aircraft have ' + (scouts ? 'fifteen' : 'ten') + ' times normal hull and escape if you take too long.' +
+  ' Destroy one to draw out the commander 14 seconds later. Keep flying through the next patrols, then defeat the final ' +
+  (scouts ? 'recon command aircraft.' : 'siege bomber.');
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
   nextWave = 1.35;
   nextTarget = 14;
   bossesCleared = false;
+  finalSpawned = false;
+  clearAt = null;
   bossAt = intercept ? null : 51;
   aimReleased = false;
   player = { x: W / 2, y: 625, hull: MAX_HULL, bank: 0, shield: 0, stack: ['laser'], cool: [0] };
@@ -101,7 +131,7 @@ if (intercept) {
   ui.title.textContent = stageTitle;
   ui.brief.textContent = stageBrief;
 } else {
-  ui.controls.textContent += ' Defeat the bosses, then survive as long as you can. When your hull runs out, you can continue if you cleared the objectives.';
+  ui.controls.textContent += ' Defeat the commander and then the final flagship to clear the level.';
 }
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
@@ -266,14 +296,21 @@ function spawn() {
 }
 function spawnTarget() {
   const x = [112, W - 112, W / 2][Math.floor(nextTarget / 38) % 3];
-  const hp = CRAFT[targetKind].hp * 5;
+  const hp = CRAFT[targetKind].hp * 5 * (scouts ? 3 : 2);
   enemies.push({ kind: targetKind, x, y: -50, base: x, side: x > W / 2 ? -1 : 1,
     age: 0, fire: 1.4, hp, maxHp: hp, objective: true });
   ui.phase.textContent = targetName.toUpperCase() + ' IN RANGE';
 }
 function spawnBoss(kind) {
-  enemies.push({ kind, x: W / 2, y: -110, age: 0, fire: 2.5, hp: CRAFT[kind].hp, mode: 0 });
-  ui.phase.textContent = kind === 'flagship' ? 'FINAL FLAGSHIP' :
+  if (kind === 'flagship') {
+    finalSpawned = true;
+    enemies = [];
+    bolts = [];
+    nextWave = Infinity;
+  }
+  const hp = kind === 'flagship' && intercept ? CRAFT.flagship.hp / 2 : CRAFT[kind].hp;
+  enemies.push({ kind, x: W / 2, y: -110, age: 0, fire: 2.5, hp, maxHp: hp, mode: 0 });
+  ui.phase.textContent = kind === 'flagship' ? (scouts ? 'FINAL RECON COMMAND AIRCRAFT' : workshop ? 'FINAL WORKSHOP SIEGE BOMBER' : 'FINAL FLAGSHIP') :
     scouts ? 'SCOUT COMMANDER' : workshop ? 'WORKSHOP COMMANDER' : 'CONVOY SIGNAL JAMMER';
 }
 function shoot(enemy) {
@@ -290,6 +327,15 @@ function shoot(enemy) {
     }
   } else if (enemy.kind === 'flagship') {
     const pattern = enemy.mode++ % 3;
+    if (scouts) {
+      for (const offset of (pattern === 0 ? [-.6, -.3, 0, .3, .6] : [-.2, 0, .2])) bolt(aim + offset, pattern === 0 ? 185 : 270);
+      if (pattern === 2) for (const port of [-65, 65]) bolt(Math.PI / 2, 310, port);
+      return;
+    }
+    if (workshop && pattern === 1) {
+      for (const port of [-78, -52, -26, 0, 26, 52, 78]) bolt(Math.PI / 2, 260, port, 26);
+      return;
+    }
     if (pattern === 0) {
       for (const offset of [-.62, -.41, -.20, 0, .20, .41, .62]) bolt(aim + offset, 206);
     } else if (pattern === 1) {
@@ -401,17 +447,15 @@ function fell(enemy) {
     ui.phase.textContent = targetName.toUpperCase() + ' DOWN · COMMANDER INBOUND';
   }
   if (enemy.kind === 'boss') {
-    if (intercept) {
-      ui.phase.textContent = 'COMMANDER DOWN';
-      clearFlight('Flight objectives complete.');
-    } else {
-      flagshipAt = time + 2.4;
-      ui.phase.textContent = 'A HEAVIER FLAGSHIP IS APPROACHING';
-    }
+    flagshipAt = time + (intercept ? 30 : 2.4);
+    ui.phase.textContent = intercept ? 'COMMANDER DOWN · PUSH THROUGH THE FINAL PATROLS' : 'A HEAVIER FLAGSHIP IS APPROACHING';
   }
   if (enemy.kind === 'flagship') {
     bossesCleared = true;
-    ui.phase.textContent = 'BOSS DOWN · SURVIVE AS LONG AS YOU CAN';
+    clearAt = time + 2;
+    player.shield = 3;
+    bolts = [];
+    ui.phase.textContent = 'FINAL BOSS DOWN · AIRSPACE CLEAR';
   }
   ui.score.textContent = String(score).padStart(6, '0');
 }
@@ -501,6 +545,10 @@ function armWeapons(dt) {
 }
 function update(dt) {
   time += dt;
+  if (clearAt !== null && time >= clearAt) {
+    clearFlight('Final aircraft destroyed. Flight objectives complete.');
+    return;
+  }
   recoil = Math.max(0, recoil - dt);
   shake = Math.max(0, shake - dt);
   for (const w of wraps) w.age += dt;
@@ -521,11 +569,11 @@ function update(dt) {
   player.bank += (clamp((player.x - x0) * .12, -.65, .65) - player.bank) * Math.min(dt * 13, 1);
   armWeapons(dt);
   if (state !== 'playing') return;
-  if (time >= nextWave && (intercept || wave < 9 || bossesCleared)) {
+  if (!finalSpawned && (flagshipAt === null || time < flagshipAt - 18) && time >= nextWave && (intercept || wave < 9)) {
     spawn();
     nextWave = time + (bossesCleared ? 5.5 : bossSpawned ? 9 : workshop ? 6 : 5.15);
   }
-  if (intercept && bossAt === null && time >= nextTarget) {
+  if (!finalSpawned && intercept && bossAt === null && time >= nextTarget) {
     spawnTarget();
     nextTarget += 38;
   }
@@ -533,7 +581,8 @@ function update(dt) {
     bossSpawned = true;
     spawnBoss('boss');
   }
-  if (flagshipAt !== null && time >= flagshipAt) {
+  if (flagshipAt !== null && time >= flagshipAt &&
+      !enemies.some(enemy => enemy.hp > 0 && !enemy.escaped && enemy.y < H + 40)) {
     flagshipAt = null;
     spawnBoss('flagship');
   }
@@ -655,12 +704,11 @@ function render() {
   const valley = art.valley;
   if (ready(valley)) {
     const height = W * valley.naturalHeight / valley.naturalWidth;
-    const index = Math.floor(scroll / height);
+    const tile = backgroundTile();
     for (let offset = -2; offset <= 1; offset++) {
       g.save();
       g.translate(0, scroll % height + offset * height);
-      if ((index - offset) % 2) { g.translate(0, height); g.scale(1, -1); }
-      g.drawImage(valley, 0, 0, W, height + .5);
+      g.drawImage(tile, 0, 0);
       g.restore();
     }
   }
@@ -751,27 +799,27 @@ function render() {
   player.stack.forEach((kind, index) => {
     if (kind !== 'flame') return;
     const origin = flameOrigin(index);
-    const tipY = origin.y - FLAME_REACH;
-    const grad = g.createLinearGradient(origin.x, origin.y, origin.x, tipY);
-    grad.addColorStop(0, '#fff6d0');
-    grad.addColorStop(.22, '#ffb15a');
-    grad.addColorStop(.7, '#ff4d1f99');
-    grad.addColorStop(1, '#ff2a0000');
-    g.globalAlpha = reduceMotion.matches ? .78 : .64 + Math.sin(time * 36 + index) * .14;
-    // Irregular tongues share the exact collision envelope defined by inFlame.
-    for (let tongue = 0; tongue < 9; tongue++) {
-      const phase = tongue * 2.4 + (reduceMotion.matches ? 0 : time * 31);
-      const length = FLAME_REACH * (.62 + .36 * (.5 + .5 * Math.sin(phase)));
-      const spread = (tongue - 4) / 4;
-      const tipX = origin.x + spread * FLAME_HALF * length / FLAME_REACH;
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (let ember = 0; ember < 64; ember++) {
+      const travel = (ember / 64 + (reduceMotion.matches ? 0 : time * 1.65)) % 1;
+      const spread = Math.sin(ember * 12.9898);
+      const curl = Math.sin(travel * 17 + ember * 2.4 + (reduceMotion.matches ? 0 : time * 12));
+      const radius = (4 + (1 - travel) * 12) * (.65 + Math.abs(spread) * .35);
+      const px = origin.x + spread * FLAME_HALF * travel * .78 + curl * 7 * travel;
+      const py = origin.y - travel * FLAME_REACH;
+      g.globalAlpha = (1 - travel) * .8;
+      const fire = g.createRadialGradient(px, py, 0, px, py, radius);
+      fire.addColorStop(0, travel < .35 ? '#ffffdc' : '#ffd057');
+      fire.addColorStop(.35, '#ff9c20');
+      fire.addColorStop(.72, '#ff3b0d');
+      fire.addColorStop(1, '#ed250000');
+      g.fillStyle = fire;
       g.beginPath();
-      g.moveTo(origin.x, origin.y);
-      g.bezierCurveTo(origin.x + spread * 10, origin.y - length * .36,
-        tipX + Math.sin(phase) * 10, origin.y - length * .72, tipX, origin.y - length);
-      g.quadraticCurveTo(origin.x + spread * 16, origin.y - length * .78, origin.x, origin.y);
-      g.fillStyle = grad;
+      g.ellipse(px, py, radius, radius * 1.6, curl * .15, 0, Math.PI * 2);
       g.fill();
     }
+    g.restore();
     g.globalAlpha = 1;
   });
   if (shield <= 0 || reduceMotion.matches || Math.floor(shield * 11) % 2 === 0) {

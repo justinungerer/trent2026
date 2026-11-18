@@ -303,30 +303,36 @@ button:focus-visible {
   --charge: 100%;
   position: absolute;
   z-index: 3;
-  top: calc(max(8px, env(safe-area-inset-top)) + 48px);
-  right: max(12px, env(safe-area-inset-right));
-  width: 112px;
-  aspect-ratio: 3 / 1;
+  left: 34%;
+  top: 24%;
+  width: clamp(64px, 8vw, 86px);
+  height: min(56%, 240px);
   display: grid;
   place-items: center;
-  padding-right: 10px;
-  background: url('art/painted-battery.webp') center / contain no-repeat;
   color: #fff;
-  font-size: .8rem;
+  font-size: 22px;
   font-weight: 800;
   pointer-events: none;
 }
-
+.battery::after {
+  content: '';
+  position: absolute;
+  width: 230px;
+  height: 76px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  background: url('art/painted-battery.webp') center / contain no-repeat;
+}
 .battery::before {
   content: '';
   position: absolute;
-  inset: 34% 19% 34% 12%;
-  background: linear-gradient(90deg, #b96730, #82974a);
-  clip-path: inset(0 calc(100% - var(--charge)) 0 0);
+  inset: 18% 34% 12%;
+  background: linear-gradient(0deg, #b96730, #b8d251);
+  clip-path: inset(calc(100% - var(--charge)) 0 0 0);
+  z-index: 1;
 }
-
-.battery span { z-index: 1; text-shadow: 0 1px 3px #000; }
-
+.battery span { z-index: 2; text-shadow: 0 1px 3px #000; }
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

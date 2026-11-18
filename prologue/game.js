@@ -70,14 +70,14 @@
     GOAL_X = rally ? 3650 : 4380;
     TOTAL_METERS = rally ? 44 : 56;
     if (breach) {
-      dispatches = [{ x: 1600, y: 210 }, { x: 3370, y: 625 }];
+      dispatches = [{ x: 1600, y: 210 }, { x: 2600, y: 420 }, { x: 3370, y: 625 }];
       mines = mines.filter(function (mine) { return mine.x < GOAL_X; });
       packs = packs.filter(function (pack) { return pack.x < GOAL_X; });
     }
     document.getElementById('landing-title').textContent = rally ? 'Ramp and Rally' : 'Through the Seawall';
     document.getElementById('landing-goal').textContent = rally
       ? 'Recover all three sealed dispatches, then carry them to the shingle ridge.'
-      : 'Recover both dispatch slips from the breach and carry them to the shelter.';
+      : 'Recover all three dispatches from the breach and carry them to the shelter.';
     document.getElementById('landing-win-title').textContent = rally ? 'Dispatch delivered' : 'Shelter reached';
   }
   var puffs = buildPuffs();
@@ -109,6 +109,14 @@
     if (breach) obstacles.push({ kind: 'crater', x: gateX + 315, y: gapY > 400 ? 200 : 680, r: 45 });
   }
   if (rally) dispatches = [{ x: 1940, y: 470 }, { x: 3890, y: 270 }, { x: 5970, y: 410 }];
+  if (!rally && !breach) dispatches = [{ x: 2400, y: 410 }, { x: 6400, y: 260 }, { x: 10500, y: 560 }];
+  if (!rally && !breach) document.getElementById('landing-goal').textContent = 'Recover all three dispatches and carry them across the shingle ground to the seawall.';
+  var mineCount = mines.length;
+  for (var mineIndex = 0; mineIndex < mineCount; mineIndex++) {
+    var extraMine = { x: START_X + 500 + mineIndex * (GOAL_X - START_X - 800) / mineCount, y: 180 + mineIndex % 4 * 150, r: 16 };
+    if (!placePickup(extraMine, mines)) throw new Error('No open beach position for mine');
+    mines.push(extraMine);
+  }
   var placed = mines.slice();
   packs.concat(hearts, dispatches).forEach(function (item) {
     if (!placePickup(item, placed)) throw new Error('No open beach position for pickup');
@@ -196,7 +204,7 @@
   soldierImg.addEventListener('load', buildSoldierMask);
   soldierImg.src = 'art/soldier.webp';
   if (imageReady(soldierImg)) buildSoldierMask();
-  beachImg.src = breach ? 'art/seawall-breach.webp' : 'art/beach-ground.webp';
+  beachImg.src = breach ? 'art/seawall-breach.webp' : rally ? 'art/beach-ground.webp' : 'art/shingle-staging.webp';
   craftImg.src = 'art/craft.webp';
   wallImg.src = 'art/seawall.webp';
   hedgehogImg.src = 'art/hedgehog.webp';
@@ -592,6 +600,12 @@
       { x: 5400, y: 42, wrap: false },
       { x: 6400, y: 176, wrap: true }
     ];
+    spots = spots.filter(function (spot) { return spot.x < GOAL_X; });
+    spots = spots.concat(spots.map(function (spot) { return Object.assign({}, spot); }));
+    spots.forEach(function (spot, index) {
+      spot.x = START_X + 650 + index * (GOAL_X - START_X - 1050) / spots.length;
+      spot.y = 90 + index % 5 * 150;
+    });
     var list = [];
     var i;
     var home;
@@ -616,7 +630,7 @@
         wrap: spots[i].wrap,
         mode: 'stand',
         t: 0,
-        cool: 1.1 + (i % 4) * 0.45,
+        cool: 2 * (1.1 + (i % 4) * 0.45),
         facing: -1,
         away: 1
       });
@@ -771,7 +785,7 @@
         s.cool = 0.4;
         continue;
       }
-      s.cool = 2.15 + Math.random() * 2.2;
+      s.cool = 2 * (2.15 + Math.random() * 2.2);
       if (Math.random() < 0.8) soldierAttack(s);
     }
   }
@@ -1070,6 +1084,10 @@
         say('Dispatch recovered.');
       }
     });
+    if (player.x >= GOAL_X - 24) {
+      var missingDispatches = dispatches.filter(function (item) { return !item.taken; }).length;
+      if (missingDispatches) movementNotice = 'Collect ' + missingDispatches + (missingDispatches === 1 ? ' more dispatch' : ' more dispatches') + ' to complete this level.';
+    }
     moved = Math.hypot(player.x - beforeX, player.y - beforeY);
     moving = !bracing && moved > 0.01;
     if (moving) player.step += moved * 0.09;
@@ -1193,7 +1211,7 @@
     w = 260 * unit();
     h = w * (craftImg.naturalHeight / craftImg.naturalWidth);
     rampX = worldToX(500);
-    baseY = worldToY(214);
+    baseY = worldToY(START_Y + 90);
     ctx.drawImage(craftImg, rampX - w, baseY - h, w, h);
   }
 
@@ -1240,6 +1258,8 @@
   }
 
   function drawBlockingGround() {
+    ctx.save();
+    ctx.globalAlpha = .5;
     obstacles.forEach(function (o) {
       var x = worldToX(o.x);
       var y = worldToY(o.y);
@@ -1259,6 +1279,7 @@
     ctx.strokeStyle = 'rgba(81, 62, 43, .8)';
     ctx.lineWidth = 2;
     ctx.strokeRect(worldToX(MIN_X), worldToY(0), (GOAL_X - MIN_X) * scale, BEACH_W * scale);
+    ctx.restore();
   }
 
   function drawHedgehog(o, alpha) {
@@ -1308,8 +1329,11 @@
     x = worldToX(WALL_X) - w * 0.06;
     y = worldToY(0);
     h = BEACH_W * scale;
-    if (x > cssW + 40) return;
-    ctx.drawImage(wallImg, x, y, w, h);
+    if (x <= cssW + 40) ctx.drawImage(wallImg, x, y, w, h);
+    if (!rally && !breach) {
+      var startWallX = worldToX(MIN_X) - w * .92;
+      ctx.drawImage(wallImg, startWallX, y, w, h);
+    }
   }
 
   function drawSmoke() {

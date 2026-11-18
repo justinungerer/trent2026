@@ -34,7 +34,8 @@
   var STRONG_HOLD = 1;
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = calibration ? 1.4 : confirmDispatch ? 3 : 2.1;
-  var BATTERY_SECONDS = 30;
+  var BATTERY_SECONDS = calibration ? 22.5 : confirmDispatch ? 37.5 : 30;
+  document.getElementById('battery-instructions').textContent = 'The radio has ' + BATTERY_SECONDS + ' seconds of battery. If it runs out, restart the stage. Incorrect stations disappear when tuned into.';
   var battery = document.getElementById('battery');
   var batterySeconds = document.getElementById('battery-seconds');
   var batterySheet = document.getElementById('battery-sheet');
@@ -173,6 +174,7 @@
     var best = 0;
     var p;
     for (i = 0; i < stations.length; i++) {
+      if (stations[i].dismissed) continue;
       p = peak(stations[i], f);
       if (p > best) best = p;
     }
@@ -199,6 +201,7 @@
     var bestD = 1;
     for (i = 0; i < stations.length; i++) {
       s = stations[i];
+      if (s.dismissed) continue;
       d = Math.abs(freq - s.center);
       if (d <= s.half && d < bestD) {
         bestD = d;
@@ -250,18 +253,13 @@
   }
 
   function hintText() {
-    if (calibration || confirmDispatch) return 'Target ' + (targetIndex + 1) + '/' + targets.length + ' · ' +
+    return 'Target ' + (targetIndex + 1) + '/' + targets.length + ' · ' +
       stationById(targets[targetIndex]).name + (bandId ? ' · Hold Lock in red band' : '');
-    if (bandId) return 'Hold Lock inside the red band';
-    return 'Hold a strong signal for ' + STRONG_HOLD + ' second';
   }
 
   function renderHud() {
     var station = heardStation();
     var line = station ? station.line : 'Static. Snow on the aerial.';
-    if (confirmDispatch && targetIndex === 0 && station && station.id === 'lantern') {
-      line = 'An unidentified signal.';
-    }
     var showingNote = performance.now() < statusUntil;
     var heard = showingNote ? statusNote : line;
     var sig = signalAt(freq);
@@ -308,17 +306,35 @@
     bandId = null;
     statusUntil = 0;
     statusNote = '';
+    var shuffled = stations.slice();
+    for (var n = shuffled.length - 1; n > 0; n--) {
+      var swap = Math.floor(Math.random() * (n + 1));
+      var held = shuffled[n]; shuffled[n] = shuffled[swap]; shuffled[swap] = held;
+    }
+    targets = shuffled.slice(0, calibration || confirmDispatch ? 2 : 1).map(function (entry) { return entry.id; });
+    var homes = stations.map(function (_, index) { return .13 + index * .74 / (stations.length - 1); });
+    for (var slot = homes.length - 1; slot > 0; slot--) {
+      var other = Math.floor(Math.random() * (slot + 1));
+      var home = homes[slot]; homes[slot] = homes[other]; homes[other] = home;
+    }
+    shuffled.forEach(function (entry, index) { entry.home = homes[index]; });
     for (i = 0; i < stations.length; i++) {
       station = stations[i];
+      station.dismissed = false;
+      station.correct = targets.indexOf(station.id) >= 0;
       station.center = station.home;
       station.dir = station.homeDir;
       station.half = STRONG_HALF;
       station.redHalf = RED_HALF;
       // Halving both the sweep speed and the scheduled reversal rate
       // doubles time between turns even when the station hits a boundary.
-      station.speed = MARKER_SPEED * station.speedScale * (calibration ? .32 : confirmDispatch ? .22 : .28);
+      station.speed = MARKER_SPEED * station.speedScale * (calibration ? .64 : confirmDispatch ? .22 : .28);
       station.turnIn = nextTurn();
     }
+    document.getElementById('radio-stage-instructions').textContent = 'Find and lock ' + stationById(targets[0]).name + '.' +
+      (targets.length > 1 ? ' The next call sign appears after the first lock.' : '') +
+      ' Incorrect stations disappear after one second of strong tuning.';
+    document.getElementById('field-report-instructions').hidden = true;
   }
 
   function announce(text) {
@@ -492,6 +508,12 @@
         }
       }
       if (strongT >= STRONG_HOLD) {
+        if (targets.indexOf(chargeId) < 0) {
+          stationById(chargeId).dismissed = true;
+          clearBand();
+          announce('Incorrect station removed.');
+          return;
+        }
         strongT = STRONG_HOLD;
         bandId = chargeId;
         lockT = 0;
@@ -633,6 +655,7 @@
     var revealed;
     for (i = 0; i < stations.length; i++) {
       station = stations[i];
+      if (station.dismissed) continue;
       revealed = station.id === bandId;
       drawBandArc(station.center, station.half, 0.72, 'rgba(196, 122, 32, 0.95)', 8);
       if (revealed) drawWedge(station.center, station.redHalf, 0.4, 0.96, 'rgba(214, 32, 36, 0.94)');
