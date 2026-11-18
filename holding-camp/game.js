@@ -138,7 +138,8 @@
         WAVE_PLAN.push({
           at: (section + wave.at) / 3,
           foes: gateFight ? wave.foes.concat(wave.foes, wave.foes) : wave.foes,
-          batches: gateFight ? 3 : 1
+          batches: gateFight ? 3 : 1,
+          extraGroup: gateFight
         });
       });
     }
@@ -149,7 +150,7 @@
   }
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the Exit door on the left.'
-    : gateFight ? 'Fight through three waves at each position, arriving five seconds apart. At the gate, defeat both bosses and their three guards.'
+    : gateFight ? 'Fight through three waves at each position, five seconds apart. An equally large reinforcement group then enters one guard every two seconds. At the gate, defeat both bosses and their three guards.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
@@ -245,7 +246,7 @@
       for (j = 0; j < src.foes.length; j++) {
         foesPlan.push({ k: src.foes[j].k, side: src.foes[j].side });
       }
-      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], pending: [], batches: src.batches || 1, sent: 0, nextAt: 0 });
+      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], pending: [], extraGroup: !!src.extraGroup, batches: src.batches || 1, sent: 0, nextAt: 0 });
     }
     return out;
   }
@@ -370,7 +371,8 @@
     else if (left === 1) gateEl.textContent = '1 guard';
     else if (left === 0) {
       var pending = waves.find(function (wave) { return wave.spawned && (wave.pending.length || wave.sent < wave.batches); });
-      var nextArrival = pending && pending.pending.length ? pending.pending[0].at : pending && pending.nextAt;
+      var nextArrival = pending && pending.pending.length ? pending.pending[0].at : Infinity;
+      if (pending && pending.sent < pending.batches) nextArrival = Math.min(nextArrival, pending.nextAt);
       gateEl.textContent = pending ? 'Reinforcements ' + Math.max(0, Math.ceil(nextArrival - played)) + 's' : 'Walk on';
     }
     else gateEl.textContent = left + ' guards';
@@ -574,6 +576,14 @@
     for (var i = 0; i < wave.foes.length; i++) {
       if (!cellPassage && !gateFight) wave.pending.push({ index: i, at: played + i });
       else spawnFoe(wave, i);
+    }
+    // Level 3 doubles every route encounter with a second, individually timed group.
+    // Its first guard follows the last original batch by two seconds.
+    if (wave.extraGroup && wave.sent === wave.batches) {
+      var afterOriginal = played;
+      for (var extra = 0; extra < wave.foes.length * wave.batches; extra++) {
+        wave.pending.push({ index: extra % wave.foes.length, at: afterOriginal + (extra + 1) * 2 });
+      }
     }
     releaseEntrants(wave);
   }
@@ -1004,7 +1014,7 @@
         h = SANTA_H * KIND[e.kind].h * depthMul(e.y);
         far = e.y < BAND_TOP + BAND_H * 0.45;
         shadow(e.x - cam, e.y, h * 0.22, far);
-        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, (e.kind === 'heavy' || KIND[e.kind].boss) ? e.face : -e.face, h, e.alpha);
+        drawSheet(e.kind, e.anim, clipFrame(e.kind, e.anim, e.animT), e.x - cam, e.y, e.face, h, e.alpha);
         if (KIND[e.kind].boss && e.state !== 'gone' && e.state !== 'out') {
           ctx.fillStyle = '#291a1a'; ctx.fillRect(e.x - cam - 60, e.y - h - 22, 120, 10);
           ctx.fillStyle = '#ef5247'; ctx.fillRect(e.x - cam - 60, e.y - h - 22, 120 * Math.max(0, e.hp) / KIND[e.kind].hp, 10);

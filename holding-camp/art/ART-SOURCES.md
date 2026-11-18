@@ -269,3 +269,26 @@ Prompt (cleanup):
 Edit the provided sprite atlas. Preserve exactly the same four characters, poses, colours, detailed painted artwork and 2 by 2 layout. Remove ALL background, checker pattern, divider lines, borders, ground shadows, and grid seams, leaving only the four character cutouts on genuinely fully transparent alpha zero background. Nothing may touch the outer or center edges. No white matte. Keep all boots and hands within their individual equal cells. Output square atlas.
 
 Assets: `boss-warden-painted.webp` and `boss-enforcer-painted.webp`, four 627-square poses each, animated for walking and strikes.
+
+
+## Painted regular guards throughout Chapter 8
+
+Built-in image generation tool, inspected and converted to WebP preserving alpha. Each atlas is 1536 by 1024 with six 512-square poses: idle, two walking poses, strike, recoil, seated defeat. WWII period sentries in grey military uniforms, no insignia.
+
+Asset: `guard-light-painted.webp`
+
+Prompt:
+
+High resolution realistically painted sprite sheet for a fictional WWII adventure videogame. One lean adult sentry, grey wool WWII military tunic, leather belt, steel helmet, clean shaven. Exactly 3 columns by 2 rows, six equal square cells in a 1536 by 1024 image. Full body profile facing RIGHT in all cells, same character and same size, boots near bottom edge of each cell. Top row: standing fists raised; walking with left foot forward; walking with right foot forward. Bottom row: extending right fist horizontally in an action pose; leaning backward with hands raised; sitting down dazed. Empty hands. Detailed painted clothing, realistic anatomy, muted period colours. No lettering, no political emblems, no symbols. Each figure isolated with generous empty margins within its cell. Fully transparent alpha zero background with no haze, no grid lines, no shadows and no borders.
+
+Asset: `guard-mid-painted.webp`
+
+Prompt:
+
+High resolution realistically painted sprite sheet for a fictional WWII adventure videogame. One stocky middle aged sentry wearing dark grey belted military winter tunic, side cap, short dark moustache. Exactly 3 columns by 2 rows, six equal square cells in a 1536 by 1024 image. Full body profile facing RIGHT in all cells, same character and same size, boots near bottom edge of each cell. Top row: standing fists raised; walking with left foot forward; walking with right foot forward. Bottom row: extending right fist horizontally in an action pose; leaning backward with hands raised; sitting down dazed. Empty hands. Detailed painted clothing, realistic anatomy, muted period colours. No lettering, no political emblems, no symbols. Each figure isolated with generous empty margins within its cell. Fully transparent alpha zero background with no haze, no grid lines, no shadows and no borders.
+
+Asset: `guard-heavy-painted.webp`
+
+Prompt:
+
+High resolution realistically painted sprite sheet for a fictional WWII adventure videogame. One large broad adult sentry, long grey green WWII military greatcoat, leather gloves, steel helmet. Exactly 3 columns by 2 rows, six equal square cells in a 1536 by 1024 image. Full body profile facing RIGHT in all cells, same character and same size, boots near bottom edge of each cell. Top row: standing fists raised; walking with left foot forward; walking with right foot forward. Bottom row: extending right fist horizontally in an action pose; leaning backward with hands raised; sitting down dazed. Empty hands. Detailed painted clothing, realistic anatomy, muted period colours. No lettering, no political emblems, no symbols. Each figure isolated with generous empty margins within its cell. Fully transparent alpha zero background with no haze, no grid lines, no shadows and no borders.
