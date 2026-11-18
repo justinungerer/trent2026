@@ -514,10 +514,12 @@ function showChapterMenu(lastChapter, complete, canTest) {
   function back() { showChapterMenu(lastChapter, complete, canTest); }
   clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
   clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
+  var testControls = [];
   if (canTest) {
     var testToggle = button('Test mode', function () {
       testMode = !testMode;
       updateTestToggle();
+      testControls.forEach(function (update) { update(); });
     }, 'secondary');
     testToggle.id = 'test-mode';
     function updateTestToggle() {
@@ -540,13 +542,35 @@ function showChapterMenu(lastChapter, complete, canTest) {
       unlocked ? function () { openChapter(chapter.id); } : null, 'choice'));
     var introButton = button('Cutscene only',
       unlocked ? function () { playIntro(chapter, back); } : null, 'secondary');
-    var gameButton = button('Minigame only',
-      unlocked ? function () { launchGame(chapter, 0, back); } : null, 'secondary chapter-minigame');
+    var levelPicker;
+    var gameButton = button('Minigame only', unlocked ? function () {
+      launchGame(chapter, 0, back, testMode && levelPicker ? Number(levelPicker.value) : undefined);
+    } : null, 'secondary chapter-minigame');
     if (unlocked) {
       introButton.setAttribute('aria-label', 'Cutscene only · ' + chapter.title);
       gameButton.setAttribute('aria-label', 'Minigame only · ' + chapter.title);
     }
     row.append(introButton, gameButton);
+    if (canTest && unlocked) {
+      levelPicker = document.createElement('select');
+      levelPicker.className = 'chapter-level';
+      levelPicker.setAttribute('aria-label', 'Test level · ' + chapter.title);
+      window.TrentLevels[chapter.id].forEach(function (level, index) {
+        var option = document.createElement('option');
+        option.value = index;
+        option.textContent = 'Level ' + (index + 1) + ' · ' + (level ? level.title : chapter.title);
+        levelPicker.appendChild(option);
+      });
+      row.insertBefore(levelPicker, gameButton);
+      var update = function () {
+        levelPicker.hidden = !testMode;
+        var action = testMode ? 'Play level' : 'Minigame only';
+        gameButton.textContent = action;
+        gameButton.setAttribute('aria-label', action + ' · ' + chapter.title);
+      };
+      testControls.push(update);
+      update();
+    }
     chapters.appendChild(row);
   });
   section.appendChild(chapters);
@@ -965,7 +989,9 @@ function playIntro(chapter, done) {
   introTitle.setAttribute('aria-description', chapter.lines.join(' '));
   progress.style.transform = 'scaleX(0)';
   cinema.dataset.chapter = chapter.id;
-  document.getElementById('intro-skip').hidden = chapter.allowSkip === false;
+  var skip = document.getElementById('intro-skip');
+  skip.hidden = !testMode && chapter.allowSkip === false;
+  skip.textContent = testMode && chapter.videoPath ? 'Skip to gameplay' : 'Skip';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   cinema.hidden = false;
   campaignRoot.hidden = true;
@@ -1008,14 +1034,18 @@ function playIntro(chapter, done) {
   introRaf = requestAnimationFrame(tick);
 }
 
-function launchGame(chapter, score, returnToMenu) {
+function launchGame(chapter, score, returnToMenu, selectedLevel) {
+  var levels = window.TrentLevels[chapter.id];
+  var practice = testMode && returnToMenu && Number.isInteger(selectedLevel) &&
+    selectedLevel >= 0 && selectedLevel < levels.length;
   active = {
     chapter: chapter,
     score: score,
     returnToMenu: returnToMenu,
-    levels: window.TrentLevels[chapter.id],
+    levels: levels,
     seen: new Set(),
-    levelIndex: 0
+    levelIndex: practice ? selectedLevel : 0,
+    practice: practice
   };
   launchMissionLevel(active);
 }
@@ -1232,6 +1262,10 @@ function playEnding() {
 
 function finishMission() {
   var run = active;
+  if (run.practice) {
+    run.returnToMenu();
+    return;
+  }
   if (run.levelIndex + 1 < run.levels.length) {
     run.levelIndex++;
     launchMissionLevel(run);
@@ -1254,7 +1288,7 @@ window.addEventListener('message', function (event) {
   if (!active || !frame || event.source !== frame.contentWindow) return;
   if (!data || !data.runId || data.runId !== active.runId) return;
   if (data.type === 'trent:restart-minigame' && active.levels.length > 1) {
-    active.levelIndex = 0;
+    if (!active.practice) active.levelIndex = 0;
     launchMissionLevel(active);
     return;
   }

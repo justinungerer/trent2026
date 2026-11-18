@@ -21,8 +21,8 @@
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
   var wrapButton = document.getElementById('wrap-box');
-  var stickEl = document.getElementById('stick');
-  var knobEl = document.getElementById('stick-knob');
+  var upButton = document.getElementById('mark-up');
+  var downButton = document.getElementById('mark-down');
 
   var VIEW_W = 844;
   var VIEW_H = 390;
@@ -46,7 +46,7 @@
   var MARK_MIN = 150;
   var MARK_MAX = 318;
   var MARK_SPEED = 460;
-  var STICK_TRAVEL = 46;
+  var MARK_HALF_HEIGHT = 34.5;
   var PRESENT_TYPES = [
     { id: 'plain', name: 'Plain', points: 1, weight: 4, src: 'art/present-plain.webp' },
     { id: 'ribbon', name: 'Ribbon', points: 3, weight: 3, src: 'art/present-ribbon.webp' },
@@ -101,10 +101,10 @@
   var markY = 262;
   var lastWord = 'Wait';
   var lastKind = '';
-  var stickAxis = 0;
-  var stickPointer = null;
-  var holdUp = false;
-  var holdDown = false;
+  var controls = [
+    { button: upButton, direction: -1, keys: ['ArrowUp', 'w', 'W'], key: false, pointer: null },
+    { button: downButton, direction: 1, keys: ['ArrowDown', 's', 'S'], key: false, pointer: null }
+  ];
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -135,7 +135,6 @@
   }
 
   function renderHud() {
-    var heightNow = Math.round((markY - MARK_MIN) / (MARK_MAX - MARK_MIN) * 100);
     var shown = Math.ceil(timeLeft);
     if (shown < 0) shown = 0;
     if (shown > Math.ceil(ROUND_SECONDS)) shown = Math.ceil(ROUND_SECONDS);
@@ -149,16 +148,26 @@
     livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
     lastEl.className = lastKind;
-    if (heightNow < 0) heightNow = 0;
-    if (heightNow > 100) heightNow = 100;
-    stickEl.setAttribute('aria-valuenow', String(100 - heightNow));
   }
 
-  function placeKnob(axis) {
-    if (axis > 1) axis = 1;
-    if (axis < -1) axis = -1;
-    stickAxis = axis;
-    knobEl.style.transform = 'translate(-50%, -50%) translateY(' + (axis * STICK_TRAVEL) + 'px)';
+  function moveMark(distance) {
+    markY = Math.max(MARK_MIN, Math.min(MARK_MAX, markY + distance));
+    hintEl.hidden = true;
+  }
+
+  function holding(control) {
+    return control.key || control.pointer !== null;
+  }
+
+  function clearMovement() {
+    controls.forEach(function (control) {
+      control.key = false;
+      if (control.pointer !== null && control.button.hasPointerCapture(control.pointer)) {
+        control.button.releasePointerCapture(control.pointer);
+      }
+      control.pointer = null;
+      control.button.classList.remove('held');
+    });
   }
 
   function nextType() {
@@ -201,6 +210,7 @@
   }
 
   function beginRun() {
+    clearMovement();
     resetBelt(false);
     victorySent = false;
     state = 'play';
@@ -231,6 +241,7 @@
   function openPause() {
     if (state !== 'play') return;
     state = 'pause';
+    clearMovement();
     pauseSheet.hidden = false;
   }
 
@@ -255,6 +266,7 @@
     if (state === 'win') return;
     seconds = Math.max(0, Math.round(played));
     state = 'win';
+    clearMovement();
     winTimeEl.textContent = 'Wrapped in ' + seconds + ' seconds.';
     winSheet.hidden = false;
     say((loading ? 'Sleigh packed.' : sorting ? 'Crates sorted.' : '30 points.') + ' ' + seconds + ' seconds.');
@@ -276,6 +288,7 @@
 
   function endRun(title, copy) {
     state = 'over';
+    clearMovement();
     hintEl.hidden = true;
     outSheet.querySelector('h1').textContent = title || 'Out of lives';
     outSheet.querySelector('p:not(.kicker)').textContent = copy || 'A damaged present took the last life. The line was not cleared.';
@@ -353,10 +366,8 @@
     if (bowT > 0) bowT -= dt;
     if (state === 'win' || state === 'over') return;
     if (state === 'play') {
-      markY += stickAxis * MARK_SPEED * dt;
-      if (markY < MARK_MIN) markY = MARK_MIN;
-      if (markY > MARK_MAX) markY = MARK_MAX;
-      if (stickAxis !== 0) hintEl.hidden = true;
+      var direction = Number(holding(controls[1])) - Number(holding(controls[0]));
+      if (direction) moveMark(direction * MARK_SPEED * dt);
     }
     timeLeft -= dt;
     spawnIn -= dt;
@@ -579,15 +590,11 @@
   }
 
   function drawMark() {
-    var pulse = reduceMotion() ? 1 : 1 + Math.sin(visualTime * 8) * 0.08;
     ctx.strokeStyle = 'rgba(255, 214, 140, 0.95)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(TARGET, markY - 46);
-    ctx.lineTo(TARGET, markY + 46);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(TARGET, markY, 18 * pulse, 0, Math.PI * 2);
+    ctx.moveTo(TARGET, markY - MARK_HALF_HEIGHT);
+    ctx.lineTo(TARGET, markY + MARK_HALF_HEIGHT);
     ctx.stroke();
   }
 
@@ -671,39 +678,31 @@
     }
   }
 
-  function axisFromPointer(event) {
-    var rect = stickEl.getBoundingClientRect();
-    var dy = event.clientY - (rect.top + rect.height / 2);
-    var axis = dy / STICK_TRAVEL;
-    if (axis > 1) axis = 1;
-    if (axis < -1) axis = -1;
-    if (Math.abs(axis) < 0.1) axis = 0;
-    return axis;
-  }
+  controls.forEach(function (control) {
+    var button = control.button;
+    button.addEventListener('pointerdown', function (event) {
+      if (state !== 'play' || event.button !== 0 || control.pointer !== null) return;
+      event.preventDefault();
+      control.pointer = event.pointerId;
+      button.setPointerCapture(event.pointerId);
+      button.classList.add('held');
+      if (!holding(controls[control.direction < 0 ? 1 : 0])) moveMark(control.direction * 8);
+    });
 
-  function releaseStick(event) {
-    if (stickPointer == null) return;
-    if (event && event.pointerId !== stickPointer) return;
-    stickPointer = null;
-    if (holdUp && !holdDown) placeKnob(-1);
-    else if (holdDown && !holdUp) placeKnob(1);
-    else placeKnob(0);
-  }
+    function release(event) {
+      if (event.pointerId !== control.pointer) return;
+      control.pointer = null;
+      button.classList.toggle('held', holding(control));
+    }
 
-  stickEl.addEventListener('pointerdown', function (event) {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    stickPointer = event.pointerId;
-    stickEl.setPointerCapture(event.pointerId);
-    placeKnob(axisFromPointer(event));
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
+    button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+    button.addEventListener('click', function (event) {
+      if (state === 'play' && event.detail === 0) moveMark(control.direction * 12);
+    });
   });
-  stickEl.addEventListener('pointermove', function (event) {
-    if (event.pointerId !== stickPointer) return;
-    placeKnob(axisFromPointer(event));
-  });
-  stickEl.addEventListener('pointerup', releaseStick);
-  stickEl.addEventListener('pointercancel', releaseStick);
-  stickEl.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
   window.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
@@ -712,36 +711,25 @@
       else if (state === 'pause') closePause();
       return;
     }
-    if (event.code === 'Space' && event.target !== wrapButton) {
+    if (state !== 'play') return;
+    if (event.code === 'Space' && event.target !== wrapButton && event.target !== upButton && event.target !== downButton) {
       event.preventDefault();
       if (!event.repeat) tryWrap();
       return;
     }
-    if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
-      event.preventDefault();
-      holdUp = true;
-      if (stickPointer == null) placeKnob(holdDown ? 0 : -1);
-      return;
-    }
-    if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
-      event.preventDefault();
-      holdDown = true;
-      if (stickPointer == null) placeKnob(holdUp ? 0 : 1);
-    }
+    var control = controls.find(function (arrow) { return arrow.keys.includes(event.key); });
+    if (!control) return;
+    event.preventDefault();
+    control.key = true;
+    control.button.classList.add('held');
   });
   window.addEventListener('keyup', function (event) {
-    if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') holdUp = false;
-    if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') holdDown = false;
-    if (stickPointer != null) return;
-    if (holdUp && !holdDown) placeKnob(-1);
-    else if (holdDown && !holdUp) placeKnob(1);
-    else placeKnob(0);
+    var control = controls.find(function (arrow) { return arrow.keys.includes(event.key); });
+    if (!control) return;
+    control.key = false;
+    control.button.classList.toggle('held', holding(control));
   });
-  window.addEventListener('blur', function () {
-    holdUp = false;
-    holdDown = false;
-    if (stickPointer == null) placeKnob(0);
-  });
+  window.addEventListener('blur', clearMovement);
 
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) openPause();
