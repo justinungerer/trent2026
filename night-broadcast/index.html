@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071422">
   <title>The Night Broadcast</title>
-  <link rel="stylesheet" href="style.css?v=vertical-battery">
+  <link rel="stylesheet" href="style.css?v=radio-feedback">
 </head>
 <body>
   <main class="stage">
@@ -29,6 +29,7 @@
       <button type="button" id="pause">Pause</button>
     </div>
     <div id="battery" class="battery" aria-label="Radio battery"><span id="battery-seconds">30s</span></div>
+    <div id="station-feedback" class="station-feedback" role="status" hidden>Wrong station</div>
 
     <div class="tune-pad">
       <button type="button" id="tune-down" aria-label="Tune lower">◀</button>
@@ -87,7 +88,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=dispatch-radio-airboss"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=patrols-radio-feedback"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=random17"></script><script src="../game-audio.js?v=random17"></script></body>
 </html>

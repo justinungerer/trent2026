@@ -91,9 +91,13 @@
   var WALL_X = GOAL_X + 42;
   var hearts = [];
   var openings = breach ? [570, 345, 125, 620, 240] : [140, 530, 280, 620, 390];
-  var columns = rally ? 9 : breach ? 5 : 16;
+  var firstColumnX = START_X + 630;
+  // Leave 30 units after the last log, which extends 415 units past its column.
+  var lastColumnX = GOAL_X - 445;
+  var columns = rally ? 9 : breach ? 5 : Math.ceil((lastColumnX - firstColumnX) / 650) + 1;
+  var columnSpacing = rally || breach ? 650 : (lastColumnX - firstColumnX) / (columns - 1);
   for (var column = 0; column < columns; column++) {
-    var gateX = START_X + 630 + column * 650;
+    var gateX = firstColumnX + column * columnSpacing;
     var gapY = openings[column % openings.length];
     obstacles.push(
       { kind: 'wire', x: gateX, y: 0, w: 54, h: gapY },
@@ -1207,7 +1211,7 @@
     var h;
     var rampX;
     var baseY;
-    if (!imageReady(craftImg)) return;
+    if (!rally || !imageReady(craftImg)) return;
     w = 260 * unit();
     h = w * (craftImg.naturalHeight / craftImg.naturalWidth);
     rampX = worldToX(500);
@@ -1261,24 +1265,21 @@
     ctx.save();
     ctx.globalAlpha = .5;
     obstacles.forEach(function (o) {
+      if (state !== 'play' || contactObstacle !== o) return;
       var x = worldToX(o.x);
       var y = worldToY(o.y);
-      var active = state === 'play' && contactObstacle === o;
       var width = (o.w || o.r * 2) * scale;
       var height = (o.h || o.r * 2) * scale;
       if (x + width < 0 || x - width > cssW || y + height < 0 || y - height > cssH) return;
       ctx.beginPath();
       if (o.w !== undefined) ctx.rect(x, y, width, height);
       else ctx.arc(x, y, o.r * scale, 0, Math.PI * 2);
-      ctx.fillStyle = active ? 'rgba(240, 153, 60, .30)' : 'rgba(47, 31, 22, .33)';
+      ctx.fillStyle = 'rgba(240, 153, 60, .30)';
       ctx.fill();
-      ctx.strokeStyle = active ? '#ffc16d' : 'rgba(64, 40, 28, .92)';
-      ctx.lineWidth = active ? 3 : 2;
+      ctx.strokeStyle = '#ffc16d';
+      ctx.lineWidth = 3;
       ctx.stroke();
     });
-    ctx.strokeStyle = 'rgba(81, 62, 43, .8)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(worldToX(MIN_X), worldToY(0), (GOAL_X - MIN_X) * scale, BEACH_W * scale);
     ctx.restore();
   }
 

@@ -34,7 +34,7 @@
   var STRONG_HOLD = 1;
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = calibration ? 1.4 : confirmDispatch ? 3 : 2.1;
-  var BATTERY_SECONDS = calibration ? 22.5 : confirmDispatch ? 37.5 : 30;
+  var BATTERY_SECONDS = calibration ? 22.5 : confirmDispatch ? 41.25 : 30;
   document.getElementById('battery-instructions').textContent = 'The radio has ' + BATTERY_SECONDS + ' seconds of battery. If it runs out, restart the stage. Incorrect stations disappear when tuned into.';
   var battery = document.getElementById('battery');
   var batterySeconds = document.getElementById('battery-seconds');
@@ -50,9 +50,10 @@
   var STRONG_HALF = calibration ? 0.105 : confirmDispatch ? 0.038 : 0.067;
   var RED_HALF = Math.min(STRONG_HALF, (calibration ? .08 : confirmDispatch ? .025 : .047) +
     (window.TrentMissionBonus || 0) * .004);
-  var DRAG = 0.0008;
-  var KEY_STEP = 0.008;
-  var KEY_RATE = 0.26;
+  var DIAL_SPEED = confirmDispatch ? .5 : 1;
+  var DRAG = 0.0008 * DIAL_SPEED;
+  var KEY_STEP = 0.008 * DIAL_SPEED;
+  var KEY_RATE = 0.26 * DIAL_SPEED;
   var NOTE_MS = 2400;
 
   var RADIO = { x: 352, y: 18, w: 468 };
@@ -261,6 +262,7 @@
     var station = heardStation();
     var line = station ? station.line : 'Static. Snow on the aerial.';
     var showingNote = performance.now() < statusUntil;
+    document.getElementById('station-feedback').hidden = state !== 'play' || !showingNote || statusNote !== 'wrong station';
     var heard = showingNote ? statusNote : line;
     var sig = signalAt(freq);
     var inside = inStrongNow();
@@ -333,13 +335,13 @@
     }
     document.getElementById('radio-stage-instructions').textContent = 'Find and lock ' + stationById(targets[0]).name + '.' +
       (targets.length > 1 ? ' The next call sign appears after the first lock.' : '') +
-      ' Incorrect stations disappear after one second of strong tuning.';
+      ' Incorrect stations disappear as soon as you tune into them.';
     document.getElementById('field-report-instructions').hidden = true;
   }
 
-  function announce(text) {
+  function announce(text, duration) {
     statusNote = text;
-    statusUntil = performance.now() + NOTE_MS;
+    statusUntil = performance.now() + (duration || NOTE_MS);
     say(text);
   }
 
@@ -465,9 +467,10 @@
   function confirmStation(id) {
     if (id !== targets[targetIndex]) {
       clearBand();
-      announce('wrong station');
+      announce('wrong station', 1500);
       return;
     }
+    stationById(id).dismissed = true;
     if (targetIndex + 1 === targets.length) {
       win();
       return;
@@ -495,6 +498,12 @@
     updateStations(dt * STATION_SPEED_SCALE);
     if (!bandId) {
       next = strongestInside();
+      if (next && targets.indexOf(next.id) < 0) {
+        next.dismissed = true;
+        clearBand();
+        announce('wrong station', 1500);
+        return;
+      }
       charged = stationById(chargeId);
       if (next && charged === next) {
         strongT += dt;
@@ -508,12 +517,6 @@
         }
       }
       if (strongT >= STRONG_HOLD) {
-        if (targets.indexOf(chargeId) < 0) {
-          stationById(chargeId).dismissed = true;
-          clearBand();
-          announce('Incorrect station removed.');
-          return;
-        }
         strongT = STRONG_HOLD;
         bandId = chargeId;
         lockT = 0;

@@ -105,6 +105,7 @@ const keys = new Set();
 let state = 'intro', player, enemies, shots, bolts, sparks, parcels, time, score, wave, bossSpawned, flagshipAt, aim, drag, wraps, recoil, shake, kills;
 let nextWave, nextTarget, bossAt, bossesCleared, aimReleased;
 let finalSpawned, clearAt;
+let regularSpawnCount, eliteWarningUntil;
 const stageTitle = scouts ? 'The Scout Screen' : 'Workshop Approach';
 const stageBrief = (scouts ? 'Intercept marked recon drones.' : 'Dodge sideways patrols and intercept marked cargo haulers.') +
   ' Marked aircraft have ' + (scouts ? 'fifteen' : 'ten') + ' times normal hull and escape if you take too long.' +
@@ -116,6 +117,8 @@ function reset() {
   nextTarget = 14;
   bossesCleared = false;
   finalSpawned = false;
+  regularSpawnCount = 0;
+  eliteWarningUntil = 0;
   clearAt = null;
   bossAt = intercept ? null : 51;
   aimReleased = false;
@@ -133,6 +136,7 @@ if (intercept) {
 } else {
   ui.controls.textContent += ' Defeat the commander and then the final flagship to clear the level.';
 }
+ui.controls.textContent += ' Sideways patrols return lower after each pass. Elite aircraft drop a weapon for every quarter of hull lost.';
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
   ui.stack.replaceChildren(...player.stack.slice(1).map(name => {
@@ -279,12 +283,13 @@ function spawn() {
     const x = 40 + col * span;
     const kind = pool[(i + next) % pool.length];
     const spec = CRAFT[kind];
-    if (workshop && i < 5) {
+    regularSpawnCount++;
+    if (regularSpawnCount % 5 === 0) {
       const direction = (i + next) % 2 ? 1 : -1;
       enemies.push({
-        kind: i % 2 ? 'skiff' : 'drone', hp: CRAFT[i % 2 ? 'skiff' : 'drone'].hp,
+        kind, hp: spec.hp,
         x: direction > 0 ? -68 - i * 35 : W + 68 + i * 35,
-        y: 92 + i * 52 + 12 * (next % 3), direction, age: 0, fire: .45 + i * .2, passes: 0
+        y: H * (.1 + Math.random() * .2), direction, age: 0, fire: .45 + i * .2, passes: 0
       });
     } else enemies.push({
       x, y: -52 - row * 58 - (col % 3) * 14,
@@ -304,12 +309,12 @@ function spawnTarget() {
 function spawnBoss(kind) {
   if (kind === 'flagship') {
     finalSpawned = true;
-    enemies = [];
     bolts = [];
     nextWave = Infinity;
+    eliteWarningUntil = time + 2;
   }
   const hp = kind === 'flagship' && intercept ? CRAFT.flagship.hp / 2 : CRAFT[kind].hp;
-  enemies.push({ kind, x: W / 2, y: -110, age: 0, fire: 2.5, hp, maxHp: hp, mode: 0 });
+  enemies.push({ kind, x: W / 2, y: -110, age: 0, fire: 2.5, hp, maxHp: hp, mode: 0, weaponDrops: 0 });
   ui.phase.textContent = kind === 'flagship' ? (scouts ? 'FINAL RECON COMMAND AIRCRAFT' : workshop ? 'FINAL WORKSHOP SIEGE BOMBER' : 'FINAL FLAGSHIP') :
     scouts ? 'SCOUT COMMANDER' : workshop ? 'WORKSHOP COMMANDER' : 'CONVOY SIGNAL JAMMER';
 }
@@ -366,8 +371,10 @@ function fly(enemy, dt) {
     enemy.x += enemy.direction * 152 * dt;
     if (enemy.direction > 0 ? enemy.x > W + 65 : enemy.x < -65) {
       enemy.passes++;
-      if (enemy.passes === 2) enemy.escaped = true;
-      else enemy.direction *= -1;
+      enemy.direction *= -1;
+      enemy.x = enemy.direction > 0 ? -65 : W + 65;
+      enemy.y += H * .1;
+      if (enemy.y > H * .9) enemy.y = H * .1;
     }
     return;
   }
@@ -447,8 +454,8 @@ function fell(enemy) {
     ui.phase.textContent = targetName.toUpperCase() + ' DOWN · COMMANDER INBOUND';
   }
   if (enemy.kind === 'boss') {
-    flagshipAt = time + (intercept ? 30 : 2.4);
-    ui.phase.textContent = intercept ? 'COMMANDER DOWN · PUSH THROUGH THE FINAL PATROLS' : 'A HEAVIER FLAGSHIP IS APPROACHING';
+    flagshipAt = time + 30;
+    ui.phase.textContent = 'COMMANDER DOWN · PUSH THROUGH THE FINAL PATROLS';
   }
   if (enemy.kind === 'flagship') {
     bossesCleared = true;
@@ -479,6 +486,17 @@ function finishFlight() {
 function harm(enemy, dmg, x, y) {
   if (enemy.hp <= 0) return;
   enemy.hp -= dmg;
+  if (enemy.kind === 'flagship') {
+    const quartersLost = Math.min(4, Math.floor((enemy.maxHp - Math.max(0, enemy.hp)) / (enemy.maxHp / 4)));
+    while (enemy.weaponDrops < quartersLost) {
+      parcels.push({
+        x: enemy.x + (enemy.weaponDrops % 2 ? 18 : -18),
+        y: enemy.y + CRAFT.flagship.hy + 14,
+        kind: PODS[enemy.weaponDrops % PODS.length]
+      });
+      enemy.weaponDrops++;
+    }
+  }
   enemy.impact = .12;
   burst(x, y, colors.ice, 4);
   if (enemy.hp <= 0) fell(enemy);
@@ -569,7 +587,7 @@ function update(dt) {
   player.bank += (clamp((player.x - x0) * .12, -.65, .65) - player.bank) * Math.min(dt * 13, 1);
   armWeapons(dt);
   if (state !== 'playing') return;
-  if (!finalSpawned && (flagshipAt === null || time < flagshipAt - 18) && time >= nextWave && (intercept || wave < 9)) {
+  if (!finalSpawned && time >= nextWave) {
     spawn();
     nextWave = time + (bossesCleared ? 5.5 : bossSpawned ? 9 : workshop ? 6 : 5.15);
   }
@@ -581,8 +599,7 @@ function update(dt) {
     bossSpawned = true;
     spawnBoss('boss');
   }
-  if (flagshipAt !== null && time >= flagshipAt &&
-      !enemies.some(enemy => enemy.hp > 0 && !enemy.escaped && enemy.y < H + 40)) {
+  if (flagshipAt !== null && time >= flagshipAt) {
     flagshipAt = null;
     spawnBoss('flagship');
   }
@@ -694,6 +711,7 @@ function drawPod(pod) {
   g.restore();
 }
 function render() {
+  document.getElementById('elite-alert').hidden = state !== 'playing' || time >= eliteWarningUntil;
   const sky = g.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, '#11243d');
   sky.addColorStop(.55, '#28637d');
