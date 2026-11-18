@@ -2,11 +2,12 @@
 const soundtrack = document.getElementById('soundtrack');
 const turnGate = document.getElementById('turn-gate');
 const musicButton = document.getElementById('music');
-const campaignTrack = soundtrack.getAttribute('src');
 soundtrack.volume = 0.35;
 let wantsMusic = true;
 let introPlaying = false;
-let campaignTime = 0;
+const playlistPlayer = window.TrentPlaylist.createPlayer(soundtrack, function () {
+  return wantsMusic && !musicBlocked();
+});
 
 function musicBlocked() {
   return document.hidden || document.body.classList.contains('playing') || !turnGate.hidden;
@@ -22,13 +23,14 @@ function syncMusic() {
     soundtrack.pause();
     return;
   }
-  soundtrack.play().catch(function () {});
+  playlistPlayer.sync();
 }
 
 musicButton.onclick = function () {
   wantsMusic = !wantsMusic;
   syncMusic();
   updateMusic();
+  window.dispatchEvent(new Event('trent:musicchange'));
 };
 
 document.addEventListener('pointerdown', syncMusic);
@@ -36,21 +38,19 @@ document.addEventListener('keydown', syncMusic);
 document.addEventListener('visibilitychange', syncMusic);
 
 window.TrentMusic = {
-  startIntro: function (chapterId) {
-    if (!introPlaying) campaignTime = soundtrack.currentTime;
+  enabled: function () { return wantsMusic; },
+  startScene: function () {
+    introPlaying = false;
+    playlistPlayer.next();
+  },
+  startIntro: function () {
     introPlaying = true;
-    soundtrack.loop = false;
-    soundtrack.src = './assets/audio/christmas-metal/intros/' + chapterId + '.mp3';
-    syncMusic();
+    playlistPlayer.next();
   },
   stopIntro: function () {
     if (!introPlaying) return;
     introPlaying = false;
-    soundtrack.pause();
-    soundtrack.loop = true;
-    soundtrack.src = campaignTrack;
-    soundtrack.currentTime = campaignTime;
-    queueMicrotask(syncMusic);
+    playlistPlayer.next();
   }
 };
 
@@ -66,3 +66,4 @@ const musicObserver = new MutationObserver(syncMusic);
 musicObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 musicObserver.observe(turnGate, { attributes: true, attributeFilter: ['hidden'] });
 updateMusic();
+playlistPlayer.next();

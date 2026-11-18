@@ -453,6 +453,7 @@ function clearOpeningFilm() {
   openingTimer = 0;
   if (openingVideo) {
     openingVideo.pause();
+    if (window.TrentMusic) window.TrentMusic.stopIntro();
     openingVideo.removeAttribute('src');
     openingVideo.load();
     openingVideo = null;
@@ -474,6 +475,7 @@ function closeMission() {
 function stopEndingVideo() {
   resumeEndingAfterTurn = false;
   endingVideo.pause();
+  if (endingVideo.getAttribute('src') && window.TrentMusic) window.TrentMusic.stopIntro();
   endingVideo.removeAttribute('src');
   endingVideo.load();
 }
@@ -601,6 +603,7 @@ function showRules() {
 }
 
 function showStart() {
+  if (window.TrentMusic) window.TrentMusic.startScene();
   testMode = false;
   if (window.TrentTrivia) window.TrentTrivia.abort();
   var section;
@@ -696,6 +699,7 @@ function showStart() {
 }
 
 function showLogo() {
+  if (window.TrentMusic) window.TrentMusic.startScene();
   var section = document.createElement('section');
   var title = document.createElement('h1');
   var begin = document.createElement('button');
@@ -768,6 +772,7 @@ function showOpeningFilm(done, film) {
   openingVideo.addEventListener('ended', finishOpening);
   section.querySelector('button').onclick = finishOpening;
   campaignRoot.appendChild(section);
+  if (window.TrentMusic) window.TrentMusic.startIntro(film.id);
   syncTurn();
   // Let the video complete naturally, with a fallback for stalled playback.
   openingTimer = schedulePortraitStep(finishOpening, (film.filmSeconds + 12) * 1000);
@@ -1174,6 +1179,7 @@ function showPin(chapter) {
 }
 
 function showCaptureCard(nextId) {
+  if (window.TrentMusic) window.TrentMusic.startScene();
   var section = document.createElement('section');
   var kicker = document.createElement('p');
   var title = document.createElement('h1');
@@ -1202,6 +1208,7 @@ function showCaptureCard(nextId) {
 }
 
 function showRestored() {
+  if (window.TrentMusic) window.TrentMusic.startScene();
   resumeEndingAfterTurn = false;
   endingVideo.pause();
   endingVideo.hidden = true;
@@ -1234,6 +1241,7 @@ function showEnding() {
 function playEnding() {
   var pending;
   if (turnNeeded()) return;
+  if (window.TrentMusic) window.TrentMusic.startIntro('ending');
   document.getElementById('ending-gate').hidden = true;
   document.getElementById('ending-skip').hidden = false;
   endingVideo.hidden = false;

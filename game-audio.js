@@ -3,14 +3,23 @@
   var name = document.documentElement.getAttribute('data-game');
   if (!name) return;
   var base = '../assets/audio/' + name;
-  var music = new Audio('../assets/audio/christmas-metal/' + name + '.mp3?v=carol-metal1');
+  var music = new Audio();
   var wantsMusic = false;
   var gate = null;
   var orientation = window.TrentOrientation;
   var landscape = orientation.gameUsesLandscape(name);
-  music.loop = true;
   music.volume = 0.35;
-  music.preload = 'auto';
+  var player = window.TrentPlaylist.createPlayer(music, function () {
+    return !blocked() && !document.hidden && wantsMusic && parentMusicEnabled();
+  });
+
+  function parentMusicEnabled() {
+    try {
+      return window.parent === window || !window.parent.TrentMusic || window.parent.TrentMusic.enabled();
+    } catch (error) {
+      return true;
+    }
+  }
 
   function blocked() {
     return orientation.blocked(landscape);
@@ -26,13 +35,17 @@
       }
       if (waiting) gate.focus({ preventScroll: true });
     }
-    if (waiting || document.hidden || !wantsMusic) music.pause();
-    else if (music.paused) music.play().catch(function () {});
+    player.sync();
   }
 
-  function start() {
+  function start(event) {
     if (blocked()) return;
+    var wasPlaying = wantsMusic;
     wantsMusic = true;
+    var button = event.target.closest && event.target.closest('button');
+    if (wasPlaying && button &&
+        button.matches('#start, #action, #retry, #retry-lose, #again, #out-retry, #restart') &&
+        !/^(resume|continue|next)/i.test(button.textContent.trim())) player.next();
     sync();
   }
 
@@ -57,8 +70,23 @@
   document.addEventListener('pointerdown', start);
   document.addEventListener('keydown', start);
   document.addEventListener('visibilitychange', sync);
-  window.addEventListener('pagehide', function () { music.pause(); });
+  window.addEventListener('pagehide', function () {
+    music.pause();
+    if (window.parent !== window) {
+      try { window.parent.removeEventListener('trent:musicchange', sync); } catch (error) {}
+    }
+  });
+  window.addEventListener('pageshow', function () {
+    if (window.parent !== window) {
+      try { window.parent.addEventListener('trent:musicchange', sync); } catch (error) {}
+    }
+    sync();
+  });
   orientation.subscribe(sync);
+  if (window.parent !== window) {
+    try { window.parent.addEventListener('trent:musicchange', sync); } catch (error) {}
+  }
+  player.next();
   sync();
 
   window.TrentSfx = {
