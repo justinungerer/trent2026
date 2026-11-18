@@ -5,9 +5,10 @@ const musicButton = document.getElementById('music');
 soundtrack.volume = 0.35;
 let wantsMusic = true;
 let introPlaying = false;
+let introTrack = null;
 const playlistPlayer = window.TrentPlaylist.createPlayer(soundtrack, function () {
   return wantsMusic && !musicBlocked();
-});
+}, function () { return introTrack; });
 
 function musicBlocked() {
   return document.hidden || document.body.classList.contains('playing') || !turnGate.hidden;
@@ -41,15 +42,18 @@ window.TrentMusic = {
   enabled: function () { return wantsMusic; },
   startScene: function () {
     introPlaying = false;
+    introTrack = null;
     playlistPlayer.next();
   },
-  startIntro: function () {
+  startIntro: function (filmId) {
     introPlaying = true;
+    introTrack = filmId === 'opening' ? '12-let-it-snow.mp3' : null;
     playlistPlayer.next();
   },
   stopIntro: function () {
     if (!introPlaying) return;
     introPlaying = false;
+    introTrack = null;
     playlistPlayer.next();
   }
 };

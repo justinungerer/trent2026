@@ -26,8 +26,8 @@ const shelves=freight?[
 ];
 const spawn={x:95,y:613};
 const caches=freight?[{x:472,y:581},{x:818,y:201}]
- :stable?[{x:194,y:149},{x:695,y:192}]
- :[{x:145,y:142},{x:534,y:359},{x:942,y:598}];
+ :stable?[{x:194,y:149},{x:695,y:192},{x:100,y:330},{x:920,y:430}]
+ :[{x:145,y:142},{x:534,y:359},{x:942,y:598},{x:100,y:390},{x:868,y:160}];
 const hearts=[{x:150,y:564},{x:560,y:370},{x:935,y:510}];
 const patrols=freight?[
  [[115,508],[115,367],[455,367],[455,508]],
@@ -84,8 +84,8 @@ const radius=14;
 let mode='intro',run,stick,last=0;
 let escapeTime=0;
 const goal=freight?'Pass both inspection checkpoints and reach the freight office.'
- :stable?'Find Rudolph’s stall, then take the key to the service gate.'
- :'Find Buddy’s three dispatches';
+ :stable?'Find Rudolph’s stall, the gate key, and two supply parcels, then reach the service gate.'
+ :'Find Buddy’s five dispatches';
 if(freight||stable){
  ui.title.textContent=freight?'Freight Gate':'The Stable Escape';
  ui.copy.textContent=goal;
@@ -365,9 +365,9 @@ function update(dt){
   if(stable&&item===run.mail[1]&&!run.mail[0].taken)continue;
   if(!item.taken&&distance(p,item)<30){
    item.taken=true;run.count++;
-   announce(stable?(run.count===1?'Rudolph is here. Find the gate key.':'Key found. Open the service gate.')
+   announce(stable?(item===run.mail[0]?'Rudolph is here. Find the gate key and supply parcels.':item===run.mail[1]?'Gate key found. Collect the remaining supplies.':'Supply parcel found · '+run.count+'/'+caches.length)
     :freight?(run.count===caches.length?'Checkpoints cleared. Reach the freight office.':'Inspection checkpoint cleared.')
-    :run.count===caches.length?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/3');
+    :run.count===caches.length?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/'+caches.length);
    sync();
   }
  }
@@ -501,7 +501,7 @@ function render(){
   const lift=Math.sin(run.time*5+item.x)*4;
   glow(item.x,item.y,41,'#69fbd18a');
   if(!sprite('mail',item.x,item.y+lift,36,29)){ctx.fillStyle='#96feda';ctx.fillRect(item.x-15,item.y-10,30,20);}
-  if(stable||freight)label(freight?'CHECKPOINT':item===run.mail[0]?'RUDOLPH’S STALL':'GATE KEY',item.x,item.y-24);
+  if(stable||freight)label(freight?'CHECKPOINT':item===run.mail[0]?'RUDOLPH’S STALL':item===run.mail[1]?'GATE KEY':'SUPPLY PARCEL',item.x,item.y-24);
  }
  if(run.mac){
   const mac=run.mac;

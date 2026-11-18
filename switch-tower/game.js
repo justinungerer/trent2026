@@ -1,12 +1,12 @@
 /* Chapter 5 — The Switch Tower.
-   Side view of a small snowy yard. Five levers set the route.
+   Side view of a small snowy yard. Three or five levers set the route.
    Five trains come, one after another, at 1.5x the original speed.
    The board shows that train's pattern.
    A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
    After two trains leave, a soldier flips a random lever every about two seconds.
    Five correct departures win and send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/.
-   The soldier is drawn on the canvas: plain gray-green coat and helmet, no marks. */
+   Painted animation atlases show the moving train and railway saboteur. */
 'use strict';
 
 (function () {
@@ -22,6 +22,7 @@
   var winTimeEl = document.getElementById('win-time');
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
+  var arrivalEl = document.getElementById('arrival-timer');
 
   if (!canvas || !ctx) return;
 
@@ -51,13 +52,16 @@
     document.getElementById('tower-standard-instructions').hidden = true;
     document.getElementById('tower-stage-title').textContent = inspection ? 'Clear the Points' : 'Send the Rescue Train';
     document.getElementById('tower-goal').textContent = inspection
-      ? 'Set both inspection patterns and hold each until the corresponding lamps clear.'
+      ? 'Use three switches to match the board before each inspection train reaches the junction. Clear both incoming trains.'
       : 'Match the board to clear the service spur first. Then set the new pattern for the rescue train.';
     document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'The rescue train is away';
     PATTERNS = inspection ? [[0, 1, 1, 0, 0], [1, 0, 0, 1, 0]]
       : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0]];
   }
-  var LEVER_X = [210, 435, 640, 845, 1050];
+  var LEVER_X = inspection ? [300, 640, 980] : [210, 435, 640, 845, 1050];
+  if (inspection) PATTERNS = PATTERNS.map(function (pattern) { return pattern.slice(0, 3); });
+  leverBtns.forEach(function (button, index) { button.hidden = index >= LEVER_X.length; });
+  document.getElementById('levers').style.gridTemplateColumns = 'repeat(' + LEVER_X.length + ', 1fr)';
   var GROUND_Y = 628;
 
   /* Near rail under the wheels. Sampled from scene.webp. */
@@ -100,6 +104,10 @@
   var trainImg = new Image();
   var trentImg = new Image();
   var signalImg = new Image();
+  var paintedSoldier = new Image();
+  var paintedTrain = new Image();
+  paintedSoldier.src = 'art/painted-saboteur-atlas.webp';
+  paintedTrain.src = 'art/painted-train-atlas.webp';
   if (inspection || rescue) signalImg.src = 'art/painted-signal.webp';
   sceneImg.src = inspection ? 'art/inspection-yard.webp' : 'art/scene.webp';
   boardImg.src = 'art/board.webp';
@@ -223,10 +231,11 @@
   }
 
   function renderHud() {
-    var line = inspection ? departures + ' / 2 · ' + Math.floor(alignedFor) + 's'
-      : rescue && !spurCleared ? 'Clear service spur'
+    var line = rescue && !spurCleared ? 'Clear service spur'
         : departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
     if (missesEl.textContent !== line) missesEl.textContent = line;
+    arrivalEl.textContent = state === 'depart' ? 'Passing' : state === 'win' ? 'Clear'
+      : Math.max(0, (SWITCH_X - TRAIN_W - trainX) / APPROACH_SPEED).toFixed(1) + 's';
   }
 
   function refreshLevers() {
@@ -490,32 +499,25 @@
   }
 
   function updateObjective(dt) {
-    if (!inspection && (!rescue || spurCleared)) {
+    if (inspection || !rescue || spurCleared) {
       updateTrain(dt);
       return;
     }
+    trainX = Math.min(-40, trainX + APPROACH_SPEED * dt);
     if (!matches()) {
       alignedFor = 0;
       return;
     }
     alignedFor += dt;
-    if (alignedFor < (inspection ? 5 : 3)) return;
+    if (alignedFor < 3) return;
     alignedFor = 0;
-    if (inspection) {
-      departures++;
-      if (departures === TRAIN_COUNT) {
-        win();
-        return;
-      }
-      patternIndex++;
-      say('First inspection lamp clear. Match the next pattern.');
-    } else {
-      spurCleared = true;
-      patternIndex++;
-      armNextTrain();
-      soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
-      say('The service spur is clear. Set the departure pattern.');
-    }
+    spurCleared = true;
+    patternIndex++;
+    var waitingTrainX = trainX;
+    armNextTrain();
+    trainX = waitingTrainX;
+    soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
+    say('The service spur is clear. Set the departure pattern.');
   }
 
   function updateTrent(dt) {
@@ -554,6 +556,9 @@
     if (!imageReady(boardImg)) return;
     dh = BOARD.dw * (BOARD.h / BOARD.w);
     ctx.drawImage(boardImg, BOARD.x, BOARD.y, BOARD.dw, dh);
+    ctx.fillStyle = '#02255b';
+    ctx.fillRect(BOARD.x + 65 * BOARD.dw / BOARD.w, BOARD.y + 95 * BOARD.dw / BOARD.w,
+      830 * BOARD.dw / BOARD.w, 250 * BOARD.dw / BOARD.w);
     drawPattern(BOARD.dw / BOARD.w);
   }
 
@@ -568,9 +573,9 @@
     var ls;
     var frame;
     for (i = 0; i < LEVER_X.length; i++) {
-      x = BOARD.x + (75 + i * 162) * scale;
+      x = BOARD.x + (75 + i * 810 / LEVER_X.length) * scale;
       y = BOARD.y + 102 * scale;
-      pw = 162 * scale;
+      pw = 810 / LEVER_X.length * scale;
       ph = 243 * scale;
       ctx.save();
       ctx.beginPath();
@@ -600,12 +605,21 @@
     var dh;
     var y;
     if (state === 'blast') return;
-    if (!imageReady(trainImg)) return;
+    if (!imageReady(trainImg) && !imageReady(paintedTrain)) return;
     mid = trainX + TRAIN_W * 0.5;
     depth = clamp(1.05 - mid / 2400, 0.92, 1.06);
     dw = TRAIN_W * depth;
     dh = TRAIN.h * (dw / TRAIN.w);
     y = railY(mid);
+    if (imageReady(paintedTrain)) {
+      var frame = reduceMotion() || !playingMotion() ? 0 : Math.floor(visualTime * 8) % 4;
+      var sw = paintedTrain.naturalWidth / 2;
+      var sh = paintedTrain.naturalHeight / 2;
+      dh = dw * sh / sw;
+      ctx.drawImage(paintedTrain, frame % 2 * sw, Math.floor(frame / 2) * sh, sw, sh,
+        mid - dw / 2, y - dh * .88, dw, dh);
+      return;
+    }
     ctx.fillStyle = 'rgba(20, 32, 48, 0.28)';
     ctx.beginPath();
     ctx.ellipse(mid, y + 6, dw * 0.32, 7, 0, 0, Math.PI * 2);
@@ -679,11 +693,25 @@
     var stride;
     var bob;
     var swing;
-    if (departures < SABOTEUR_AFTER || state === 'title') return;
+    if (inspection || state === 'title') return;
     walking = Math.abs(soldierTarget - soldierX) > 8 && !reduceMotion();
     stride = walking ? Math.sin(visualTime * 11) : 0;
     bob = walking ? Math.abs(stride) * 2 : 0;
     swing = Math.sin(Math.PI * clamp(soldierFlipT, 0, 1));
+    if (imageReady(paintedSoldier)) {
+      var frame = soldierFlipT < 1 ? 3 : walking ? [0, 1, 0, 2][Math.floor(visualTime * 9) % 4] : 0;
+      var sw = paintedSoldier.naturalWidth / 2;
+      var sh = paintedSoldier.naturalHeight / 2;
+      var height = 208;
+      var width = height * sw / sh;
+      ctx.save();
+      ctx.translate(soldierX, GROUND_Y - bob);
+      if (soldierFace > 0) ctx.scale(-1, 1);
+      ctx.drawImage(paintedSoldier, frame % 2 * sw, Math.floor(frame / 2) * sh, sw, sh,
+        -width / 2, -height * .938, width, height);
+      ctx.restore();
+      return;
+    }
 
     ctx.fillStyle = 'rgba(20, 32, 48, 0.28)';
     ctx.beginPath();

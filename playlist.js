@@ -22,7 +22,7 @@
     '18-silent-night.mp3'
   ];
 
-  function createPlayer(audio, canPlay) {
+  function createPlayer(audio, canPlay, selectFile) {
     audio.loop = false;
     audio.preload = 'metadata';
 
@@ -33,7 +33,8 @@
 
     function next() {
       audio.pause();
-      audio.src = new URL(files[Math.floor(Math.random() * files.length)], base).href;
+      var selected = selectFile && selectFile();
+      audio.src = new URL(selected || files[Math.floor(Math.random() * files.length)], base).href;
       sync();
     }
 

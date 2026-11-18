@@ -10,7 +10,7 @@ function game(query=''){
  const listeners={};
  const element=()=>({style:{},textContent:'',innerHTML:'',hidden:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn},querySelector(){return {style:{}}},setPointerCapture(){},getBoundingClientRect(){return {left:0,top:0,width:100,height:100}}});
  const elements={};for(const id of ['world','move','fire','jump','title','brief','equipment','action','sheet','pause','objective','progress','health','ammo','hint'])elements[id]=element();
- elements.world.getContext=()=>({});
+ elements.world.getContext=()=>({setTransform(){}});
  const host={messages:[],postMessage(message,origin){this.messages.push({message,origin})}};
  const sandbox={document:{getElementById:id=>elements[id],addEventListener(){},hidden:false},location:{search:query},parent:host,
   addEventListener:(type,fn)=>{listeners[type]=fn},URL,URLSearchParams,Math,Set,Image:class {},matchMedia:()=>({matches:false}),requestAnimationFrame(){}};
@@ -26,7 +26,7 @@ test('all reachable quiz loadouts complete through the actual mission update loo
    keys.clear();const count=relays.filter(r=>r.done).length;
    const target=missionTarget().x;
    let goal=target;
-   if(ammo===0&&startingAmmo){const box=supplies.filter(x=>Math.abs(x-player.x)>30&&(x<=player.x||!gates.some((g,i)=>!relays[i].done&&player.x<=g-20&&x>g-20)&&!locks.some(l=>!l.done&&player.x<=l.x+250&&x>l.x+250))).sort((a,b)=>Math.abs(a-player.x)-Math.abs(b-player.x))[0];if(box!==undefined)goal=box}
+   if(ammo===0&&startingAmmo){const box=supplies.filter((x,index)=>!collectedSupplies.has(index)&&(x<=player.x||!gates.some((g,i)=>!relays[i].done&&player.x<=g-20&&x>g-20)&&!locks.some(l=>!l.done&&player.x<=l.x+250&&x>l.x+250))).sort((a,b)=>Math.abs(a-player.x)-Math.abs(b-player.x))[0];if(box!==undefined)goal=box}
    if(player.x<goal-3)keys.add('d');else if(player.x>goal+3)keys.add('a');
    const dir=goal>=player.x?1:-1;
    const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
@@ -89,7 +89,7 @@ test('shots and guard hits drive real animation state timers',()=>{
  assert.deepEqual(result,{firing:true,guardHurt:true,guardAttack:true,guardProjectile:true});
 });
 
-test('yard gates require their objectives and refills preserve magazine and cumulative use',()=>{
+test('yard gates require their objectives and ammo boxes add two rounds once',()=>{
  const {run}=game('?charges=2');
  const result=JSON.parse(run(`start();guards=[];player.x=2579;keys.add('d');update(.02);
  const closed=player.x===2580;
@@ -97,7 +97,17 @@ test('yard gates require their objectives and refills preserve magazine and cumu
  player.x=300;keys.clear();ammo=0;shotsUsed=19;player.hp=1;update(.02);
  const first={ammo,hp:player.hp,used:shotsUsed};player.x=350;update(.02);player.x=300;ammo=0;player.hp=1;update(.02);
  JSON.stringify({closed,open,first,second:{ammo,hp:player.hp,used:shotsUsed}})`));
- assert.deepEqual(result,{closed:true,open:true,first:{ammo:12,hp:2,used:19},second:{ammo:12,hp:1,used:19}});
+ assert.deepEqual(result,{closed:true,open:true,first:{ammo:2,hp:2,used:19},second:{ammo:0,hp:1,used:19}});
+});
+
+test('a locked starting weapon can collect a two-shot ammo box once',()=>{
+ const {run}=game('?weapon=locked&stage=out-of-the-cell');
+ const result=JSON.parse(run(`start();guards=[];player.x=supplies[0];update(0);
+ const first=ammo;player.x+=80;update(0);player.x=supplies[0];update(0);
+ const second=ammo;overlay('lost','lost','lost','retry');start();
+ const restored=collectedSupplies.size===0&&ammo===0;
+ JSON.stringify({first,second,restored})`));
+ assert.deepEqual(result,{first:2,second:2,restored:true});
 });
 
 test('enemy projectiles are blocked by crates and otherwise cause damage',()=>{
@@ -131,7 +141,7 @@ test('empty taps and cancelled touches cannot prevent hiding or fire after resup
   const event={pointerId:1,clientX:50,clientY:50};
   elements.fire.handlers.pointerdown(event);elements.fire.handlers[end](event);
   const result=JSON.parse(run(`update(.02);const hidden=player.hidden;player.x=300;keys.clear();update(.02);JSON.stringify({hidden,ammo,shotsUsed,queued:fireQueued})`));
-  assert.deepEqual(result,{hidden:true,ammo:12,shotsUsed:0,queued:false},end);
+  assert.deepEqual(result,{hidden:true,ammo:2,shotsUsed:0,queued:false},end);
  }
 });
 

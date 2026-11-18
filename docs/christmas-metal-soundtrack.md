@@ -1,10 +1,10 @@
 # Christmas playlist soundtrack
 
-All background music in Trent Saves Christmas uses the 17 MP3s in `assets/audio/christmas-metal/playlist-songs/`. Each selection is random across the full playlist.
+Background music in Trent Saves Christmas uses the 17 MP3s in `assets/audio/christmas-metal/playlist-songs/`. Each selection is random across the full playlist.
 
 ## Playback
 
-A fresh song is chosen for every minigame level, replay or retry, every chapter film and level film, the opening film, the ending film, the title credits, and campaign or quiz transitions. Songs that finish are followed by another random selection.
+A fresh song is chosen for every minigame level, replay or retry, every chapter film and level film, the ending film, the title credits, and campaign or quiz transitions. Songs that finish are followed by another random selection.
 
 Pausing for phone rotation, hiding the tab, and toggling music resume the selected song. The campaign track pauses while the embedded minigame plays. The music toggle also controls embedded minigames.
 
