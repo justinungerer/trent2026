@@ -135,7 +135,11 @@
     WAVE_PLAN = [];
     for (var section = 0; section < 3; section++) {
       originalPlan.forEach(function (wave) {
-        WAVE_PLAN.push({ at: (section + wave.at) / 3, foes: wave.foes, batches: gateFight ? 3 : 1 });
+        WAVE_PLAN.push({
+          at: (section + wave.at) / 3,
+          foes: gateFight ? wave.foes.concat(wave.foes, wave.foes) : wave.foes,
+          batches: gateFight ? 3 : 1
+        });
       });
     }
     WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
