@@ -245,7 +245,7 @@
       for (j = 0; j < src.foes.length; j++) {
         foesPlan.push({ k: src.foes[j].k, side: src.foes[j].side });
       }
-      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], batches: src.batches || 1, sent: 0, nextAt: 0 });
+      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], pending: [], batches: src.batches || 1, sent: 0, nextAt: 0 });
     }
     return out;
   }
@@ -331,7 +331,7 @@
 
   function waveClear(wave) {
     var i;
-    if (!wave.spawned || wave.sent < wave.batches) return false;
+    if (!wave.spawned || wave.sent < wave.batches || wave.pending.length) return false;
     for (i = 0; i < wave.members.length; i++) {
       if (wave.members[i].state !== 'gone') return false;
     }
@@ -369,8 +369,9 @@
     else if (allClear()) gateEl.textContent = 'The gate';
     else if (left === 1) gateEl.textContent = '1 guard';
     else if (left === 0) {
-      var pending = waves.find(function (wave) { return wave.spawned && wave.sent < wave.batches; });
-      gateEl.textContent = pending ? 'Reinforcements ' + Math.max(0, Math.ceil(pending.nextAt - played)) + 's' : 'Walk on';
+      var pending = waves.find(function (wave) { return wave.spawned && (wave.pending.length || wave.sent < wave.batches); });
+      var nextArrival = pending && pending.pending.length ? pending.pending[0].at : pending && pending.nextAt;
+      gateEl.textContent = pending ? 'Reinforcements ' + Math.max(0, Math.ceil(nextArrival - played)) + 's' : 'Walk on';
     }
     else gateEl.textContent = left + ' guards';
     pipsEl.textContent = pipsText();
@@ -567,34 +568,43 @@
   }
 
   function spawnWave(wave) {
-    var slots = [0.24, 0.43, 0.63, 0.81];
-    var i;
-    var spec;
-    var e;
     wave.spawned = true;
     wave.sent++;
     wave.nextAt = played + 5;
-    for (i = 0; i < wave.foes.length; i++) {
-      spec = wave.foes[i];
-      e = {
-        kind: spec.k,
-        x: spec.side === 'right' ? cam + VIEW_W + 36 + i * 38 : cam - 36 - i * 38,
-        y: BAND_TOP + BAND_H * slots[i % slots.length],
-        face: spec.side === 'right' ? -1 : 1,
-        hp: KIND[spec.k].hp,
-        state: 'go',
-        t: 0,
-        cool: 0.35 + i * 0.12,
-        anim: 'walk',
-        animT: Math.random() * 0.4,
-        hitDone: false,
-        alpha: 1,
-        aimY: 0
-      };
-      e.x = clamp(e.x, 24, WORLD_R);
-      foes.push(e);
-      wave.members.push(e);
+    for (var i = 0; i < wave.foes.length; i++) {
+      if (!cellPassage && !gateFight) wave.pending.push({ index: i, at: played + i });
+      else spawnFoe(wave, i);
     }
+    releaseEntrants(wave);
+  }
+
+  function releaseEntrants(wave) {
+    while (wave.pending.length && played >= wave.pending[0].at) {
+      spawnFoe(wave, wave.pending.shift().index);
+    }
+  }
+
+  function spawnFoe(wave, i) {
+    var slots = [0.24, 0.43, 0.63, 0.81];
+    var spec = wave.foes[i];
+    var e = {
+      kind: spec.k,
+      x: spec.side === 'right' ? cam + VIEW_W + 36 + i * 38 : cam - 36 - i * 38,
+      y: BAND_TOP + BAND_H * slots[i % slots.length],
+      face: spec.side === 'right' ? -1 : 1,
+      hp: KIND[spec.k].hp,
+      state: 'go',
+      t: 0,
+      cool: 0.35 + i * 0.12,
+      anim: 'walk',
+      animT: Math.random() * 0.4,
+      hitDone: false,
+      alpha: 1,
+      aimY: 0
+    };
+    e.x = clamp(e.x, 24, WORLD_R);
+    foes.push(e);
+    wave.members.push(e);
   }
 
   function considerSpawns() {
@@ -603,6 +613,7 @@
     var line;
     for (i = 0; i < waves.length; i++) {
       wave = waves[i];
+      releaseEntrants(wave);
       if (waveClear(wave)) continue;
       line = wave.at * WALK;
       if ((!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) ||
