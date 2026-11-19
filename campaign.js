@@ -514,8 +514,10 @@ function showChapterMenu(lastChapter, complete, canTest) {
   var clips = document.createElement('div');
   clips.className = 'choices';
   function back() { showChapterMenu(lastChapter, complete, canTest); }
-  clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
-  clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
+  if (canTest) {
+    clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
+    clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
+  }
   var testControls = [];
   if (canTest) {
     var testToggle = button('Test mode', function () {
@@ -531,7 +533,7 @@ function showChapterMenu(lastChapter, complete, canTest) {
     updateTestToggle();
     clips.appendChild(testToggle);
   }
-  section.appendChild(clips);
+  if (canTest) section.appendChild(clips);
 
   var chapters = document.createElement('div');
   chapters.className = 'choices';
@@ -539,6 +541,36 @@ function showChapterMenu(lastChapter, complete, canTest) {
     var unlocked = chapter.number <= lastChapter;
     var row = document.createElement('div');
     row.className = 'chapter-menu-row';
+    if (!canTest) {
+      var chapterLabel = chapter.kicker + ' · ' + chapter.title;
+      if (!unlocked) {
+        row.appendChild(button('', null, 'choice'));
+      } else if (chapter.number === lastChapter && !complete) {
+        row.appendChild(button('Continue at ' + chapterLabel, function () { openChapter(chapter.id); }, 'choice'));
+      } else {
+        var chapterHeading = document.createElement('h2');
+        chapterHeading.className = 'chapter-replay-heading';
+        chapterHeading.textContent = chapterLabel;
+        row.appendChild(chapterHeading);
+        var returnFromReplay = chapter.nextId ? back : function () { showEnding(back); };
+        function addReplay(label, skipQuiz) {
+          var replay = button(label, function () {
+            openChapter(chapter.id, { skipQuiz: skipQuiz, returnToMenu: returnFromReplay });
+          }, 'secondary');
+          replay.setAttribute('aria-label', label + ' · ' + chapterLabel);
+          row.appendChild(replay);
+        }
+        if (chapter.number) {
+          addReplay('Replay without quiz', true);
+          addReplay('Replay with quiz', false);
+        } else {
+          addReplay('Replay prologue', true);
+          row.lastElementChild.classList.add('chapter-replay-single');
+        }
+      }
+      chapters.appendChild(row);
+      return;
+    }
     var chapterAction = chapter.number === lastChapter ? 'Continue at ' : 'Replay ';
     row.appendChild(button(chapterAction + chapter.kicker + ' · ' + chapter.title,
       unlocked ? function () { openChapter(chapter.id); } : null, 'choice'));
@@ -604,7 +636,7 @@ function showRules() {
     '<p>You get two guesses per question. Afterward, you can review why each answer is right or wrong.</p>' +
     '<p>Get at least five answers right to enter the chapter’s minigame. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses. Each level starts with your full earned loadout.</p>' +
     '<p>Play the three minigame levels in order. If you lose, you can retry the level or start that minigame over.</p>' +
-    '<p>Finish Level 3 to earn the password for the next chapter. Entering it also unlocks earlier chapters, films, and complete minigame sequences in the chapter menu.</p>' +
+    '<p>Finish Level 3 to earn the password for the next chapter. Entering it lets you replay completed chapters with or without their quizzes.</p>' +
     '<button class="primary" type="button">Close</button></div>';
   modal.querySelector('.primary').onclick = function () {
     modal.remove();
@@ -1122,20 +1154,21 @@ function openMissionLevel(run, stage) {
   openMissionFrame(url.href, chapter.title + (run.finalFight ? ' · Final fight' : ''));
 }
 
-function afterIntro(chapter) {
-  if (!chapter.number) {
-    launchGame(chapter);
+function afterIntro(chapter, options) {
+  if (!chapter.number || options.skipQuiz) {
+    launchGame(chapter, 0, options.returnToMenu);
     return;
   }
   window.TrentTrivia.start(chapter, {
     story: chapter.story,
     testMode: testMode,
-    onClear: function (correct) { launchGame(chapter, correct); },
+    onClear: function (correct) { launchGame(chapter, correct, options.returnToMenu); },
     onHome: showStart
   });
 }
 
-function openChapter(id) {
+function openChapter(id, options) {
+  options = options || {};
   var chapter = byId(id);
   if (!chapter) {
     showStart();
@@ -1147,7 +1180,7 @@ function openChapter(id) {
   closeMission();
   stopEndingVideo();
   ending.hidden = true;
-  playIntro(chapter, function () { afterIntro(chapter); });
+  playIntro(chapter, function () { afterIntro(chapter, options); });
 }
 
 function showPin(chapter) {
@@ -1174,8 +1207,8 @@ function showPin(chapter) {
   code.textContent = password;
   code.setAttribute('aria-label', 'Continue code ' + password);
   copy.className = 'lead';
-  copy.textContent = (nextId ? 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters and films. ' :
-    'This completion password opens every chapter and film. ') +
+  copy.textContent = (nextId ? 'Use this password to open ' + byId(nextId).title + ' and replay earlier chapters. ' :
+    'This completion password opens every chapter for replay. ') +
     'Trent, write it down. If you forget it, you’ll have to replay ' + chapter.title + ' to get back here.';
   home.type = 'button';
   home.className = 'secondary';
@@ -1247,7 +1280,11 @@ function showRestored() {
   document.getElementById('ending-home').focus({ preventScroll: true });
 }
 
-function showEnding() {
+function showEnding(returnToMenu) {
+  var home = document.getElementById('ending-home');
+  var hasMenu = typeof returnToMenu === 'function';
+  home.textContent = hasMenu ? 'Chapter menu' : 'Start screen';
+  home.onclick = hasMenu ? returnToMenu : showStart;
   closeMission();
   cinema.hidden = true;
   campaignRoot.hidden = true;

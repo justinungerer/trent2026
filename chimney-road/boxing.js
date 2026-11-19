@@ -2,6 +2,9 @@
 (function () {
   var MAX_ENEMY_HP = 2120;
   var STUN_SECONDS = 3;
+  var STUN_COOLDOWN_SECONDS = 3;
+  var PUNCH_FLASH_SECONDS = .16;
+  var SAME_SIDE_LIMIT = 3;
   var WINDUP_SECONDS = 1;
   var DODGE_SECONDS = 1.15;
   var ATTACK_WARNINGS = {
@@ -16,7 +19,7 @@
     [.17, -.12, 8], [.05, -.18, 10], [.24, -.02, 5], [.16, .18, 6],
     [-.02, .25, 9], [.08, .28, 4], [.30, -.13, 4], [.21, .12, 3]
   ];
-  var HITS_PER_STAR = 5;
+  var HITS_PER_STAR = 6;
   var PUNCHES = {
     left: { windup: .09, recovery: .20, damage: 4, cost: 6, side: -1 },
     right: { windup: .14, recovery: .23, damage: 6, cost: 8, side: 1 },
@@ -44,7 +47,7 @@
       bout = { mode: 'intro', hp: 20 + (window.TrentMissionBonus || 0), max: 20 + (window.TrentMissionBonus || 0), enemy: MAX_ENEMY_HP,
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
         dodge: 0, dodgeTime: 0, dodgeCool: 0, dodgeHeld: false, block: false,
-        punch: null, queuedPunch: null, stars: 0, punchStreak: 0,
+        punch: null, queuedPunch: null, stars: 0, punchStreak: 0, lastPunchSide: 0, sameSideHits: 0, stunCooldown: 0,
         guardSide: -1, evadeSide: 0, evadeTime: 0, playerHitTime: 0, playerDamage: 0,
         hitVision: 0, hitVisionDuration: 0, hitSide: 1,
         counterHits: 0, counterLimit: 0, flash: 0, lastImpact: null,
@@ -56,7 +59,7 @@
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land five punches in a row to earn a star. Missing or taking a hit resets the streak. Every punch has a one-second warning. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
+      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. Switch sides after three hits. Land six punches in a row to earn an Uppercut. It stuns him when he has been awake for at least three seconds after the last stun. Missing or taking a hit resets the streak. Every punch has a one-second warning. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
       sync();
     }
     function stop() {
@@ -89,9 +92,13 @@
       var release = bout.dodgeHeld ? 1 : Math.min(1, bout.dodgeTime / .18);
       return bout.dodge * 72 * lean * release;
     }
+    function adaptiveDodgeSide() {
+      return bout.phase !== 'stun' && bout.sameSideHits >= SAME_SIDE_LIMIT ? bout.lastPunchSide : 0;
+    }
     function guardedSide() {
+      if (bout.phase === 'stun') return 0;
       var counterOpen = bout.phase === 'recover' && bout.counterHits < bout.counterLimit;
-      return bout.phase === 'stun' || counterOpen ? 0 : bout.guardSide;
+      return adaptiveDodgeSide() || (counterOpen ? 0 : bout.guardSide);
     }
     function punch(kind) {
       if (!bout || bout.mode !== 'fight' || !PUNCHES[kind] || bout.block || bout.dodgeHeld) return;
@@ -112,12 +119,15 @@
         sync();
         return;
       }
-      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, evaded: request.guarded };
+      var adaptedSide = adaptiveDodgeSide();
+      var evaded = kind !== 'upper' && bout.phase !== 'stun' &&
+        (adaptedSide ? adaptedSide === move.side : request.guarded);
+      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, evaded: evaded };
       bout.dodgeTime = 0;
       bout.block = false;
       bout.stamina -= move.cost;
       if (kind === 'upper') bout.stars--;
-      if (request.guarded) {
+      if (evaded) {
         bout.evadeSide = -move.side;
         bout.evadeTime = .42;
       }
@@ -131,20 +141,26 @@
       }
       var upper = action.kind === 'upper';
       var earnedStar = false;
-      if (upper) {
+      var stunned = upper && bout.phase !== 'stun' && bout.stunCooldown <= 0;
+      if (stunned) {
         bout.phase = 'stun';
         bout.timer = STUN_SECONDS;
         bout.evadeTime = 0;
-      } else if (++bout.punchStreak >= HITS_PER_STAR) {
-        earnedStar = bout.stars < 3;
-        if (earnedStar) bout.stars++;
-        bout.punchStreak = 0;
+      }
+      if (!upper) {
+        bout.sameSideHits = move.side === bout.lastPunchSide ? Math.min(SAME_SIDE_LIMIT, bout.sameSideHits + 1) : 1;
+        bout.lastPunchSide = move.side;
+        if (++bout.punchStreak >= HITS_PER_STAR) {
+          earnedStar = bout.stars < 3;
+          if (earnedStar) bout.stars++;
+          bout.punchStreak = 0;
+        }
       }
       bout.enemy = Math.max(0, bout.enemy - move.damage);
       if (bout.phase === 'recover') bout.counterHits++;
       bout.flash = .20;
       bout.lastImpact = action.kind;
-      var hit = upper ? 'Guard broken! He’s stunned.' : action.kind === 'left' ? 'Left lands!' : 'Right lands!';
+      var hit = stunned ? 'Guard broken! He’s stunned.' : upper ? 'Uppercut lands!' : action.kind === 'left' ? 'Left lands!' : 'Right lands!';
       bout.cue = hit + (earnedStar ? ' +1 star.' : '');
       if (bout.enemy === 0) {
         bout.mode = 'victory';
@@ -192,6 +208,7 @@
       bout.flash = Math.max(0, bout.flash - dt);
       bout.playerHitTime = Math.max(0, bout.playerHitTime - dt);
       bout.evadeTime = Math.max(0, bout.evadeTime - dt);
+      bout.stunCooldown = Math.max(0, bout.stunCooldown - dt);
       bout.timer -= dt;
       if (bout.timer <= 0) {
         if (bout.phase === 'guard') beginAttack();
@@ -204,6 +221,7 @@
           bout.timer = 1.25;
           if (bout.counterLimit) bout.cue = bout.counterLimit === 2 ? 'Open! Land two punches.' : 'Open! Land one punch.';
         } else {
+          if (bout.phase === 'stun') bout.stunCooldown = STUN_COOLDOWN_SECONDS;
           bout.phase = 'guard';
           bout.counterLimit = 0;
           bout.guardSide *= -1;
@@ -235,12 +253,15 @@
       playerHit.textContent = '−' + bout.playerDamage + ' HP';
       var enemyPercent = bout.enemy > 0 ? Math.max(1, Math.floor(100 * bout.enemy / MAX_ENEMY_HP)) : 0;
       get('box-enemy-hp').textContent = enemyPercent + '%';
-      get('box-stars').textContent = bout.stars ? bout.stars + '★' : bout.punchStreak + '/' + HITS_PER_STAR;
+      var uppercutLabel = bout.stars ? bout.stars + '★' : bout.punchStreak + '/' + HITS_PER_STAR;
+      if (bout.stars && bout.stunCooldown > 0) uppercutLabel += ' · Stun ' + Math.ceil(bout.stunCooldown) + 's';
+      get('box-stars').textContent = uppercutLabel;
       get('box-uppercut').classList.toggle('charged', bout.stars > 0);
       get('box-clock').textContent = Math.floor(bout.time/60) + ':' + String(Math.floor(bout.time%60)).padStart(2,'0') + ' · Stamina ' + Math.round(bout.stamina);
       var guard = guardedSide();
       var guardLabel = guard < 0 ? 'Left covered · Right open' : guard > 0 ? 'Right covered · Left open' : 'Both sides open';
       if (bout.phase === 'stun') guardLabel = 'Stunned · Both sides open';
+      else if (adaptiveDodgeSide()) guardLabel = guard < 0 ? 'Dodging left · Right open' : 'Dodging right · Left open';
       get('box-guard').textContent = bout.mode === 'victory' ? '' : guardLabel;
       get('box-punch-left').classList.toggle('open-side', guard !== -1);
       get('box-punch-right').classList.toggle('open-side', guard !== 1);
@@ -259,13 +280,16 @@
       ctx.drawImage(img,frame%cols*sw,Math.floor(frame/cols)*sh,sw,sh,x-w/2,y-height,w,height);
     }
     // Historical face over the painted poses: the approved portrait/body fallback.
-    function enemySprite(ctx,frame,x,y,height,bloodyNose) {
+    function enemySprite(ctx,frame,x,y,height,bloodyNose,warningFlash) {
+      ctx.save();
+      if (warningFlash) ctx.filter = 'brightness(1.75)';
       sprite(ctx,enemy,3,2,frame,x,y,height);
+      ctx.restore();
       if(!ready(face)||!ready(enemy))return;
       var heads=[[229,8,58,79],[747,8,58,81],[1231,10,65,83],[230,518,59,81],[728,524,63,86],[1240,582,69,88]];
       var h=heads[frame],k=height/512,w=height,dx=x-w/2+(h[0]%512)*k,dy=y-height+(h[1]%512)*k;
       ctx.save();ctx.beginPath();ctx.ellipse(dx+h[2]*k/2,dy+h[3]*k/2,h[2]*k/2,h[3]*k/2,0,0,Math.PI*2);ctx.clip();
-      ctx.filter = 'sepia(0.35)';
+      ctx.filter = warningFlash ? 'sepia(.35) brightness(1.75)' : 'sepia(.35)';
       ctx.drawImage(face, 174, 18, 116, 161, dx, dy, h[2] * k, h[3] * k);
       ctx.filter = 'none';
       if (bloodyNose) drawBloodyNose(ctx, dx, dy, h[2] * k, h[3] * k);
@@ -379,8 +403,17 @@
         recoil = bout.flash / .20 * (bout.lastImpact === 'left' ? 10 : -10);
       }
       var enemyX = center + (enemyShift + recoil) * scale;
+      var warningFlash = bout && bout.mode === 'fight' && bout.phase === 'tell' && bout.timer <= PUNCH_FLASH_SECONDS;
+      if (warningFlash) {
+        var flashY = 132 * scale, flashRadius = 81 * scale;
+        var glow = ctx.createRadialGradient(enemyX, flashY, 0, enemyX, flashY, flashRadius);
+        glow.addColorStop(0, 'rgba(255, 226, 151, .66)');
+        glow.addColorStop(1, 'rgba(255, 226, 151, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(enemyX - flashRadius, flashY - flashRadius, flashRadius * 2, flashRadius * 2);
+      }
       enemySprite(ctx, enemyFrame, enemyX, (435 - Math.abs(recoil) * .6) * scale, 380 * scale,
-        bout && bout.enemy <= MAX_ENEMY_HP / 2);
+        bout && bout.enemy <= MAX_ENEMY_HP / 2, warningFlash);
       if (bout && bout.phase === 'stun' && bout.mode !== 'victory') {
         drawStunStars(ctx, enemyX, (enemyFrame === 5 ? 94 : 49) * scale, scale);
       }

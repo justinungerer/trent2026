@@ -92,7 +92,7 @@
   }
   stations.forEach(function (station, index) { station.home = .13 + index * .74 / (stations.length - 1); });
   document.getElementById('radio-lock-instructions').textContent =
-    'Hold Lock in the red band for ' + LOCK_TIME + ' seconds. Drag the knob or use the arrows to track the station while locking.';
+    'Hold Lock in the red band for ' + LOCK_TIME + ' seconds. Drag the dial or tuning knob, or use the arrows to track the station while locking.';
   if (calibration || confirmDispatch) {
     document.getElementById('radio-stage-title').textContent = calibration ? 'Find the Carrier' : 'Confirm the Dispatch';
     var instructions = document.getElementById('radio-stage-instructions');
@@ -135,7 +135,6 @@
   var dragging = false;
   var dragId = 0;
   var lastDragX = 0;
-  var pendingDx = 0;
   var lastFrame = 0;
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -352,7 +351,6 @@
     tuneDown = false;
     tuneUp = false;
     dragging = false;
-    pendingDx = 0;
     keys.clear();
     pauseAccum = 0;
     runStart = performance.now();
@@ -377,7 +375,6 @@
     tuneDown = false;
     tuneUp = false;
     dragging = false;
-    pendingDx = 0;
     keys.clear();
     lockBtn.classList.remove('held');
     lockBtn.setAttribute('aria-pressed', 'false');
@@ -398,7 +395,6 @@
     tuneDown = false;
     tuneUp = false;
     dragging = false;
-    pendingDx = 0;
     state = 'title';
     pauseSheet.hidden = true;
     startSheet.hidden = false;
@@ -416,7 +412,6 @@
     tuneDown = false;
     tuneUp = false;
     dragging = false;
-    pendingDx = 0;
     keys.clear();
     winTimeEl.textContent = 'Tuned in ' + seconds + ' seconds.';
     winSheet.hidden = false;
@@ -488,10 +483,6 @@
     var band;
     var onBand;
     var inRed;
-    if (Math.abs(pendingDx) >= 1.6) {
-      freq += pendingDx * DRAG;
-      pendingDx = 0;
-    }
     dir = tuneDirection();
     if (dir) freq += dir * KEY_RATE * dt;
     freq = clamp(freq, 0, 1);
@@ -852,45 +843,40 @@
     }
   }
 
+  function hitsTuningControl(point, control, radius) {
+    return Math.hypot(point.x - control.x, point.y - control.y) <= radius;
+  }
+
   canvas.addEventListener('pointerdown', function (event) {
-    var p;
-    var dx;
-    var dy;
-    var hit;
-    var knob;
-    if (event.button !== 0) return;
-    if (state !== 'play') return;
-    knob = knobCenter();
-    p = designPoint(event);
-    dx = p.x - knob.x;
-    dy = p.y - knob.y;
-    hit = knobHitRadius();
-    if (dx * dx + dy * dy > hit * hit) return;
+    if (event.button !== 0 || state !== 'play' || dragging) return;
+    var point = designPoint(event);
+    var dial = radioPoint(DIAL_U);
+    if (!hitsTuningControl(point, knobCenter(), knobHitRadius()) &&
+        !hitsTuningControl(point, dial, dial.r + 10)) return;
     event.preventDefault();
     dragging = true;
     dragId = event.pointerId;
-    lastDragX = p.x;
-    pendingDx = 0;
+    lastDragX = point.x;
     if (canvas.setPointerCapture) canvas.setPointerCapture(event.pointerId);
   });
 
-  window.addEventListener('pointermove', function (event) {
-    var p;
-    if (!dragging || event.pointerId !== dragId) return;
-    p = designPoint(event);
-    pendingDx += p.x - lastDragX;
-    lastDragX = p.x;
+  canvas.addEventListener('pointermove', function (event) {
+    if (state !== 'play' || !dragging || event.pointerId !== dragId) return;
+    var x = designPoint(event).x;
+    // Apply the movement before pointerup, even if both events arrive between frames.
+    freq = clamp(freq + (x - lastDragX) * DRAG, 0, 1);
+    lastDragX = x;
   });
 
   function endDrag(event) {
     if (!dragging || event.pointerId !== dragId) return;
     dragging = false;
     dragId = 0;
-    pendingDx = 0;
   }
 
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('lostpointercapture', endDrag);
   canvas.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
   function bindTune(button, sign) {
@@ -918,6 +904,7 @@
     }
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   }
 
@@ -968,7 +955,6 @@
     tuneDown = false;
     tuneUp = false;
     dragging = false;
-    pendingDx = 0;
   });
 
   document.addEventListener('visibilitychange', function () {

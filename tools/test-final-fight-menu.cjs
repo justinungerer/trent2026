@@ -19,18 +19,82 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         contentType: 'application/javascript',
         body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/, hooks + '\nwindow.menuFightState=()=>({state,mode:fight.state().mode,gunfire:!!gunfire});' +
           'window.prepareWarning=(late)=>{fight.start();fight.begin();const b=fight.state();if(late)b.enemy=100;b.timer=.02;fight.update(.02);};' +
-          'window.stepWarning=(dt)=>{fight.update(dt);return fight.state();};\n})();')
+          'window.stepWarning=(dt)=>{fight.update(dt);return fight.state();};' +
+          'window.fighterBrightness=()=>{render(0);return ctx.getImageData(canvas.width/2-4,canvas.height*.31,8,8).data.reduce((sum,v,i)=>sum+(i%4===3?0:v),0);};\n})();')
+      });
+      if (pathname.endsWith('/night-broadcast/game.js')) return route.fulfill({
+        contentType: 'application/javascript',
+        body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/,
+          'window.radioControl=(dial)=>{const p=dial?radioPoint(DIAL_U):knobCenter();return {x:view.ox+p.x*view.s,y:view.oy+p.y*view.s,freq};};\n})();')
       });
       if (/\.(mp3|mp4|wav)$/.test(pathname)) return route.fulfill({ status: 204 });
       return fs.existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404 });
     });
     await page.goto('http://localhost/');
-    await page.evaluate(() => showChapterMenu(9, false, false));
-    assert.equal(await page.locator('.chapter-final-fight').isDisabled(), true);
-    assert.equal(await page.locator('.chapter-final-fight').textContent(), '—');
-    await page.evaluate(() => showChapterMenu(10, false, false));
+    async function usePassword(pin) {
+      await page.evaluate(() => showStart());
+      await page.locator('#pin').fill(pin);
+      await page.locator('#campaign-start').click();
+    }
+    await usePassword('SKY');
+    assert.equal(await page.getByRole('button', { name: /^Continue at / }).count(), 1);
+    assert.equal(await page.locator('.chapter-minigame, .chapter-final-fight, .chapter-level').count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Opening film' }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: /^Replay without quiz/ }).count(), 1);
+    assert.equal(await page.getByRole('button', { name: /^Replay with quiz/ }).count(), 1);
+    await page.getByRole('button', { name: /^Replay without quiz/ }).click();
+    assert.equal(await page.locator('#cinema').getAttribute('data-chapter'), 'night');
+    await page.evaluate(() => introDone());
+    assert.equal(await page.locator('#intro-title').textContent(), 'Find the Carrier');
+    await page.evaluate(() => introDone());
+    await page.evaluate(() => finishMission());
+    assert.equal(await page.evaluate(() => active.levelIndex), 1);
+    await page.setViewportSize({ width: 568, height: 320 });
+    const radioFrame = page.frameLocator('#game');
+    await radioFrame.locator('#start').click();
+    const radio = page.frames().find(f => new URL(f.url()).pathname.endsWith('/night-broadcast/'));
+    assert.equal(new URL(radio.url()).searchParams.get('sequence'), '2');
+    const canvas = await radioFrame.locator('#radio').boundingBox();
+    async function quickTuningDrag(dial, delta) {
+      const before = await radio.evaluate(value => radioControl(value), dial);
+      const x = canvas.x + before.x, y = canvas.y + before.y;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + delta, y);
+      await page.mouse.up();
+      const after = await radio.evaluate(value => radioControl(value), dial);
+      assert.ok((after.freq - before.freq) * Math.sign(delta) > .03);
+    }
+    await quickTuningDrag(true, 65);
+    await quickTuningDrag(false, -45);
+    await page.evaluate(() => finishMission());
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.locator('#intro-title').textContent(), 'Confirm the Dispatch');
+    await page.evaluate(() => { introDone(); finishMission(); });
+    assert.equal(await page.getByRole('heading', { name: 'Chapter menu' }).isVisible(), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem(PIN_KEY)), 'SKY');
+    await page.evaluate(() => {
+      const startQuiz = TrentTrivia.start;
+      TrentTrivia.start = function(chapter, hooks) {
+        window.startedQuiz = chapter.id;
+        return startQuiz(chapter, hooks);
+      };
+    });
+    await page.getByRole('button', { name: /^Replay with quiz/ }).click();
+    await page.evaluate(() => introDone());
+    assert.equal(await page.evaluate(() => window.startedQuiz), 'night');
+    await usePassword('SKY');
+    await page.getByRole('button', { name: /^Continue at / }).click();
+    await page.evaluate(() => introDone());
+    assert.equal(await page.evaluate(() => window.startedQuiz), 'frost');
+    await usePassword(await page.evaluate(() => COMPLETION_PIN));
+    assert.equal(await page.getByRole('button', { name: /^Continue at / }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: /^Replay without quiz/ }).count(), 10);
+    assert.equal(await page.locator('.chapter-final-fight').count(), 0);
+    await usePassword(await page.evaluate(() => TEST_PIN));
     assert.equal(await page.getByRole('button', { name: 'Final fight only · The Chimney Road', exact: true }).count(), 1);
-    assert.equal(await page.locator('.chapter-level').count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Opening film' }).count(), 1);
+    assert.equal(await page.getByRole('button', { name: 'Ending video' }).count(), 1);
     const savedPin = await page.evaluate(() => localStorage.getItem(PIN_KEY));
     await page.locator('.chapter-final-fight').click();
     assert.equal(await page.locator('#turn-gate').isVisible(), true);
@@ -43,12 +107,14 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.deepEqual(await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
     assert.equal(await page.evaluate(() => active.practice && active.finalFight), true);
     const fightFrame = page.frames().find(f => f.url().includes('stage=final-fight'));
+    await fightFrame.waitForFunction(() => boxAssetsReady(), null, { polling: 50 });
     async function holdThroughSwing(buttonId, late, warningText) {
       await fightFrame.evaluate(value => prepareWarning(value), late);
       await frame.locator('#box-cue').getByText(warningText, { exact: false }).waitFor();
       const initial = await fightFrame.evaluate(() => stepWarning(0));
       assert.equal(initial.phase, 'tell');
       assert.equal(initial.timer, 1);
+      const warningBrightness = await fightFrame.evaluate(() => fighterBrightness());
       const control = frame.locator(buttonId);
       const box = await control.boundingBox();
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -57,6 +123,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         const beforeImpact = await fightFrame.evaluate(() => stepWarning(.99));
         assert.equal(beforeImpact.phase, 'tell');
         assert.equal(beforeImpact.hp, initial.hp);
+        assert.ok(await fightFrame.evaluate(() => fighterBrightness()) > warningBrightness);
         const afterImpact = await fightFrame.evaluate(() => stepWarning(.02));
         assert.equal(afterImpact.phase, 'strike');
         assert.equal(afterImpact.hp, initial.hp);
@@ -84,7 +151,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.evaluate(() => active.finalFight && active.practice), true);
     assert.ok(await page.evaluate(() => pendingMissionUrl.includes('stage=final-fight')));
     assert.deepEqual(errors, []);
-    console.log('PASS: unlock gating, direct fight, phone rotation, one-second warnings, held dodge and block, full bout, practice return, no completion reward, test selector.');
+    console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, one-second warnings, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();
   }

@@ -148,7 +148,7 @@ window.testBoxing=()=>{
  const heldGuard=()=>{bout.phase='guard';bout.timer=8;};
  heldGuard();
  tap('box-uppercut');step(12);
- if(bout.punch||bout.stars||bout.enemy!==guardHp)throw Error('Uppercut available before five clean hits');
+ if(bout.punch||bout.stars||bout.enemy!==guardHp)throw Error('Uppercut available before six clean hits');
  tap('box-punch-left');step(16);
  if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('First covered punch was not dodged');
  tap('box-punch-left');step(16);
@@ -161,25 +161,38 @@ window.testBoxing=()=>{
  bout.phase='tell';bout.attack='left';bout.timer=.02;step(2);
  if(bout.punchStreak||bout.stars||bout.hp!==bout.max-1)throw Error('An incoming hit did not reset the streak');
  heldGuard();
- for(let hit=1;hit<=5;hit++){
-  tap('box-punch-right');step(19);
-  if(bout.stars!==Number(hit===5)||bout.punchStreak!==hit%5)throw Error('Uppercut charge did not match consecutive hit count '+hit);
+ tap('box-punch-right');step(19);
+ const adaptedHp=bout.enemy;
+ tap('box-punch-right');step(19);
+ if(bout.enemy!==adaptedHp||bout.punchStreak||bout.sameSideHits!==3)throw Error('Fourth hit on a repeated side was not dodged');
+ for(let hit=1;hit<=6;hit++){
+  const rightOpen=document.getElementById('box-punch-right').classList.contains('open-side');
+  tap(rightOpen?'box-punch-right':'box-punch-left');step(19);
+  if(bout.stars!==Number(hit===6)||bout.punchStreak!==hit%6)throw Error('Uppercut charge did not match consecutive hit count '+hit);
  }
  const chargedHp=bout.enemy;
  tap('box-uppercut');step(12);
  if(bout.enemy!==chargedHp-18||bout.phase!=='stun'||bout.stars!==0||bout.timer!==3||bout.punchStreak)throw Error('Uppercut did not deal triple damage and stun');
  const trentHealth=bout.hp;
- step(12);tap('box-punch-left');step(16);
- if(bout.enemy!==chargedHp-22||bout.lastImpact!=='left'||bout.hp!==trentHealth)throw Error('Left punch did not deal double damage during stun');
+ step(12);
+ for(let hit=1;hit<=4;hit++) { tap('box-punch-left');step(16); }
+ if(bout.enemy!==chargedHp-34||bout.hp!==trentHealth||bout.phase!=='stun')throw Error('Repeated punches must land during the stun');
  while(bout.timer>.04)step(1);
  if(bout.phase!=='stun')throw Error('Stun ended before three seconds');
  step(3);
- if(bout.phase!=='guard'||bout.guardSide!==1)throw Error('Guard did not switch sides after the stun');
+ if(bout.phase!=='guard'||bout.stunCooldown<2.95||bout.stunCooldown>3)throw Error('A three-second cooldown must start on waking');
+ tap('box-punch-left');step(16);
+ if(bout.enemy!==chargedHp-34||!bout.cue.startsWith('He dodged'))throw Error('Boss did not resume repeat-side dodges on waking');
  tap('box-punch-right');step(19);
- if(bout.enemy!==chargedHp-22||!bout.cue.startsWith('He dodged'))throw Error('Covered right punch was not dodged');
- tap('box-punch-left');
- bout.timer=.02;step(5);
- if(bout.enemy!==chargedHp-26||bout.lastImpact!=='left')throw Error('A punch aimed at an open side missed during a phase change');
+ if(bout.enemy!==chargedHp-40||bout.lastImpact!=='right')throw Error('Adaptive guard did not leave the opposite side open');
+ heldGuard();
+ bout.stars=1;
+ tap('box-uppercut');step(12);
+ if(bout.enemy!==chargedHp-58||bout.phase==='stun'||bout.stunCooldown<=0)throw Error('Uppercut re-stunned the boss during cooldown');
+ while(bout.stunCooldown>0)step(1);
+ bout.stars=1;
+ tap('box-uppercut');step(12);
+ if(bout.phase!=='stun'||bout.timer!==3)throw Error('Uppercut did not stun after cooldown expired');
  let ticks=0,leftHits=0,rightHits=0,upperHits=0,previousHp=bout.enemy;
  while(fight.state().mode==='fight'&&ticks++<30000){
   bout=fight.state();
