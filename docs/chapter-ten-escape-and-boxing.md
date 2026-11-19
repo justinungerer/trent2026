@@ -1,0 +1,32 @@
+# Chapter 10: expanded skyline and final fight
+
+## Level changes
+
+- Level 1 retains its chimney/double-jump lesson and lantern retrieval. Reaching the sleigh without the lantern still asks Trent to go back; it never teleports him.
+- Level 2 has twice the previous vertical world span (3,480 world units), with repositioned roofs and markers. Painted stepping roofs connect the upper and lower paths. It now includes the final level's ordinary obstacle families: tall climbable chimneys, presents, a moving crate, rolling snowball, swinging lantern, smoke, falling icicles, and searchlights. Both markers remain required.
+- Level 3 has four times the previous vertical span (6,960 units) and 1.5 times the horizontal length (12,870 units). Trent begins spotted. Bombs arrive every five active seconds, with a 2.2-second red target warning before impact. Authored snow roofs collapse; gold-braced reinforcement islands and stone switchback roofs remain. Checkpoints use permanent surfaces. Bombs can hurt Trent even when he stands on a permanent roof, so move away from their target.
+- In all three levels, detection starts an immediate shot followed by one per second until Trent fully leaves the screen area where he was spotted. Solid roofs block bullets. Existing shots keep travelling after firing stops.
+
+## Final encounter
+
+Hitler stands beside the final sleigh. Contact opens a separate touch-controlled boxing encounter before campaign completion. The fight uses original painted rooftop art and character poses, with a historical portrait composited over the enemy's head, as approved when image generation rejected the requested likeness. His hairstyle and toothbrush moustache remain visible.
+
+The player can dodge left, dodge right, hold Block, punch, and pause. Hooks require dodging away from the winding glove; uppercuts cannot be blocked. Successful dodges allow two counterpunches, blocks allow one. Guarded punches do no damage. Stamina prevents constant punching/blocking. Attack timing becomes faster as enemy health falls, but the encounter is one continuous fight, with no phase checkpoints. Losing offers a full-bout retry. Defeating him triggers the existing campaign completion/closing-film flow. Music continues from the current level through the fight.
+
+The opponent has 360 health and counterpunches deal two damage. The deterministic successful-play test completes the active fight in 302.36 seconds (about five minutes). Human play time depends on missed openings. Pausing, hiding the tab, or turning the phone to portrait freezes fight progress. The quiz bonus grants fresh additional player health when retrying the bout.
+
+## Verification
+
+`tools/test-chimney-expansion.cjs` runs the local files through Playwright WebKit with mobile touch settings. It checks dimensions and objective placement, all ordinary obstacle families in level 2, actual movement/jump/climb reachability to both level-2 markers and the goal, and an actual movement route to the final roof after every destructible roof has been removed. It also verifies continuous gunfire and stopping outside the original screen, boss entry, guarded punches, a complete successful bout, full retry after defeat, pause, and victory progression.
+
+Using the existing testing workspace from the repository directory in PowerShell:
+
+```powershell
+$env:NODE_PATH = (Resolve-Path '../iOS Safari Testing/node_modules').Path
+$env:PLAYWRIGHT_BROWSERS_PATH = '0'
+node tools/test-chimney-expansion.cjs
+```
+
+Playwright and its WebKit browser must be installed. This checks WebKit behavior rather than running Apple's iOS Safari itself. Additional existing lesson and lantern-return regressions passed. Artwork and touch-control layout were inspected at landscape sizes 568×320, 844×390, and 932×430.
+
+Historical portrait credit and generated-asset prompts are in `chimney-road/art/ART-SOURCES.md`.

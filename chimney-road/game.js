@@ -145,6 +145,13 @@
     objectives[1].x += WORLD_W;
     WORLD_W *= 2;
   }
+  var escapeMode = !eaves && !flags;
+  var expansion = null;
+  if (!eaves) {
+    WORLD_W = Math.round(WORLD_W * (escapeMode ? 1.5 : 1));
+    expansion = window.TrentRoofExpansion(PLATFORMS, objectives, { flags: flags, width: WORLD_W });
+    WORLD_TOP = expansion.top; WORLD_BOTTOM = expansion.bottom;
+  }
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
   });
@@ -173,16 +180,24 @@
   }
   document.getElementById('roof-controls').textContent +=
     ' Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Dodge four bullets fired upward from below, one per second during a four-second volley. Only a bullet hit counts as a fall.';
-  var GOAL = PLATFORMS.length - 1;
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once per second until you leave the screen where they spotted you. Only a bullet hit counts as a fall.';
+  var GOAL = PLATFORMS.findIndex(function (roof) { return roof.goal; });
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
-    if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
+    if (roof.permanentRoute || (index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
     var height = 26 + (index % 3) * 7;
     var width = eaves ? height * .98 : Math.min(44, roof.w * .18);
     return { x: roof.x + roof.w * .58, y: roof.y - height, w: width, h: height, bottom: roof.y, roof: index };
   }).filter(Boolean);
   var SLEIGH_X = PLATFORMS[GOAL].x + 250;
   var SLEIGH_W = 168;
+  var GUARD_X = SLEIGH_X - 100;
+  var bossBeaten = false;
+  var fight = escapeMode ? window.TrentBoxing.create({ onWin: function () { bossBeaten = true; win(); } }) : null;
+  var fallingBomb = null, bombNext = 3, roofBlasts = [];
+  if (escapeMode) {
+    document.getElementById('roof-objective').textContent = 'You have been spotted. Escape the bombed roofs, follow the reinforced stone route to the sleigh, and confront Hitler guarding it.';
+    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Snow roofs can collapse; gold-braced stone roofs remain. Follow the permanent switchbacks up, down, and back across the skyline.';
+  }
   var ICE_PATCHES = eaves ? [{ x: 3070, y: 283, w: 194 }, { x: 4870, y: 294, w: 190 }] : [];
   var WIND_ZONES = eaves ? [{ x: 3980, y: 292, w: 212, phase: 0 }, { x: 4490, y: 352, w: 150, phase: 1.3 }] : [];
   var GRAV = 1480;
@@ -196,6 +211,8 @@
   var trentVisibleBounds = [];
   var climbVisibleBounds = [];
   var climbImg = new Image();
+  var bombImg = new Image();
+  if (escapeMode) bombImg.src = 'art/painted-bomb.webp';
   var projectorImg = new Image();
   climbImg.onload = function () { climbVisibleBounds = spriteBounds(climbImg, 2, 2); };
   climbImg.src = 'art/trent-climbing-painted.webp';
@@ -303,25 +320,33 @@
     return roof.x + Math.min(96, Math.max(48, roof.w * 0.22));
   }
 
+  function hazardRoof(kind) {
+    var index = { crate: flags ? 4 : LONG, snowball: flags ? 5 : BALLS,
+      lantern: flags ? 10 : 14, smoke: flags ? 6 : ROW, ice1: flags ? 4 : 10, ice2: flags ? 6 : 22 }[kind];
+    return PLATFORMS.find(function (roof) { return roof.originalIndex === index; }) || PLATFORMS[index] || PLATFORMS[0];
+  }
+
   function crateBox() {
-    if (objectives.length) return { x: -1000, y: -1000, w: 0, h: 0 };
-    var roof = PLATFORMS[LONG];
+    if (eaves) return { x: -1000, y: -1000, w: 0, h: 0 };
+    var roof = hazardRoof('crate');
+    if (roof.destroyed) return { x: -1000, y: -1000, w: 0, h: 0 };
     var w = 112;
     var h = 74;
-    var left = 2320 + Math.sin(visualTime * 0.9) * 60;
+    var left = roof.x + roof.w * .4 + Math.sin(visualTime * .9) * Math.min(60, roof.w * .15);
     return { x: left, y: roof.y - h, w: w, h: h };
   }
 
   function snowball() {
-    if (objectives.length) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
-    var roof = PLATFORMS[BALLS];
+    if (eaves) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
+    var roof = hazardRoof('snowball');
+    if (roof.destroyed) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
     var span = 120;
     var travel = visualTime * 68;
     var ping = travel % (span * 2);
     if (ping < 0) ping += span * 2;
     if (ping > span) ping = span * 2 - ping;
     var r = 22;
-    return { x: 6360 + ping, y: roof.y - r, r: r, roofY: roof.y };
+    return { x: roof.x + roof.w * .4 + ping, y: roof.y - r, r: r, roofY: roof.y };
   }
 
   function icicleAt(x, roofY, phase) {
@@ -344,8 +369,10 @@
   function lanternBob() {
     var angle = Math.sin(visualTime * Math.PI * 2 / 3.15) * 0.85;
     var len = 130;
-    var pivotX = flags ? 1680 : 3800;
-    var pivotY = flags ? 349 : -20;
+    var roof = hazardRoof('lantern');
+    if (roof.destroyed) return { px: -1000, py: -1000, x: -1000, y: -1000, r: 0 };
+    var pivotX = eaves ? 3800 : roof.x + roof.w * .35;
+    var pivotY = eaves ? -20 : roof.y - 150;
     return {
       px: pivotX,
       py: pivotY,
@@ -356,11 +383,13 @@
   }
 
   function smokeList() {
-    if (objectives.length) return [];
-    var y = PLATFORMS[ROW].y;
+    if (eaves) return [];
+    var roof = hazardRoof('smoke');
+    if (roof.destroyed) return [];
+    var y = roof.y;
     return [
-      puffAt(4810, y, 0),
-      puffAt(4965, y, 1.9)
+      puffAt(roof.x + roof.w * .55, y, 0),
+      puffAt(roof.x + roof.w * .8, y, 1.9)
     ];
   }
 
@@ -380,7 +409,7 @@
       : PLATFORMS[stood].name;
     fallsEl.textContent = falls + ' / 3';
     gunfireWarning.hidden = !gunfire && !hostileShots.length;
-    gunfireWarning.textContent = gunfire ? 'Spotted! Dodge incoming fire · ' + Math.max(0, Math.ceil(gunfire.until - played)) + 's' : 'Dodge the incoming bullets!';
+    gunfireWarning.textContent = gunfire ? 'Spotted! Leave this screen to escape the gunfire' : 'Dodge the incoming bullets!';
     fallsEl.className = falls ? 'warn' : '';
   }
 
@@ -419,6 +448,9 @@
     played = 0;
     shotSerial = 0;
     SEARCHLIGHTS.forEach(function (light) { light.spottedCycle = -1; });
+    PLATFORMS.forEach(function (roof) { roof.destroyed = false; });
+    fallingBomb = null; roofBlasts = []; bombNext = 3; bossBeaten = false;
+    if (fight) fight.stop();
     shake = 0;
     jumpQueued = 0;
     coyote = 0;
@@ -439,7 +471,8 @@
     loseSheet.hidden = true;
     hintEl.hidden = true;
     renderHud();
-    say(eaves ? 'Recover the lantern from the lower roof.' : 'The sleigh is at the end of the road.');
+    say(eaves ? 'Recover the lantern from the lower roof.' : escapeMode ? 'Spotted! Escape the bombing and reach the final sleigh.' : 'The sleigh is at the end of the road.');
+    if (escapeMode) startGunfire({ x: body.x, y: body.y + 220, left: body.x - 110, right: body.x + 110, phase: 0, spottedCycle: -1 });
   }
 
   function openPause() {
@@ -530,6 +563,13 @@
 
   function checkBoarding() {
     var roof = PLATFORMS[GOAL];
+    if (escapeMode && !bossBeaten) {
+      if (body.x >= GUARD_X - 42 && body.y >= roof.y - 178 && body.y <= roof.y + 25) {
+        state = 'boxing'; gunfire = null; hostileShots = []; fallingBomb = null;
+        held.left = held.right = held.climb = false; fight.start();
+      }
+      return;
+    }
     var nearSleigh = body.y <= roof.y + 2 && body.y >= roof.y - 84 &&
       body.x >= SLEIGH_X - 12 && body.x <= SLEIGH_X + SLEIGH_W + 12;
     if (!nearSleigh) {
@@ -591,12 +631,13 @@
 
   function nearChimney() {
     return PLATFORMS.find(function (roof) {
-      return roof.cap && body.x >= capX(roof) - 28 && body.x <= capX(roof) + 70 &&
+      return !roof.destroyed && roof.cap && body.x >= capX(roof) - 28 && body.x <= capX(roof) + 70 &&
         body.y <= roof.y + 8 && body.y > roof.y - roof.chimneyHeight + 0.1;
     });
   }
 
   function stepClimb(dt) {
+    if (climbRoof && climbRoof.destroyed) { climbRoof = null; body.climbing = false; }
     if (!held.climb) {
       if (climbRoof) body.x = capX(climbRoof) + (climbSide < 0 ? -14 : 56);
       climbRoof = null; body.climbing = false;
@@ -618,7 +659,7 @@
       body.ground = true; body.climbing = false; airJumps = 1;
       stood = PLATFORMS.indexOf(climbRoof);
       if (eaves && stood === 0) tutorialReachedTop = true;
-      if (climbRoof.role === 'main') cp = stood;
+      if (climbRoof.permanent || (!escapeMode && climbRoof.role === 'main')) cp = stood;
       climbRoof = null;
     }
     return true;
@@ -626,7 +667,7 @@
 
   function resolveChimneyWalls(prevX, prevY) {
     PLATFORMS.forEach(function (roof) {
-      if (!roof.cap) return;
+      if (roof.destroyed || !roof.cap) return;
       var x = capX(roof), top = roof.y - roof.chimneyHeight;
       if (prevY <= top + 1 || body.y <= top + 1 || body.y - 48 >= roof.y) return;
       if (body.x + 13 <= x || body.x - 13 >= x + 42) return;
@@ -722,8 +763,8 @@
     var cycle = Math.floor((played + light.phase) / (SEARCH_SWEEP + SEARCH_BREAK));
     if (gunfire || light.spottedCycle === cycle) return;
     light.spottedCycle = cycle;
-    gunfire = { light: light, until: played + 4, next: played, fired: 0 };
-    say('Spotted! Four bullets will fire from below, one per second. Dodge them or take cover.');
+    gunfire = { light: light, next: played, fired: 0, screen: { left: camX, right: camX + VIEW_W, top: camY, bottom: camY + VIEW_H } };
+    say('Spotted! Soldiers keep firing once per second until you leave this screen. Dodge or take cover.');
   }
 
   function fireHostileShot(burst) {
@@ -753,16 +794,16 @@
 
   function updateGunfire(dt) {
     if (gunfire) {
-      while (gunfire.fired < 4 && played >= gunfire.next) {
-        fireHostileShot(gunfire); gunfire.fired++; gunfire.next++;
-      }
-      if (gunfire.fired === 4 && played >= gunfire.until) gunfire = null;
+      var visible = trentSearchlightBounds(), screen = gunfire.screen;
+      if (visible.right < screen.left || visible.left > screen.right || visible.bottom < screen.top || visible.top > screen.bottom) gunfire = null;
+      else while (played >= gunfire.next) { fireHostileShot(gunfire); gunfire.fired++; gunfire.next++; }
     }
     for (var i = hostileShots.length - 1; i >= 0; i--) {
       var shot = hostileShots[i];
       shot.oldX = shot.x; shot.oldY = shot.y;
       shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.age += dt;
       var blocked = PLATFORMS.some(function (roof) {
+        if (roof.destroyed) return false;
         return segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y, roof.x, roof.y, roof.w, 10) ||
           (roof.cap && segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y,
             capX(roof), roof.y - roof.chimneyHeight, 42, roof.chimneyHeight));
@@ -783,6 +824,51 @@
       ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 20, y - shot.vy / speed * 20);ctx.lineTo(x, y);ctx.stroke();
       ctx.strokeStyle = '#fff2a1'; ctx.lineWidth = 2;
       ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 12, y - shot.vy / speed * 12);ctx.lineTo(x, y);ctx.stroke();
+    });
+  }
+
+  function updateBombing(dt) {
+    roofBlasts.forEach(function (blast) { blast.age += dt; });
+    roofBlasts = roofBlasts.filter(function (blast) { return blast.age < 1; });
+    if (!fallingBomb && played >= bombNext) {
+      var roof = PLATFORMS[stood];
+      if (!roof || roof.destroyed || Math.abs(body.y - roof.y) > 100) roof = PLATFORMS[cp];
+      // Target the snow roof over a reinforced core, so the weak roof falls away.
+      if (roof && roof.permanentRoute) roof = PLATFORMS.find(function (candidate) {
+        return !candidate.permanent && !candidate.destroyed && Math.abs(candidate.y - roof.y) < 1 && body.x >= candidate.x && body.x <= candidate.x + candidate.w;
+      }) || roof;
+      if (roof) fallingBomb = { roof: roof, x: clamp(body.x, roof.x + 16, roof.x + roof.w - 16), y: roof.y, due: played + 2.2, startY: camY - 140 };
+      bombNext = played + 5;
+    }
+    if (fallingBomb && played >= fallingBomb.due) {
+      var target = fallingBomb;
+      if (!target.roof.permanent) target.roof.destroyed = true;
+      roofBlasts.push({ x: target.x, y: target.y, age: 0 });
+      fallingBomb = null;
+      if (!reduceMotion()) shake = 9;
+      if (hurt <= 0 && Math.abs(body.x - target.x) < 78 && Math.abs(body.y - target.y) < 115) drop('The bomb blast knocked Trent off. Move away from the red target.');
+    }
+  }
+
+  function drawBombing() {
+    if (!escapeMode) return;
+    if (fallingBomb) {
+      var target = fallingBomb, x = target.x - camX, y = target.y - camY;
+      var left = Math.max(0, target.due - played), progress = 1 - left / 2.2;
+      ctx.strokeStyle = '#ff4c35';ctx.lineWidth = 4;ctx.beginPath();ctx.ellipse(x, y - 5, 77, 15, 0, 0, Math.PI * 2);ctx.stroke();
+      ctx.fillStyle = '#ffe0ab';ctx.font = 'bold 18px system-ui';ctx.textAlign = 'center';ctx.fillText('BOMB ' + left.toFixed(1) + 's', x, y - 35);
+      var by = target.startY + (target.y - target.startY) * progress;
+      if (imageReady(bombImg)) ctx.drawImage(bombImg, x - 22, by - camY - 50, 44, 64);
+    }
+    roofBlasts.forEach(function (blast) {
+      var x = blast.x - camX, y = blast.y - camY, radius = 35 + blast.age * 150;
+      var fire = ctx.createRadialGradient(x, y - 20, 2, x, y - 20, radius);
+      fire.addColorStop(0, 'rgba(255,245,176,' + (1 - blast.age) + ')');fire.addColorStop(.35, 'rgba(255,112,35,' + (1 - blast.age) + ')');fire.addColorStop(1, 'rgba(60,40,45,0)');
+      ctx.fillStyle = fire;ctx.beginPath();ctx.arc(x, y - 20, radius, 0, Math.PI * 2);ctx.fill();
+      if (imageReady(roofImg)) for (var i = 0; i < 6; i++) {
+        var px = x + (i - 2.5) * blast.age * 95, py = y - Math.sin(i + 1) * blast.age * 120 + blast.age * blast.age * 190;
+        ctx.drawImage(roofImg, i * roofImg.naturalWidth / 6, 0, roofImg.naturalWidth / 6, roofImg.naturalHeight / 2, px, py, 32, 18);
+      }
     });
   }
 
@@ -884,6 +970,7 @@
       }
       for (n = 0; n < PLATFORMS.length; n++) {
         roof = PLATFORMS[n];
+        if (roof.destroyed) continue;
         if (body.vy < 0) break;
         if (roof.cap) {
           var cap = capX(roof);
@@ -898,6 +985,7 @@
       }
       for (var obstacleIndex = 0; obstacleIndex < ROOF_BLOCKS.length; obstacleIndex++) {
         var obstacle = ROOF_BLOCKS[obstacleIndex];
+        if (PLATFORMS[obstacle.roof].destroyed) continue;
         if (body.x < obstacle.x - 11 || body.x > obstacle.x + obstacle.w + 11 || body.y - 30 > obstacle.bottom) continue;
         if (body.vy >= 0 && prevY <= obstacle.y + 5 && body.y >= obstacle.y &&
             body.x >= obstacle.x && body.x <= obstacle.x + obstacle.w && (!best || obstacle.y < best.top)) {
@@ -914,7 +1002,7 @@
         if (best.id < 0) onCrate = true;
         else {
           stood = best.id;
-          if (PLATFORMS[best.id].role === 'main') cp = best.id;
+          if (PLATFORMS[best.id].permanent || (!escapeMode && PLATFORMS[best.id].role === 'main')) cp = best.id;
         }
       }
       if (!onCrate && body.x > box.x - 16 && body.x < box.x + box.w + 16 && body.y > box.y + 18 && body.y - 48 < box.y + box.h) {
@@ -972,7 +1060,11 @@
       if (spottingLight) startGunfire(spottingLight);
       updateGunfire(dt);
     }
-    if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
+    if (escapeMode && state === 'play') {
+      if (body.ground) PLATFORMS.forEach(function (roof, index) { if (roof.permanent && Math.abs(body.y - roof.y) < 1 && body.x >= roof.x + 10 && body.x <= roof.x + roof.w - 10) cp = index; });
+      updateBombing(dt);
+    }
+    if (state === 'play' && (body.y > WORLD_BOTTOM - 120 || body.x < -40 || body.x > WORLD_W + 40)) drop();
     if (state !== 'play') return;
     objectives.forEach(function (item) {
       var pickupWidth = eaves ? 64 : 28;
@@ -985,11 +1077,13 @@
   }
 
   function firstIcicle() {
-    return objectives.length ? icicleAt(1470, PLATFORMS[4].y, 0) : icicleAt(3070, PLATFORMS[10].y, 0);
+    if (eaves) return icicleAt(1470, PLATFORMS[4].y, 0);
+    var roof = hazardRoof('ice1'); if (roof.destroyed) return {x:-1000,hang:-1000,tip:-1000,roofY:-1000,mode:'down'}; return icicleAt(roof.x + roof.w * .45, roof.y, 0);
   }
 
   function secondIcicle() {
-    return objectives.length ? icicleAt(2300, PLATFORMS[6].y, 1.3) : icicleAt(7500, PLATFORMS[22].y, 1.3);
+    if (eaves) return icicleAt(2300, PLATFORMS[6].y, 1.3);
+    var roof = hazardRoof('ice2'); if (roof.destroyed) return {x:-1000,hang:-1000,tip:-1000,roofY:-1000,mode:'down'}; return icicleAt(roof.x + roof.w * .55, roof.y, 1.3);
   }
 
   function trentFrame() {
@@ -1057,8 +1151,10 @@
     if (!imageReady(roofImg)) return;
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
+      if (roof.destroyed || roof.x + roof.w < camX || roof.x > camX + VIEW_W || roof.y < camY - 300 || roof.y > camY + VIEW_H) continue;
       dh = roof.w * roofImg.naturalHeight / roofImg.naturalWidth;
       ctx.drawImage(roofImg, roof.x - camX, roof.y - camY, roof.w, dh);
+      if (roof.permanentRoute) { ctx.fillStyle = '#eac976'; ctx.fillRect(roof.x - camX + 8, roof.y - camY + 16, roof.w - 16, 4); }
     }
   }
 
@@ -1073,7 +1169,7 @@
     var y;
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
-      if (!roof.cap) continue;
+      if (roof.destroyed || !roof.cap) continue;
       x = capX(roof) - camX;
       y = roof.y - camY;
       var height = roof.chimneyHeight;
@@ -1095,6 +1191,7 @@
 
   function drawRoofBlocks() {
     ROOF_BLOCKS.forEach(function (obstacle) {
+      if (PLATFORMS[obstacle.roof].destroyed) return;
       var x = obstacle.x - camX;
       var y = obstacle.y - camY;
       if (x > VIEW_W + 50 || x + obstacle.w < -50) return;
@@ -1267,6 +1364,7 @@
     var above = null;
     var below = null;
     PLATFORMS.forEach(function (roof) {
+      if (roof.destroyed) return;
       var dx = Math.max(roof.x - body.x, body.x - (roof.x + roof.w), 0);
       if (dx > 235) return;
       var screenY = roof.y - camY;
@@ -1346,6 +1444,7 @@
   }
 
   function render(dt) {
+    if (state === 'boxing') { fight.draw(ctx, cssW, cssH, dpr); return; }
     var mag = reduceMotion() ? 0 : shake;
     followCamera(dt || 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1370,6 +1469,8 @@
     drawPuffs();
     drawWind();
     drawSleigh();
+    if (escapeMode && !bossBeaten) fight.drawGuard(ctx, GUARD_X - camX, PLATFORMS[GOAL].y - camY, 178);
+    drawBombing();
     objectives.forEach(function (item) {
       if (item.taken) return;
       var x = item.x - camX;
@@ -1418,6 +1519,7 @@
     if (dt < 0) dt = 0;
     if (dt > 0.05) dt = 0.05;
     if (state !== 'pause' && state !== 'boarding') visualTime += dt;
+    if (state === 'boxing' && !portraitWanted() && !document.hidden) { if (fight.state().mode === 'fight') played += dt; fight.update(dt); }
     if (state === 'play') {
       played += dt;
       update(dt);
