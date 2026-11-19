@@ -11,9 +11,11 @@
 
 Hitler stands beside the final sleigh. Contact opens a separate touch-controlled boxing encounter before campaign completion. The fight uses original painted rooftop art and character poses, with a historical portrait composited over the enemy's head, as approved when image generation rejected the requested likeness. His hairstyle and toothbrush moustache remain visible.
 
-The player can dodge left or right, hold Block, throw either punch or an uppercut, and pause. Hooks require dodging away from the winding glove. Dodge an uppercut in either direction. Successful dodges allow two counterpunches, and blocks allow one. The left punch is quicker and deals two damage, and the right punch deals three. A quick first counter after dodging a straight punch or uppercut can earn a star. Spend a star to deliver a six-damage uppercut during an opening. The opponent can block or sidestep punches outside the counter window. Impacts occur at glove contact and show a flash and recoil.
+The opponent guards one side at a time. The game highlights the open punch, and an attack aimed at that side lands even if the guard changes during the animation. A correctly timed dodge or block creates a brief opening on both sides. The left punch is quicker and deals two damage, and the right punch deals three.
 
-The 530-health opponent attacks more quickly as his health falls. The encounter is one continuous bout. Losing offers a full-bout retry. Defeating him triggers the campaign completion and closing film. Music continues from the current level through the fight. Timed WebKit playthroughs finish in about five minutes. Pausing, hiding the tab, or turning the phone to portrait freezes fight progress. The quiz bonus grants fresh additional player health when retrying the bout.
+Trent starts with one star and earns another for every eight landed punches. An uppercut spends a star, deals six damage through either guard, and stuns the opponent for 1.5 seconds. His nose starts bleeding at half health and stays marked through the bout.
+
+The opponent has 1,940 health and attacks more quickly as it falls. Losing offers a full-bout retry. Defeating him triggers the campaign completion and closing film. Music continues from the current level through the fight. A successful WebKit test bout took about five minutes. Pausing, hiding the tab, or turning the phone to portrait freezes fight progress. The quiz bonus grants fresh additional player health when retrying the bout.
 
 ## Verification
 

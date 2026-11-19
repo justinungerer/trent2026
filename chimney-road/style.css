@@ -297,7 +297,9 @@ button:focus-visible {
 .boxing-left {position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2,90px);gap:8px}
 #box-block {grid-column:1/-1;justify-self:center;min-width:100px}
 .boxing-right {position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2, minmax(72px, 86px));gap:8px}
-#box-punch-left, #box-punch-right { min-height:56px;background:#ead3a3;color:#30241b;font-size:15px; }
+#box-punch-left, #box-punch-right { min-height:56px;background:#49391f;color:#f7e8cb;font-size:15px; }
+#box-punch-left.open-side, #box-punch-right.open-side { background:#ead3a3;color:#30241b; }
+#box-guard { display:block;color:#ffda96;margin-bottom:3px; }
 #box-uppercut { grid-column:1/-1;justify-self:center;min-width:120px; }
 #box-uppercut.charged { background:#a84c24;color:#fff8e8; }
 #box-stars { display:inline-block;margin-left:4px;color:#ffe39a; }

@@ -99,19 +99,36 @@ window.testBoxing=()=>{
  fight.begin();let bout=fight.state(),guardHp=bout.enemy;
  const tap=(button)=>document.getElementById(button).click();
  const step=(ticks)=>{for(let i=0;i<ticks;i++)fight.update(.02);};
- tap('box-uppercut');
- if(bout.punch||bout.stars)throw Error('Uppercut should require a star');
- tap('box-punch-left');step(17);
- if(bout.enemy!==guardHp||!bout.cue.startsWith('Blocked'))throw Error('Guard did not block a punch');
- tap('box-punch-right');step(8);
- if(bout.enemy!==guardHp||!bout.evadeTime||bout.cue!=='He dodged!')throw Error('Opponent did not dodge a punch');
- let ticks=0,leftHits=0,rightHits=0,upperHits=0,previousHp=bout.enemy,turn=0;
+ if(guardHp<=530)throw Error('Boss health did not increase');
+ tap('box-punch-left');step(16);
+ if(bout.enemy!==guardHp||!bout.cue.startsWith('Blocked'))throw Error('Covered left punch was not blocked');
+ tap('box-punch-left');step(16);
+ if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('Boss did not dodge on the covered side');
+ tap('box-punch-right');step(19);
+ if(bout.enemy!==guardHp-3||bout.lastImpact!=='right')throw Error('Open right punch did not land');
+ tap('box-uppercut');step(12);
+ if(bout.enemy!==guardHp-9||bout.phase!=='stun'||bout.stars!==0)throw Error('Uppercut did not break the guard and stun');
+ const trentHealth=bout.hp;
+ step(12);tap('box-punch-left');step(16);
+ if(bout.enemy!==guardHp-11||bout.lastImpact!=='left'||bout.hp!==trentHealth)throw Error('Stun did not open both sides and prevent attacks');
+ while(bout.phase==='stun')step(1);
+ if(bout.phase!=='guard'||bout.guardSide!==1)throw Error('Guard did not switch sides after the stun');
+ tap('box-punch-right');step(19);
+ if(bout.enemy!==guardHp-11||!bout.cue.startsWith('Blocked'))throw Error('Covered right punch was not blocked');
+ tap('box-punch-left');
+ bout.timer=.02;step(5);
+ if(bout.enemy!==guardHp-13||bout.lastImpact!=='left')throw Error('A punch aimed at an open side missed during a phase change');
+ let ticks=0,leftHits=0,rightHits=0,upperHits=0,previousHp=bout.enemy;
  while(fight.state().mode==='fight'&&ticks++<30000){
   bout=fight.state();
-  if(bout.phase==='tell'&&bout.dodgeCool<=0&&bout.timer<.39)fight.dodge(bout.attack==='left'?1:-1);
-  if(bout.phase==='recover'&&bout.counterHits<bout.counterLimit&&!bout.punch){
-   if (bout.stars && bout.counterHits===1) tap('box-uppercut');
-   else tap(turn++%2===0?'box-punch-left':'box-punch-right');
+  if(bout.phase==='tell'&&bout.dodgeCool<=0&&bout.timer<.27)fight.dodge(bout.attack==='left'?1:-1);
+  const dodgingTight=bout.phase==='tell'&&bout.timer<.46;
+  if(!bout.punch&&bout.stamina>=17&&!dodgingTight){
+   if(bout.stars&&bout.phase!=='stun'&&bout.dodgeTime===0)tap('box-uppercut');
+   else if(bout.phase!=='tell'||bout.dodgeTime===0) {
+    const rightOpen=document.getElementById('box-punch-right').classList.contains('open-side');
+    tap(rightOpen?'box-punch-right':'box-punch-left');
+   }
   }
   fight.update(.02);
   if(bout.enemy<previousHp){

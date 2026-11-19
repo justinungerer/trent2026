@@ -1,6 +1,8 @@
 'use strict';
 (function () {
-  var MAX_ENEMY_HP = 530;
+  var MAX_ENEMY_HP = 1940;
+  var STUN_SECONDS = 1.5;
+  var HITS_PER_STAR = 8;
   var PUNCHES = {
     left: { windup: .09, recovery: .20, damage: 2, cost: 6, side: -1 },
     right: { windup: .14, recovery: .23, damage: 3, cost: 8, side: 1 },
@@ -13,7 +15,7 @@
     enemy.src = 'art/hitler-boxing-painted.webp'; hero.src = 'art/trent-boxing-painted.webp'; ring.src = 'art/boxing-rooftop.webp';
     var host = document.createElement('div'); host.className = 'boxing-ui'; host.hidden = true;
     host.innerHTML = '<div class="boxing-hud"><span>Trent <strong id="box-player-hp"></strong></span><span id="box-clock"></span><span>Hitler <strong id="box-enemy-hp"></strong></span></div>' +
-      '<p class="boxing-cue" id="box-cue"></p><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
+      '<div class="boxing-cue"><strong id="box-guard"></strong><span id="box-cue"></span></div><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
       '<button class="boxing-pause" id="box-pause">Pause</button>' +
       '<div class="boxing-right"><button id="box-uppercut">Uppercut <span id="box-stars"></span></button><button id="box-punch-left">Left punch</button><button id="box-punch-right">Right punch</button></div>' +
       '<div class="sheet" id="box-sheet"><div class="card"><h1 id="box-title">The final fight</h1><p id="box-copy"></p><button id="box-start">Fight</button><p class="boxing-art-credit"><a href="art/ART-SOURCES.md" target="_blank" rel="noopener">Portrait: Bundesarchiv / CC BY-SA 3.0</a></p></div></div>';
@@ -24,9 +26,10 @@
       bout = { mode: 'intro', hp: 20 + (window.TrentMissionBonus || 0), max: 20 + (window.TrentMissionBonus || 0), enemy: MAX_ENEMY_HP,
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
         dodge: 0, dodgeTime: 0, dodgeCool: 0, block: false,
-        punch: null, queuedPunch: null, stars: 0, guardAttempts: 0, evadeSide: 0, evadeTime: 0,
-        counterHits: 0, counterLimit: 0, cleanDodge: false, flash: 0, lastImpact: null,
-        victory: 0, cue: 'Watch his gloves. Dodge, then counterpunch.' };
+        punch: null, queuedPunch: null, stars: 1, hitsTowardStar: 0,
+        guardSide: -1, guardAttempts: 0, evadeSide: 0, evadeTime: 0,
+        counterHits: 0, counterLimit: 0, flash: 0, lastImpact: null,
+        victory: 0, cue: 'Punch the highlighted side.' };
     }
     function modal(title, copy, label) {
       get('box-title').textContent = title; get('box-copy').textContent = copy;
@@ -34,7 +37,7 @@
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'Watch his wind-up. Dodge away from hooks and dodge either way against an uppercut. Hold Block against a straight punch. Tap Left or Right when he’s open. Counter quickly after dodging a straight punch or uppercut to earn a star, then spend it on an Uppercut.', 'Fight');
+      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land eight punches to earn another star. Dodge his wind-up or block a straight punch to open both sides.', 'Fight');
       sync();
     }
     function stop() {
@@ -43,25 +46,30 @@
     }
     function dodge(side) {
       if (!bout || bout.mode !== 'fight' || bout.dodgeCool > 0 || bout.stamina < 10) return;
-      if (bout.punch) return;
+      if (bout.punch && !bout.punch.resolved) return;
+      bout.punch = null;
+      bout.queuedPunch = null;
       bout.stamina -= 10;bout.dodge = side;bout.dodgeTime = 1.15;bout.dodgeCool = 1.15;bout.block = false;
     }
     function dodgeOffset() {
       var elapsed = 1.15 - bout.dodgeTime;
       return bout.dodge * 72 * Math.min(1, elapsed / .13, bout.dodgeTime / .18);
     }
+    function guardedSide() {
+      var counterOpen = bout.phase === 'recover' && bout.counterHits < bout.counterLimit;
+      return bout.phase === 'stun' || counterOpen ? 0 : bout.guardSide;
+    }
     function punch(kind) {
-      if (!bout || bout.mode !== 'fight') return;
-      if (!PUNCHES[kind]) return;
-      if ((bout.punch && bout.punch.resolved) || bout.phase === 'strike' ||
-          (bout.phase === 'tell' && bout.dodgeTime > 0 && bout.timer < .18)) {
-        bout.queuedPunch = kind;
-        return;
-      }
-      if (bout.punch) return;
-      var move = PUNCHES[kind];
+      if (!bout || bout.mode !== 'fight' || !PUNCHES[kind]) return;
+      // Keep the opening the player saw when tapping, even if the next guard starts during the animation.
+      var request = { kind: kind, guarded: kind !== 'upper' && PUNCHES[kind].side === guardedSide() };
+      if (bout.punch) bout.queuedPunch = request;
+      else startPunch(request);
+    }
+    function startPunch(request) {
+      var kind = request.kind, move = PUNCHES[kind];
       if (kind === 'upper' && !bout.stars) {
-        bout.cue = 'Earn a star with a quick counter.';
+        bout.cue = 'Land ' + (HITS_PER_STAR - bout.hitsTowardStar) + ' punches for a star.';
         sync();
         return;
       }
@@ -70,38 +78,40 @@
         sync();
         return;
       }
-      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, evaded: false };
+      var evaded = request.guarded && ++bout.guardAttempts % 2 === 0;
+      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, guarded: request.guarded, evaded: evaded };
       bout.dodgeTime = 0;
       bout.block = false;
       bout.stamina -= move.cost;
       if (kind === 'upper') bout.stars--;
-      if (bout.phase === 'guard' && ++bout.guardAttempts % 2 === 0) {
-        bout.punch.evaded = true;
+      if (evaded) {
         bout.evadeSide = -move.side;
         bout.evadeTime = .42;
       }
       sync();
     }
     function resolvePunch(action, move) {
-      var open = bout.phase === 'recover' && bout.counterHits < bout.counterLimit;
-      if (action.evaded || (!open && bout.evadeTime > .15)) {
-        if (bout.phase !== 'tell') bout.cue = 'He dodged!';
+      if (action.guarded) {
+        bout.cue = action.evaded ? 'He dodged the covered side.' : 'Blocked. Punch the other side.';
         return;
       }
-      if (!open) {
-        if (bout.phase !== 'tell') bout.cue = 'Blocked. Dodge his attack, then punch back.';
-        return;
+      var upper = action.kind === 'upper';
+      var earnedStar = false;
+      if (upper) {
+        bout.phase = 'stun';
+        bout.timer = STUN_SECONDS;
+        bout.evadeTime = 0;
+      } else if (++bout.hitsTowardStar >= HITS_PER_STAR) {
+        earnedStar = bout.stars < 3;
+        if (earnedStar) bout.stars++;
+        bout.hitsTowardStar = 0;
       }
-      var earnedStar = action.kind !== 'upper' && bout.cleanDodge && bout.counterHits === 0 &&
-        (bout.attack === 'straight' || bout.attack === 'upper') && bout.timer >= .81 && bout.stars < 3;
-      if (earnedStar) bout.stars++;
       bout.enemy = Math.max(0, bout.enemy - move.damage);
-      bout.counterHits++;
+      if (bout.phase === 'recover') bout.counterHits++;
       bout.flash = .20;
       bout.lastImpact = action.kind;
-      var hitsLeft = bout.counterLimit - bout.counterHits;
-      var hit = action.kind === 'upper' ? 'Uppercut lands!' : action.kind === 'left' ? 'Left lands!' : 'Right lands!';
-      bout.cue = hit + (earnedStar ? ' +1 star.' : '') + (hitsLeft ? ' One more!' : '');
+      var hit = upper ? 'Guard broken! He’s stunned.' : action.kind === 'left' ? 'Left lands!' : 'Right lands!';
+      bout.cue = hit + (earnedStar ? ' +1 star.' : '');
       if (bout.enemy === 0) {
         bout.mode = 'victory';
         bout.victory = 1.2;
@@ -121,13 +131,9 @@
       if (blocked) bout.stamina -= 18;
       bout.counterLimit = dodged ? 2 : blocked ? 1 : 0;
       bout.counterHits = 0;
-      bout.cleanDodge = dodged;
       if (!dodged && !blocked) {
         bout.hp = Math.max(0, bout.hp - (bout.attack === 'upper' ? 2 : 1));
-        bout.stars = Math.max(0, bout.stars - 1);
         bout.stamina = Math.max(0, bout.stamina - 12);
-        bout.queuedPunch = null;
-        bout.punch = null;
         bout.cue = 'Hit! Watch the next wind-up.';
       } else {
         bout.cue = dodged ? 'Good dodge. Get ready to counter.' : 'Blocked. Get ready to counter.';
@@ -156,8 +162,9 @@
         } else {
           bout.phase = 'guard';
           bout.counterLimit = 0;
+          bout.guardSide *= -1;
           bout.timer = bout.enemy > MAX_ENEMY_HP * 2 / 3 ? 1.5 : bout.enemy > MAX_ENEMY_HP / 3 ? 1.25 : 1;
-          bout.cue = 'Watch his gloves.';
+          bout.cue = 'Punch the highlighted side.';
         }
       }
       if (bout.punch) {
@@ -169,10 +176,10 @@
         }
         if (action.elapsed >= move.windup + move.recovery) bout.punch = null;
       }
-      if (!bout.punch && bout.queuedPunch && bout.phase !== 'tell' && bout.phase !== 'strike') {
+      if (!bout.punch && bout.queuedPunch && bout.mode === 'fight') {
         var queued = bout.queuedPunch;
         bout.queuedPunch = null;
-        punch(queued);
+        startPunch(queued);
       }
       sync();
     }
@@ -184,6 +191,12 @@
       get('box-stars').textContent = bout.stars + '★';
       get('box-uppercut').classList.toggle('charged', bout.stars > 0);
       get('box-clock').textContent = Math.floor(bout.time/60) + ':' + String(Math.floor(bout.time%60)).padStart(2,'0') + ' · Stamina ' + Math.round(bout.stamina);
+      var guard = guardedSide();
+      var guardLabel = guard < 0 ? 'Left covered · Right open' : guard > 0 ? 'Right covered · Left open' : 'Both sides open';
+      if (bout.phase === 'stun') guardLabel = 'Stunned · Both sides open';
+      get('box-guard').textContent = bout.mode === 'victory' ? '' : guardLabel;
+      get('box-punch-left').classList.toggle('open-side', guard !== -1);
+      get('box-punch-right').classList.toggle('open-side', guard !== 1);
       get('box-cue').textContent = bout.cue;
     }
     function sprite(ctx,img,cols,rows,frame,x,y,height) {
@@ -192,13 +205,34 @@
       ctx.drawImage(img,frame%cols*sw,Math.floor(frame/cols)*sh,sw,sh,x-w/2,y-height,w,height);
     }
     // Historical face over the painted poses: the approved portrait/body fallback.
-    function enemySprite(ctx,frame,x,y,height) {
+    function enemySprite(ctx,frame,x,y,height,bloodyNose) {
       sprite(ctx,enemy,3,2,frame,x,y,height);
       if(!ready(face)||!ready(enemy))return;
       var heads=[[229,8,58,79],[747,8,58,81],[1231,10,65,83],[230,518,59,81],[728,524,63,86],[1240,582,69,88]];
       var h=heads[frame],k=height/512,w=height,dx=x-w/2+(h[0]%512)*k,dy=y-height+(h[1]%512)*k;
       ctx.save();ctx.beginPath();ctx.ellipse(dx+h[2]*k/2,dy+h[3]*k/2,h[2]*k/2,h[3]*k/2,0,0,Math.PI*2);ctx.clip();
-      ctx.filter='sepia(0.35)';ctx.drawImage(face,174,18,116,161,dx,dy,h[2]*k,h[3]*k);ctx.restore();
+      ctx.filter = 'sepia(0.35)';
+      ctx.drawImage(face, 174, 18, 116, 161, dx, dy, h[2] * k, h[3] * k);
+      ctx.filter = 'none';
+      if (bloodyNose) drawBloodyNose(ctx, dx, dy, h[2] * k, h[3] * k);
+      ctx.restore();
+    }
+    function drawBloodyNose(ctx, x, y, width, height) {
+      // The portrait is anchored to all six poses, so the mark follows the nose during movement.
+      ctx.translate(x, y);
+      ctx.scale(width / 116, height / 161);
+      ctx.fillStyle = '#8f252d';
+      ctx.beginPath();
+      ctx.moveTo(65, 108);
+      ctx.quadraticCurveTo(71, 111, 70, 118);
+      ctx.quadraticCurveTo(72, 123, 70, 132);
+      ctx.quadraticCurveTo(68, 138, 65, 134);
+      ctx.lineTo(64, 119);
+      ctx.quadraticCurveTo(60, 117, 60, 113);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#cf5553';
+      ctx.fillRect(66, 116, 2, 12);
     }
     function drawGuard(ctx,x,y,height) {
       enemySprite(ctx,0,x,y,height);ctx.fillStyle='#fff0d6';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('Hitler',x,y-height-8);
@@ -233,13 +267,26 @@
         if (bout.mode === 'victory') enemyFrame = 5;
         else if (bout.phase === 'tell') enemyFrame = bout.attack === 'right' ? 2 : 1;
         else if (bout.phase === 'strike') enemyFrame = bout.attack === 'right' ? 4 : 3;
+        else if (bout.phase === 'stun') enemyFrame = bout.timer > 1.0 ? 5 : 0;
         if (bout.evadeTime > 0) {
           enemyFrame = bout.evadeSide < 0 ? 2 : 1;
           enemyShift = bout.evadeSide * 66 * Math.sin(Math.PI * Math.min(1, bout.evadeTime / .42));
         }
         recoil = bout.flash / .20 * (bout.lastImpact === 'left' ? 10 : -10);
       }
-      enemySprite(ctx, enemyFrame, center + (enemyShift + recoil) * scale, (435 - Math.abs(recoil) * .6) * scale, 380 * scale);
+      var enemyX = center + (enemyShift + recoil) * scale;
+      enemySprite(ctx, enemyFrame, enemyX, (435 - Math.abs(recoil) * .6) * scale, 380 * scale,
+        bout && bout.enemy <= MAX_ENEMY_HP / 2);
+      var guard = bout && guardedSide();
+      if (bout && bout.mode === 'fight' && guard) {
+        var coveredX = enemyX + guard * 29 * scale;
+        var arcStart = guard < 0 ? Math.PI / 2 : -Math.PI / 2;
+        ctx.strokeStyle = '#ffd389';
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.arc(coveredX, 131 * scale, 20 * scale, arcStart, arcStart + Math.PI);
+        ctx.stroke();
+      }
 
       var action = bout && bout.punch;
       var heroShift = bout ? dodgeOffset() : 0;
@@ -257,7 +304,7 @@
       if (action && extension > .02 && ready(hero)) {
         var side = PUNCHES[action.kind].side;
         var shoulderX = heroX + side * 28 * scale, shoulderY = (246 - lunge) * scale;
-        var goalX = center + side * 9 * scale, goalY = (action.kind === 'upper' ? 111 : 152) * scale;
+        var goalX = center + (action.kind === 'upper' ? 9 : side * 20) * scale, goalY = (action.kind === 'upper' ? 111 : 152) * scale;
         var gloveX = shoulderX + (goalX - shoulderX) * extension + side * 10 * scale * (1 - extension);
         var gloveY = shoulderY + (goalY - shoulderY) * extension - 22 * scale * (1 - extension);
         drawPunchArm(ctx, shoulderX, shoulderY, gloveX, gloveY, side < 0, scale);
@@ -269,7 +316,7 @@
         ctx.lineWidth = 2.5 * scale;
         ctx.beginPath();
         for (var i = 0; i < 6; i++) {
-          var angle = i * Math.PI / 3, x = center + impactSide * 9 * scale, y = impactY * scale;
+          var angle = i * Math.PI / 3, x = center + (bout.lastImpact === 'upper' ? 9 : impactSide * 20) * scale, y = impactY * scale;
           ctx.moveTo(x + Math.cos(angle) * 10 * scale, y + Math.sin(angle) * 10 * scale);
           ctx.lineTo(x + Math.cos(angle) * 22 * scale, y + Math.sin(angle) * 22 * scale);
         }
