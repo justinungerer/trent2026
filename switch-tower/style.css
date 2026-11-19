@@ -76,6 +76,16 @@ button:focus-visible {
 
 .hud button { pointer-events: auto; }
 
+.arrival-block {
+  position: absolute;
+  top: calc(max(8px, env(safe-area-inset-top)) + 56px);
+  right: max(10px, env(safe-area-inset-right));
+  text-align: right;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(12, 28, 42, 0.78);
+}
+
 .hud-block {
   color: #f7f4ec;
   text-shadow: 0 1px 2px rgba(8, 12, 20, 0.9);
@@ -117,33 +127,36 @@ button:focus-visible {
 .levers {
   position: absolute;
   z-index: 5;
-  left: max(12px, env(safe-area-inset-left));
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(12px, env(safe-area-inset-bottom));
-  display: flex;
-  justify-content: center;
-  gap: 12px;
+  left: 0;
+  right: 0;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  height: 43px;
   pointer-events: none;
 }
 
 .levers button {
   pointer-events: auto;
-  min-width: 88px;
-  min-height: 64px;
-  padding: 8px 14px 10px;
-  border: 3px solid #e6c98a;
-  border-radius: 16px;
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 59px;
+  height: 43px;
+  min-width: 59px;
+  min-height: 43px;
+  padding: 5px 8px 6px;
+  border: 2px solid #e6c98a;
+  border-radius: 11px;
   background: rgba(16, 32, 48, 0.9);
   color: #f6e7c4;
-  font-size: 22px;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1;
 }
 
 .levers button span {
   display: block;
-  margin-top: 4px;
-  font-size: 13px;
+  margin-top: 3px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -248,7 +261,7 @@ button:focus-visible {
   .card { padding: 12px 14px; }
   .card h1 { font-size: 22px; }
   .card p { margin-bottom: 6px; }
-  .levers button { min-height: 52px; min-width: 72px; }
+  .levers button { min-height: 43px; min-width: 59px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

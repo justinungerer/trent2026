@@ -192,21 +192,26 @@
     }
   }
 
+  // Match the backdrop's vertical fit while keeping animated figures unstretched.
+  function sceneY(y) {
+    return y * cssH / (VIEW_H * view.s);
+  }
+
   function railY(x) {
     var i;
     var a;
     var b;
     var t;
-    if (x <= RAIL[0][0]) return RAIL[0][1];
+    if (x <= RAIL[0][0]) return sceneY(RAIL[0][1]);
     for (i = 1; i < RAIL.length; i++) {
       if (x <= RAIL[i][0]) {
         a = RAIL[i - 1];
         b = RAIL[i];
         t = (x - a[0]) / (b[0] - a[0]);
-        return a[1] + (b[1] - a[1]) * t;
+        return sceneY(a[1] + (b[1] - a[1]) * t);
       }
     }
-    return RAIL[RAIL.length - 1][1];
+    return sceneY(RAIL[RAIL.length - 1][1]);
   }
 
   function currentPattern() {
@@ -548,7 +553,7 @@
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       return;
     }
-    ctx.drawImage(sceneImg, 0, 0, VIEW_W, VIEW_H);
+    ctx.drawImage(sceneImg, 0, 0, VIEW_W, sceneY(VIEW_H));
   }
 
   function drawBoard() {
@@ -835,10 +840,10 @@
     drawScene();
     drawBoard();
     if (imageReady(signalImg)) {
-      ctx.drawImage(signalImg, 862, 301, 64, 111);
+      ctx.drawImage(signalImg, 862, sceneY(412) - 111, 64, 111);
       ctx.fillStyle = matches() ? '#9df8ad' : '#ff9b84';
       ctx.beginPath();
-      ctx.arc(matches() ? 906 : 883, 347, 6, 0, Math.PI * 2);
+      ctx.arc(matches() ? 906 : 883, sceneY(412) - 65, 6, 0, Math.PI * 2);
       ctx.fill();
     }
     drawTrainSprite();
@@ -888,11 +893,19 @@
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
-    s = Math.min(cssW / VIEW_W, cssH / VIEW_H);
+    // Cover the phone width without stretching the painted figures. The backdrop
+    // and its rail coordinates fit the screen height separately.
+    s = Math.max(cssW / VIEW_W, cssH / VIEW_H);
     if (s < 0.01) s = 0.01;
     view.s = s;
     view.ox = (cssW - VIEW_W * s) / 2;
-    view.oy = (cssH - VIEW_H * s) / 2;
+    view.oy = 0;
+    // Keep the painted switches and their shadows above the touch controls.
+    var controls = document.getElementById('levers').getBoundingClientRect();
+    GROUND_Y = Math.min(628, (controls.top - rect.top - 12) / s);
+    leverBtns.forEach(function (button, index) {
+      if (index < LEVER_X.length) button.style.left = (view.ox + LEVER_X[index] * s) + 'px';
+    });
   }
 
   function loop(now) {
