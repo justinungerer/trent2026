@@ -30,3 +30,11 @@ node tools/test-chimney-expansion.cjs
 Playwright and its WebKit browser must be installed. This checks WebKit behavior rather than running Apple's iOS Safari itself. Additional existing lesson and lantern-return regressions passed. Artwork and touch-control layout were inspected at landscape sizes 568×320, 844×390, and 932×430.
 
 Historical portrait credit and generated-asset prompts are in `chimney-road/art/ART-SOURCES.md`.
+
+## Follow-up audit and menu access
+
+The five recent gameplay requests were rechecked: (1) immediate gunfire on searchlight contact, with the later sustained-fire rule; (2) the first-run three-height chimney and double-jump lesson; (3) walking back for the dropped lantern instead of teleporting; (4) the larger level-2/3 maps and a completable bombed-roof escape, including the clarified 1.5× horizontal length; and (5) the final sleigh guardian and continuous five-minute boxing fight, including the approved historical-face/painted-body fallback. The associated movement, contact, tutorial, lantern, and full-fight checks passed.
+
+Chapter 10 now has a **Final fight only** button whenever that chapter is unlocked. Earlier chapter passwords leave that button blank and disabled. The backdoor-only test level selector also includes **Final fight · Hitler guards the sleigh**, alongside the three rooftop levels. This is a practice entry, not a fourth campaign level. It skips the roof course, opens the fight instructions, uses landscape orientation, and returns to the same chapter menu on victory without awarding a completion password or showing the ending. Normal campaign play still reaches the fight by confronting the guardian on the final roof.
+
+Run `node tools/test-final-fight-menu.cjs` with the same Playwright environment above. It exercises the locked/unlocked buttons, portrait-to-landscape handoff, direct fight introduction, a complete winning bout, return to the menu without completion rewards, and the test-level selector entry.

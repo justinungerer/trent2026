@@ -546,13 +546,19 @@ function showChapterMenu(lastChapter, complete, canTest) {
       unlocked ? function () { playIntro(chapter, back); } : null, 'secondary');
     var levelPicker;
     var gameButton = button('Minigame only', unlocked ? function () {
-      launchGame(chapter, 0, back, testMode && levelPicker ? Number(levelPicker.value) : undefined);
+      if (testMode && levelPicker && levelPicker.value === 'final-fight') launchFinalFight(chapter, back);
+      else launchGame(chapter, 0, back, testMode && levelPicker ? Number(levelPicker.value) : undefined);
     } : null, 'secondary chapter-minigame');
     if (unlocked) {
       introButton.setAttribute('aria-label', 'Cutscene only · ' + chapter.title);
       gameButton.setAttribute('aria-label', 'Minigame only · ' + chapter.title);
     }
     row.append(introButton, gameButton);
+    if (chapter.id === 'chimney') {
+      var finalFightButton = button('Final fight only', unlocked ? function () { launchFinalFight(chapter, back); } : null, 'secondary chapter-final-fight');
+      if (unlocked) finalFightButton.setAttribute('aria-label', 'Final fight only · ' + chapter.title);
+      row.appendChild(finalFightButton);
+    }
     if (canTest && unlocked) {
       levelPicker = document.createElement('select');
       levelPicker.className = 'chapter-level';
@@ -563,6 +569,12 @@ function showChapterMenu(lastChapter, complete, canTest) {
         option.textContent = 'Level ' + (index + 1) + ' · ' + (level ? level.title : chapter.title);
         levelPicker.appendChild(option);
       });
+      if (chapter.id === 'chimney') {
+        var finalFightOption = document.createElement('option');
+        finalFightOption.value = 'final-fight';
+        finalFightOption.textContent = 'Final fight · Hitler guards the sleigh';
+        levelPicker.appendChild(finalFightOption);
+      }
       row.insertBefore(levelPicker, gameButton);
       var update = function () {
         levelPicker.hidden = !testMode;
@@ -1058,6 +1070,14 @@ function launchGame(chapter, score, returnToMenu, selectedLevel) {
   launchMissionLevel(active);
 }
 
+function launchFinalFight(chapter, returnToMenu) {
+  active = {
+    chapter: chapter, score: 0, returnToMenu: returnToMenu,
+    levels: [null], seen: new Set(), levelIndex: 0, practice: true, finalFight: true
+  };
+  openMissionLevel(active, 'final-fight');
+}
+
 function launchMissionLevel(run) {
   var level = run.levels[run.levelIndex];
   run.runId = null;
@@ -1099,7 +1119,7 @@ function openMissionLevel(run, stage) {
   if (run.levels.length > 1) url.searchParams.set('sequence', String(run.levelIndex + 1));
   if (bonus) url.searchParams.set('bonus', String(bonus));
   if (chapter.path === './wrapping-line/') url.searchParams.set('lives', String(7 + bonus));
-  openMissionFrame(url.href, chapter.title);
+  openMissionFrame(url.href, chapter.title + (run.finalFight ? ' · Final fight' : ''));
 }
 
 function afterIntro(chapter) {

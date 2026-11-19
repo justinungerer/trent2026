@@ -34,6 +34,18 @@ window.testExpansion=()=>{
  }
  return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length,branches:expansion.branches.length,reversals};
 };
+window.testSearchlightContact=()=>{
+ beginRun();gunfire=null;hostileShots=[];shotSerial=0;
+ const light=SEARCHLIGHTS[0];played=(8-light.phase%8)%8;light.spottedCycle=-1;
+ body.x=light.x;body.y=light.labelY+78;body.vx=body.vy=0;body.ground=false;hurt=999;
+ camX=body.x-200;camY=body.y-250;
+ if(!inSearchlight(light))throw Error('Visible character not detected by beam');
+ update(0);
+ if(!gunfire||shotSerial!==1)throw Error('Touching searchlight did not fire immediately');
+ played+=3;
+ for(let i=0;i<50;i++){if(searchlightState(light).active)throw Error('Searchlight break shorter than five seconds');played+=.0999;}
+ return {touchStartsFire:true,firstShotImmediate:true,fiveSecondBreak:true};
+};
 window.testPersistentGunfire=()=>{
  beginRun();gunfire=null;hostileShots=[];shotSerial=0;hurt=999;
  const light=SEARCHLIGHTS[0];light.spottedCycle=-1;body.x=light.x;body.y=light.labelY+78;camX=body.x-200;camY=body.y-250;
@@ -159,6 +171,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
  for(const stage of ['the-eaves','above-the-lanterns','']){
   await page.goto('http://localhost/chimney-road/?stage='+stage);
   console.log('MAP',await page.evaluate(()=>testExpansion()));
+  console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));
   console.log('FIRE',await page.evaluate(()=>testPersistentGunfire()));
   console.log('MARKER ROUTE',await page.evaluate(()=>testMarkerRoutePhysics()));
   console.log('ROUTE',await page.evaluate(()=>testPermanentRoutePhysics()));

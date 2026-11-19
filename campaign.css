@@ -579,3 +579,5 @@ body {
 @media (orientation: portrait) {
   :is(.opening-film video, #intro-video) { object-fit: cover; }
 }
+
+.chapter-final-fight { grid-column: 1 / -1; }

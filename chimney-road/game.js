@@ -24,6 +24,7 @@
   var statusEl = document.getElementById('status');
   var levelParams = new URLSearchParams(location.search);
   var stage = levelParams.get('stage');
+  var finalFightOnly = stage === 'final-fight';
   var eaves = stage === 'the-eaves';
   var flags = stage === 'above-the-lanterns';
   var objectives = [];
@@ -472,7 +473,9 @@
     hintEl.hidden = true;
     renderHud();
     say(eaves ? 'Recover the lantern from the lower roof.' : escapeMode ? 'Spotted! Escape the bombing and reach the final sleigh.' : 'The sleigh is at the end of the road.');
-    if (escapeMode) startGunfire({ x: body.x, y: body.y + 220, left: body.x - 110, right: body.x + 110, phase: 0, spottedCycle: -1 });
+    if (finalFightOnly) {
+      placeOn(GOAL); body.x = GUARD_X; checkBoarding();
+    } else if (escapeMode) startGunfire({ x: body.x, y: body.y + 220, left: body.x - 110, right: body.x + 110, phase: 0, spottedCycle: -1 });
   }
 
   function openPause() {
@@ -1655,6 +1658,7 @@
   resize();
   syncPortrait();
   cratePrev = crateBox().x;
+  if (finalFightOnly) beginRun();
   lastFrame = performance.now();
   requestAnimationFrame(loop);
 })();
