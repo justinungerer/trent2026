@@ -168,8 +168,8 @@
       labelY: Math.min(before.y, after.y) - 78, phase: SEARCHLIGHTS.length * 1.7 });
   }
   document.getElementById('roof-controls').textContent +=
-    ' Hold Jump beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. A searchlight hit counts as a fall.';
+    ' Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. If a searchlight spots you, dodge four bullets fired upward from below, one per second for four seconds. Only a bullet hit counts as a fall.';
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && index === objectives[0].roof)) return null;
@@ -236,6 +236,10 @@
   var cp = 0;
   var stood = 0;
   var body = { x: 96, y: 300, vx: 0, vy: 0, face: 1, ground: true, runT: 0, climbing: false, climbT: 0 };
+  var gunfire = null;
+  var hostileShots = [];
+  var shotSerial = 0;
+  var gunfireWarning = document.getElementById('gunfire-warning');
   var climbRoof = null;
   var climbSide = -1;
   var held = { left: false, right: false, climb: false };
@@ -363,12 +367,15 @@
       : objectives.length ? PLATFORMS[stood].name + ' · ' + objectives.filter(function (item) { return item.taken; }).length + '/' + objectives.length
       : PLATFORMS[stood].name;
     fallsEl.textContent = falls + ' / 3';
-    document.getElementById('jump').textContent = body.climbing ? 'Climb' : 'Jump';
+    gunfireWarning.hidden = !gunfire && !hostileShots.length;
+    gunfireWarning.textContent = gunfire ? 'Spotted! Dodge incoming fire · ' + Math.max(0, Math.ceil(gunfire.until - played)) + 's' : 'Dodge the incoming bullets!';
     fallsEl.className = falls ? 'warn' : '';
   }
 
   function placeOn(index) {
     var roof = PLATFORMS[index];
+    gunfire = null;
+    hostileShots = [];
     climbRoof = null;
     body.climbing = false;
     body.climbT = 0;
@@ -394,6 +401,8 @@
     objectives.forEach(function (item) { item.taken = false; });
     falls = 0;
     played = 0;
+    shotSerial = 0;
+    SEARCHLIGHTS.forEach(function (light) { light.spottedCycle = -1; });
     shake = 0;
     jumpQueued = 0;
     coyote = 0;
@@ -552,7 +561,6 @@
 
   function requestJump() {
     if (state !== 'play') return;
-    if (nearChimney()) { jumpQueued = 0; airBuffer = 0; return; }
     if (body.ground || coyote > 0) jumpQueued = 0.14 + jumpBonus;
     else airBuffer = 0.52;
   }
@@ -619,6 +627,74 @@
       return rayX >= roof.x && rayX <= roof.x + roof.w;
     })) return false;
     return Math.abs(body.x - (light.x + beam.slope * distance)) < 13 + distance * 0.075;
+  }
+
+  function startGunfire(light) {
+    var cycle = Math.floor((played + light.phase) / (SEARCH_SWEEP + SEARCH_BREAK));
+    if (gunfire || light.spottedCycle === cycle) return;
+    light.spottedCycle = cycle;
+    gunfire = { light: light, until: played + 4, next: played + 1, fired: 0 };
+    say('Spotted! Four bullets will fire from below, one per second. Dodge them or take cover.');
+  }
+
+  function fireHostileShot(burst) {
+    var side = burst.fired % 2 ? -1 : 1;
+    var x = burst.light.x + side * Math.min(90, (burst.light.right - burst.light.left) * .4);
+    var y = Math.max(burst.light.y, body.y + 120);
+    var dx = body.x - x, dy = body.y - 24 - y;
+    var length = Math.hypot(dx, dy) || 1;
+    hostileShots.push({ x: x, y: y, oldX: x, oldY: y, vx: dx / length * 440, vy: dy / length * 440, age: 0 });
+    shotSerial++;
+  }
+
+  function segmentHitsRect(ax, ay, bx, by, x, y, w, h) {
+    var enter = 0, exit = 1;
+    var axes = [[ax, bx - ax, x, x + w], [ay, by - ay, y, y + h]];
+    for (var i = 0; i < axes.length; i++) {
+      var line = axes[i];
+      if (Math.abs(line[1]) < .00001) { if (line[0] < line[2] || line[0] > line[3]) return false; }
+      else {
+        var a = (line[2] - line[0]) / line[1], b = (line[3] - line[0]) / line[1];
+        enter = Math.max(enter, Math.min(a, b)); exit = Math.min(exit, Math.max(a, b));
+        if (enter > exit) return false;
+      }
+    }
+    return true;
+  }
+
+  function updateGunfire(dt) {
+    if (gunfire) {
+      while (gunfire.fired < 4 && played >= gunfire.next) {
+        fireHostileShot(gunfire); gunfire.fired++; gunfire.next++;
+      }
+      if (gunfire.fired === 4) gunfire = null;
+    }
+    for (var i = hostileShots.length - 1; i >= 0; i--) {
+      var shot = hostileShots[i];
+      shot.oldX = shot.x; shot.oldY = shot.y;
+      shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.age += dt;
+      var blocked = PLATFORMS.some(function (roof) {
+        return segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y, roof.x, roof.y, roof.w, 10) ||
+          (roof.cap && segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y,
+            capX(roof), roof.y - roof.chimneyHeight, 42, roof.chimneyHeight));
+      });
+      if (blocked || shot.age > 3) { hostileShots.splice(i, 1); continue; }
+      if (hurt <= 0 && segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y, body.x - 16, body.y - 51, 32, 54)) {
+        drop('A bullet hit Trent. Dodge the next volley or take cover.');
+        return;
+      }
+    }
+  }
+
+  function drawHostileShots() {
+    hostileShots.forEach(function (shot) {
+      var speed = Math.hypot(shot.vx, shot.vy) || 1;
+      var x = shot.x - camX, y = shot.y - camY;
+      ctx.strokeStyle = '#ff603e'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 20, y - shot.vy / speed * 20);ctx.lineTo(x, y);ctx.stroke();
+      ctx.strokeStyle = '#fff2a1'; ctx.lineWidth = 2;
+      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 12, y - shot.vy / speed * 12);ctx.lineTo(x, y);ctx.stroke();
+    });
   }
 
   function drawSearchlights() {
@@ -785,7 +861,13 @@
         }
       }
     }
-    if (state === 'play' && hurt <= 0 && SEARCHLIGHTS.some(inSearchlight)) drop('A searchlight caught Trent in the opening. Wait for the five-second blackout.');
+    if (state === 'play') {
+      if (hurt <= 0) {
+        var spottingLight = SEARCHLIGHTS.find(inSearchlight);
+        if (spottingLight) startGunfire(spottingLight);
+      }
+      updateGunfire(dt);
+    }
     if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
     if (state !== 'play') return;
     objectives.forEach(function (item) {
@@ -1184,6 +1266,7 @@
       paintedProp(flags ? 'flag' : 'lantern', x - 19, y - 58, 38, 54);
     });
     drawTrent();
+    drawHostileShots();
     drawSearchlightCues();
     drawLedgeCues();
     drawSnow();
@@ -1279,22 +1362,20 @@
 
   bindHold(document.getElementById('left'), 'left');
   bindHold(document.getElementById('right'), 'right');
+  bindHold(document.getElementById('climb'), 'climb');
 
   document.getElementById('jump').addEventListener('pointerdown', function (event) {
     if (event.button !== 0) return;
     event.preventDefault();
-    held.climb = true;
     requestJump();
     hintEl.hidden = true;
     if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.classList.add('held');
   });
   document.getElementById('jump').addEventListener('pointerup', function (event) {
-    held.climb = false;
     event.currentTarget.classList.remove('held');
   });
   document.getElementById('jump').addEventListener('pointercancel', function (event) {
-    held.climb = false;
     event.currentTarget.classList.remove('held');
   });
 
@@ -1307,10 +1388,8 @@
     }
     if (event.key === 'ArrowLeft') held.left = true;
     else if (event.key === 'ArrowRight') held.right = true;
-    else if (event.key === 'ArrowUp' || event.key === ' ') {
-      held.climb = true;
-      if (!event.repeat) requestJump();
-    }
+    else if (event.key === 'ArrowUp') held.climb = true;
+    else if (event.key === ' ') { if (!event.repeat) requestJump(); }
     else return;
     event.preventDefault();
     hintEl.hidden = true;
@@ -1319,7 +1398,7 @@
   window.addEventListener('keyup', function (event) {
     if (event.key === 'ArrowLeft') held.left = false;
     if (event.key === 'ArrowRight') held.right = false;
-    if (event.key === 'ArrowUp' || event.key === ' ') held.climb = false;
+    if (event.key === 'ArrowUp') held.climb = false;
   });
 
   window.addEventListener('blur', function () {
