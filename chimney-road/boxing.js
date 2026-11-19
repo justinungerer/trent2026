@@ -5,7 +5,7 @@
   var STUN_COOLDOWN_SECONDS = 3;
   var PUNCH_FLASH_SECONDS = .16;
   var SAME_SIDE_LIMIT = 3;
-  var WINDUP_SECONDS = 1;
+  var WINDUP_SECONDS = 2;
   var DODGE_SECONDS = 1.15;
   var ATTACK_WARNINGS = {
     left: 'Left hook. Hold Dodge Right or Block.',
@@ -19,7 +19,7 @@
     [.17, -.12, 8], [.05, -.18, 10], [.24, -.02, 5], [.16, .18, 6],
     [-.02, .25, 9], [.08, .28, 4], [.30, -.13, 4], [.21, .12, 3]
   ];
-  var HITS_PER_STAR = 6;
+  var HITS_PER_STAR = 3;
   var PUNCHES = {
     left: { windup: .09, recovery: .20, damage: 4, cost: 6, side: -1 },
     right: { windup: .14, recovery: .23, damage: 6, cost: 8, side: 1 },
@@ -59,7 +59,7 @@
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. Switch sides after three hits. Land six punches in a row to earn an Uppercut. It stuns him when he has been awake for at least three seconds after the last stun. Missing or taking a hit resets the streak. Every punch has a one-second warning. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
+      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. Switch sides after three hits. Land three punches in a row to earn an Uppercut. It stuns him when he has been awake for at least three seconds after the last stun. Missing or taking a hit resets the streak. Every punch has a two-second warning with two flashes. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
       sync();
     }
     function stop() {
@@ -280,7 +280,7 @@
       ctx.drawImage(img,frame%cols*sw,Math.floor(frame/cols)*sh,sw,sh,x-w/2,y-height,w,height);
     }
     // Historical face over the painted poses: the approved portrait/body fallback.
-    function enemySprite(ctx,frame,x,y,height,bloodyNose,warningFlash) {
+    function enemySprite(ctx,frame,x,y,height,healthFraction,warningFlash) {
       ctx.save();
       if (warningFlash) ctx.filter = 'brightness(1.75)';
       sprite(ctx,enemy,3,2,frame,x,y,height);
@@ -292,13 +292,42 @@
       ctx.filter = warningFlash ? 'sepia(.35) brightness(1.75)' : 'sepia(.35)';
       ctx.drawImage(face, 174, 18, 116, 161, dx, dy, h[2] * k, h[3] * k);
       ctx.filter = 'none';
-      if (bloodyNose) drawBloodyNose(ctx, dx, dy, h[2] * k, h[3] * k);
+      if (healthFraction <= .75) {
+        drawFaceDamage(ctx, dx, dy, h[2] * k, h[3] * k, healthFraction);
+      }
       ctx.restore();
     }
-    function drawBloodyNose(ctx, x, y, width, height) {
-      // The portrait is anchored to all six poses, so the mark follows the nose during movement.
+    function drawBruise(ctx, x, y, width, height, centerColor, edgeColor) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(width, height);
+      var bruise = ctx.createRadialGradient(-.12, -.15, .05, 0, 0, 1);
+      bruise.addColorStop(0, centerColor);
+      bruise.addColorStop(.52, edgeColor);
+      bruise.addColorStop(1, 'rgba(54, 23, 60, 0)');
+      ctx.fillStyle = bruise;
+      ctx.fillRect(-1, -1, 2, 2);
+      ctx.restore();
+    }
+    function drawFaceDamage(ctx, x, y, width, height, healthFraction) {
+      // Draw in portrait coordinates so injuries follow the face in every pose.
       ctx.translate(x, y);
       ctx.scale(width / 116, height / 161);
+      if (healthFraction <= .5) {
+        drawBruise(ctx, 82, 78, 23, 17, 'rgba(52, 28, 65, .80)', 'rgba(104, 49, 93, .64)');
+      }
+      if (healthFraction <= .25) {
+        drawBruise(ctx, 35, 76, 20, 15, 'rgba(49, 27, 68, .84)', 'rgba(118, 44, 86, .61)');
+        drawBruise(ctx, 88, 103, 23, 20, 'rgba(92, 30, 55, .85)', 'rgba(124, 53, 78, .62)');
+        drawBruise(ctx, 37, 110, 18, 14, 'rgba(124, 38, 44, .72)', 'rgba(139, 61, 54, .53)');
+        ctx.strokeStyle = '#751d29';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(89, 60);ctx.lineTo(99, 65);
+        ctx.moveTo(53, 129);ctx.lineTo(44, 137);
+        ctx.stroke();
+      }
       ctx.fillStyle = '#8f252d';
       ctx.beginPath();
       ctx.moveTo(65, 108);
@@ -403,7 +432,8 @@
         recoil = bout.flash / .20 * (bout.lastImpact === 'left' ? 10 : -10);
       }
       var enemyX = center + (enemyShift + recoil) * scale;
-      var warningFlash = bout && bout.mode === 'fight' && bout.phase === 'tell' && bout.timer <= PUNCH_FLASH_SECONDS;
+      var warningFlash = bout && bout.mode === 'fight' && bout.phase === 'tell' &&
+        (bout.timer <= PUNCH_FLASH_SECONDS || (bout.timer > 1 && bout.timer <= 1 + PUNCH_FLASH_SECONDS));
       if (warningFlash) {
         var flashY = 132 * scale, flashRadius = 81 * scale;
         var glow = ctx.createRadialGradient(enemyX, flashY, 0, enemyX, flashY, flashRadius);
@@ -413,7 +443,7 @@
         ctx.fillRect(enemyX - flashRadius, flashY - flashRadius, flashRadius * 2, flashRadius * 2);
       }
       enemySprite(ctx, enemyFrame, enemyX, (435 - Math.abs(recoil) * .6) * scale, 380 * scale,
-        bout && bout.enemy <= MAX_ENEMY_HP / 2, warningFlash);
+        bout ? bout.enemy / MAX_ENEMY_HP : 1, warningFlash);
       if (bout && bout.phase === 'stun' && bout.mode !== 'victory') {
         drawStunStars(ctx, enemyX, (enemyFrame === 5 ? 94 : 49) * scale, scale);
       }

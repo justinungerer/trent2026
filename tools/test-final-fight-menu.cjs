@@ -20,7 +20,8 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/, hooks + '\nwindow.menuFightState=()=>({state,mode:fight.state().mode,gunfire:!!gunfire});' +
           'window.prepareWarning=(late)=>{fight.start();fight.begin();const b=fight.state();if(late)b.enemy=100;b.timer=.02;fight.update(.02);};' +
           'window.stepWarning=(dt)=>{fight.update(dt);return fight.state();};' +
-          'window.fighterBrightness=()=>{render(0);return ctx.getImageData(canvas.width/2-4,canvas.height*.31,8,8).data.reduce((sum,v,i)=>sum+(i%4===3?0:v),0);};\n})();')
+          'window.fighterBrightness=()=>{render(0);return ctx.getImageData(canvas.width/2-4,canvas.height*.31,8,8).data.reduce((sum,v,i)=>sum+(i%4===3?0:v),0);};' +
+          'window.facePixels=(ratio)=>{const b=fight.state();b.enemy*=ratio;render(0);b.enemy/=ratio;return Array.from(ctx.getImageData(canvas.width/2-canvas.height*.075,canvas.height*.125,canvas.height*.16,canvas.height*.19).data);};\n})();')
       });
       if (pathname.endsWith('/night-broadcast/game.js')) return route.fulfill({
         contentType: 'application/javascript',
@@ -117,14 +118,18 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       await frame.locator('#box-cue').getByText(warningText, { exact: false }).waitFor();
       const initial = await fightFrame.evaluate(() => stepWarning(0));
       assert.equal(initial.phase, 'tell');
-      assert.equal(initial.timer, 1);
+      assert.equal(initial.timer, 2);
       const warningBrightness = await fightFrame.evaluate(() => fighterBrightness());
       const control = frame.locator(buttonId);
       const box = await control.boundingBox();
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
       try {
-        const beforeImpact = await fightFrame.evaluate(() => stepWarning(.99));
+        await fightFrame.evaluate(() => stepWarning(.90));
+        assert.ok(await fightFrame.evaluate(() => fighterBrightness()) > warningBrightness);
+        await fightFrame.evaluate(() => stepWarning(.30));
+        assert.equal(await fightFrame.evaluate(() => fighterBrightness()), warningBrightness);
+        const beforeImpact = await fightFrame.evaluate(() => stepWarning(.79));
         assert.equal(beforeImpact.phase, 'tell');
         assert.equal(beforeImpact.hp, initial.hp);
         assert.ok(await fightFrame.evaluate(() => fighterBrightness()) > warningBrightness);
@@ -140,6 +145,12 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     }
     await holdThroughSwing('#box-right', false, 'Left hook');
     await holdThroughSwing('#box-block', true, 'Uppercut');
+    await fightFrame.evaluate(() => prepareWarning(false));
+    for (const threshold of [.75, .50, .25]) {
+      const before = await fightFrame.evaluate(value => facePixels(value), threshold + .001);
+      const after = await fightFrame.evaluate(value => facePixels(value), threshold);
+      assert.notDeepEqual(after, before);
+    }
     const result = await fightFrame.evaluate(() => testBoxing());
     assert.ok(result.seconds > 80 && result.seconds < 190);
     await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { polling: 50 });
@@ -155,7 +166,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.evaluate(() => active.finalFight && active.practice), true);
     assert.ok(await page.evaluate(() => pendingMissionUrl.includes('stage=final-fight')));
     assert.deepEqual(errors, []);
-    console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, one-second warnings, held dodge and block, full bout, practice return, no completion reward, test selector.');
+    console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();
   }
