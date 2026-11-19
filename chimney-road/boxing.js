@@ -14,7 +14,7 @@
     face.src = 'art/hitler-front-historical.jpg';
     enemy.src = 'art/hitler-boxing-painted.webp'; hero.src = 'art/trent-boxing-painted.webp'; ring.src = 'art/boxing-rooftop.webp';
     var host = document.createElement('div'); host.className = 'boxing-ui'; host.hidden = true;
-    host.innerHTML = '<div class="boxing-hud"><span>Trent <strong id="box-player-hp"></strong></span><span id="box-clock"></span><span>Hitler <strong id="box-enemy-hp"></strong></span></div>' +
+    host.innerHTML = '<div class="boxing-hud"><span>Trent <strong id="box-player-hp"></strong> <strong id="box-player-hit" hidden></strong></span><span id="box-clock"></span><span>Hitler <strong id="box-enemy-hp"></strong></span></div>' +
       '<div class="boxing-cue"><strong id="box-guard"></strong><span id="box-cue"></span></div><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
       '<button class="boxing-pause" id="box-pause">Pause</button>' +
       '<div class="boxing-right"><button id="box-uppercut">Uppercut <span id="box-stars"></span></button><button id="box-punch-left">Left punch</button><button id="box-punch-right">Right punch</button></div>' +
@@ -27,7 +27,7 @@
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
         dodge: 0, dodgeTime: 0, dodgeCool: 0, block: false,
         punch: null, queuedPunch: null, stars: 1, hitsTowardStar: 0,
-        guardSide: -1, guardAttempts: 0, evadeSide: 0, evadeTime: 0,
+        guardSide: -1, evadeSide: 0, evadeTime: 0, playerHitTime: 0, playerDamage: 0,
         counterHits: 0, counterLimit: 0, flash: 0, lastImpact: null,
         victory: 0, cue: 'Punch the highlighted side.' };
     }
@@ -78,21 +78,20 @@
         sync();
         return;
       }
-      var evaded = request.guarded && ++bout.guardAttempts % 2 === 0;
-      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, guarded: request.guarded, evaded: evaded };
+      bout.punch = { kind: kind, elapsed: 0, offset: dodgeOffset(), resolved: false, evaded: request.guarded };
       bout.dodgeTime = 0;
       bout.block = false;
       bout.stamina -= move.cost;
       if (kind === 'upper') bout.stars--;
-      if (evaded) {
+      if (request.guarded) {
         bout.evadeSide = -move.side;
         bout.evadeTime = .42;
       }
       sync();
     }
     function resolvePunch(action, move) {
-      if (action.guarded) {
-        bout.cue = action.evaded ? 'He dodged the covered side.' : 'Blocked. Punch the other side.';
+      if (action.evaded) {
+        bout.cue = 'He dodged the covered side.';
         return;
       }
       var upper = action.kind === 'upper';
@@ -132,7 +131,9 @@
       bout.counterLimit = dodged ? 2 : blocked ? 1 : 0;
       bout.counterHits = 0;
       if (!dodged && !blocked) {
-        bout.hp = Math.max(0, bout.hp - (bout.attack === 'upper' ? 2 : 1));
+        bout.playerDamage = Math.min(bout.hp, bout.attack === 'upper' ? 2 : 1);
+        bout.hp -= bout.playerDamage;
+        bout.playerHitTime = .55;
         bout.stamina = Math.max(0, bout.stamina - 12);
         bout.cue = 'Hit! Watch the next wind-up.';
       } else {
@@ -147,6 +148,7 @@
       bout.time += dt;bout.stamina = Math.min(100, bout.stamina + (bout.block ? 5 : 18) * dt);
       bout.dodgeTime = Math.max(0,bout.dodgeTime-dt);bout.dodgeCool = Math.max(0,bout.dodgeCool-dt);
       bout.flash = Math.max(0, bout.flash - dt);
+      bout.playerHitTime = Math.max(0, bout.playerHitTime - dt);
       bout.evadeTime = Math.max(0, bout.evadeTime - dt);
       bout.timer -= dt;
       if (bout.timer <= 0) {
@@ -186,6 +188,9 @@
     function sync() {
       if (!bout) return;
       get('box-player-hp').textContent = bout.hp + '/' + bout.max;
+      var playerHit = get('box-player-hit');
+      playerHit.hidden = bout.playerHitTime <= 0;
+      playerHit.textContent = '−' + bout.playerDamage + ' HP';
       var enemyPercent = bout.enemy > 0 ? Math.max(1, Math.floor(100 * bout.enemy / MAX_ENEMY_HP)) : 0;
       get('box-enemy-hp').textContent = enemyPercent + '%';
       get('box-stars').textContent = bout.stars + '★';
@@ -299,6 +304,9 @@
         lunge = extension * (action.kind === 'upper' ? 53 : 39);
         heroShift = action.offset * (1 - reach) - move.side * extension * 9;
       }
+      if (bout && bout.playerHitTime > .35) {
+        heroShift += Math.sin((.55 - bout.playerHitTime) * 50) * (bout.playerHitTime - .35) * 45;
+      }
       var heroX = center + heroShift * scale;
       sprite(ctx, hero, 2, 2, bout && bout.block ? 3 : 0, heroX, (470 - lunge) * scale, 280 * scale);
       if (action && extension > .02 && ready(hero)) {
@@ -335,7 +343,14 @@
     [['box-punch-left', 'left'], ['box-punch-right', 'right'], ['box-uppercut', 'upper']].forEach(function (binding) {
       get(binding[0]).addEventListener('click', function () { punch(binding[1]); });
     });
-    get('box-block').addEventListener('pointerdown',function(e){e.preventDefault();if(bout&&bout.mode==='fight')bout.block=true;if(e.currentTarget.setPointerCapture)e.currentTarget.setPointerCapture(e.pointerId)});
+    get('box-block').addEventListener('pointerdown', function (event) {
+      event.preventDefault();
+      if (!bout || bout.mode !== 'fight' || (bout.punch && !bout.punch.resolved)) return;
+      bout.punch = null;
+      bout.queuedPunch = null;
+      bout.block = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    });
     ['pointerup','pointercancel','lostpointercapture'].forEach(function(event){get('box-block').addEventListener(event,function(){if(bout)bout.block=false})});
     get('box-pause').onclick=function(){if(!bout||bout.mode!=='fight')return;bout.mode='pause';bout.block=false;modal('Paused','The bout resumes from this moment.','Resume')};
     get('box-start').onclick=function(){

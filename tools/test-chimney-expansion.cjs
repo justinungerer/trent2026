@@ -92,6 +92,37 @@ window.testPermanentRoutePhysics=()=>{
  }
  throw Error('No physical permanent-only route to goal '+JSON.stringify({reached:reached.size,trials,maxX:Math.max(...[...reached].map(i=>PLATFORMS[i].x)),goal:PLATFORMS[GOAL].x}));
 };
+window.testIncomingBoxingDamage=()=>{
+ if(!escapeMode)return;
+ const results=[];
+ const combinations=[
+  {attack:'left',loss:1},
+  {attack:'right',loss:1},
+  {attack:'straight',loss:1},
+  {attack:'upper',loss:2},
+  {attack:'left',dodge:1,loss:0},
+  {attack:'right',dodge:-1,loss:0},
+  {attack:'left',dodge:-1,loss:1},
+  {attack:'upper',dodge:1,loss:0},
+  {attack:'straight',block:true,loss:0},
+  {attack:'right',block:true,loss:0},
+  {attack:'upper',block:true,loss:2}
+ ];
+ for(const sample of combinations){
+  beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();fight.begin();
+  const bout=fight.state();
+  bout.phase='tell';bout.attack=sample.attack;bout.timer=.12;
+  if(sample.dodge)fight.dodge(sample.dodge);
+  if(sample.block)bout.block=true;
+  for(let i=0;i<8;i++)fight.update(.02);
+  if(bout.max-bout.hp!==sample.loss)throw Error('Unexpected damage for '+JSON.stringify(sample));
+  const badge=document.getElementById('box-player-hit');
+  if(sample.loss&&(badge.hidden||badge.textContent!=='−'+sample.loss+' HP'))throw Error('Player damage feedback was not shown');
+  if(!sample.loss&&!badge.hidden)throw Error('Damage feedback shown for a successful defense');
+  results.push(sample);
+ }
+ return {attackAndDefenseCases:results.length};
+};
 window.testBoxing=()=>{
  if(!escapeMode)return;
  beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();
@@ -101,9 +132,9 @@ window.testBoxing=()=>{
  const step=(ticks)=>{for(let i=0;i<ticks;i++)fight.update(.02);};
  if(guardHp<=530)throw Error('Boss health did not increase');
  tap('box-punch-left');step(16);
- if(bout.enemy!==guardHp||!bout.cue.startsWith('Blocked'))throw Error('Covered left punch was not blocked');
+ if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('First covered punch was not dodged');
  tap('box-punch-left');step(16);
- if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('Boss did not dodge on the covered side');
+ if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('Second covered punch was not dodged');
  tap('box-punch-right');step(19);
  if(bout.enemy!==guardHp-3||bout.lastImpact!=='right')throw Error('Open right punch did not land');
  tap('box-uppercut');step(12);
@@ -114,7 +145,7 @@ window.testBoxing=()=>{
  while(bout.phase==='stun')step(1);
  if(bout.phase!=='guard'||bout.guardSide!==1)throw Error('Guard did not switch sides after the stun');
  tap('box-punch-right');step(19);
- if(bout.enemy!==guardHp-11||!bout.cue.startsWith('Blocked'))throw Error('Covered right punch was not blocked');
+ if(bout.enemy!==guardHp-11||!bout.cue.startsWith('He dodged'))throw Error('Covered right punch was not dodged');
  tap('box-punch-left');
  bout.timer=.02;step(5);
  if(bout.enemy!==guardHp-13||bout.lastImpact!=='left')throw Error('A punch aimed at an open side missed during a phase change');
@@ -209,6 +240,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   console.log('FIRE',await page.evaluate(()=>testPersistentGunfire()));
   console.log('MARKER ROUTE',await page.evaluate(()=>testMarkerRoutePhysics()));
   console.log('ROUTE',await page.evaluate(()=>testPermanentRoutePhysics()));
+  console.log('INCOMING',await page.evaluate(()=>testIncomingBoxingDamage()));
   console.log('BOSS',await page.evaluate(()=>testBoxing()));
  }
  assert.deepEqual(errors,[]);

@@ -11,7 +11,7 @@
 
 Hitler stands beside the final sleigh. Contact opens a separate touch-controlled boxing encounter before campaign completion. The fight uses original painted rooftop art and character poses, with a historical portrait composited over the enemy's head, as approved when image generation rejected the requested likeness. His hairstyle and toothbrush moustache remain visible.
 
-The opponent guards one side at a time. The game highlights the open punch, and an attack aimed at that side lands even if the guard changes during the animation. A correctly timed dodge or block creates a brief opening on both sides. The left punch is quicker and deals two damage, and the right punch deals three.
+The opponent guards one side at a time and sidesteps every punch aimed at that side. The game highlights the open punch, and an attack aimed at that side lands even if the guard changes during the animation. An undefended hook or straight costs one health, and an uppercut costs two. A correctly timed dodge or block prevents the hit and creates a brief opening on both sides. Uppercuts require a dodge. The left punch is quicker and deals two damage, and the right punch deals three.
 
 Trent starts with one star and earns another for every eight landed punches. An uppercut spends a star, deals six damage through either guard, and stuns the opponent for 1.5 seconds. His nose starts bleeding at half health and stays marked through the bout.
 
