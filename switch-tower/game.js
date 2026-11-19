@@ -3,8 +3,8 @@
    Five trains come, one after another, at 1.5x the original speed.
    The board shows that train's pattern.
    A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
-   After two trains leave, a soldier flips a random lever every about two seconds.
-   Five correct departures win and send switch-tower:complete once.
+   The final level has sabotage from train one; the middle level starts after two departures.
+   The stage train count must depart correctly to send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/.
    Painted animation atlases show the moving train and railway saboteur. */
 'use strict';
@@ -31,16 +31,14 @@
   var stage = new URLSearchParams(location.search).get('stage');
   var inspection = stage === 'clear-the-points';
   var rescue = stage === 'send-the-rescue-train';
-  var alignedFor = 0;
-  var spurCleared = false;
 
-  /* 0 is left, 1 is right. Five patterns, one per successful departure.
+  /* 0 is left, 1 is right. One route pattern per successful departure.
      The painted board is covered and redrawn so the current pattern shows. */
-  var TRAIN_COUNT = inspection ? 2 : rescue ? 1 : 5;
+  var TRAIN_COUNT = inspection ? 2 : rescue ? 7 : 5;
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
   var RECOVERY_TIME = 1.8;
-  var SABOTEUR_AFTER = 2;
+  var SABOTEUR_AFTER = rescue ? 0 : 2;
   var PATTERNS = [
     [0, 1, 0, 1, 0],
     [1, 0, 1, 0, 1],
@@ -53,10 +51,11 @@
     document.getElementById('tower-stage-title').textContent = inspection ? 'Clear the Points' : 'Send the Rescue Train';
     document.getElementById('tower-goal').textContent = inspection
       ? 'Use three switches to match the board before each inspection train reaches the junction. Clear both incoming trains.'
-      : 'Match the board to clear the service spur first. Then set the new pattern for the rescue train.';
-    document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'The rescue train is away';
+      : 'Guide seven rescue trains through the junction. Match all five switches to each train’s board. The Nazi opponent starts changing switches during the first train’s approach.';
+    document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'All seven rescue trains are away';
     PATTERNS = inspection ? [[0, 1, 1, 0, 0], [1, 0, 0, 1, 0]]
-      : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0]];
+      : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0], [0, 0, 1, 1, 0],
+         [1, 1, 0, 0, 1], [0, 1, 1, 0, 1], [1, 0, 0, 1, 0], [1, 1, 0, 1, 0]];
   }
   var LEVER_X = inspection ? [300, 640, 980] : [210, 435, 640, 845, 1050];
   if (inspection) PATTERNS = PATTERNS.map(function (pattern) { return pattern.slice(0, 3); });
@@ -236,8 +235,7 @@
   }
 
   function renderHud() {
-    var line = rescue && !spurCleared ? 'Clear service spur'
-        : departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
+    var line = departures + ' / ' + TRAIN_COUNT + ' · ' + misses;
     if (missesEl.textContent !== line) missesEl.textContent = line;
     arrivalEl.textContent = state === 'depart' ? 'Passing' : state === 'win' ? 'Clear'
       : Math.max(0, (SWITCH_X - TRAIN_W - trainX) / APPROACH_SPEED).toFixed(1) + 's';
@@ -260,8 +258,6 @@
   }
 
   function resetPuzzle() {
-    alignedFor = 0;
-    spurCleared = false;
     levers = LEVER_X.map(function () { return 1; });
     activeLever = 0;
     patternIndex = 0;
@@ -346,7 +342,7 @@
     if (state === 'win' || state === 'lose') return;
     seconds = elapsedSeconds();
     state = 'win';
-    var result = inspection ? 'Both routes cleared in ' : rescue ? 'Rescue train sent in ' : 'Five trains away in ';
+    var result = inspection ? 'Both routes cleared in ' : rescue ? 'Seven rescue trains sent in ' : 'Five trains away in ';
     winTimeEl.textContent = result + seconds + (seconds === 1 ? ' second.' : ' seconds.');
     winSheet.hidden = false;
     say(winTimeEl.textContent);
@@ -419,12 +415,12 @@
     }
   }
 
-  /* After two departures, throw one random lever on the approach clock.
+  /* Level 3 sabotages from the first approach; level 2 starts after two departures.
      The lever changes on that clock. The figure only shows who did it. */
   function updateSoldier(dt) {
     var index;
     var mark;
-    if (rescue ? !spurCleared : inspection || departures < SABOTEUR_AFTER) return;
+    if (inspection || departures < SABOTEUR_AFTER) return;
     if (state === 'approach' && trainX + TRAIN_W < SWITCH_X) {
       flipTimer += dt;
       if (flipTimer >= FLIP_INTERVAL) {
@@ -504,25 +500,7 @@
   }
 
   function updateObjective(dt) {
-    if (inspection || !rescue || spurCleared) {
-      updateTrain(dt);
-      return;
-    }
-    trainX = Math.min(-40, trainX + APPROACH_SPEED * dt);
-    if (!matches()) {
-      alignedFor = 0;
-      return;
-    }
-    alignedFor += dt;
-    if (alignedFor < 3) return;
-    alignedFor = 0;
-    spurCleared = true;
-    patternIndex++;
-    var waitingTrainX = trainX;
-    armNextTrain();
-    trainX = waitingTrainX;
-    soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
-    say('The service spur is clear. Set the departure pattern.');
+    updateTrain(dt);
   }
 
   function updateTrent(dt) {
