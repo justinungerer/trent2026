@@ -1,5 +1,5 @@
 /* Chapter 9 — The Wrapping Line.
-   Thirty percent round times and proportionally faster belt arrivals.
+   Thirty percent round times, with packages moving at half the previous speed.
    Wrap intact boxes, avoid damaged boxes, and fill the level objective.
    Painted sprites live in art/. */
 'use strict';
@@ -39,7 +39,7 @@
   document.getElementById('round-limit').textContent = 'You have ' + ROUND_SECONDS + ' seconds per round.';
   var TARGET = 456;
   var MEET = 26;
-  var SPEED = 232 / 0.3;
+  var SPEED = (232 / 0.3) * 0.5;
   var INTERVAL = 0.8 * 0.3;
   var FIRST_SPAWN = 0.4 * 0.3;
   var LANES = [150, 206, 262, 318];
