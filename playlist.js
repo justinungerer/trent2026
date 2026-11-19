@@ -46,5 +46,9 @@
     return { next: next, sync: sync };
   }
 
-  window.TrentPlaylist = { files: files.slice(), createPlayer: createPlayer };
+  window.TrentPlaylist = {
+    files: files.slice(),
+    bossFile: '../metallica-enter-sandman.mp3',
+    createPlayer: createPlayer
+  };
 })();

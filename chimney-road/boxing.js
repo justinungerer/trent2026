@@ -62,9 +62,11 @@
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
       modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. Switch sides after three hits. Land three punches in a row to earn an Uppercut. It stuns him when he has been awake for at least three seconds after the last stun. Missing or taking a hit resets the streak. Every punch has a two-second warning with two flashes. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
+      window.dispatchEvent(new CustomEvent('trent:boss-music', { detail: true }));
       sync();
     }
     function stop() {
+      if (!host.hidden) window.dispatchEvent(new CustomEvent('trent:boss-music', { detail: false }));
       clearDefense();
       host.hidden = true;if (bout) bout.mode = 'off';
       canvas.style.filter = '';
@@ -570,6 +572,7 @@
     get('box-start').onclick=function(){
       if(bout.mode==='lost')reset();
       bout.mode='fight';get('box-sheet').hidden=true;sync();
+      window.dispatchEvent(new CustomEvent('trent:boss-music', { detail: true }));
     };
     document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); });
     window.addEventListener('blur', clearDefense);

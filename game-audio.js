@@ -11,13 +11,37 @@
   } catch (error) {}
   var music = campaignMusic ? null : new Audio();
   var wantsMusic = false;
+  var bossMusic = false;
+  var previousTrack = null;
   var gate = null;
   var orientation = window.TrentOrientation;
   var landscape = orientation.gameUsesLandscape(name);
   if (music) music.volume = 0.35;
   var player = campaignMusic ? { sync: campaignMusic.sync } : window.TrentPlaylist.createPlayer(music, function () {
     return !blocked() && !document.hidden && wantsMusic && parentMusicEnabled();
+  }, function () {
+    return bossMusic ? window.TrentPlaylist.bossFile : previousTrack;
   });
+
+  function setBossMusic(active) {
+    if (campaignMusic) {
+      if (active) campaignMusic.startBoss();
+      else campaignMusic.endBoss();
+      return;
+    }
+    if (bossMusic === active) {
+      sync();
+      return;
+    }
+    if (active) previousTrack = music.src;
+    bossMusic = active;
+    player.next();
+    if (!active) previousTrack = null;
+  }
+
+  if (name === 'chimney-road') {
+    window.addEventListener('trent:boss-music', function (event) { setBossMusic(event.detail); });
+  }
 
   function parentMusicEnabled() {
     try {

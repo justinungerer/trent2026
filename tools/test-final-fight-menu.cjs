@@ -107,6 +107,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await page.waitForFunction(() => document.querySelector('#game').src.includes('stage=final-fight'), null, { polling: 50 });
     const frame = page.frameLocator('#game');
     await frame.locator('#box-start').waitFor();
+    assert.match(await page.locator('#soundtrack').getAttribute('src'), /\/metallica-enter-sandman\.mp3$/);
     assert.equal(await frame.locator('#box-title').textContent(), 'Hitler guards the sleigh');
     assert.equal(await frame.locator('#start-sheet').isVisible(), false);
     assert.deepEqual(await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
@@ -156,6 +157,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { polling: 50 });
     assert.equal(await page.evaluate(() => localStorage.getItem(PIN_KEY)), savedPin);
     assert.equal(await page.locator('#ending').isHidden(), true);
+    assert.doesNotMatch(await page.locator('#soundtrack').getAttribute('src'), /enter-sandman/);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.evaluate(() => showChapterMenu(10, false, true));
     await page.locator('#test-mode').click();

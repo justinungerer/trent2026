@@ -17,7 +17,7 @@ The opponent guards one side at a time and sidesteps every punch aimed at that s
 
 Trent starts without an uppercut charge. Every three consecutive regular hits earns one star. After three regular hits in a row on the same side, the opponent automatically dodges that side. The opposite side is open, and repeated hits can land while he is stunned. A missed punch or a hit on Trent resets the streak. An uppercut spends a star, deals 18 damage through either guard, and stuns the opponent for three seconds, with stars above his head. For three seconds after waking, further uppercuts deal damage without stunning him. His nose starts bleeding at 75% health, one eye bruises at 50%, and more bruises and cuts appear at 25%. The injuries build through the bout.
 
-The opponent has 2,120 health and attacks more quickly as it falls. Losing offers a full-bout retry. Defeating him triggers the campaign completion and closing film. Music continues from the current level through the fight. A successful WebKit test bout took about two minutes and five seconds. Pausing, hiding the tab, or turning the phone to portrait freezes fight progress. The quiz bonus grants fresh additional player health when retrying the bout.
+The opponent has 2,120 health and attacks more quickly as it falls. Losing offers a full-bout retry. Defeating him triggers the campaign completion and closing film. Metallica’s “Enter Sandman” is the fixed track for the final fight, including standalone and practice play. A successful WebKit test bout took about two minutes and five seconds. Pausing, hiding the tab, or turning the phone to portrait freezes fight progress. The quiz bonus grants fresh additional player health when retrying the bout.
 
 ## Verification
 

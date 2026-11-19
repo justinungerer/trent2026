@@ -461,6 +461,7 @@ function clearOpeningFilm() {
 }
 
 function closeMission() {
+  if (window.TrentMusic) window.TrentMusic.endBoss();
   pendingMissionUrl = '';
   var menuButton = document.getElementById('mission-menu');
   menuButton.hidden = true;

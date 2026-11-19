@@ -6,6 +6,7 @@ soundtrack.volume = 0.35;
 let wantsMusic = true;
 let musicSegment = 'opening';
 let segmentTrack = '01-jingle-bells.mp3';
+let beforeBoss = null;
 const playlistPlayer = window.TrentPlaylist.createPlayer(soundtrack, function () {
   return wantsMusic && !musicBlocked();
 }, function () { return segmentTrack; });
@@ -47,7 +48,21 @@ function startMusicSegment(key, fixedTrack) {
   playlistPlayer.next();
 }
 
+function startBossMusic() {
+  if (!beforeBoss) beforeBoss = { segment: musicSegment, track: soundtrack.src };
+  startMusicSegment('boss:chimney', window.TrentPlaylist.bossFile);
+}
+
+function endBossMusic() {
+  if (!beforeBoss) return;
+  const previous = beforeBoss;
+  beforeBoss = null;
+  if (musicSegment === 'boss:chimney') startMusicSegment(previous.segment, previous.track);
+}
+
 window.TrentMusic = {
+  startBoss: startBossMusic,
+  endBoss: endBossMusic,
   enabled: function () { return wantsMusic; },
   sync: syncMusic,
   startScene: syncMusic,
