@@ -8,11 +8,11 @@
     [.17, -.12, 8], [.05, -.18, 10], [.24, -.02, 5], [.16, .18, 6],
     [-.02, .25, 9], [.08, .28, 4], [.30, -.13, 4], [.21, .12, 3]
   ];
-  var HITS_PER_STAR = 8;
+  var HITS_PER_STAR = 5;
   var PUNCHES = {
-    left: { windup: .09, recovery: .20, damage: 2, cost: 6, side: -1 },
-    right: { windup: .14, recovery: .23, damage: 3, cost: 8, side: 1 },
-    upper: { windup: .22, recovery: .24, damage: 6, cost: 12, side: 1 }
+    left: { windup: .09, recovery: .20, damage: 4, cost: 6, side: -1 },
+    right: { windup: .14, recovery: .23, damage: 6, cost: 8, side: 1 },
+    upper: { windup: .22, recovery: .24, damage: 18, cost: 12, side: 1 }
   };
   function ready(image) { return image.complete && image.naturalWidth > 0; }
   window.TrentBoxing = { create: function (options) {
@@ -34,7 +34,7 @@
       bout = { mode: 'intro', hp: 20 + (window.TrentMissionBonus || 0), max: 20 + (window.TrentMissionBonus || 0), enemy: MAX_ENEMY_HP,
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
         dodge: 0, dodgeTime: 0, dodgeCool: 0, block: false,
-        punch: null, queuedPunch: null, stars: 1, hitsTowardStar: 0,
+        punch: null, queuedPunch: null, stars: 0, punchStreak: 0,
         guardSide: -1, evadeSide: 0, evadeTime: 0, playerHitTime: 0, playerDamage: 0,
         hitVision: 0, hitVisionDuration: 0, hitSide: 1,
         counterHits: 0, counterLimit: 0, flash: 0, lastImpact: null,
@@ -46,7 +46,7 @@
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land eight punches to earn another star. Dodge his wind-up or block a straight punch to open both sides.', 'Fight');
+      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land five punches in a row to earn a star. Missing or taking a hit resets the streak. Dodge his wind-up or block a straight punch to open both sides.', 'Fight');
       sync();
     }
     function stop() {
@@ -79,7 +79,7 @@
     function startPunch(request) {
       var kind = request.kind, move = PUNCHES[kind];
       if (kind === 'upper' && !bout.stars) {
-        bout.cue = 'Land ' + (HITS_PER_STAR - bout.hitsTowardStar) + ' punches for a star.';
+        bout.cue = 'Land ' + (HITS_PER_STAR - bout.punchStreak) + ' more in a row for a star.';
         sync();
         return;
       }
@@ -101,7 +101,8 @@
     }
     function resolvePunch(action, move) {
       if (action.evaded) {
-        bout.cue = 'He dodged the covered side.';
+        bout.cue = bout.punchStreak ? 'He dodged. Streak reset.' : 'He dodged the covered side.';
+        bout.punchStreak = 0;
         return;
       }
       var upper = action.kind === 'upper';
@@ -110,10 +111,10 @@
         bout.phase = 'stun';
         bout.timer = STUN_SECONDS;
         bout.evadeTime = 0;
-      } else if (++bout.hitsTowardStar >= HITS_PER_STAR) {
+      } else if (++bout.punchStreak >= HITS_PER_STAR) {
         earnedStar = bout.stars < 3;
         if (earnedStar) bout.stars++;
-        bout.hitsTowardStar = 0;
+        bout.punchStreak = 0;
       }
       bout.enemy = Math.max(0, bout.enemy - move.damage);
       if (bout.phase === 'recover') bout.counterHits++;
@@ -148,7 +149,8 @@
         bout.hitVision = bout.hitVisionDuration;
         bout.hitSide = bout.attack === 'right' ? -1 : 1;
         bout.stamina = Math.max(0, bout.stamina - 12);
-        bout.cue = 'Hit! Watch the next wind-up.';
+        bout.cue = bout.punchStreak ? 'Hit! Streak reset.' : 'Hit! Watch the next wind-up.';
+        bout.punchStreak = 0;
       } else {
         bout.cue = dodged ? 'Good dodge. Get ready to counter.' : 'Blocked. Get ready to counter.';
       }
@@ -209,7 +211,7 @@
       playerHit.textContent = '−' + bout.playerDamage + ' HP';
       var enemyPercent = bout.enemy > 0 ? Math.max(1, Math.floor(100 * bout.enemy / MAX_ENEMY_HP)) : 0;
       get('box-enemy-hp').textContent = enemyPercent + '%';
-      get('box-stars').textContent = bout.stars + '★';
+      get('box-stars').textContent = bout.stars ? bout.stars + '★' : bout.punchStreak + '/' + HITS_PER_STAR;
       get('box-uppercut').classList.toggle('charged', bout.stars > 0);
       get('box-clock').textContent = Math.floor(bout.time/60) + ':' + String(Math.floor(bout.time%60)).padStart(2,'0') + ' · Stamina ' + Math.round(bout.stamina);
       var guard = guardedSide();

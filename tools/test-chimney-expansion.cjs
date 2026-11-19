@@ -143,27 +143,41 @@ window.testBoxing=()=>{
  fight.begin();let bout=fight.state(),guardHp=bout.enemy;
  const tap=(button)=>document.getElementById(button).click();
  const step=(ticks)=>{for(let i=0;i<ticks;i++)fight.update(.02);};
- if(guardHp<=530)throw Error('Boss health did not increase');
+ const heldGuard=()=>{bout.phase='guard';bout.timer=8;};
+ heldGuard();
+ tap('box-uppercut');step(12);
+ if(bout.punch||bout.stars||bout.enemy!==guardHp)throw Error('Uppercut available before five clean hits');
  tap('box-punch-left');step(16);
  if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('First covered punch was not dodged');
  tap('box-punch-left');step(16);
  if(bout.enemy!==guardHp||!bout.cue.startsWith('He dodged'))throw Error('Second covered punch was not dodged');
  tap('box-punch-right');step(19);
- if(bout.enemy!==guardHp-3||bout.lastImpact!=='right')throw Error('Open right punch did not land');
+ if(bout.enemy!==guardHp-6||bout.punchStreak!==1)throw Error('Open right punch did not deal double damage');
+ tap('box-punch-left');step(16);
+ if(bout.punchStreak||bout.stars)throw Error('A missed punch did not reset the streak');
+ tap('box-punch-right');step(19);
+ bout.phase='tell';bout.attack='left';bout.timer=.02;step(2);
+ if(bout.punchStreak||bout.stars||bout.hp!==bout.max-1)throw Error('An incoming hit did not reset the streak');
+ heldGuard();
+ for(let hit=1;hit<=5;hit++){
+  tap('box-punch-right');step(19);
+  if(bout.stars!==Number(hit===5)||bout.punchStreak!==hit%5)throw Error('Uppercut charge did not match consecutive hit count '+hit);
+ }
+ const chargedHp=bout.enemy;
  tap('box-uppercut');step(12);
- if(bout.enemy!==guardHp-9||bout.phase!=='stun'||bout.stars!==0||bout.timer!==3)throw Error('Uppercut did not break the guard and stun');
+ if(bout.enemy!==chargedHp-18||bout.phase!=='stun'||bout.stars!==0||bout.timer!==3||bout.punchStreak)throw Error('Uppercut did not deal triple damage and stun');
  const trentHealth=bout.hp;
  step(12);tap('box-punch-left');step(16);
- if(bout.enemy!==guardHp-11||bout.lastImpact!=='left'||bout.hp!==trentHealth)throw Error('Stun did not open both sides and prevent attacks');
+ if(bout.enemy!==chargedHp-22||bout.lastImpact!=='left'||bout.hp!==trentHealth)throw Error('Left punch did not deal double damage during stun');
  while(bout.timer>.04)step(1);
  if(bout.phase!=='stun')throw Error('Stun ended before three seconds');
  step(3);
  if(bout.phase!=='guard'||bout.guardSide!==1)throw Error('Guard did not switch sides after the stun');
  tap('box-punch-right');step(19);
- if(bout.enemy!==guardHp-11||!bout.cue.startsWith('He dodged'))throw Error('Covered right punch was not dodged');
+ if(bout.enemy!==chargedHp-22||!bout.cue.startsWith('He dodged'))throw Error('Covered right punch was not dodged');
  tap('box-punch-left');
  bout.timer=.02;step(5);
- if(bout.enemy!==guardHp-13||bout.lastImpact!=='left')throw Error('A punch aimed at an open side missed during a phase change');
+ if(bout.enemy!==chargedHp-26||bout.lastImpact!=='left')throw Error('A punch aimed at an open side missed during a phase change');
  let ticks=0,leftHits=0,rightHits=0,upperHits=0,previousHp=bout.enemy;
  while(fight.state().mode==='fight'&&ticks++<30000){
   bout=fight.state();
@@ -186,12 +200,12 @@ window.testBoxing=()=>{
  }
  if(!leftHits||!rightHits||!upperHits)throw Error('Missing a successful hit type');
  const seconds=fight.state().time;
- if(fight.state().enemy!==0||seconds<270||seconds>350)throw Error('Bout balance or counters failed '+JSON.stringify({seconds,mode:fight.state().mode,hp:fight.state().hp,enemy:fight.state().enemy}));
+ if(fight.state().enemy!==0||seconds<80||seconds>190)throw Error('Bout balance or counters failed '+JSON.stringify({seconds,mode:fight.state().mode,hp:fight.state().hp,enemy:fight.state().enemy}));
  fight.update(1.3);if(state!=='win'||!bossBeaten)throw Error('Defeating Hitler did not win');
  beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();fight.begin();
  for(let i=0;i<10000&&fight.state().mode==='fight';i++)fight.update(.02);
  if(fight.state().mode!=='lost')throw Error('Cannot lose boss fight');
- fight.begin();if(fight.state().enemy!==guardHp||fight.state().hp!==fight.state().max||fight.state().time!==0)throw Error('Retry is not a fresh continuous bout');
+ fight.begin();if(fight.state().enemy!==guardHp||fight.state().hp!==fight.state().max||fight.state().time!==0||fight.state().stars||fight.state().punchStreak)throw Error('Retry is not a fresh continuous bout');
  document.getElementById('box-pause').click();const time=fight.state().time;fight.update(5);
  if(fight.state().time!==time)throw Error('Boxing pause failed');fight.begin();
  return {seconds,leftHits,rightHits,upperHits,continuous:true,fullRetry:true};

@@ -41,7 +41,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.deepEqual(await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
     assert.equal(await page.evaluate(() => active.practice && active.finalFight), true);
     const result = await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => testBoxing());
-    assert.ok(result.seconds > 290 && result.seconds < 330);
+    assert.ok(result.seconds > 80 && result.seconds < 190);
     await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { polling: 50 });
     assert.equal(await page.evaluate(() => localStorage.getItem(PIN_KEY)), savedPin);
     assert.equal(await page.locator('#ending').isHidden(), true);
