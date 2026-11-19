@@ -1,7 +1,13 @@
 'use strict';
 (function () {
-  var MAX_ENEMY_HP = 1940;
-  var STUN_SECONDS = 1.5;
+  var MAX_ENEMY_HP = 2120;
+  var STUN_SECONDS = 3;
+  var HIT_BLUR_SECONDS = { straight: 1, left: 2, right: 2, upper: 3 };
+  var SPLASH_DROPS = [
+    [0, 0, 33], [.05, -.07, 22], [-.04, .09, 25], [.12, .07, 10],
+    [.17, -.12, 8], [.05, -.18, 10], [.24, -.02, 5], [.16, .18, 6],
+    [-.02, .25, 9], [.08, .28, 4], [.30, -.13, 4], [.21, .12, 3]
+  ];
   var HITS_PER_STAR = 8;
   var PUNCHES = {
     left: { windup: .09, recovery: .20, damage: 2, cost: 6, side: -1 },
@@ -22,12 +28,15 @@
     document.querySelector('.stage').appendChild(host);
     var get = function (id) { return host.querySelector('#' + id); };
     var bout = null;
+    var canvas = document.getElementById('roofs');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     function reset() {
       bout = { mode: 'intro', hp: 20 + (window.TrentMissionBonus || 0), max: 20 + (window.TrentMissionBonus || 0), enemy: MAX_ENEMY_HP,
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
         dodge: 0, dodgeTime: 0, dodgeCool: 0, block: false,
         punch: null, queuedPunch: null, stars: 1, hitsTowardStar: 0,
         guardSide: -1, evadeSide: 0, evadeTime: 0, playerHitTime: 0, playerDamage: 0,
+        hitVision: 0, hitVisionDuration: 0, hitSide: 1,
         counterHits: 0, counterLimit: 0, flash: 0, lastImpact: null,
         victory: 0, cue: 'Punch the highlighted side.' };
     }
@@ -42,6 +51,7 @@
     }
     function stop() {
       host.hidden = true;if (bout) bout.mode = 'off';
+      canvas.style.filter = '';
       document.querySelector('.move').hidden = false;document.getElementById('jump').hidden = false;document.querySelector('.hud').hidden = false;
     }
     function dodge(side) {
@@ -134,6 +144,9 @@
         bout.playerDamage = Math.min(bout.hp, bout.attack === 'upper' ? 2 : 1);
         bout.hp -= bout.playerDamage;
         bout.playerHitTime = .55;
+        bout.hitVisionDuration = Math.max(bout.hitVision, HIT_BLUR_SECONDS[bout.attack]);
+        bout.hitVision = bout.hitVisionDuration;
+        bout.hitSide = bout.attack === 'right' ? -1 : 1;
         bout.stamina = Math.max(0, bout.stamina - 12);
         bout.cue = 'Hit! Watch the next wind-up.';
       } else {
@@ -143,6 +156,9 @@
     }
     function update(dt) {
       if (!bout) return;
+      if (bout.mode === 'fight' || bout.mode === 'lost' || bout.mode === 'victory') {
+        bout.hitVision = Math.max(0, bout.hitVision - dt);
+      }
       if (bout.mode === 'victory') { bout.victory -= dt;if (bout.victory <= 0) { stop();options.onWin(); }return; }
       if (bout.mode !== 'fight') return;
       bout.time += dt;bout.stamina = Math.min(100, bout.stamina + (bout.block ? 5 : 18) * dt);
@@ -260,6 +276,56 @@
       ctx.drawImage(hero, frameWidth, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
       ctx.restore();
     }
+    function drawStunStars(ctx, x, y, scale) {
+      var orbit = reduceMotion.matches ? 0 : (STUN_SECONDS - bout.timer) * 5;
+      ctx.fillStyle = '#ffdc73';
+      ctx.strokeStyle = '#69401b';
+      ctx.lineWidth = Math.max(1, 1.3 * scale);
+      for (var star = 0; star < 3; star++) {
+        var angle = orbit + star * Math.PI * 2 / 3;
+        var starX = x + Math.cos(angle) * 34 * scale;
+        var starY = y + Math.sin(angle) * 6 * scale;
+        ctx.beginPath();
+        for (var point = 0; point < 10; point++) {
+          var ray = point * Math.PI / 5 - Math.PI / 2;
+          var radius = (point % 2 === 0 ? 8 : 3.6) * scale;
+          var tipX = starX + Math.cos(ray) * radius, tipY = starY + Math.sin(ray) * radius;
+          if (point === 0) ctx.moveTo(tipX, tipY);
+          else ctx.lineTo(tipX, tipY);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    function drawHitSplash(ctx, width, height) {
+      if (!bout || bout.hitVision <= 0) {
+        if (canvas.style.filter) canvas.style.filter = '';
+        return;
+      }
+      var remaining = bout.hitVision / bout.hitVisionDuration;
+      var fade = Math.min(1, bout.hitVision / .65);
+      var blur = (1 + 4 * remaining) * fade;
+      canvas.style.filter = 'blur(' + blur.toFixed(2) + 'px)';
+      var scale = height / 390, side = bout.hitSide;
+      var spread = reduceMotion.matches ? 1 : Math.min(1, .65 + (1 - remaining) * 2.5);
+      var originX = width * (side > 0 ? .085 : .915);
+      var originY = height * .55;
+
+      ctx.save();
+      ctx.globalAlpha = .72 * fade;
+      ctx.fillStyle = '#821720';
+      ctx.beginPath();
+      SPLASH_DROPS.forEach(function (drop) {
+        var x = originX + side * width * drop[0] * spread;
+        var y = originY + height * drop[1] * spread;
+        var size = drop[2] * scale;
+        ctx.moveTo(x + Math.cos(.56) * size, y + side * Math.sin(.56) * size);
+        ctx.ellipse(x, y, size, size * .64, side * .56, 0, Math.PI * 2);
+      });
+      ctx.fill();
+      ctx.restore();
+    }
     function draw(ctx, width, height, dpr) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = '#101b2c';
@@ -272,7 +338,7 @@
         if (bout.mode === 'victory') enemyFrame = 5;
         else if (bout.phase === 'tell') enemyFrame = bout.attack === 'right' ? 2 : 1;
         else if (bout.phase === 'strike') enemyFrame = bout.attack === 'right' ? 4 : 3;
-        else if (bout.phase === 'stun') enemyFrame = bout.timer > 1.0 ? 5 : 0;
+        else if (bout.phase === 'stun') enemyFrame = bout.timer > STUN_SECONDS - .5 ? 5 : 0;
         if (bout.evadeTime > 0) {
           enemyFrame = bout.evadeSide < 0 ? 2 : 1;
           enemyShift = bout.evadeSide * 66 * Math.sin(Math.PI * Math.min(1, bout.evadeTime / .42));
@@ -282,6 +348,9 @@
       var enemyX = center + (enemyShift + recoil) * scale;
       enemySprite(ctx, enemyFrame, enemyX, (435 - Math.abs(recoil) * .6) * scale, 380 * scale,
         bout && bout.enemy <= MAX_ENEMY_HP / 2);
+      if (bout && bout.phase === 'stun' && bout.mode !== 'victory') {
+        drawStunStars(ctx, enemyX, (enemyFrame === 5 ? 94 : 49) * scale, scale);
+      }
       var guard = bout && guardedSide();
       if (bout && bout.mode === 'fight' && guard) {
         var coveredX = enemyX + guard * 29 * scale;
@@ -304,7 +373,7 @@
         lunge = extension * (action.kind === 'upper' ? 53 : 39);
         heroShift = action.offset * (1 - reach) - move.side * extension * 9;
       }
-      if (bout && bout.playerHitTime > .35) {
+      if (bout && bout.playerHitTime > .35 && !reduceMotion.matches) {
         heroShift += Math.sin((.55 - bout.playerHitTime) * 50) * (bout.playerHitTime - .35) * 45;
       }
       var heroX = center + heroShift * scale;
@@ -330,6 +399,7 @@
         }
         ctx.stroke();
       }
+      drawHitSplash(ctx, width, height);
       if (bout) {
         ctx.fillStyle = '#371d20';
         var gaugeTop = Math.max(28, 32 * scale);

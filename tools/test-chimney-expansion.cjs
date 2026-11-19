@@ -119,6 +119,19 @@ window.testIncomingBoxingDamage=()=>{
   const badge=document.getElementById('box-player-hit');
   if(sample.loss&&(badge.hidden||badge.textContent!=='−'+sample.loss+' HP'))throw Error('Player damage feedback was not shown');
   if(!sample.loss&&!badge.hidden)throw Error('Damage feedback shown for a successful defense');
+  const expectedBlur=sample.loss ? {straight:1,left:2,right:2,upper:3}[sample.attack] : 0;
+  if(bout.hitVisionDuration!==expectedBlur)throw Error('Incorrect blur duration for '+JSON.stringify(sample));
+  render(0);
+  if(Boolean(canvas.style.filter)!==Boolean(expectedBlur))throw Error('Blur rendered without a hit or missing after impact');
+  if(expectedBlur){
+   bout.phase='stun';bout.timer=5;
+   fight.update(bout.hitVision-.05);
+   render(0);
+   if(!canvas.style.filter)throw Error('Blur ended early');
+   fight.update(.06);
+   render(0);
+   if(canvas.style.filter)throw Error('Blur persisted after the hit effect ended');
+  }
   results.push(sample);
  }
  return {attackAndDefenseCases:results.length};
@@ -138,11 +151,13 @@ window.testBoxing=()=>{
  tap('box-punch-right');step(19);
  if(bout.enemy!==guardHp-3||bout.lastImpact!=='right')throw Error('Open right punch did not land');
  tap('box-uppercut');step(12);
- if(bout.enemy!==guardHp-9||bout.phase!=='stun'||bout.stars!==0)throw Error('Uppercut did not break the guard and stun');
+ if(bout.enemy!==guardHp-9||bout.phase!=='stun'||bout.stars!==0||bout.timer!==3)throw Error('Uppercut did not break the guard and stun');
  const trentHealth=bout.hp;
  step(12);tap('box-punch-left');step(16);
  if(bout.enemy!==guardHp-11||bout.lastImpact!=='left'||bout.hp!==trentHealth)throw Error('Stun did not open both sides and prevent attacks');
- while(bout.phase==='stun')step(1);
+ while(bout.timer>.04)step(1);
+ if(bout.phase!=='stun')throw Error('Stun ended before three seconds');
+ step(3);
  if(bout.phase!=='guard'||bout.guardSide!==1)throw Error('Guard did not switch sides after the stun');
  tap('box-punch-right');step(19);
  if(bout.enemy!==guardHp-11||!bout.cue.startsWith('He dodged'))throw Error('Covered right punch was not dodged');
