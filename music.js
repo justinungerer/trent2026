@@ -4,14 +4,14 @@ const turnGate = document.getElementById('turn-gate');
 const musicButton = document.getElementById('music');
 soundtrack.volume = 0.35;
 let wantsMusic = true;
-let introPlaying = false;
-let introTrack = null;
+let musicSegment = 'opening';
+let segmentTrack = '01-jingle-bells.mp3';
 const playlistPlayer = window.TrentPlaylist.createPlayer(soundtrack, function () {
   return wantsMusic && !musicBlocked();
-}, function () { return introTrack; });
+}, function () { return segmentTrack; });
 
 function musicBlocked() {
-  return document.hidden || document.body.classList.contains('playing') || !turnGate.hidden;
+  return document.hidden || !turnGate.hidden;
 }
 
 function updateMusic() {
@@ -38,24 +38,27 @@ document.addEventListener('pointerdown', syncMusic);
 document.addEventListener('keydown', syncMusic);
 document.addEventListener('visibilitychange', syncMusic);
 
+// A segment spans its film, instructions, gameplay, and completion screens.
+// Keeping the same key preserves the source and playback position on retries.
+function startMusicSegment(key, fixedTrack) {
+  if (musicSegment === key) { syncMusic(); return; }
+  musicSegment = key;
+  segmentTrack = fixedTrack || null;
+  playlistPlayer.next();
+}
+
 window.TrentMusic = {
   enabled: function () { return wantsMusic; },
-  startScene: function () {
-    introPlaying = false;
-    introTrack = null;
-    playlistPlayer.next();
-  },
+  sync: syncMusic,
+  startScene: syncMusic,
+  startChapter: function (id) { startMusicSegment('chapter:' + id); },
+  startLevel: function (chapterId, levelId) { startMusicSegment('level:' + chapterId + ':' + levelId); },
   startIntro: function (filmId) {
-    introPlaying = true;
-    introTrack = filmId === 'opening' ? '12-let-it-snow.mp3' : null;
-    playlistPlayer.next();
+    if (filmId === 'cast' || filmId === 'opening') startMusicSegment('opening', '01-jingle-bells.mp3');
+    else if (filmId === 'ending') startMusicSegment('ending');
+    else startMusicSegment('chapter:' + filmId);
   },
-  stopIntro: function () {
-    if (!introPlaying) return;
-    introPlaying = false;
-    introTrack = null;
-    playlistPlayer.next();
-  }
+  stopIntro: syncMusic
 };
 
 window.TrentSfx = {

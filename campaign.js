@@ -1005,7 +1005,10 @@ function playIntro(chapter, done) {
     last = performance.now();
   });
   updateVideo();
-  if (window.TrentMusic) window.TrentMusic.startIntro(chapter.id);
+  if (window.TrentMusic) {
+    if (chapter.musicLevel) window.TrentMusic.startLevel(chapter.id, chapter.musicLevel);
+    else window.TrentMusic.startChapter(chapter.id);
+  }
   introTitle.focus({ preventScroll: true });
   introDone = function () {
     if (introToken !== token) return;
@@ -1062,6 +1065,7 @@ function launchMissionLevel(run) {
   if (level) {
     playIntro({
       id: run.chapter.id,
+      musicLevel: level.id,
       kicker: run.chapter.kicker + ' · Level ' + (run.levelIndex + 1),
       title: level.title,
       lines: level.lines,
@@ -1080,6 +1084,7 @@ function launchMissionLevel(run) {
 
 function openMissionLevel(run, stage) {
   var chapter = run.chapter;
+  if (window.TrentMusic) window.TrentMusic.startLevel(chapter.id, stage || 'main');
   run.runId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
   if (chapter.id === 'shelf') {
     window.TrentChapter6.startMission(run.score, {

@@ -3,13 +3,19 @@
   var name = document.documentElement.getAttribute('data-game');
   if (!name) return;
   var base = '../assets/audio/' + name;
-  var music = new Audio();
+  var campaignMusic = null;
+  try {
+    if (window.parent !== window && window.parent.TrentMusic && window.parent.TrentMusic.sync) {
+      campaignMusic = window.parent.TrentMusic;
+    }
+  } catch (error) {}
+  var music = campaignMusic ? null : new Audio();
   var wantsMusic = false;
   var gate = null;
   var orientation = window.TrentOrientation;
   var landscape = orientation.gameUsesLandscape(name);
-  music.volume = 0.35;
-  var player = window.TrentPlaylist.createPlayer(music, function () {
+  if (music) music.volume = 0.35;
+  var player = campaignMusic ? { sync: campaignMusic.sync } : window.TrentPlaylist.createPlayer(music, function () {
     return !blocked() && !document.hidden && wantsMusic && parentMusicEnabled();
   });
 
@@ -40,12 +46,7 @@
 
   function start(event) {
     if (blocked()) return;
-    var wasPlaying = wantsMusic;
     wantsMusic = true;
-    var button = event.target.closest && event.target.closest('button');
-    if (wasPlaying && button &&
-        button.matches('#start, #action, #retry, #retry-lose, #again, #out-retry, #restart') &&
-        !/^(resume|continue|next)/i.test(button.textContent.trim())) player.next();
     sync();
   }
 
@@ -71,7 +72,7 @@
   document.addEventListener('keydown', start);
   document.addEventListener('visibilitychange', sync);
   window.addEventListener('pagehide', function () {
-    music.pause();
+    if (music) music.pause();
     if (window.parent !== window) {
       try { window.parent.removeEventListener('trent:musicchange', sync); } catch (error) {}
     }
@@ -86,7 +87,7 @@
   if (window.parent !== window) {
     try { window.parent.addEventListener('trent:musicchange', sync); } catch (error) {}
   }
-  player.next();
+  if (!campaignMusic) player.next();
   sync();
 
   window.TrentSfx = {

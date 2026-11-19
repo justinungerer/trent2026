@@ -23,7 +23,7 @@
   ];
 
   function createPlayer(audio, canPlay, selectFile) {
-    audio.loop = false;
+    audio.loop = true;
     audio.preload = 'metadata';
 
     function sync() {
@@ -34,11 +34,15 @@
     function next() {
       audio.pause();
       var selected = selectFile && selectFile();
-      audio.src = new URL(selected || files[Math.floor(Math.random() * files.length)], base).href;
+      var choices = files.filter(function (file) { return new URL(file, base).href !== audio.src; });
+      audio.src = new URL(selected || choices[Math.floor(Math.random() * choices.length)], base).href;
       sync();
     }
 
-    audio.addEventListener('ended', next);
+    audio.addEventListener('ended', function () {
+      audio.currentTime = 0;
+      sync();
+    });
     return { next: next, sync: sync };
   }
 
