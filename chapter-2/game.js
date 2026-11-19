@@ -9,6 +9,7 @@ const MAC_USES=2;
 const MAC_SECONDS=6+(window.TrentMissionBonus||0)*0.75;
 const MAC_SPEED=205;
 const FLEE_RANGE=145;
+const GUARD_RADIUS=12;
 const stage=new URLSearchParams(location.search).get('stage');
 const freight=stage==='freight-gate';
 const stable=stage==='the-stable-escape';
@@ -177,8 +178,9 @@ function sendMac(){
  if(mode!=='play'||!run.macUses||run.mac)return;
  const p=run.player;
  const target=nearestGuard(p);
- run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),until:run.time+MAC_SECONDS,
-  target, waypoint:null,pathDue:0};
+ if(!target)return;
+ run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),until:Infinity,
+  target,waypoint:null,pathDue:0,retreat:null};
  run.macUses--;
  announce('Mac is after the guards.');
  sync();
@@ -186,24 +188,24 @@ function sendMac(){
 macButton.onclick=sendMac;
 
 function nearestGuard(actor){
- return run.guards.reduce((nearest,guard)=>distance(actor,guard)<distance(actor,nearest)?guard:nearest);
+ return run.guards.reduce((nearest,guard)=>!nearest||distance(actor,guard)<distance(actor,nearest)?guard:nearest,null);
 }
 
-function clearDogPath(a,b){
+function clearPath(a,b,bodyRadius){
  const steps=Math.max(1,Math.ceil(distance(a,b)/8));
  for(let i=1;i<=steps;i++){
   const t=i/steps;
-  if(blocked(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,macRadius))return false;
+  if(blocked(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,bodyRadius))return false;
  }
  return true;
 }
 
-function nextDogWaypoint(mac,target){
- const pad=macRadius+4;
- const nodes=[mac,target,...shelves.flatMap(({x,y,w,h})=>[
+function nextWaypoint(actor,target,bodyRadius){
+ const pad=bodyRadius+4;
+ const nodes=[actor,target,...shelves.flatMap(({x,y,w,h})=>[
   {x:x-pad,y:y-pad},{x:x+w+pad,y:y-pad},
   {x:x-pad,y:y+h+pad},{x:x+w+pad,y:y+h+pad}
- ].filter(point=>!blocked(point.x,point.y,macRadius)))];
+ ].filter(point=>!blocked(point.x,point.y,bodyRadius)))];
  const costs=nodes.map(()=>Infinity), firstHop=[], visited=new Set();
  costs[0]=0;
  for(let step=0;step<nodes.length;step++){
@@ -216,13 +218,63 @@ function nextDogWaypoint(mac,target){
   visited.add(current);
   for(let i=1;i<nodes.length;i++){
    const cost=costs[current]+distance(nodes[current],nodes[i]);
-   if(!visited.has(i)&&cost<costs[i]&&clearDogPath(nodes[current],nodes[i])){
+   if(!visited.has(i)&&cost<costs[i]&&clearPath(nodes[current],nodes[i],bodyRadius)){
     costs[i]=cost;
     firstHop[i]=current===0?nodes[i]:firstHop[current];
    }
   }
  }
  return target;
+}
+function retreatPoint(guard,player){
+ const away=Math.atan2(guard.y-player.y,guard.x-player.x);
+ const choices=guard.route.map(([x,y])=>({x,y}));
+ for(const angle of [away,away+.8,away-.8,away+1.6,away-1.6]){
+  choices.push({x:clamp(guard.x+Math.cos(angle)*380,24,world.w-24),
+   y:clamp(guard.y+Math.sin(angle)*380,24,world.h-24)});
+ }
+ return choices.filter(point=>!blocked(point.x,point.y,GUARD_RADIUS))
+  .sort((a,b)=>distance(b,player)-distance(a,player))[0];
+}
+
+function moveAlongPath(actor,target,speed,dt,bodyRadius,stopDistance=3){
+ if(clearPath(actor,target,bodyRadius))actor.waypoint=null;
+ else if(!actor.waypoint||run.time>=actor.pathDue||distance(actor,actor.waypoint)<6){
+  actor.waypoint=nextWaypoint(actor,target,bodyRadius);
+  actor.pathDue=run.time+.25;
+ }
+ const aim=actor.waypoint||target;
+ const gap=distance(actor,aim);
+ if(gap<=(actor.waypoint?3:stopDistance))return;
+ const heading=Math.atan2(aim.y-actor.y,aim.x-actor.x);
+ if(!clearPath(actor,aim,bodyRadius)){
+  steer(actor,heading,speed,dt,bodyRadius);
+  return;
+ }
+ const step=Math.min(speed*dt,gap);
+ actor.angle=heading;
+ walk(actor,Math.cos(heading)*step,Math.sin(heading)*step,bodyRadius);
+}
+
+function updateMac(player,dt){
+ const mac=run.mac;
+ if(!mac)return;
+ if(mac.until<=run.time){
+  run.mac=null;
+  mac.target.waypoint=null;
+  sync();
+  return;
+ }
+ const target=mac.target;
+ const before={x:mac.x,y:mac.y};
+ moveAlongPath(mac,target,MAC_SPEED,dt,macRadius,30);
+ mac.running=distance(mac,before)>.1;
+ if(mac.until===Infinity&&distance(target,mac)<FLEE_RANGE&&!lineBlocked(target,mac)){
+  mac.until=run.time+MAC_SECONDS;
+  mac.retreat=retreatPoint(target,player);
+  target.waypoint=null;
+  announce('Mac chased off the nearest guard.');
+ }
 }
 const movement=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 window.addEventListener('keydown',event=>{
@@ -300,38 +352,18 @@ function update(dt){
   announce('Mine shock. Stunned for two seconds.');
  }
  run.prints=run.prints.filter(print=>print.until>run.time);
- if(run.mac&&run.mac.until<=run.time){
-  run.mac=null;
-  sync();
- }
- if(run.mac){
-  const mac=run.mac;
-  const target=nearestGuard(mac);
-  const before={x:mac.x,y:mac.y};
-  if(clearDogPath(mac,target))mac.waypoint=null;
-  else if(target!==mac.target||!mac.waypoint||run.time>=mac.pathDue||distance(mac,mac.waypoint)<7){
-   mac.waypoint=nextDogWaypoint(mac,target);
-   mac.pathDue=run.time+.25;
-  }
-  mac.target=target;
-  const aim=mac.waypoint||target;
-  const gap=distance(mac,aim);
-  if(gap>(mac.waypoint?3:23)){
-   const heading=Math.atan2(aim.y-mac.y,aim.x-mac.x);
-   if(clearDogPath(mac,aim)){
-    const step=Math.min(MAC_SPEED*dt,gap);
-    mac.angle=heading;
-    walk(mac,Math.cos(heading)*step,Math.sin(heading)*step,macRadius);
-   }else steer(mac,heading,MAC_SPEED,dt,macRadius);
-  }
-  mac.running=distance(mac,before)>.1;
- }
+ updateMac(p,dt);
  let spotted=false;
  for(const guard of run.guards){
-  guard.fleeing=Boolean(run.mac&&distance(guard,run.mac)<FLEE_RANGE&&!lineBlocked(guard,run.mac));
+  const mac=run.mac;
+  guard.fleeing=Boolean(mac&&guard===mac.target&&mac.until!==Infinity);
   if(guard.fleeing){
    guard.chase=false;
-   steer(guard,Math.atan2(guard.y-run.mac.y,guard.x-run.mac.x),155*guardPace,dt,12);
+   if(mac.retreat&&distance(guard,mac.retreat)>9){
+    moveAlongPath(guard,mac.retreat,155*guardPace,dt,GUARD_RADIUS,9);
+   }else{
+    steer(guard,Math.atan2(guard.y-p.y,guard.x-p.x),155*guardPace,dt,GUARD_RADIUS);
+   }
   }else if(sees(guard,p)){
    if(!guard.chase)spotted=true;
    guard.chase=true;
