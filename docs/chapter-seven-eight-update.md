@@ -15,7 +15,7 @@ Added 12 pixels above each chapter group after its divider. Existing space betwe
 - Collecting either map pauses the run and opens the full-screen map. Map above Shoot reopens it. Before collection, the button explains that a map must be found.
 - Exploration records from the start. Only visited floor cells and adjacent solid walls appear. Unvisited openings remain unexplored. A red arrow marks the player and heading. A discovered exit appears green.
 - Simulation and its clock stop while viewing the map. Closing preserves discoveries. Retrying resets discoveries and map possession.
-- All three enemy types patrol and approach at 0.75 their previous movement speeds. Player and projectile speeds remain unchanged.
+- Trent starts each Corridor level with five hit points plus any earned quiz bonus. Enemy patrol, approach, and retreat speeds are half their previous values. Player movement and projectile speeds are unchanged.
 - Enemy totals remain 52 / 60 / 78.
 
 ## Chapter 8 — Holding Camp

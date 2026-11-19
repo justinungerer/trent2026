@@ -26,7 +26,7 @@
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
   var WALK_SPEED = 2.55;
-  var ENEMY_SPEED_SCALE = 0.75;
+  var ENEMY_SPEED_SCALE = 0.375;
   var hasMap = false;
   var discovered = new Set();
   var mapSheet = document.getElementById('map-sheet');
@@ -34,7 +34,7 @@
   var wallTiles = [];
   var floorTiles = [];
   var PATROL_STEPS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-  var MAX_HEALTH = 3 + (window.TrentMissionBonus || 0);
+  var MAX_HEALTH = 5 + (window.TrentMissionBonus || 0);
   var stage = new URLSearchParams(location.search).get('stage');
   var listening = stage === 'the-listening-post';
   var gatehouse = stage === 'gatehouse-code';
