@@ -2,6 +2,14 @@
 (function () {
   var MAX_ENEMY_HP = 2120;
   var STUN_SECONDS = 3;
+  var WINDUP_SECONDS = 1;
+  var DODGE_SECONDS = 1.15;
+  var ATTACK_WARNINGS = {
+    left: 'Left hook. Hold Dodge Right or Block.',
+    right: 'Right hook. Hold Dodge Left or Block.',
+    straight: 'Straight punch. Hold Block or either dodge.',
+    upper: 'Uppercut. Hold Block or either dodge.'
+  };
   var HIT_BLUR_SECONDS = { straight: 1, left: 2, right: 2, upper: 3 };
   var SPLASH_DROPS = [
     [0, 0, 33], [.05, -.07, 22], [-.04, .09, 25], [.12, .07, 10],
@@ -21,19 +29,21 @@
     enemy.src = 'art/hitler-boxing-painted.webp'; hero.src = 'art/trent-boxing-painted.webp'; ring.src = 'art/boxing-rooftop.webp';
     var host = document.createElement('div'); host.className = 'boxing-ui'; host.hidden = true;
     host.innerHTML = '<div class="boxing-hud"><span>Trent <strong id="box-player-hp"></strong> <strong id="box-player-hit" hidden></strong></span><span id="box-clock"></span><span>Hitler <strong id="box-enemy-hp"></strong></span></div>' +
-      '<div class="boxing-cue"><strong id="box-guard"></strong><span id="box-cue"></span></div><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
+      '<div class="boxing-cue"><strong id="box-guard"></strong><span id="box-cue"></span><progress id="box-windup" max="1" aria-hidden="true" hidden></progress></div><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
       '<button class="boxing-pause" id="box-pause">Pause</button>' +
       '<div class="boxing-right"><button id="box-uppercut">Uppercut <span id="box-stars"></span></button><button id="box-punch-left">Left punch</button><button id="box-punch-right">Right punch</button></div>' +
       '<div class="sheet" id="box-sheet"><div class="card"><h1 id="box-title">The final fight</h1><p id="box-copy"></p><button id="box-start">Fight</button><p class="boxing-art-credit"><a href="art/ART-SOURCES.md" target="_blank" rel="noopener">Portrait: Bundesarchiv / CC BY-SA 3.0</a></p></div></div>';
     document.querySelector('.stage').appendChild(host);
     var get = function (id) { return host.querySelector('#' + id); };
     var bout = null;
+    var defensePointer = null;
     var canvas = document.getElementById('roofs');
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     function reset() {
+      defensePointer = null;
       bout = { mode: 'intro', hp: 20 + (window.TrentMissionBonus || 0), max: 20 + (window.TrentMissionBonus || 0), enemy: MAX_ENEMY_HP,
         time: 0, stamina: 100, phase: 'guard', timer: 1.5, attack: 'left', cycle: 0,
-        dodge: 0, dodgeTime: 0, dodgeCool: 0, block: false,
+        dodge: 0, dodgeTime: 0, dodgeCool: 0, dodgeHeld: false, block: false,
         punch: null, queuedPunch: null, stars: 0, punchStreak: 0,
         guardSide: -1, evadeSide: 0, evadeTime: 0, playerHitTime: 0, playerDamage: 0,
         hitVision: 0, hitVisionDuration: 0, hitSide: 1,
@@ -46,31 +56,45 @@
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land five punches in a row to earn a star. Missing or taking a hit resets the streak. Dodge his wind-up or block a straight punch to open both sides.', 'Fight');
+      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. An Uppercut spends a star, breaks his guard, and stuns him. Land five punches in a row to earn a star. Missing or taking a hit resets the streak. Every punch has a one-second warning. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
       sync();
     }
     function stop() {
+      clearDefense();
       host.hidden = true;if (bout) bout.mode = 'off';
       canvas.style.filter = '';
       document.querySelector('.move').hidden = false;document.getElementById('jump').hidden = false;document.querySelector('.hud').hidden = false;
     }
-    function dodge(side) {
-      if (!bout || bout.mode !== 'fight' || bout.dodgeCool > 0 || bout.stamina < 10) return;
-      if (bout.punch && !bout.punch.resolved) return;
-      bout.punch = null;
+    function clearDefense() {
+      defensePointer = null;
+      if (!bout) return;
+      bout.block = false;
+      bout.dodgeHeld = false;
+      bout.dodgeTime = 0;
+    }
+    function dodge(side, held) {
+      if (!bout || bout.mode !== 'fight' || (!held && bout.dodgeCool > 0)) return;
+      if (bout.punch && bout.punch.resolved) bout.punch = null;
       bout.queuedPunch = null;
-      bout.stamina -= 10;bout.dodge = side;bout.dodgeTime = 1.15;bout.dodgeCool = 1.15;bout.block = false;
+      bout.stamina = Math.max(0, bout.stamina - 10);
+      bout.dodge = side;
+      bout.dodgeTime = DODGE_SECONDS;
+      bout.dodgeCool = DODGE_SECONDS;
+      bout.dodgeHeld = Boolean(held);
+      bout.block = false;
     }
     function dodgeOffset() {
-      var elapsed = 1.15 - bout.dodgeTime;
-      return bout.dodge * 72 * Math.min(1, elapsed / .13, bout.dodgeTime / .18);
+      var elapsed = DODGE_SECONDS - bout.dodgeTime;
+      var lean = Math.min(1, elapsed / .13);
+      var release = bout.dodgeHeld ? 1 : Math.min(1, bout.dodgeTime / .18);
+      return bout.dodge * 72 * lean * release;
     }
     function guardedSide() {
       var counterOpen = bout.phase === 'recover' && bout.counterHits < bout.counterLimit;
       return bout.phase === 'stun' || counterOpen ? 0 : bout.guardSide;
     }
     function punch(kind) {
-      if (!bout || bout.mode !== 'fight' || !PUNCHES[kind]) return;
+      if (!bout || bout.mode !== 'fight' || !PUNCHES[kind] || bout.block || bout.dodgeHeld) return;
       // Keep the opening the player saw when tapping, even if the next guard starts during the animation.
       var request = { kind: kind, guarded: kind !== 'upper' && PUNCHES[kind].side === guardedSide() };
       if (bout.punch) bout.queuedPunch = request;
@@ -132,13 +156,13 @@
       var phase = bout.enemy > MAX_ENEMY_HP * 2 / 3 ? 0 : bout.enemy > MAX_ENEMY_HP / 3 ? 1 : 2;
       var patterns = [['left','right','straight','left'],['right','upper','left','straight'],['upper','right','left','upper','straight']];
       bout.attack = patterns[phase][bout.cycle % patterns[phase].length];bout.cycle++;
-      bout.phase = 'tell';bout.timer = [1,.85,.7][phase];
-      bout.cue = bout.attack === 'left' ? 'Left hook — dodge right!' : bout.attack === 'right' ? 'Right hook — dodge left!' : bout.attack === 'upper' ? 'Uppercut — dodge either way!' : 'Straight punch — block or dodge!';
+      bout.phase = 'tell';
+      bout.timer = WINDUP_SECONDS;
     }
     function strike() {
-      var dodged = bout.dodgeTime > 0 && (bout.attack === 'left' ? bout.dodge > 0 : bout.attack === 'right' ? bout.dodge < 0 : true);
-      var blocked = !dodged && bout.block && !bout.punch && bout.attack !== 'upper' && bout.stamina >= 18;
-      if (blocked) bout.stamina -= 18;
+      var dodged = (bout.dodgeHeld || bout.dodgeTime > 0) && (bout.attack === 'left' ? bout.dodge > 0 : bout.attack === 'right' ? bout.dodge < 0 : true);
+      var blocked = !dodged && bout.block;
+      if (blocked) bout.stamina = Math.max(0, bout.stamina - 18);
       bout.counterLimit = dodged ? 2 : blocked ? 1 : 0;
       bout.counterHits = 0;
       if (!dodged && !blocked) {
@@ -220,7 +244,14 @@
       get('box-guard').textContent = bout.mode === 'victory' ? '' : guardLabel;
       get('box-punch-left').classList.toggle('open-side', guard !== -1);
       get('box-punch-right').classList.toggle('open-side', guard !== 1);
-      get('box-cue').textContent = bout.cue;
+      var warning = bout.mode === 'fight' && bout.phase === 'tell';
+      get('box-cue').textContent = warning ? ATTACK_WARNINGS[bout.attack] : bout.cue;
+      var windup = get('box-windup');
+      windup.hidden = !warning;
+      windup.value = warning ? Math.max(0, bout.timer / WINDUP_SECONDS) : 0;
+      get('box-block').classList.toggle('defending', bout.block);
+      get('box-left').classList.toggle('defending', bout.dodgeHeld && bout.dodge < 0);
+      get('box-right').classList.toggle('defending', bout.dodgeHeld && bout.dodge > 0);
     }
     function sprite(ctx,img,cols,rows,frame,x,y,height) {
       if (!ready(img)) return;
@@ -410,26 +441,59 @@
         ctx.fillRect(center - 120 * scale, gaugeTop, 240 * scale * bout.enemy / MAX_ENEMY_HP, 5);
       }
     }
-    get('box-left').addEventListener('pointerdown',function(e){e.preventDefault();dodge(-1)});
-    get('box-right').addEventListener('pointerdown',function(e){e.preventDefault();dodge(1)});
+    function bindDefense(id, side) {
+      var button = get(id);
+      button.addEventListener('pointerdown', function (event) {
+        if (event.button !== 0 || !bout || bout.mode !== 'fight') return;
+        event.preventDefault();
+        defensePointer = event.pointerId;
+        if (side) {
+          dodge(side, true);
+        } else {
+          if (bout.punch && bout.punch.resolved) bout.punch = null;
+          bout.queuedPunch = null;
+          bout.dodgeHeld = false;
+          bout.dodgeTime = 0;
+          bout.block = true;
+        }
+        button.setPointerCapture(event.pointerId);
+        sync();
+      });
+      function release(event) {
+        if (defensePointer !== event.pointerId) return;
+        // A quick tap still works just before impact. An early dodge needs to be held.
+        var tapWindow = side && event.type === 'pointerup' ? Math.max(0, bout.dodgeTime - .85) : 0;
+        clearDefense();
+        bout.dodgeTime = tapWindow;
+        sync();
+      }
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (event) {
+        button.addEventListener(event, release);
+      });
+    }
+    bindDefense('box-left', -1);
+    bindDefense('box-right', 1);
+    bindDefense('box-block', 0);
     [['box-punch-left', 'left'], ['box-punch-right', 'right'], ['box-uppercut', 'upper']].forEach(function (binding) {
       get(binding[0]).addEventListener('click', function () { punch(binding[1]); });
     });
-    get('box-block').addEventListener('pointerdown', function (event) {
-      event.preventDefault();
-      if (!bout || bout.mode !== 'fight' || (bout.punch && !bout.punch.resolved)) return;
-      bout.punch = null;
-      bout.queuedPunch = null;
-      bout.block = true;
-      event.currentTarget.setPointerCapture(event.pointerId);
-    });
-    ['pointerup','pointercancel','lostpointercapture'].forEach(function(event){get('box-block').addEventListener(event,function(){if(bout)bout.block=false})});
-    get('box-pause').onclick=function(){if(!bout||bout.mode!=='fight')return;bout.mode='pause';bout.block=false;modal('Paused','The bout resumes from this moment.','Resume')};
+    function pause() {
+      if (!bout || bout.mode !== 'fight') return;
+      clearDefense();
+      bout.mode = 'pause';
+      sync();
+      modal('Paused', 'The bout resumes from this moment.', 'Resume');
+    }
+    get('box-pause').onclick = pause;
     get('box-start').onclick=function(){
       if(bout.mode==='lost')reset();
       bout.mode='fight';get('box-sheet').hidden=true;sync();
     };
-    document.addEventListener('visibilitychange',function(){if(document.hidden&&bout&&bout.mode==='fight'){bout.mode='pause';bout.block=false;modal('Paused','The bout resumes from this moment.','Resume')}});
+    document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); });
+    window.addEventListener('blur', clearDefense);
+    window.TrentOrientation.subscribe(function () {
+      if (window.TrentOrientation.blocked(true)) clearDefense();
+    });
     return {start:start,stop:stop,update:update,draw:draw,drawGuard:drawGuard,ready:function(){return [enemy,hero,ring,face].every(ready)},
       // State and controls also support deterministic balance and progression checks.
       state:function(){return bout},dodge:dodge,punch:punch,begin:function(){get('box-start').click()}};

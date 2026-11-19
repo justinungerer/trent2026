@@ -106,12 +106,14 @@ window.testIncomingBoxingDamage=()=>{
   {attack:'upper',dodge:1,loss:0},
   {attack:'straight',block:true,loss:0},
   {attack:'right',block:true,loss:0},
-  {attack:'upper',block:true,loss:2}
+  {attack:'upper',block:true,stamina:0,loss:0},
+  {attack:'upper',dodge:1,stamina:0,loss:0}
  ];
  for(const sample of combinations){
   beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();fight.begin();
   const bout=fight.state();
   bout.phase='tell';bout.attack=sample.attack;bout.timer=.12;
+  if(sample.stamina===0)bout.stamina=0;
   if(sample.dodge)fight.dodge(sample.dodge);
   if(sample.block)bout.block=true;
   for(let i=0;i<8;i++)fight.update(.02);

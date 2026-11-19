@@ -17,7 +17,9 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       const file = path.join(root, pathname.endsWith('/') ? pathname + 'index.html' : pathname);
       if (pathname.endsWith('/chimney-road/game.js')) return route.fulfill({
         contentType: 'application/javascript',
-        body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/, hooks + '\nwindow.menuFightState=()=>({state,mode:fight.state().mode,gunfire:!!gunfire});\n})();')
+        body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/, hooks + '\nwindow.menuFightState=()=>({state,mode:fight.state().mode,gunfire:!!gunfire});' +
+          'window.prepareWarning=(late)=>{fight.start();fight.begin();const b=fight.state();if(late)b.enemy=100;b.timer=.02;fight.update(.02);};' +
+          'window.stepWarning=(dt)=>{fight.update(dt);return fight.state();};\n})();')
       });
       if (/\.(mp3|mp4|wav)$/.test(pathname)) return route.fulfill({ status: 204 });
       return fs.existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404 });
@@ -40,7 +42,34 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await frame.locator('#start-sheet').isVisible(), false);
     assert.deepEqual(await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
     assert.equal(await page.evaluate(() => active.practice && active.finalFight), true);
-    const result = await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => testBoxing());
+    const fightFrame = page.frames().find(f => f.url().includes('stage=final-fight'));
+    async function holdThroughSwing(buttonId, late, warningText) {
+      await fightFrame.evaluate(value => prepareWarning(value), late);
+      await frame.locator('#box-cue').getByText(warningText, { exact: false }).waitFor();
+      const initial = await fightFrame.evaluate(() => stepWarning(0));
+      assert.equal(initial.phase, 'tell');
+      assert.equal(initial.timer, 1);
+      const control = frame.locator(buttonId);
+      const box = await control.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      try {
+        const beforeImpact = await fightFrame.evaluate(() => stepWarning(.99));
+        assert.equal(beforeImpact.phase, 'tell');
+        assert.equal(beforeImpact.hp, initial.hp);
+        const afterImpact = await fightFrame.evaluate(() => stepWarning(.02));
+        assert.equal(afterImpact.phase, 'strike');
+        assert.equal(afterImpact.hp, initial.hp);
+        assert.equal(afterImpact.hitVision, 0);
+      } finally {
+        await page.mouse.up();
+      }
+      const released = await fightFrame.evaluate(() => stepWarning(0));
+      assert.equal(released.block || released.dodgeHeld, false);
+    }
+    await holdThroughSwing('#box-right', false, 'Left hook');
+    await holdThroughSwing('#box-block', true, 'Uppercut');
+    const result = await fightFrame.evaluate(() => testBoxing());
     assert.ok(result.seconds > 80 && result.seconds < 190);
     await page.waitForFunction(() => !document.querySelector('#app').hidden, null, { polling: 50 });
     assert.equal(await page.evaluate(() => localStorage.getItem(PIN_KEY)), savedPin);
@@ -55,7 +84,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.evaluate(() => active.finalFight && active.practice), true);
     assert.ok(await page.evaluate(() => pendingMissionUrl.includes('stage=final-fight')));
     assert.deepEqual(errors, []);
-    console.log('PASS: unlock gating, direct fight, phone rotation, full bout, practice return, no completion reward, test selector.');
+    console.log('PASS: unlock gating, direct fight, phone rotation, one-second warnings, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();
   }
