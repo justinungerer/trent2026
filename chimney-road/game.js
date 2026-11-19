@@ -106,6 +106,8 @@
       { x: 2520, y: 239, w: 450, name: 'Junction roof', role: 'main', goal: true }
     ];
     if (eaves) {
+      PLATFORMS[0].cap = 'right';
+      PLATFORMS[1] = { x: 520, y: -184, w: 260, name: 'The practice landing', role: 'main' };
       document.getElementById('roof-controls').textContent =
         'Jump over the painted presents. Tap Jump again near the top of a jump to go higher. ' +
         'Ice makes stopping harder. Wait for the blowing snow to clear before crossing a windy roof.';
@@ -146,6 +148,7 @@
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
   });
+  if (eaves) PLATFORMS[0].chimneyHeight = 324;
   var SEARCH_SWEEP = 3;
   var SEARCH_BREAK = 5;
   var SEARCHLIGHTS = [];
@@ -154,6 +157,7 @@
   for (var opening = 1; opening < mainRoofs.length; opening++) {
     var before = mainRoofs[opening - 1], after = mainRoofs[opening];
     var leftEdge = before.x + before.w, gap = after.x - leftEdge;
+    if (eaves && before === PLATFORMS[0] && after === PLATFORMS[1]) continue;
     if (gap < 30 || gap > 230) continue;
     if (openingIndex++ % 3 !== 0) continue;
     var lightX = leftEdge + gap / 2;
@@ -172,7 +176,7 @@
     'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Dodge four bullets fired upward from below, one per second during a four-second volley. Only a bullet hit counts as a fall.';
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
-    if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && index === objectives[0].roof)) return null;
+    if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
     var height = 26 + (index % 3) * 7;
     var width = eaves ? height * .98 : Math.min(44, roof.w * .18);
     return { x: roof.x + roof.w * .58, y: roof.y - height, w: width, h: height, bottom: roof.y, roof: index };
@@ -232,6 +236,10 @@
   var played = 0;
   var victorySent = false;
   var returningFromLantern = false;
+  var tutorialReachedTop = false;
+  var tutorialAttempt = false;
+  var tutorialDoubleJumpHint = false;
+  var tutorialPassed = false;
   var rotateHold = false;
   var visualTime = 0;
   var lastFrame = 0;
@@ -385,6 +393,10 @@
     body.climbT = 0;
     body.x = spawnX(roof);
     body.y = roof.y;
+    if (eaves && index === 0 && tutorialReachedTop && !tutorialPassed) {
+      body.x = capX(roof) + 21;
+      body.y = roof.y - roof.chimneyHeight;
+    }
     body.vx = 0;
     body.vy = 0;
     body.ground = true;
@@ -414,6 +426,7 @@
     airBuffer = 0;
     victorySent = false;
     returningFromLantern = false;
+    tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
     boardingSheet.hidden = true;
     boardingHint.hidden = true;
     held.left = held.right = held.climb = false;
@@ -424,7 +437,7 @@
     pauseSheet.hidden = true;
     winSheet.hidden = true;
     loseSheet.hidden = true;
-    hintEl.hidden = false;
+    hintEl.hidden = true;
     renderHud();
     say(eaves ? 'Recover the lantern from the lower roof.' : 'The sleigh is at the end of the road.');
   }
@@ -478,6 +491,10 @@
   }
 
   function drop(reason) {
+    if (eaves && tutorialAttempt && !tutorialPassed) {
+      tutorialDoubleJumpHint = true;
+      tutorialAttempt = false;
+    }
     boardingHint.hidden = true;
     falls += 1;
     if (!reduceMotion()) shake = 8;
@@ -490,6 +507,7 @@
         return;
       }
       objectives.forEach(function (item) { item.taken = false; });
+      tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
       falls = 0;
       placeOn(0);
       cp = 0;
@@ -565,6 +583,7 @@
 
   function requestJump() {
     if (state !== 'play') return;
+    if (eaves && tutorialReachedTop && !tutorialPassed && body.ground && stood === 0) tutorialAttempt = true;
     if (body.ground || coyote > 0) jumpQueued = 0.14 + jumpBonus;
     else airBuffer = 0.52;
   }
@@ -597,6 +616,7 @@
     if (body.y <= top) {
       body.ground = true; body.climbing = false; airJumps = 1;
       stood = PLATFORMS.indexOf(climbRoof);
+      if (eaves && stood === 0) tutorialReachedTop = true;
       if (climbRoof.role === 'main') cp = stood;
       climbRoof = null;
     }
@@ -900,6 +920,18 @@
         if (body.x < box.x + box.w / 2) body.x = box.x - 18;
         else body.x = box.x + box.w + 18;
         body.vx = body.x < box.x ? Math.min(body.vx, 0) : Math.max(body.vx, 0);
+      }
+    }
+    if (eaves && !tutorialPassed && tutorialReachedTop) {
+      var tutorialTop = PLATFORMS[0].y - PLATFORMS[0].chimneyHeight;
+      if (body.ground && stood === 1 && Math.abs(body.y - PLATFORMS[1].y) < 1) {
+        tutorialPassed = true; tutorialAttempt = false; tutorialDoubleJumpHint = false;
+      } else {
+        if (body.x > capX(PLATFORMS[0]) + 46) tutorialAttempt = true;
+        if (tutorialAttempt && body.y > tutorialTop + 60) {
+          drop('Try a double jump: tap Jump again near the top of your first jump.');
+          return;
+        }
       }
     }
     if (Math.abs(body.vx) > 30 && body.ground) body.runT += dt;
@@ -1217,6 +1249,24 @@
     }
   }
 
+  function drawOpeningLesson() {
+    if (!eaves || tutorialPassed || body.x > PLATFORMS[1].x + 60) return;
+    if (tutorialReachedTop && !tutorialDoubleJumpHint) return;
+    var x = capX(PLATFORMS[0]) + 21 - camX;
+    var cardX = clamp(x + 205, 180, VIEW_W - 170), cardY = 105;
+    ctx.fillStyle = '#102635f2';ctx.fillRect(cardX - 150, cardY, 300, 62);
+    ctx.fillStyle = '#fff1d4';ctx.font = 'bold 19px system-ui';ctx.textAlign = 'center';
+    ctx.fillText(tutorialDoubleJumpHint ? 'Try a double jump' : 'Climb this chimney', cardX, cardY + 24);
+    ctx.font = 'bold 15px system-ui';
+    ctx.fillText(tutorialDoubleJumpHint ? 'Tap Jump again near the top' : 'Hold the left-side ▲ button', cardX, cardY + 48);
+    if (!tutorialReachedTop) {
+      var y = clamp(PLATFORMS[0].y - 100 - camY, 178, VIEW_H - 90);
+      ctx.strokeStyle = '#ff3030';ctx.fillStyle = '#ff3030';ctx.lineWidth = 5;
+      ctx.beginPath();ctx.moveTo(x + 72, y);ctx.lineTo(x + 13, y);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x + 6, y);ctx.lineTo(x + 31, y - 15);ctx.lineTo(x + 31, y + 15);ctx.closePath();ctx.fill();
+    }
+  }
+
   function drawLedgeCues() {
     var above = null;
     var below = null;
@@ -1341,6 +1391,7 @@
     drawSearchlightCues();
     drawLedgeCues();
     drawSnow();
+    drawOpeningLesson();
     if (state === 'play' && objectiveNoticeUntil > played) {
       ctx.fillStyle = '#102b3cf2';
       ctx.fillRect(VIEW_W / 2 - 240, 64, 480, 46);
