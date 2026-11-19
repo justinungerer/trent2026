@@ -235,7 +235,7 @@
   var view = { s: 1, ox: 0, oy: 0 };
   var played = 0;
   var victorySent = false;
-  var returningFromLantern = false;
+  var boardingWarned = false;
   var tutorialReachedTop = false;
   var tutorialAttempt = false;
   var tutorialDoubleJumpHint = false;
@@ -425,7 +425,7 @@
     airJumps = 1;
     airBuffer = 0;
     victorySent = false;
-    returningFromLantern = false;
+    boardingWarned = false;
     tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
     boardingSheet.hidden = true;
     boardingHint.hidden = true;
@@ -520,15 +520,12 @@
   }
 
   document.getElementById('retry-lose').addEventListener('click', beginRun);
-  document.getElementById('recover-lantern').addEventListener('click', function () {
+  document.getElementById('close-boarding').addEventListener('click', function () {
     if (state !== 'boarding') return;
-    returningFromLantern = true;
-    var lantern = objectives[0];
-    placeOn(lantern.roof);
-    cp = lantern.roof;
     state = 'play';
     boardingSheet.hidden = true;
-    say('Cross the lower ledge to recover the lantern.');
+    lastFrame = performance.now();
+    say('Find the lantern you dropped on the lower coach-house roof, then return to the sleigh.');
   });
 
   function checkBoarding() {
@@ -536,16 +533,20 @@
     var nearSleigh = body.y <= roof.y + 2 && body.y >= roof.y - 84 &&
       body.x >= SLEIGH_X - 12 && body.x <= SLEIGH_X + SLEIGH_W + 12;
     if (!nearSleigh) {
+      boardingWarned = false;
       boardingHint.hidden = true;
       return;
     }
     if (objectives.every(function (item) { return item.taken; })) {
       win();
     } else if (eaves) {
-      state = 'boarding';
-      held.left = held.right = held.climb = false;
-      boardingSheet.hidden = false;
-      document.getElementById('recover-lantern').focus();
+      if (!boardingWarned) {
+        boardingWarned = true;
+        state = 'boarding';
+        held.left = held.right = held.climb = false;
+        boardingSheet.hidden = false;
+        document.getElementById('close-boarding').focus();
+      }
     } else {
       var missing = objectives.filter(function (item) { return !item.taken; }).length;
       var message = 'You still need to collect ' + missing + (missing === 1 ? ' flag.' : ' flags.');
@@ -978,12 +979,7 @@
       if (item.taken || Math.abs(item.x - body.x) > pickupWidth || Math.abs(item.y - body.y) > 40) return;
       item.taken = true;
       say(eaves ? 'Lantern recovered.' : 'Route marker collected.');
-      if (returningFromLantern) {
-        returningFromLantern = false;
-        placeOn(GOAL);
-        cp = GOAL;
-        body.x = SLEIGH_X;
-      }
+
     });
     checkBoarding();
   }
