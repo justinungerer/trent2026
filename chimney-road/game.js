@@ -169,7 +169,7 @@
   }
   document.getElementById('roof-controls').textContent +=
     ' Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. If a searchlight spots you, dodge four bullets fired upward from below, one per second for four seconds. Only a bullet hit counts as a fall.';
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Dodge four bullets fired upward from below, one per second during a four-second volley. Only a bullet hit counts as a fall.';
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && index === objectives[0].roof)) return null;
@@ -189,8 +189,11 @@
   var BALLS = 20;
   var ROW = 15;
 
+  var trentVisibleBounds = [];
+  var climbVisibleBounds = [];
   var climbImg = new Image();
   var projectorImg = new Image();
+  climbImg.onload = function () { climbVisibleBounds = spriteBounds(climbImg, 2, 2); };
   climbImg.src = 'art/trent-climbing-painted.webp';
   projectorImg.src = 'art/painted-searchlight.webp';
   var panoramaImg = new Image();
@@ -200,6 +203,7 @@
   var crateImg = new Image();
   panoramaImg.src = 'art/panorama.webp';
   roofImg.src = 'art/roof.webp';
+  trentImg.onload = function () { trentVisibleBounds = spriteBounds(trentImg, TRENT.n, 1); };
   trentImg.src = 'art/trent.webp';
   sleighImg.src = 'art/sleigh.webp';
   crateImg.src = 'art/crate.webp';
@@ -617,23 +621,87 @@
       slope: Math.sin(t / SEARCH_SWEEP * Math.PI * 2) * 0.65 };
   }
 
+  // Cache painted frame bounds once so transparent atlas margins do not count as Trent.
+  function spriteBounds(image, columns, rows) {
+    var canvas = document.createElement('canvas');
+    var width = image.naturalWidth / columns, height = image.naturalHeight / rows;
+    canvas.width = width; canvas.height = height;
+    var painter = canvas.getContext('2d', { willReadFrequently: true });
+    var frames = [];
+    for (var frame = 0; frame < columns * rows; frame++) {
+      painter.clearRect(0, 0, width, height);
+      painter.drawImage(image, frame % columns * width, Math.floor(frame / columns) * height, width, height, 0, 0, width, height);
+      var pixels = painter.getImageData(0, 0, width, height).data;
+      var left = width, right = 0, top = height, bottom = 0;
+      for (var y = 0; y < height; y++) for (var x = 0; x < width; x++) {
+        if (pixels[(y * width + x) * 4 + 3] <= 64) continue;
+        left = Math.min(left, x); right = Math.max(right, x + 1);
+        top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
+      }
+      frames.push({ left: left, right: right, top: top, bottom: bottom });
+    }
+    return frames;
+  }
+
+  function trentSearchlightBounds() {
+    var scale, bounds, left, right, top, bottom;
+    if (body.climbing && imageReady(climbImg)) {
+      var frame = reduceMotion() ? 0 : Math.floor(body.climbT * 8) % 4;
+      var width = climbImg.naturalWidth / 2, height = climbImg.naturalHeight / 2;
+      scale = 132 / height; bounds = climbVisibleBounds[frame];
+      if (bounds) {
+        left = (bounds.left - width / 2) * scale; right = (bounds.right - width / 2) * scale;
+        top = (bounds.top - height) * scale; bottom = (bounds.bottom - height) * scale;
+      }
+    } else {
+      scale = 132 / TRENT.h; bounds = trentVisibleBounds[trentFrame()];
+      if (bounds) {
+        left = (bounds.left - TRENT.ax) * scale; right = (bounds.right - TRENT.ax) * scale;
+        if (body.face < 0) { var oldLeft = left; left = -right; right = -oldLeft; }
+        top = (bounds.top - TRENT.ay) * scale; bottom = (bounds.bottom - TRENT.ay) * scale;
+      }
+    }
+    if (!bounds) return { left: body.x - 34, right: body.x + 34, top: body.y - 132, bottom: body.y };
+    return { left: body.x + left, right: body.x + right, top: body.y + top, bottom: body.y + bottom };
+  }
+
+  function searchlightPolygon(light, beam) {
+    var distance = light.y - light.top, tip = light.x + beam.slope * distance;
+    return [{ x: light.x - 5, y: light.y }, { x: tip - distance * .075, y: light.top },
+      { x: tip + distance * .075, y: light.top }, { x: light.x + 5, y: light.y }];
+  }
+
+  function polygonsTouch(a, b) {
+    var shapes = [a, b];
+    for (var shape = 0; shape < shapes.length; shape++) {
+      var polygon = shapes[shape];
+      for (var edge = 0; edge < polygon.length; edge++) {
+        var next = polygon[(edge + 1) % polygon.length];
+        var nx = next.y - polygon[edge].y, ny = polygon[edge].x - next.x;
+        var minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity;
+        a.forEach(function (point) { var dot = point.x * nx + point.y * ny; minA = Math.min(minA, dot); maxA = Math.max(maxA, dot); });
+        b.forEach(function (point) { var dot = point.x * nx + point.y * ny; minB = Math.min(minB, dot); maxB = Math.max(maxB, dot); });
+        if (maxA < minB || maxB < minA) return false;
+      }
+    }
+    return true;
+  }
+
   function inSearchlight(light) {
-    var beam = searchlightState(light), y = body.y - 24;
-    if (!beam.active || body.x <= light.left || body.x >= light.right || y < light.top || y > light.y) return false;
-    var distance = light.y - y;
-    if (PLATFORMS.some(function (roof) {
-      if (roof.y <= y || roof.y >= light.y) return false;
-      var rayX = light.x + (body.x - light.x) * (light.y - roof.y) / distance;
-      return rayX >= roof.x && rayX <= roof.x + roof.w;
-    })) return false;
-    return Math.abs(body.x - (light.x + beam.slope * distance)) < 13 + distance * 0.075;
+    var beam = searchlightState(light);
+    if (!beam.active) return false;
+    var bounds = trentSearchlightBounds();
+    return polygonsTouch(searchlightPolygon(light, beam), [
+      { x: bounds.left, y: bounds.top }, { x: bounds.right, y: bounds.top },
+      { x: bounds.right, y: bounds.bottom }, { x: bounds.left, y: bounds.bottom }
+    ]);
   }
 
   function startGunfire(light) {
     var cycle = Math.floor((played + light.phase) / (SEARCH_SWEEP + SEARCH_BREAK));
     if (gunfire || light.spottedCycle === cycle) return;
     light.spottedCycle = cycle;
-    gunfire = { light: light, until: played + 4, next: played + 1, fired: 0 };
+    gunfire = { light: light, until: played + 4, next: played, fired: 0 };
     say('Spotted! Four bullets will fire from below, one per second. Dodge them or take cover.');
   }
 
@@ -667,7 +735,7 @@
       while (gunfire.fired < 4 && played >= gunfire.next) {
         fireHostileShot(gunfire); gunfire.fired++; gunfire.next++;
       }
-      if (gunfire.fired === 4) gunfire = null;
+      if (gunfire.fired === 4 && played >= gunfire.until) gunfire = null;
     }
     for (var i = hostileShots.length - 1; i >= 0; i--) {
       var shot = hostileShots[i];
@@ -706,8 +774,13 @@
         var glow = ctx.createLinearGradient(x, y, tip, light.top - camY);
         glow.addColorStop(0, 'rgba(255,244,176,.64)'); glow.addColorStop(1, 'rgba(255,244,176,.06)');
         ctx.fillStyle = glow;
-        ctx.beginPath();ctx.moveTo(x - 5, y);ctx.lineTo(tip - distance * .075, light.top - camY);
-        ctx.lineTo(tip + distance * .075, light.top - camY);ctx.lineTo(x + 5, y);ctx.closePath();ctx.fill();
+        var polygon = searchlightPolygon(light, beam);
+        ctx.beginPath();
+        polygon.forEach(function (point, index) {
+          if (index === 0) ctx.moveTo(point.x - camX, point.y - camY);
+          else ctx.lineTo(point.x - camX, point.y - camY);
+        });
+        ctx.closePath();ctx.fill();
       }
       if (imageReady(projectorImg)) ctx.drawImage(projectorImg, x - 36, y - 20, 72, 72);
 
@@ -862,10 +935,8 @@
       }
     }
     if (state === 'play') {
-      if (hurt <= 0) {
-        var spottingLight = SEARCHLIGHTS.find(inSearchlight);
-        if (spottingLight) startGunfire(spottingLight);
-      }
+      var spottingLight = SEARCHLIGHTS.find(inSearchlight);
+      if (spottingLight) startGunfire(spottingLight);
       updateGunfire(dt);
     }
     if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
