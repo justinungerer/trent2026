@@ -50,7 +50,7 @@
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
   var COAST = 1.15;
-  var MAX_SPEED = 40.5;
+  var MAX_SPEED = 121.5;
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
@@ -551,7 +551,8 @@
   function dropBomb(jet) {
     var lane = occupiedLane();
     var w = 4.2;
-    var lead = Math.min(VIEW_DEPTH - 32, 23 + speed);
+    // Put the gap ahead of the cart when the bomb lands, even at full speed.
+    var lead = 23 + speed;
     var x = placeGapX(distance + lead, w);
     bombs.push({ x: x < 0 ? Math.min(distance + lead, FINISH - w) : x, lane: lane,
       w: w, fromX: jet.x, fromY: jet.y, fall: 0, damagesTrack: x >= 0 });
@@ -1157,9 +1158,15 @@
       visualTime += dt;
       if (!reduceMotion()) updateFlakes(dt);
     }
-    if (state === 'play') updatePlay(dt);
-    else if (state === 'slip') updateSlip(dt);
-    if (state === 'play' || state === 'slip') updateFlyovers(dt);
+    // Substep fast travel so the cart cannot skip narrow obstacles on a slow frame.
+    var remaining = dt;
+    while (remaining > 0 && playing()) {
+      var step = Math.min(remaining, .02);
+      if (state === 'play') updatePlay(step);
+      else updateSlip(step);
+      if (playing()) updateFlyovers(step);
+      remaining -= step;
+    }
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 24);
     refreshPump();
     renderHud();
