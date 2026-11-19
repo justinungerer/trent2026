@@ -37,6 +37,9 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       await page.locator('#campaign-start').click();
     }
     await usePassword('SKY');
+    const locked = page.getByRole('button', { name: /Chapter 10.*The Chimney Road.*Locked/ });
+    assert.equal(await locked.isDisabled(), true);
+    assert.ok(await locked.evaluate(button => Number(getComputedStyle(button).opacity) < 1));
     assert.equal(await page.getByRole('button', { name: /^Continue at / }).count(), 1);
     assert.equal(await page.locator('.chapter-minigame, .chapter-final-fight, .chapter-level').count(), 0);
     assert.equal(await page.getByRole('button', { name: 'Opening film' }).count(), 0);
@@ -92,6 +95,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.getByRole('button', { name: /^Replay without quiz/ }).count(), 10);
     assert.equal(await page.locator('.chapter-final-fight').count(), 0);
     await usePassword(await page.evaluate(() => TEST_PIN));
+    assert.equal(await page.locator('.chapter-locked').count(), 0);
     assert.equal(await page.getByRole('button', { name: 'Final fight only · The Chimney Road', exact: true }).count(), 1);
     assert.equal(await page.getByRole('button', { name: 'Opening film' }).count(), 1);
     assert.equal(await page.getByRole('button', { name: 'Ending video' }).count(), 1);

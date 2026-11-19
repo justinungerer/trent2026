@@ -568,6 +568,11 @@ body {
   opacity: .42;
 }
 
+.chapter-menu-row .chapter-locked:disabled {
+  opacity: .64;
+  cursor: default;
+}
+
 .opening-film {
   position: fixed;
   inset: 0;

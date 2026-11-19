@@ -544,7 +544,10 @@ function showChapterMenu(lastChapter, complete, canTest) {
     if (!canTest) {
       var chapterLabel = chapter.kicker + ' · ' + chapter.title;
       if (!unlocked) {
-        row.appendChild(button('', null, 'choice'));
+        var lockedChapter = button('', null, 'choice chapter-locked');
+        lockedChapter.textContent = chapterLabel + ' · Locked';
+        lockedChapter.removeAttribute('aria-label');
+        row.appendChild(lockedChapter);
       } else if (chapter.number === lastChapter && !complete) {
         row.appendChild(button('Continue at ' + chapterLabel, function () { openChapter(chapter.id); }, 'choice'));
       } else {
