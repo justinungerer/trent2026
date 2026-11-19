@@ -96,25 +96,42 @@ window.testBoxing=()=>{
  if(!escapeMode)return;
  beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();
  if(state!=='boxing'||fight.state().mode!=='intro')throw Error('Guard contact did not start boxing intro');
- fight.begin();let bout=fight.state(),guardHp=bout.enemy;fight.punch();
- if(bout.enemy!==guardHp)throw Error('Guarded punches damage boss');
- let ticks=0;
+ fight.begin();let bout=fight.state(),guardHp=bout.enemy;
+ const tap=(button)=>document.getElementById(button).click();
+ const step=(ticks)=>{for(let i=0;i<ticks;i++)fight.update(.02);};
+ tap('box-uppercut');
+ if(bout.punch||bout.stars)throw Error('Uppercut should require a star');
+ tap('box-punch-left');step(17);
+ if(bout.enemy!==guardHp||!bout.cue.startsWith('Blocked'))throw Error('Guard did not block a punch');
+ tap('box-punch-right');step(8);
+ if(bout.enemy!==guardHp||!bout.evadeTime||bout.cue!=='He dodged!')throw Error('Opponent did not dodge a punch');
+ let ticks=0,leftHits=0,rightHits=0,upperHits=0,previousHp=bout.enemy,turn=0;
  while(fight.state().mode==='fight'&&ticks++<30000){
   bout=fight.state();
-  if(bout.phase==='tell'&&bout.dodgeCool<=0&&bout.timer<.6)fight.dodge(bout.attack==='left'?1:-1);
-  if(bout.phase==='recover'&&bout.counterHits<bout.counterLimit&&bout.punchCool<=0)fight.punch();
+  if(bout.phase==='tell'&&bout.dodgeCool<=0&&bout.timer<.39)fight.dodge(bout.attack==='left'?1:-1);
+  if(bout.phase==='recover'&&bout.counterHits<bout.counterLimit&&!bout.punch){
+   if (bout.stars && bout.counterHits===1) tap('box-uppercut');
+   else tap(turn++%2===0?'box-punch-left':'box-punch-right');
+  }
   fight.update(.02);
+  if(bout.enemy<previousHp){
+   if(bout.lastImpact==='left')leftHits++;
+   if(bout.lastImpact==='right')rightHits++;
+   if(bout.lastImpact==='upper')upperHits++;
+   previousHp=bout.enemy;
+  }
  }
+ if(!leftHits||!rightHits||!upperHits)throw Error('Missing a successful hit type');
  const seconds=fight.state().time;
  if(fight.state().enemy!==0||seconds<270||seconds>350)throw Error('Bout balance or counters failed '+JSON.stringify({seconds,mode:fight.state().mode,hp:fight.state().hp,enemy:fight.state().enemy}));
  fight.update(1.3);if(state!=='win'||!bossBeaten)throw Error('Defeating Hitler did not win');
  beginRun();body.x=GUARD_X;body.y=PLATFORMS[GOAL].y;checkBoarding();fight.begin();
  for(let i=0;i<10000&&fight.state().mode==='fight';i++)fight.update(.02);
  if(fight.state().mode!=='lost')throw Error('Cannot lose boss fight');
- fight.begin();if(fight.state().enemy!==360||fight.state().hp!==fight.state().max||fight.state().time!==0)throw Error('Retry is not a fresh continuous bout');
+ fight.begin();if(fight.state().enemy!==guardHp||fight.state().hp!==fight.state().max||fight.state().time!==0)throw Error('Retry is not a fresh continuous bout');
  document.getElementById('box-pause').click();const time=fight.state().time;fight.update(5);
  if(fight.state().time!==time)throw Error('Boxing pause failed');fight.begin();
- return {seconds,continuous:true,fullRetry:true};
+ return {seconds,leftHits,rightHits,upperHits,continuous:true,fullRetry:true};
 };
 window.previewExpansion=()=>{
  beginRun();if(escapeMode){body.x=GUARD_X-190;body.y=PLATFORMS[GOAL].y;stood=GOAL;}
