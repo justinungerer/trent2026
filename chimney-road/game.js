@@ -143,6 +143,33 @@
     objectives[1].x += WORLD_W;
     WORLD_W *= 2;
   }
+  PLATFORMS.forEach(function (roof, index) {
+    if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
+  });
+  var SEARCH_SWEEP = 3;
+  var SEARCH_BREAK = 5;
+  var SEARCHLIGHTS = [];
+  var mainRoofs = PLATFORMS.filter(function (roof) { return roof.role === 'main'; }).slice().sort(function (a, b) { return a.x - b.x; });
+  var openingIndex = 0;
+  for (var opening = 1; opening < mainRoofs.length; opening++) {
+    var before = mainRoofs[opening - 1], after = mainRoofs[opening];
+    var leftEdge = before.x + before.w, gap = after.x - leftEdge;
+    if (gap < 30 || gap > 230) continue;
+    if (openingIndex++ % 3 !== 0) continue;
+    var lightX = leftEdge + gap / 2;
+    var sourceY = Math.max(before.y, after.y) + 230;
+    PLATFORMS.forEach(function (lower) {
+      if (lower.y > Math.max(before.y, after.y) + 60 && lightX >= lower.x && lightX <= lower.x + lower.w) {
+        sourceY = Math.min(sourceY, lower.y - 60);
+      }
+    });
+    SEARCHLIGHTS.push({ left: leftEdge, right: after.x, x: lightX,
+      y: sourceY, top: Math.min(before.y, after.y) - 360,
+      labelY: Math.min(before.y, after.y) - 78, phase: SEARCHLIGHTS.length * 1.7 });
+  }
+  document.getElementById('roof-controls').textContent +=
+    ' Hold Jump beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. A searchlight hit counts as a fall.';
   var GOAL = PLATFORMS.length - 1;
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if ((index % 4 === 0 && index !== 4) || index === GOAL || (eaves && index === objectives[0].roof)) return null;
@@ -162,6 +189,10 @@
   var BALLS = 20;
   var ROW = 15;
 
+  var climbImg = new Image();
+  var projectorImg = new Image();
+  climbImg.src = 'art/trent-climbing-painted.webp';
+  projectorImg.src = 'art/painted-searchlight.webp';
   var panoramaImg = new Image();
   var roofImg = new Image();
   var trentImg = new Image();
@@ -204,7 +235,9 @@
   var falls = 0;
   var cp = 0;
   var stood = 0;
-  var body = { x: 96, y: 300, vx: 0, vy: 0, face: 1, ground: true, runT: 0 };
+  var body = { x: 96, y: 300, vx: 0, vy: 0, face: 1, ground: true, runT: 0, climbing: false, climbT: 0 };
+  var climbRoof = null;
+  var climbSide = -1;
   var held = { left: false, right: false, climb: false };
   var jumpQueued = 0;
   var coyote = 0;
@@ -330,11 +363,15 @@
       : objectives.length ? PLATFORMS[stood].name + ' · ' + objectives.filter(function (item) { return item.taken; }).length + '/' + objectives.length
       : PLATFORMS[stood].name;
     fallsEl.textContent = falls + ' / 3';
+    document.getElementById('jump').textContent = body.climbing ? 'Climb' : 'Jump';
     fallsEl.className = falls ? 'warn' : '';
   }
 
   function placeOn(index) {
     var roof = PLATFORMS[index];
+    climbRoof = null;
+    body.climbing = false;
+    body.climbT = 0;
     body.x = spawnX(roof);
     body.y = roof.y;
     body.vx = 0;
@@ -515,8 +552,102 @@
 
   function requestJump() {
     if (state !== 'play') return;
+    if (nearChimney()) { jumpQueued = 0; airBuffer = 0; return; }
     if (body.ground || coyote > 0) jumpQueued = 0.14 + jumpBonus;
     else airBuffer = 0.52;
+  }
+
+  function nearChimney() {
+    return PLATFORMS.find(function (roof) {
+      return roof.cap && body.x >= capX(roof) - 28 && body.x <= capX(roof) + 70 &&
+        body.y <= roof.y + 8 && body.y > roof.y - roof.chimneyHeight + 0.1;
+    });
+  }
+
+  function stepClimb(dt) {
+    if (!held.climb) {
+      if (climbRoof) body.x = capX(climbRoof) + (climbSide < 0 ? -14 : 56);
+      climbRoof = null; body.climbing = false;
+      return false;
+    }
+    if (!climbRoof) {
+      climbRoof = nearChimney();
+      if (!climbRoof) { body.climbing = false; return false; }
+      climbSide = body.x < capX(climbRoof) + 21 ? -1 : 1;
+      body.climbT = 0;
+    }
+    var top = climbRoof.y - climbRoof.chimneyHeight;
+    body.x = capX(climbRoof) + 21;
+    body.y = Math.max(top, body.y - 180 * dt);
+    body.vx = body.vy = 0;
+    body.ground = false; body.climbing = true; body.climbT += dt;
+    jumpQueued = airBuffer = coyote = 0;
+    if (body.y <= top) {
+      body.ground = true; body.climbing = false; airJumps = 1;
+      stood = PLATFORMS.indexOf(climbRoof);
+      if (climbRoof.role === 'main') cp = stood;
+      climbRoof = null;
+    }
+    return true;
+  }
+
+  function resolveChimneyWalls(prevX, prevY) {
+    PLATFORMS.forEach(function (roof) {
+      if (!roof.cap) return;
+      var x = capX(roof), top = roof.y - roof.chimneyHeight;
+      if (prevY <= top + 1 || body.y <= top + 1 || body.y - 48 >= roof.y) return;
+      if (body.x + 13 <= x || body.x - 13 >= x + 42) return;
+      if (prevX <= x + 21) body.x = x - 14;
+      else body.x = x + 56;
+      body.vx = 0;
+    });
+  }
+
+  function searchlightState(light) {
+    var t = (played + light.phase) % (SEARCH_SWEEP + SEARCH_BREAK);
+    return { active: t < SEARCH_SWEEP, remaining: t < SEARCH_SWEEP ? SEARCH_SWEEP - t : SEARCH_SWEEP + SEARCH_BREAK - t,
+      slope: Math.sin(t / SEARCH_SWEEP * Math.PI * 2) * 0.65 };
+  }
+
+  function inSearchlight(light) {
+    var beam = searchlightState(light), y = body.y - 24;
+    if (!beam.active || body.x <= light.left || body.x >= light.right || y < light.top || y > light.y) return false;
+    var distance = light.y - y;
+    if (PLATFORMS.some(function (roof) {
+      if (roof.y <= y || roof.y >= light.y) return false;
+      var rayX = light.x + (body.x - light.x) * (light.y - roof.y) / distance;
+      return rayX >= roof.x && rayX <= roof.x + roof.w;
+    })) return false;
+    return Math.abs(body.x - (light.x + beam.slope * distance)) < 13 + distance * 0.075;
+  }
+
+  function drawSearchlights() {
+    SEARCHLIGHTS.forEach(function (light) {
+      if (light.right < camX - 300 || light.left > camX + VIEW_W + 300) return;
+      var beam = searchlightState(light), x = light.x - camX, y = light.y - camY;
+      if (beam.active) {
+        var distance = light.y - light.top, tip = x + beam.slope * distance;
+        var glow = ctx.createLinearGradient(x, y, tip, light.top - camY);
+        glow.addColorStop(0, 'rgba(255,244,176,.64)'); glow.addColorStop(1, 'rgba(255,244,176,.06)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();ctx.moveTo(x - 5, y);ctx.lineTo(tip - distance * .075, light.top - camY);
+        ctx.lineTo(tip + distance * .075, light.top - camY);ctx.lineTo(x + 5, y);ctx.closePath();ctx.fill();
+      }
+      if (imageReady(projectorImg)) ctx.drawImage(projectorImg, x - 36, y - 20, 72, 72);
+
+    });
+  }
+
+  function drawSearchlightCues() {
+    SEARCHLIGHTS.forEach(function (light) {
+      var beam = searchlightState(light);
+      if (Math.abs(body.x - light.x) < 430) {
+        var x = light.x - camX;
+        ctx.fillStyle = '#102635e8';ctx.fillRect(x - 95, light.labelY - camY - 22, 190, 30);
+        ctx.fillStyle = beam.active ? '#ffe09a' : '#aef6b4';ctx.font = 'bold 15px system-ui';ctx.textAlign = 'center';
+        ctx.fillText((beam.active ? 'Searchlight · ' : 'Clear · ') + beam.remaining.toFixed(1) + 's', x, light.labelY - camY - 2);
+      }
+    });
   }
 
   function update(dt) {
@@ -538,96 +669,89 @@
     var inGust = WIND_ZONES.some(inWind);
     if (held.left) dir -= 1;
     if (held.right) dir += 1;
-    if (dir < 0) body.face = -1;
-    if (dir > 0) body.face = 1;
-    if (dir) body.vx += dir * (onIce ? 620 : 1600) * dt;
-    else body.vx *= Math.max(0, 1 - (onIce ? 1.7 : 10) * dt);
-    if (inGust) body.vx -= 4600 * dt;
-    body.vx = clamp(body.vx, inGust ? -RUN - 85 : -RUN, RUN);
-    if (jumpQueued > 0) jumpQueued -= dt;
-    if (body.ground) {
-      coyote = 0.11 + jumpBonus;
-      airJumps = 1;
-      airBuffer = 0;
-    } else {
-      coyote -= dt;
-      if (airBuffer > 0) airBuffer -= dt;
-    }
-    if (jumpQueued > 0 && coyote > 0) {
-      body.vy = JUMP;
+    if (!stepClimb(dt)) {
+      if (dir < 0) body.face = -1;
+      if (dir > 0) body.face = 1;
+      if (dir) body.vx += dir * (onIce ? 620 : 1600) * dt;
+      else body.vx *= Math.max(0, 1 - (onIce ? 1.7 : 10) * dt);
+      if (inGust) body.vx -= 4600 * dt;
+      body.vx = clamp(body.vx, inGust ? -RUN - 85 : -RUN, RUN);
+      if (jumpQueued > 0) jumpQueued -= dt;
+      if (body.ground) {
+        coyote = 0.11 + jumpBonus;
+        airJumps = 1;
+        airBuffer = 0;
+      } else {
+        coyote -= dt;
+        if (airBuffer > 0) airBuffer -= dt;
+      }
+      if (jumpQueued > 0 && coyote > 0) {
+        body.vy = JUMP;
+        body.ground = false;
+        coyote = 0;
+        jumpQueued = 0;
+        airBuffer = 0;
+      } else if (!body.ground && airJumps > 0 && airBuffer > 0 && body.vy > -70) {
+        body.vy = HOP;
+        airJumps = 0;
+        airBuffer = 0;
+      }
+      body.vy += GRAV * dt;
+      if (body.vy > 820) body.vy = 820;
+      box = crateBox();
+      if (onCrate) body.x += box.x - cratePrev;
+      cratePrev = box.x;
+      var prevX = body.x;
+      body.x += body.vx * dt;
+      prevY = body.y;
+      body.y += body.vy * dt;
+      resolveChimneyWalls(prevX, prevY);
       body.ground = false;
-      coyote = 0;
-      jumpQueued = 0;
-      airBuffer = 0;
-    } else if (!body.ground && airJumps > 0 && airBuffer > 0 && body.vy > -70) {
-      body.vy = HOP;
-      airJumps = 0;
-      airBuffer = 0;
-    }
-    body.vy += GRAV * dt;
-    if (body.vy > 820) body.vy = 820;
-    box = crateBox();
-    if (onCrate) body.x += box.x - cratePrev;
-    cratePrev = box.x;
-    var prevX = body.x;
-    body.x += body.vx * dt;
-    prevY = body.y;
-    body.y += body.vy * dt;
-    body.ground = false;
-    onCrate = false;
-    best = null;
-    if (body.vy >= 0 && prevY <= box.y + 8 && body.y >= box.y && body.x >= box.x + 8 && body.x <= box.x + box.w - 8) {
-      best = { top: box.y, id: -1 };
-    }
-    for (n = 0; n < PLATFORMS.length; n++) {
-      roof = PLATFORMS[n];
-      if (body.vy < 0) break;
-      if (roof.cap) {
-        var cap = capX(roof);
-        var capTop = roof.y - 108;
-        if (prevY <= capTop + 6 && body.y >= capTop && body.x >= cap - 4 && body.x <= cap + 46 &&
-            (!best || capTop < best.top)) best = { top: capTop, id: n };
+      onCrate = false;
+      best = null;
+      if (body.vy >= 0 && prevY <= box.y + 8 && body.y >= box.y && body.x >= box.x + 8 && body.x <= box.x + box.w - 8) {
+        best = { top: box.y, id: -1 };
       }
-      if (prevY > roof.y + 8) continue;
-      if (body.y < roof.y) continue;
-      if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
-      if (!best || roof.y < best.top) best = { top: roof.y, id: n };
-    }
-    for (var obstacleIndex = 0; obstacleIndex < ROOF_BLOCKS.length; obstacleIndex++) {
-      var obstacle = ROOF_BLOCKS[obstacleIndex];
-      if (body.x < obstacle.x - 11 || body.x > obstacle.x + obstacle.w + 11 || body.y - 30 > obstacle.bottom) continue;
-      if (body.vy >= 0 && prevY <= obstacle.y + 5 && body.y >= obstacle.y &&
-          body.x >= obstacle.x && body.x <= obstacle.x + obstacle.w && (!best || obstacle.y < best.top)) {
-        best = { top: obstacle.y, id: obstacle.roof };
-      } else if (prevY > obstacle.y && body.y > obstacle.y && body.y <= obstacle.bottom + 6) {
-        if (prevX <= obstacle.x - 10) body.x = obstacle.x - 11;
-        else if (prevX >= obstacle.x + obstacle.w + 10) body.x = obstacle.x + obstacle.w + 11;
+      for (n = 0; n < PLATFORMS.length; n++) {
+        roof = PLATFORMS[n];
+        if (body.vy < 0) break;
+        if (roof.cap) {
+          var cap = capX(roof);
+          var capTop = roof.y - roof.chimneyHeight;
+          if (prevY <= capTop + 6 && body.y >= capTop && body.x >= cap - 4 && body.x <= cap + 46 &&
+              (!best || capTop < best.top)) best = { top: capTop, id: n };
+        }
+        if (prevY > roof.y + 8) continue;
+        if (body.y < roof.y) continue;
+        if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
+        if (!best || roof.y < best.top) best = { top: roof.y, id: n };
       }
-    }
-    if (best) {
-      body.y = best.top;
-      body.vy = 0;
-      body.ground = true;
-      if (best.id < 0) onCrate = true;
-      else {
-        stood = best.id;
-        if (PLATFORMS[best.id].role === 'main') cp = best.id;
+      for (var obstacleIndex = 0; obstacleIndex < ROOF_BLOCKS.length; obstacleIndex++) {
+        var obstacle = ROOF_BLOCKS[obstacleIndex];
+        if (body.x < obstacle.x - 11 || body.x > obstacle.x + obstacle.w + 11 || body.y - 30 > obstacle.bottom) continue;
+        if (body.vy >= 0 && prevY <= obstacle.y + 5 && body.y >= obstacle.y &&
+            body.x >= obstacle.x && body.x <= obstacle.x + obstacle.w && (!best || obstacle.y < best.top)) {
+          best = { top: obstacle.y, id: obstacle.roof };
+        } else if (prevY > obstacle.y && body.y > obstacle.y && body.y <= obstacle.bottom + 6) {
+          if (prevX <= obstacle.x - 10) body.x = obstacle.x - 11;
+          else if (prevX >= obstacle.x + obstacle.w + 10) body.x = obstacle.x + obstacle.w + 11;
+        }
       }
-    }
-    if (held.climb) {
-      var chimney = PLATFORMS.find(function (roof) {
-        return roof.cap && body.x >= capX(roof) - 23 && body.x <= capX(roof) + 65 &&
-          body.y <= roof.y + 8 && body.y > roof.y - 108;
-      });
-      if (chimney) {
-        body.y = Math.max(chimney.y - 108, body.y - 180 * dt);
+      if (best) {
+        body.y = best.top;
         body.vy = 0;
+        body.ground = true;
+        if (best.id < 0) onCrate = true;
+        else {
+          stood = best.id;
+          if (PLATFORMS[best.id].role === 'main') cp = best.id;
+        }
       }
-    }
-    if (!onCrate && body.x > box.x - 16 && body.x < box.x + box.w + 16 && body.y > box.y + 18 && body.y - 48 < box.y + box.h) {
-      if (body.x < box.x + box.w / 2) body.x = box.x - 18;
-      else body.x = box.x + box.w + 18;
-      body.vx = body.x < box.x ? Math.min(body.vx, 0) : Math.max(body.vx, 0);
+      if (!onCrate && body.x > box.x - 16 && body.x < box.x + box.w + 16 && body.y > box.y + 18 && body.y - 48 < box.y + box.h) {
+        if (body.x < box.x + box.w / 2) body.x = box.x - 18;
+        else body.x = box.x + box.w + 18;
+        body.vx = body.x < box.x ? Math.min(body.vx, 0) : Math.max(body.vx, 0);
+      }
     }
     if (Math.abs(body.vx) > 30 && body.ground) body.runT += dt;
     if (hurt > 0) hurt -= dt;
@@ -661,6 +785,7 @@
         }
       }
     }
+    if (state === 'play' && hurt <= 0 && SEARCHLIGHTS.some(inSearchlight)) drop('A searchlight caught Trent in the opening. Wait for the five-second blackout.');
     if (state === 'play' && (body.y > 1000 || body.x < -40 || body.x > WORLD_W + 40)) drop();
     if (state !== 'play') return;
     objectives.forEach(function (item) {
@@ -770,18 +895,19 @@
       if (!roof.cap) continue;
       x = capX(roof) - camX;
       y = roof.y - camY;
-      var painted = paintedProp('chimney', x - 6, y - 108, 54, 108);
+      var height = roof.chimneyHeight;
+      var painted = paintedProp('chimney', x - 6, y - height, 54, height);
       if (!painted) {
         ctx.fillStyle = '#5c4034';
-        ctx.fillRect(x, y - 84, 42, 84);
+        ctx.fillRect(x, y - height + 24, 42, height - 24);
       }
       ctx.fillStyle = '#b28c5c';
-      for (var rung = 18; rung <= 72; rung += 18) ctx.fillRect(x + 7, y - rung, 28, 4);
+      for (var rung = 18; rung <= height - 20; rung += 18) ctx.fillRect(x + 7, y - rung, 28, 4);
       if (!painted) {
         ctx.fillStyle = '#c5d0dc';
-        ctx.fillRect(x - 6, y - 94, 54, 12);
+        ctx.fillRect(x - 6, y - height + 14, 54, 12);
         ctx.fillStyle = '#241c18';
-        ctx.fillRect(x + 10, y - 108, 22, 16);
+        ctx.fillRect(x + 10, y - height, 22, 16);
       }
     }
   }
@@ -983,6 +1109,14 @@
     var frame;
     var destH = 132;
     var s;
+    if (body.climbing && imageReady(climbImg)) {
+      var climbFrame = reduceMotion() ? 0 : Math.floor(body.climbT * 8) % 4;
+      var cw = climbImg.naturalWidth / 2, ch = climbImg.naturalHeight / 2;
+      var width = destH * cw / ch;
+      ctx.drawImage(climbImg, climbFrame % 2 * cw, Math.floor(climbFrame / 2) * ch, cw, ch,
+        body.x - camX - width / 2, body.y - camY - destH, width, destH);
+      return;
+    }
     if (!imageReady(trentImg)) return;
     frame = trentFrame();
     s = destH / TRENT.h;
@@ -1024,6 +1158,7 @@
     );
     drawSky();
     drawPanorama();
+    drawSearchlights();
     drawRoofs();
     drawCaps();
     drawIce();
@@ -1049,6 +1184,7 @@
       paintedProp(flags ? 'flag' : 'lantern', x - 19, y - 58, 38, 54);
     });
     drawTrent();
+    drawSearchlightCues();
     drawLedgeCues();
     drawSnow();
     if (state === 'play' && objectiveNoticeUntil > played) {
