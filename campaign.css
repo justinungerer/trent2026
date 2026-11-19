@@ -111,6 +111,12 @@ body {
   font-size: clamp(1rem, 5vw, 1.55rem);
 }
 
+.title-credit-window .credit-note {
+  display: block;
+  margin-top: 3px;
+  font-size: .72rem;
+}
+
 .logo-screen > .primary {
   margin: 0;
 }

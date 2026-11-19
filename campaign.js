@@ -786,6 +786,12 @@ function showLogo() {
     var name = document.createElement('dd');
     role.textContent = row[0];
     name.textContent = row[1];
+    if (row[0] === 'Music') {
+      var note = document.createElement('small');
+      note.className = 'credit-note';
+      note.textContent = '(except 1 track)';
+      name.appendChild(note);
+    }
     credit.append(role, name);
     reel.appendChild(credit);
   });
