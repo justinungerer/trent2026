@@ -34,6 +34,32 @@ window.testExpansion=()=>{
  }
  return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length,branches:expansion.branches.length,reversals};
 };
+window.testTierAndTracer=()=>{
+ beginRun();
+ const terraces=PLATFORMS.filter(r=>r.name==='Upper terrace'||r.name==='Lower terrace');
+ if(terraces.length<5||!terraces.some(r=>r.cap))throw Error('Missing traversable terraces and chimneys');
+ for(const a of PLATFORMS)for(const b of PLATFORMS)
+   if(a!==b&&Math.abs(a.y-b.y)<.001&&Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>.001)
+     throw Error('Overlapping roof surfaces '+a.name+' / '+b.name);
+ const roof=PLATFORMS[0];
+ gunfire=null;hurt=999;
+ hostileShots=[{x:roof.x+25,y:roof.y+25,vx:0,vy:-265,age:0}];
+ updateGunfire(.2);
+ if(hostileShots.length!==1||hostileShots[0].y>=roof.y)throw Error('Tracer did not penetrate roof');
+ fireHostileShot({fired:0,light:{x:body.x,y:body.y+120,left:body.x-50,right:body.x+50}});
+ if(Math.abs(Math.hypot(hostileShots[1].vx,hostileShots[1].vy)-265)>.01)throw Error('Tracer speed');
+ if(escapeMode){
+   const gap=PLATFORMS.find(r=>r.section&&!r.permanent&&r.w>72&&PLATFORMS.some(other=>other.permanentRoute&&other.y===r.y&&Math.abs(other.x-r.x-r.w)<.001));
+   if(!gap)throw Error('No hole between surviving roof sections');
+   body.x=gap.x+gap.w/2;body.y=gap.y;body.vx=body.vy=0;body.ground=true;
+   stood=PLATFORMS.indexOf(gap);played=bombNext;updateBombing(0);
+   if(!fallingBomb||fallingBomb.roof!==gap)throw Error('Bomb did not target one section');
+   played=fallingBomb.due;updateBombing(0);
+   for(let i=0;i<5;i++)update(.02);
+   if(!gap.destroyed||body.y<=gap.y||falls)throw Error('Bomb hole did not allow Trent to fall through');
+ }
+ return {terraces:terraces.length,tracerSpeed:265};
+};
 window.testSearchlightContact=()=>{
  beginRun();gunfire=null;hostileShots=[];shotSerial=0;
  const light=SEARCHLIGHTS[0];played=(8-light.phase%8)%8;light.spottedCycle=-1;
@@ -280,6 +306,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
  for(const stage of ['the-eaves','above-the-lanterns','']){
   await page.goto('http://localhost/chimney-road/?stage='+stage);
   console.log('MAP',await page.evaluate(()=>testExpansion()));
+  console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));
   console.log('FIRE',await page.evaluate(()=>testPersistentGunfire()));
   console.log('MARKER ROUTE',await page.evaluate(()=>testMarkerRoutePhysics()));

@@ -20,8 +20,10 @@ Added 12 pixels above each chapter group after its divider. Existing space betwe
 
 ## Chapter 8 — Holding Camp
 
-- Level 1 retains its 4,260-unit outward route and return objective. Regular guards double from 3 to 6. A unique 10-HP Key Warden guards the key. Collecting it requires his defeat.
-- Level 2 increases from 5,035 to 15,105 world units. Encounters repeat along the extended route at unchanged density, totaling 72 regular guards. A unique 12-HP Yard Enforcer guards the exit. Within each level 2 encounter, individual guards enter one second apart in their original order, from their original sides and lanes. The encounter triggers and total guard count are unchanged. Queued guards must arrive and be defeated before the encounter clears.
+Santa has 10 stamina in every level. A punch uses 1, an uppercut uses 3, and stamina refills at 2 points per second. Painted cookies restore the full meter.
+
+- Level 1 is 8,520 units long and has 12 regular guards spread along the route. The Key Warden still guards the far-right key. The exit is halfway across the passage.
+- Level 2 is 12,084 units long, 20% shorter than before. Groups of up to two enter more quickly and nearby groups can overlap. The 72 regular guards and 12-HP Yard Enforcer remain.
 - Level 3 increases from 1,770 to 5,310 world units with triple regular guard density. Six encounter positions send three batches five seconds apart, including while earlier guards are still fighting. All batches must arrive and be defeated before passage clears. A countdown appears while waiting for reinforcements.
 - Level 3 now has 378 regular guards across the six route encounters, doubled from 189. Each section retains its original three batches five seconds apart. An equal number of extra guards then enters individually every two seconds, starting two seconds after the third original batch enters. Types, entry sides, and lanes repeat in their original order. All queued reinforcements must arrive and be defeated before passage clears. The finale retains both bosses and three additional guards, making 383 enemies total.
 - Each boss has a unique 1,254-square transparent painted atlas with idle, two walking poses, and a strike pose. Facing, walk and strike animation, damage, health bars, and defeat use the existing fighting mechanics.

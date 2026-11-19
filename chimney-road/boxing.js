@@ -4,6 +4,8 @@
   var STUN_SECONDS = 3;
   var STUN_COOLDOWN_SECONDS = 3;
   var PUNCH_FLASH_SECONDS = .16;
+  var FIRST_FLASH_END = .30;
+  var HEADS = [[229, 8, 58, 79], [747, 8, 58, 81], [1231, 10, 65, 83], [230, 518, 59, 81], [728, 524, 63, 86], [1240, 582, 69, 88]];
   var SAME_SIDE_LIMIT = 3;
   var WINDUP_SECONDS = 2;
   var DODGE_SECONDS = 1.15;
@@ -280,20 +282,33 @@
       ctx.drawImage(img,frame%cols*sw,Math.floor(frame/cols)*sh,sw,sh,x-w/2,y-height,w,height);
     }
     // Historical face over the painted poses: the approved portrait/body fallback.
-    function enemySprite(ctx,frame,x,y,height,healthFraction,warningFlash) {
+    function faceBox(frame, x, y, height) {
+      var head = HEADS[frame], scale = height / 512;
+      return { x: x - height / 2 + (head[0] % 512) * scale,
+        y: y - height + (head[1] % 512) * scale, w: head[2] * scale, h: head[3] * scale };
+    }
+    function enemySprite(ctx,frame,x,y,height,healthFraction,warningFlash,headRecoil) {
       ctx.save();
       if (warningFlash) ctx.filter = 'brightness(1.75)';
       sprite(ctx,enemy,3,2,frame,x,y,height);
       ctx.restore();
       if(!ready(face)||!ready(enemy))return;
-      var heads=[[229,8,58,79],[747,8,58,81],[1231,10,65,83],[230,518,59,81],[728,524,63,86],[1240,582,69,88]];
-      var h=heads[frame],k=height/512,w=height,dx=x-w/2+(h[0]%512)*k,dy=y-height+(h[1]%512)*k;
-      ctx.save();ctx.beginPath();ctx.ellipse(dx+h[2]*k/2,dy+h[3]*k/2,h[2]*k/2,h[3]*k/2,0,0,Math.PI*2);ctx.clip();
+      var head = faceBox(frame, x, y, height);
+      var dx = head.x, dy = head.y;
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(dx + head.w / 2, dy + head.h / 2, head.w / 2, head.h / 2, 0, 0, Math.PI * 2);
+      ctx.clip();
+      if (headRecoil) {
+        ctx.translate(dx + head.w / 2, dy + head.h * .85);
+        ctx.rotate(headRecoil * .14);
+        ctx.translate(-dx - head.w / 2, -dy - head.h * .85 - Math.abs(headRecoil) * head.h * .07);
+      }
       ctx.filter = warningFlash ? 'sepia(.35) brightness(1.75)' : 'sepia(.35)';
-      ctx.drawImage(face, 174, 18, 116, 161, dx, dy, h[2] * k, h[3] * k);
+      ctx.drawImage(face, 174, 18, 116, 161, dx, dy, head.w, head.h);
       ctx.filter = 'none';
       if (healthFraction <= .75) {
-        drawFaceDamage(ctx, dx, dy, h[2] * k, h[3] * k, healthFraction);
+        drawFaceDamage(ctx, dx, dy, head.w, head.h, healthFraction);
       }
       ctx.restore();
     }
@@ -433,7 +448,7 @@
       }
       var enemyX = center + (enemyShift + recoil) * scale;
       var warningFlash = bout && bout.mode === 'fight' && bout.phase === 'tell' &&
-        (bout.timer <= PUNCH_FLASH_SECONDS || (bout.timer > 1 && bout.timer <= 1 + PUNCH_FLASH_SECONDS));
+        (bout.timer <= PUNCH_FLASH_SECONDS || (bout.timer > FIRST_FLASH_END && bout.timer <= FIRST_FLASH_END + PUNCH_FLASH_SECONDS));
       if (warningFlash) {
         var flashY = 132 * scale, flashRadius = 81 * scale;
         var glow = ctx.createRadialGradient(enemyX, flashY, 0, enemyX, flashY, flashRadius);
@@ -442,8 +457,11 @@
         ctx.fillStyle = glow;
         ctx.fillRect(enemyX - flashRadius, flashY - flashRadius, flashRadius * 2, flashRadius * 2);
       }
-      enemySprite(ctx, enemyFrame, enemyX, (435 - Math.abs(recoil) * .6) * scale, 380 * scale,
-        bout ? bout.enemy / MAX_ENEMY_HP : 1, warningFlash);
+      var enemyBottom = (435 - Math.abs(recoil) * .6) * scale;
+      var headRecoil = reduceMotion.matches ? 0 : recoil / 10;
+      enemySprite(ctx, enemyFrame, enemyX, enemyBottom, 380 * scale,
+        bout ? bout.enemy / MAX_ENEMY_HP : 1, warningFlash, headRecoil);
+      var head = faceBox(enemyFrame, center, 435 * scale, 380 * scale);
       if (bout && bout.phase === 'stun' && bout.mode !== 'victory') {
         drawStunStars(ctx, enemyX, (enemyFrame === 5 ? 94 : 49) * scale, scale);
       }
@@ -466,7 +484,7 @@
         var reach = Math.min(1, action.elapsed / move.windup);
         var retract = Math.max(0, (action.elapsed - move.windup - .045) / (move.recovery - .045));
         extension = reach * Math.max(0, 1 - retract);
-        lunge = extension * (action.kind === 'upper' ? 53 : 39);
+        lunge = extension * (action.kind === 'upper' ? 61 : 55);
         heroShift = action.offset * (1 - reach) - move.side * extension * 9;
       }
       if (bout && bout.playerHitTime > .35 && !reduceMotion.matches) {
@@ -477,19 +495,20 @@
       if (action && extension > .02 && ready(hero)) {
         var side = PUNCHES[action.kind].side;
         var shoulderX = heroX + side * 28 * scale, shoulderY = (246 - lunge) * scale;
-        var goalX = center + (action.kind === 'upper' ? 9 : side * 20) * scale, goalY = (action.kind === 'upper' ? 111 : 152) * scale;
+        var goalX = head.x + head.w * (action.kind === 'upper' ? .5 : .5 + side * .21);
+        var goalY = head.y + head.h * (action.kind === 'upper' ? .91 : .64);
         var gloveX = shoulderX + (goalX - shoulderX) * extension + side * 10 * scale * (1 - extension);
         var gloveY = shoulderY + (goalY - shoulderY) * extension - 22 * scale * (1 - extension);
         drawPunchArm(ctx, shoulderX, shoulderY, gloveX, gloveY, side < 0, scale);
       }
       if (bout && bout.flash > 0) {
         var impactSide = PUNCHES[bout.lastImpact].side;
-        var impactY = bout.lastImpact === 'upper' ? 111 : 152;
+        var impactY = head.y + head.h * (bout.lastImpact === 'upper' ? .91 : .64);
         ctx.strokeStyle = 'rgba(255,220,138,' + Math.min(1, bout.flash/.16) + ')';
         ctx.lineWidth = 2.5 * scale;
         ctx.beginPath();
         for (var i = 0; i < 6; i++) {
-          var angle = i * Math.PI / 3, x = center + (bout.lastImpact === 'upper' ? 9 : impactSide * 20) * scale, y = impactY * scale;
+          var angle = i * Math.PI / 3, x = head.x + head.w * (bout.lastImpact === 'upper' ? .5 : .5 + impactSide * .21), y = impactY;
           ctx.moveTo(x + Math.cos(angle) * 10 * scale, y + Math.sin(angle) * 10 * scale);
           ctx.lineTo(x + Math.cos(angle) * 22 * scale, y + Math.sin(angle) * 22 * scale);
         }

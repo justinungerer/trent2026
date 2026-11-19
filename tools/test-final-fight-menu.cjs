@@ -125,11 +125,11 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
       try {
-        await fightFrame.evaluate(() => stepWarning(.90));
+        await fightFrame.evaluate(() => stepWarning(1.61));
         assert.ok(await fightFrame.evaluate(() => fighterBrightness()) > warningBrightness);
-        await fightFrame.evaluate(() => stepWarning(.30));
+        await fightFrame.evaluate(() => stepWarning(.18));
         assert.equal(await fightFrame.evaluate(() => fighterBrightness()), warningBrightness);
-        const beforeImpact = await fightFrame.evaluate(() => stepWarning(.79));
+        const beforeImpact = await fightFrame.evaluate(() => stepWarning(.20));
         assert.equal(beforeImpact.phase, 'tell');
         assert.equal(beforeImpact.hp, initial.hp);
         assert.ok(await fightFrame.evaluate(() => fighterBrightness()) > warningBrightness);

@@ -148,24 +148,38 @@
   }
   var escapeMode = !eaves && !flags;
   var expansion = null;
+  var tierAnchors = PLATFORMS.filter(function (roof) { return roof.role === 'main'; }).map(function (roof) {
+    return { x: roof.x, y: roof.y, w: roof.w };
+  });
   if (!eaves) {
     WORLD_W = Math.round(WORLD_W * (escapeMode ? 1.5 : 1));
     expansion = window.TrentRoofExpansion(PLATFORMS, objectives, { flags: flags, width: WORLD_W });
     WORLD_TOP = expansion.top; WORLD_BOTTOM = expansion.bottom;
   }
+  tierAnchors.forEach(function (roof) {
+    if (escapeMode) { roof.x *= 1.5; roof.w *= 1.5; }
+    if (!eaves) roof.y = 300 + (roof.y - 300) * expansion.scale;
+  });
+  window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W, escapeMode, eaves);
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
+    roof.drawDepth = 55;
+    PLATFORMS.forEach(function (lower) {
+      if (lower.y > roof.y && lower.x < roof.x + roof.w && lower.x + lower.w > roof.x) {
+        roof.drawDepth = Math.min(roof.drawDepth, lower.y - roof.y);
+      }
+    });
   });
   if (eaves) PLATFORMS[0].chimneyHeight = 324;
   var SEARCH_SWEEP = 3;
   var SEARCH_BREAK = 5;
   var SEARCHLIGHTS = [];
-  var mainRoofs = PLATFORMS.filter(function (roof) { return roof.role === 'main'; }).slice().sort(function (a, b) { return a.x - b.x; });
+  var mainRoofs = tierAnchors.slice().sort(function (a, b) { return a.x - b.x; });
   var openingIndex = 0;
   for (var opening = 1; opening < mainRoofs.length; opening++) {
     var before = mainRoofs[opening - 1], after = mainRoofs[opening];
     var leftEdge = before.x + before.w, gap = after.x - leftEdge;
-    if (eaves && before === PLATFORMS[0] && after === PLATFORMS[1]) continue;
+    if (eaves && opening === 1) continue;
     if (gap < 30 || gap > 230) continue;
     if (openingIndex++ % 3 !== 0) continue;
     var lightX = leftEdge + gap / 2;
@@ -181,7 +195,7 @@
   }
   document.getElementById('roof-controls').textContent +=
     ' Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once per second until you leave the screen where they spotted you. Only a bullet hit counts as a fall.';
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once per second until you leave the screen where they spotted you. These slower tracers can pass through roofs, so dodge the bright shots.';
   var GOAL = PLATFORMS.findIndex(function (roof) { return roof.goal; });
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if (roof.permanentRoute || (index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
@@ -197,7 +211,7 @@
   var fallingBomb = null, bombNext = 3, roofBlasts = [];
   if (escapeMode) {
     document.getElementById('roof-objective').textContent = 'You have been spotted. Escape the bombed roofs, follow the reinforced stone route to the sleigh, and confront Hitler guarding it.';
-    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Snow roofs can collapse; gold-braced stone roofs remain. Follow the permanent switchbacks up, down, and back across the skyline.';
+    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Bombs punch holes through individual roof sections. Gold-braced stone remains. Follow the permanent switchbacks up, down, and back across the skyline.';
   }
   var ICE_PATCHES = eaves ? [{ x: 3070, y: 283, w: 194 }, { x: 4870, y: 294, w: 190 }] : [];
   var WIND_ZONES = eaves ? [{ x: 3980, y: 292, w: 212, phase: 0 }, { x: 4490, y: 352, w: 150, phase: 1.3 }] : [];
@@ -767,7 +781,7 @@
     if (gunfire || light.spottedCycle === cycle) return;
     light.spottedCycle = cycle;
     gunfire = { light: light, next: played, fired: 0, screen: { left: camX, right: camX + VIEW_W, top: camY, bottom: camY + VIEW_H } };
-    say('Spotted! Soldiers keep firing once per second until you leave this screen. Dodge or take cover.');
+    say('Spotted! Soldiers keep firing once per second until you leave this screen. Keep moving. Bullets pass through roofs.');
   }
 
   function fireHostileShot(burst) {
@@ -776,7 +790,7 @@
     var y = Math.max(burst.light.y, body.y + 120);
     var dx = body.x - x, dy = body.y - 24 - y;
     var length = Math.hypot(dx, dy) || 1;
-    hostileShots.push({ x: x, y: y, oldX: x, oldY: y, vx: dx / length * 440, vy: dy / length * 440, age: 0 });
+    hostileShots.push({ x: x, y: y, oldX: x, oldY: y, vx: dx / length * 265, vy: dy / length * 265, age: 0 });
     shotSerial++;
   }
 
@@ -805,15 +819,9 @@
       var shot = hostileShots[i];
       shot.oldX = shot.x; shot.oldY = shot.y;
       shot.x += shot.vx * dt; shot.y += shot.vy * dt; shot.age += dt;
-      var blocked = PLATFORMS.some(function (roof) {
-        if (roof.destroyed) return false;
-        return segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y, roof.x, roof.y, roof.w, 10) ||
-          (roof.cap && segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y,
-            capX(roof), roof.y - roof.chimneyHeight, 42, roof.chimneyHeight));
-      });
-      if (blocked || shot.age > 3) { hostileShots.splice(i, 1); continue; }
+      if (shot.age > 3) { hostileShots.splice(i, 1); continue; }
       if (hurt <= 0 && segmentHitsRect(shot.oldX, shot.oldY, shot.x, shot.y, body.x - 16, body.y - 51, 32, 54)) {
-        drop('A bullet hit Trent. Dodge the next volley or take cover.');
+        drop('A bullet hit Trent. Dodge the next volley. Bullets pass through roofs.');
         return;
       }
     }
@@ -823,10 +831,10 @@
     hostileShots.forEach(function (shot) {
       var speed = Math.hypot(shot.vx, shot.vy) || 1;
       var x = shot.x - camX, y = shot.y - camY;
-      ctx.strokeStyle = '#ff603e'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 20, y - shot.vy / speed * 20);ctx.lineTo(x, y);ctx.stroke();
-      ctx.strokeStyle = '#fff2a1'; ctx.lineWidth = 2;
-      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 12, y - shot.vy / speed * 12);ctx.lineTo(x, y);ctx.stroke();
+      ctx.strokeStyle = '#ff5938'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 35, y - shot.vy / speed * 35);ctx.lineTo(x, y);ctx.stroke();
+      ctx.strokeStyle = '#fff5ac'; ctx.lineWidth = 5;
+      ctx.beginPath();ctx.moveTo(x - shot.vx / speed * 23, y - shot.vy / speed * 23);ctx.lineTo(x, y);ctx.stroke();
     });
   }
 
@@ -835,12 +843,16 @@
     roofBlasts = roofBlasts.filter(function (blast) { return blast.age < 1; });
     if (!fallingBomb && played >= bombNext) {
       var roof = PLATFORMS[stood];
-      if (!roof || roof.destroyed || Math.abs(body.y - roof.y) > 100) roof = PLATFORMS[cp];
-      // Target the snow roof over a reinforced core, so the weak roof falls away.
-      if (roof && roof.permanentRoute) roof = PLATFORMS.find(function (candidate) {
-        return !candidate.permanent && !candidate.destroyed && Math.abs(candidate.y - roof.y) < 1 && body.x >= candidate.x && body.x <= candidate.x + candidate.w;
-      }) || roof;
-      if (roof) fallingBomb = { roof: roof, x: clamp(body.x, roof.x + 16, roof.x + roof.w - 16), y: roof.y, due: played + 2.2, startY: camY - 140 };
+      if (!roof || roof.destroyed || roof.permanent || Math.abs(body.y - roof.y) > 100) {
+        roof = PLATFORMS.filter(function (candidate) {
+          return !candidate.permanent && !candidate.destroyed &&
+            Math.abs(candidate.y - body.y) < 170 &&
+            candidate.x < body.x + 380 && candidate.x + candidate.w > body.x - 380;
+        }).sort(function (a, b) {
+          return Math.abs(a.x + a.w / 2 - body.x) - Math.abs(b.x + b.w / 2 - body.x);
+        })[0];
+      }
+      if (roof) fallingBomb = { roof: roof, x: roof.x + roof.w / 2, y: roof.y, due: played + 2.2, startY: camY - 140 };
       bombNext = played + 5;
     }
     if (fallingBomb && played >= fallingBomb.due) {
@@ -849,7 +861,6 @@
       roofBlasts.push({ x: target.x, y: target.y, age: 0 });
       fallingBomb = null;
       if (!reduceMotion()) shake = 9;
-      if (hurt <= 0 && Math.abs(body.x - target.x) < 78 && Math.abs(body.y - target.y) < 115) drop('The bomb blast knocked Trent off. Move away from the red target.');
     }
   }
 
@@ -983,7 +994,8 @@
         }
         if (prevY > roof.y + 8) continue;
         if (body.y < roof.y) continue;
-        if (body.x < roof.x + 10 || body.x > roof.x + roof.w - 10) continue;
+        var edgeInset = roof.section || roof.permanentRoute ? 0 : 10;
+        if (body.x < roof.x + edgeInset || body.x > roof.x + roof.w - edgeInset) continue;
         if (!best || roof.y < best.top) best = { top: roof.y, id: n };
       }
       for (var obstacleIndex = 0; obstacleIndex < ROOF_BLOCKS.length; obstacleIndex++) {
@@ -1155,9 +1167,9 @@
     for (n = 0; n < PLATFORMS.length; n++) {
       roof = PLATFORMS[n];
       if (roof.destroyed || roof.x + roof.w < camX || roof.x > camX + VIEW_W || roof.y < camY - 300 || roof.y > camY + VIEW_H) continue;
-      dh = roof.w * roofImg.naturalHeight / roofImg.naturalWidth;
+      dh = Math.min(roof.drawDepth, roof.w * roofImg.naturalHeight / roofImg.naturalWidth);
       ctx.drawImage(roofImg, roof.x - camX, roof.y - camY, roof.w, dh);
-      if (roof.permanentRoute) { ctx.fillStyle = '#eac976'; ctx.fillRect(roof.x - camX + 8, roof.y - camY + 16, roof.w - 16, 4); }
+      if (roof.permanentRoute) { ctx.fillStyle = '#eac976'; ctx.fillRect(roof.x - camX + 8, roof.y - camY + Math.min(16, dh * .55), roof.w - 16, Math.min(4, dh * .35)); }
     }
   }
 

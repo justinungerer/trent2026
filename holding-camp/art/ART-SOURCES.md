@@ -292,3 +292,5 @@ Asset: `guard-heavy-painted.webp`
 Prompt:
 
 High resolution realistically painted sprite sheet for a fictional WWII adventure videogame. One large broad adult sentry, long grey green WWII military greatcoat, leather gloves, steel helmet. Exactly 3 columns by 2 rows, six equal square cells in a 1536 by 1024 image. Full body profile facing RIGHT in all cells, same character and same size, boots near bottom edge of each cell. Top row: standing fists raised; walking with left foot forward; walking with right foot forward. Bottom row: extending right fist horizontally in an action pose; leaning backward with hands raised; sitting down dazed. Empty hands. Detailed painted clothing, realistic anatomy, muted period colours. No lettering, no political emblems, no symbols. Each figure isolated with generous empty margins within its cell. Fully transparent alpha zero background with no haze, no grid lines, no shadows and no borders.
+
+- stamina-cookie.webp uses a generated transparent gouache illustration of a golden chocolate-chip cookie. It restores stamina in all Holding Camp levels.

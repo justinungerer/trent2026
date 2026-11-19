@@ -33,15 +33,19 @@
   var BAND_BOT = BAND_TOP + BAND_H;
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
-  var WALK = cellPassage ? 4260 : gateFight ? 1770 * 3 : Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW)) * 3;
+  var yardPassage = !cellPassage && !gateFight;
+  var WALK = cellPassage ? 8520 : gateFight ? 1770 * 3 : Math.round(Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW)) * 3 * .8);
   var START_X = 340;
   var OUTBOUND = 1;
   var GATE_X = START_X + WALK;
-  var EXIT_X = cellPassage ? START_X - 160 : GATE_X;
+  var EXIT_X = cellPassage ? START_X + WALK / 2 : GATE_X;
   var EXIT_Y = BAND_TOP + 156;
   var WORLD_R = GATE_X + 240;
   var SANTA_H = Math.round(VIEW_H * 0.28);
   var MAX_HP = 5 + (window.TrentMissionBonus || 0);
+  var MAX_STAMINA = 10;
+  var STAMINA_REFILL = MAX_STAMINA / 5;
+  var staminaEl = document.getElementById('stamina');
   var FR = window.CAMP_FRAMES;
 
   var KIND = {
@@ -113,7 +117,7 @@
       document.getElementById('camp-win-copy').textContent = 'Santa brought the key back and unlocked the passage door.';
     }
     document.getElementById('camp-goal').textContent = cellPassage
-      ? 'Start beside the Exit door on the left. Fight across the passage to collect the key at the far right, then return to the door on the left.'
+      ? 'Fight across the passage, take the key at the far right, then return to the exit halfway back.'
       : 'Clear both gatehouse groups and reach the yard gate.';
     WAVE_PLAN = cellPassage ? [
       { at: 0.24, foes: [{ k: 'light', side: 'left' }] },
@@ -127,9 +131,12 @@
   // Repeat the authored encounters over three times the route, preserving density.
   var originalPlan = WAVE_PLAN;
   if (cellPassage) {
-    WAVE_PLAN = originalPlan.map(function (wave) {
-      return { at: wave.at, foes: wave.foes.concat(wave.foes) };
-    });
+    WAVE_PLAN = [];
+    for (var half = 0; half < 2; half++) {
+      originalPlan.forEach(function (wave) {
+        WAVE_PLAN.push({ at: (half + wave.at) / 2, foes: wave.foes.concat(wave.foes) });
+      });
+    }
     WAVE_PLAN.push({ at: 0.94, foes: [{ k: 'warden', side: 'right' }] });
   } else {
     WAVE_PLAN = [];
@@ -143,19 +150,30 @@
         });
       });
     }
+    if (yardPassage) {
+      WAVE_PLAN = WAVE_PLAN.flatMap(function (wave) {
+        var split = Math.ceil(wave.foes.length / 2);
+        return [
+          { at: wave.at, foes: wave.foes.slice(0, split) },
+          { at: wave.at + .018, foes: wave.foes.slice(split) }
+        ];
+      }).filter(function (wave) { return wave.foes.length; });
+    }
     WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
       { k: 'warden', side: 'left' }, { k: 'enforcer', side: 'right' },
       { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }
     ] : [{ k: 'enforcer', side: 'right' }] });
   }
   document.getElementById('camp-goal').textContent = cellPassage
-    ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the Exit door on the left.'
+    ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the exit halfway back.'
     : gateFight ? 'Fight through three waves at each position, five seconds apart. An equally large reinforcement group then enters one guard every two seconds. At the gate, defeat both bosses and their three guards.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
   var gateImg = new Image();
   var cocoaImg = new Image();
+  var cookieImg = new Image();
+  cookieImg.src = 'art/stamina-cookie.webp';
   var keyImg = new Image();
   if (cellPassage) keyImg.src = '../shelf-escape/art/props/depot-key.webp';
   yardImg.src = cellPassage ? 'art/cell-passage.webp' :
@@ -263,6 +281,13 @@
         got: false
       });
     }
+    for (var slot = 1; slot <= (cellPassage || yardPassage ? 8 : 6); slot++) {
+      out.push({
+        x: START_X + slot * WALK / (cellPassage || yardPassage ? 9 : 7),
+        y: BAND_TOP + BAND_H * (slot % 2 ? .5 : .73),
+        got: false, stamina: true
+      });
+    }
     return out;
   }
 
@@ -272,6 +297,7 @@
       y: BAND_TOP + BAND_H * 0.62,
       face: OUTBOUND,
       hp: MAX_HP,
+      stamina: MAX_STAMINA,
       atk: '',
       atkT: 0,
       cool: 0,
@@ -377,6 +403,7 @@
     }
     else gateEl.textContent = left + ' guards';
     pipsEl.textContent = pipsText();
+    staminaEl.textContent = Math.floor(santa.stamina) + '/' + MAX_STAMINA;
   }
 
   function beginRun() {
@@ -476,6 +503,13 @@
   }
 
   function beginAttack(name) {
+    var cost = name === 'upper' ? 3 : 1;
+    if (santa.stamina < cost) {
+      santa.buffer = '';
+      say('Catch your breath or grab a cookie.');
+      return;
+    }
+    santa.stamina -= cost;
     var foe = nearestFoe();
     santa.atk = name;
     santa.atkT = 0;
@@ -574,7 +608,7 @@
     wave.sent++;
     wave.nextAt = played + 5;
     for (var i = 0; i < wave.foes.length; i++) {
-      if (!cellPassage && !gateFight) wave.pending.push({ index: i, at: played + i });
+      if (yardPassage) wave.pending.push({ index: i, at: played + i * .45 });
       else spawnFoe(wave, i);
     }
     // Level 3 doubles every route encounter with a second, individually timed group.
@@ -628,7 +662,7 @@
       line = wave.at * WALK;
       if ((!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) ||
           (wave.spawned && wave.sent < wave.batches && played >= wave.nextAt)) spawnWave(wave);
-      if (!cellPassage) return;
+      if (gateFight) return;
     }
   }
 
@@ -750,7 +784,7 @@
     if (cellPassage && !keyTaken && waveClear(waves[waves.length - 1]) && Math.abs(cellKey.x - santa.x) < 48 &&
         Math.abs(cellKey.y - santa.y) < 46) {
       keyTaken = true;
-      say('Key collected. Return to the exit on the left.');
+      say('Key collected. Return to the exit halfway back.');
     }
     var i;
     var p;
@@ -758,6 +792,14 @@
       p = picks[i];
       if (p.got) continue;
       if (Math.abs(p.x - santa.x) < 36 && Math.abs(p.y - santa.y) < 42) {
+        if (p.stamina) {
+          if (santa.stamina >= MAX_STAMINA) continue;
+          santa.stamina = MAX_STAMINA;
+          p.got = true;
+          sfx('right');
+          say('Cookie collected. Stamina restored.');
+          continue;
+        }
         if (santa.hp >= MAX_HP) continue;
         santa.hp += 1;
         p.got = true;
@@ -775,6 +817,7 @@
     var when;
     var clip;
     var i;
+    santa.stamina = Math.min(MAX_STAMINA, santa.stamina + STAMINA_REFILL * dt);
     if (santa.iframe > 0) santa.iframe -= dt;
     if (santa.cool > 0) santa.cool -= dt;
     if (santa.down > 0) {
@@ -867,7 +910,7 @@
     drawH = (VIEW_H - BAND_TOP) / (1 - fence);
     drawW = drawH * (yardImg.naturalWidth / yardImg.naturalHeight);
     originY = BAND_TOP - fence * drawH;
-    var offset = cellPassage ? EXIT_X - drawW * 0.255 : 0;
+    var offset = cellPassage ? 180 - drawW * 0.255 : 0;
     start = Math.floor((cam - offset) / drawW) - 1;
     for (i = start; i < start + 5; i++) {
       x = Math.round(offset + i * drawW - cam);
@@ -920,6 +963,11 @@
     if (cellPassage) {
       var doorX = EXIT_X - cam;
       var label = exitLabel();
+      if (imageReady(gateImg)) {
+        var doorHeight = VIEW_H * .33;
+        var doorWidth = doorHeight * gateImg.naturalWidth / gateImg.naturalHeight;
+        ctx.drawImage(gateImg, doorX - doorWidth / 2, EXIT_Y - doorHeight, doorWidth, doorHeight);
+      }
       ctx.save();
       ctx.font = 'bold 24px system-ui';
       ctx.textAlign = 'center';
@@ -946,9 +994,10 @@
     var bob = reduceMotion() ? 0 : Math.sin(visualTime * 3 + p.x) * 3;
     var s = 46;
     var gh;
-    if (!imageReady(cocoaImg)) return;
-    gh = s * (cocoaImg.naturalHeight / cocoaImg.naturalWidth);
-    ctx.drawImage(cocoaImg, p.x - cam - s * 0.5, p.y - gh + bob, s, gh);
+    var art = p.stamina ? cookieImg : cocoaImg;
+    if (!imageReady(art)) return;
+    gh = s * (art.naturalHeight / art.naturalWidth);
+    ctx.drawImage(art, p.x - cam - s * 0.5, p.y - gh + bob, s, gh);
   }
 
   function drawDots(e, height) {

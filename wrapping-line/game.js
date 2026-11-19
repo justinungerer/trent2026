@@ -1,5 +1,5 @@
 /* Chapter 9 — The Wrapping Line.
-   Thirty percent round times, with a slower conveyor for every stage.
+   A slow conveyor with room between every box.
    Wrap intact boxes, avoid damaged boxes, and fill the level objective.
    Painted sprites live in art/. */
 'use strict';
@@ -35,12 +35,13 @@
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
   var NEED = 30;
-  var ROUND_SECONDS = (loading ? 300 : sorting ? 100 : 27) * 0.3;
+  // The score round needs enough time for the wider-spaced boxes to reach the mark.
+  var ROUND_SECONDS = loading ? 90 : sorting ? 30 : 22;
   document.getElementById('round-limit').textContent = 'You have ' + ROUND_SECONDS + ' seconds per round.';
   var TARGET = 456;
   var MEET = 26;
   var SPEED = (232 / 0.3) * 0.25;
-  var INTERVAL = 0.8 * 0.3;
+  var INTERVAL = 0.8 * 0.3 * 3;
   var FIRST_SPAWN = 0.4 * 0.3;
   var LANES = [150, 206, 262, 318];
   var MARK_MIN = 150;
