@@ -18,7 +18,7 @@
   var landscape = orientation.gameUsesLandscape(name);
   if (music) music.volume = 0.35;
   var player = campaignMusic ? { sync: campaignMusic.sync } : window.TrentPlaylist.createPlayer(music, function () {
-    return !blocked() && !document.hidden && wantsMusic && parentMusicEnabled();
+    return !document.hidden && wantsMusic && parentMusicEnabled();
   }, function () {
     return bossMusic ? window.TrentPlaylist.bossFile : previousTrack;
   });

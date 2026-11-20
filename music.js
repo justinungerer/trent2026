@@ -1,6 +1,5 @@
 'use strict';
 const soundtrack = document.getElementById('soundtrack');
-const turnGate = document.getElementById('turn-gate');
 const musicButton = document.getElementById('music');
 soundtrack.volume = 0.35;
 let wantsMusic = true;
@@ -8,12 +7,8 @@ let musicSegment = 'opening';
 let segmentTrack = '01-jingle-bells.mp3';
 let beforeBoss = null;
 const playlistPlayer = window.TrentPlaylist.createPlayer(soundtrack, function () {
-  return wantsMusic && !musicBlocked();
+  return wantsMusic && !document.hidden;
 }, function () { return segmentTrack; });
-
-function musicBlocked() {
-  return document.hidden || !turnGate.hidden;
-}
 
 function updateMusic() {
   musicButton.textContent = wantsMusic ? 'Music on' : 'Music off';
@@ -21,10 +16,6 @@ function updateMusic() {
 }
 
 function syncMusic() {
-  if (!wantsMusic || musicBlocked()) {
-    soundtrack.pause();
-    return;
-  }
   playlistPlayer.sync();
 }
 
@@ -86,6 +77,5 @@ window.TrentSfx = {
 
 const musicObserver = new MutationObserver(syncMusic);
 musicObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-musicObserver.observe(turnGate, { attributes: true, attributeFilter: ['hidden'] });
 updateMusic();
 playlistPlayer.next();
