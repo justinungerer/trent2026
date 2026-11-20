@@ -36,7 +36,7 @@
      The painted board is covered and redrawn so the current pattern shows. */
   var TRAIN_COUNT = inspection ? 2 : rescue ? 7 : 5;
   var SPEED_MULT = 1.5;
-  var FLIP_INTERVAL = 2.5 / 1.2;
+  var FLIP_INTERVAL = (2.5 / 1.2) / (rescue ? 0.75 : 1);
   var FLIP_RATE_VARIATION = rescue ? 0.35 : 0.2;
   var SABOTEUR_MOVE_TIME = 0.42;
   var RECOVERY_TIME = rescue ? 0 : 0.9;
