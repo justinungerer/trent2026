@@ -16,6 +16,7 @@ var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 var active = null;
 var pendingMissionUrl = '';
 var missionLandscape = false;
+var missionInstructionsAccepted = false;
 var resumeEndingAfterTurn = false;
 var introToken = 0;
 var introRaf = 0;
@@ -473,11 +474,17 @@ function clearOpeningFilm() {
 function closeMission() {
   if (window.TrentMusic) window.TrentMusic.endBoss();
   pendingMissionUrl = '';
+  missionInstructionsAccepted = false;
   var menuButton = document.getElementById('mission-menu');
   menuButton.hidden = true;
   menuButton.onclick = null;
   var frame = document.getElementById('game');
-  if (frame) frame.src = 'about:blank';
+  if (frame && frame.hasAttribute('src')) {
+    // Replacing the frame keeps a queued blank navigation from racing the next level.
+    var emptyFrame = frame.cloneNode(false);
+    emptyFrame.removeAttribute('src');
+    frame.replaceWith(emptyFrame);
+  }
   document.getElementById('mission').hidden = true;
   document.body.classList.remove('playing');
   syncTurn();
@@ -847,7 +854,7 @@ function showOpeningFilm(done, film) {
 }
 
 function wantsLandscape() {
-  return missionLandscape && !document.getElementById('mission').hidden;
+  return missionInstructionsAccepted && missionLandscape && !document.getElementById('mission').hidden;
 }
 
 function turnNeeded() {
@@ -881,7 +888,8 @@ function syncTurn() {
   if (needed) {
     heading.textContent = landscape ? 'Turn your phone sideways' : 'Turn your phone upright';
     note.textContent = landscape ? 'This minigame plays in landscape.' :
-      document.getElementById('mission').hidden ? 'The campaign continues in portrait.' : 'Frosted Skies plays in portrait.';
+      document.getElementById('mission').hidden ? 'The campaign continues in portrait.' :
+      missionInstructionsAccepted ? 'Frosted Skies plays in portrait.' : 'Read the minigame instructions in portrait.';
     mark.classList.toggle('upright', !landscape);
   }
   document.body.classList.toggle('waiting-for-rotation', needed);
@@ -919,6 +927,7 @@ function openMissionFrame(url, title) {
   address.searchParams.set('layout', 'painted-obstacles');
   var game = address.pathname.split('/').filter(Boolean).pop();
   missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
+  missionInstructionsAccepted = false;
   pendingMissionUrl = address.href;
   campaignRoot.hidden = true;
   cinema.hidden = true;
@@ -1412,6 +1421,13 @@ window.addEventListener('message', function (event) {
 
 document.getElementById('intro-skip').onclick = function () {
   if (introDone) introDone();
+};
+window.TrentOrientation.acceptMissionInstructions = function (source) {
+  var frame = document.getElementById('game');
+  if (document.getElementById('mission').hidden || source !== frame.contentWindow || source.location.href !== frame.src) return false;
+  missionInstructionsAccepted = true;
+  syncTurn();
+  return true;
 };
 window.TrentOrientation.subscribe(syncTurn);
 document.getElementById('ending-play').onclick = playEnding;

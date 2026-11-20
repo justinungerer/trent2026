@@ -1,0 +1,42 @@
+.reading-game-instructions body,
+.reading-game-instructions body > main {
+  touch-action: pan-y;
+}
+
+.reading-game-instructions body > main {
+  width: 100%;
+  max-width: none;
+}
+
+.reading-game-instructions :is(#start-sheet, #sheet, #panel, #box-sheet) {
+  z-index: 50;
+  place-items: center;
+  overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  touch-action: pan-y;
+}
+
+.reading-game-instructions :is(#start-sheet, #sheet, #panel, #box-sheet) .card {
+  width: min(100%, 420px);
+  min-width: 0;
+  max-height: none;
+  margin: auto;
+}
+
+.briefing-turn {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  background: #0c171e;
+  color: #f8ecd4;
+  text-align: center;
+  padding: 24px;
+  font: 16px system-ui;
+}
+
+.briefing-turn[hidden] { display: none !important; }
+.briefing-turn h1, .briefing-turn p { margin: 0; color: inherit; }

@@ -304,7 +304,11 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   return fs.existsSync(file)?route.fulfill({path:file}):route.fulfill({status:404});
  });
  for(const stage of ['the-eaves','above-the-lanterns','']){
+  await page.setViewportSize({width:390,height:844});
   await page.goto('http://localhost/chimney-road/?stage='+stage);
+  await page.locator('#start').click();
+  await page.setViewportSize({width:844,height:390});
+  await page.locator('#start-sheet').waitFor({state:'hidden'});
   console.log('MAP',await page.evaluate(()=>testExpansion()));
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));

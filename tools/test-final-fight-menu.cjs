@@ -51,11 +51,18 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await page.evaluate(() => introDone());
     assert.equal(await page.locator('#intro-title').textContent(), 'Find the Carrier');
     await page.evaluate(() => introDone());
-    await page.evaluate(() => finishMission());
-    assert.equal(await page.evaluate(() => active.levelIndex), 1);
-    await page.setViewportSize({ width: 568, height: 320 });
     const radioFrame = page.frameLocator('#game');
     await radioFrame.locator('#start').click();
+    await page.setViewportSize({ width: 568, height: 320 });
+    await radioFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
+    await page.evaluate(() => finishMission());
+    assert.equal(await page.evaluate(() => active.levelIndex), 1);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => document.getElementById('game').contentWindow.location.search.includes('sequence=2'), null, { polling: 50 });
+    await radioFrame.locator('#start').click();
+    assert.equal(await page.locator('#turn-gate').isVisible(), true);
+    await page.setViewportSize({ width: 568, height: 320 });
+    await radioFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
     const radio = page.frames().find(f => new URL(f.url()).pathname.endsWith('/night-broadcast/'));
     assert.equal(new URL(radio.url()).searchParams.get('sequence'), '2');
     const canvas = await radioFrame.locator('#radio').boundingBox();
@@ -102,8 +109,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.getByRole('button', { name: 'Ending video' }).count(), 1);
     const savedPin = await page.evaluate(() => localStorage.getItem(PIN_KEY));
     await page.locator('.chapter-final-fight').click();
-    assert.equal(await page.locator('#turn-gate').isVisible(), true);
-    await page.setViewportSize({ width: 844, height: 390 });
+    assert.equal(await page.locator('#turn-gate').isVisible(), false);
     await page.waitForFunction(() => document.querySelector('#game').src.includes('stage=final-fight'), null, { polling: 50 });
     const frame = page.frameLocator('#game');
     await frame.locator('#box-start').waitFor();
@@ -113,7 +119,11 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.deepEqual(await page.frames().find(f => f.url().includes('stage=final-fight')).evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
     assert.equal(await page.evaluate(() => active.practice && active.finalFight), true);
     const fightFrame = page.frames().find(f => f.url().includes('stage=final-fight'));
-    await fightFrame.waitForFunction(() => boxAssetsReady(), null, { polling: 50 });
+    await frame.locator('#box-start').click();
+    assert.equal(await page.locator('#turn-gate').isVisible(), true);
+    assert.equal(await fightFrame.evaluate(() => menuFightState().mode), 'intro');
+    await page.setViewportSize({ width: 844, height: 390 });
+    await fightFrame.waitForFunction(() => menuFightState().mode === 'fight' && boxAssetsReady(), null, { polling: 50 });
     async function holdThroughSwing(buttonId, late, warningText) {
       await fightFrame.evaluate(value => prepareWarning(value), late);
       await frame.locator('#box-cue').getByText(warningText, { exact: false }).waitFor();
@@ -166,8 +176,70 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await picker.selectOption('final-fight');
     await page.getByRole('button', { name: 'Play level · The Chimney Road', exact: true }).click();
     assert.equal(await page.evaluate(() => active.finalFight && active.practice), true);
-    assert.ok(await page.evaluate(() => pendingMissionUrl.includes('stage=final-fight')));
+    assert.ok(await page.evaluate(() => document.getElementById('game').src.includes('stage=final-fight')));
+    for (const [game, accept, sheet] of [
+      ['prologue', '#start', '#start-sheet'],
+      ['night-broadcast', '#start', '#start-sheet'],
+      ['frosted-skies', '#action', '#sheet'],
+      ['white-rail', '#start', '#start-sheet'],
+      ['chapter-2', '#start', '#panel'],
+      ['switch-tower', '#start', '#start-sheet'],
+      ['shelf-escape', '#action', '#sheet'],
+      ['listening-wire', '#start', '#start-sheet'],
+      ['holding-camp', '#start', '#start-sheet'],
+      ['wrapping-line', '#start', '#start-sheet'],
+      ['chimney-road', '#start', '#start-sheet']
+    ]) {
+      await page.evaluate(game => {
+        closeMission();
+        openMissionFrame('./' + game + '/', game);
+      }, game);
+      const gameFrame = page.frameLocator('#game');
+      await page.waitForFunction(game => document.getElementById('game').contentWindow.location.pathname === '/' + game + '/', game, { polling: 50 });
+      await gameFrame.locator(accept).waitFor();
+      assert.equal(await page.locator('#turn-gate').isHidden(), true, game);
+      const cardWidth = await gameFrame.locator(sheet + ' .card').evaluate(card => card.getBoundingClientRect().width);
+      assert.ok(cardWidth <= 390, game + ' portrait card overflows');
+      await gameFrame.locator(accept).click();
+      if (game !== 'frosted-skies') {
+        assert.equal(await page.locator('#turn-gate').isVisible(), true, game);
+        assert.equal(await gameFrame.locator(sheet).isVisible(), true, game + ' started before rotation');
+        await page.setViewportSize({ width: 844, height: 390 });
+      }
+      await gameFrame.locator(sheet).waitFor({ state: 'hidden' });
+      assert.equal(await page.locator('#turn-gate').isHidden(), true, game);
+      await page.evaluate(() => closeMission());
+      if (game !== 'frosted-skies') {
+        assert.match(await page.locator('#turn-heading').textContent(), /upright/);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.locator('#turn-gate').waitFor({ state: 'hidden' });
+      }
+    }
+    for (const [game, accept, sheet, gameplayGate] of [
+      ['prologue', '#start', '#start-sheet', '#portrait'],
+      ['shelf-escape', '#action', '#sheet', '#turn-gate'],
+      ['frosted-skies', '#action', '#sheet', '#turn-gate']
+    ]) {
+      await page.setViewportSize({ width: 844, height: 390 });
+      await page.goto('http://localhost/' + game + '/');
+      await page.locator('.briefing-turn').waitFor();
+      assert.equal(await page.locator(gameplayGate).isHidden(), true, game);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.locator('.briefing-turn').waitFor({ state: 'hidden' });
+      await page.locator(accept).click();
+      if (game !== 'frosted-skies') {
+        await page.locator(gameplayGate).waitFor();
+        const gateOnTop = await page.locator(gameplayGate).evaluate(gate =>
+          gate.contains(document.elementFromPoint(innerWidth / 2, innerHeight / 2)));
+        assert.equal(gateOnTop, true, game);
+        assert.equal(await page.locator(sheet).isVisible(), true, game);
+        await page.setViewportSize({ width: 844, height: 390 });
+      }
+      await page.locator(sheet).waitFor({ state: 'hidden' });
+      assert.equal(await page.locator(gameplayGate).isHidden(), true, game);
+    }
     assert.deepEqual(errors, []);
+    console.log('PASS: portrait instructions and deferred rotation across all 11 minigames, plus standalone links.');
     console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();
