@@ -37,7 +37,7 @@
   var TRAIN_COUNT = inspection ? 2 : rescue ? 7 : 5;
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
-  var RECOVERY_TIME = 1.8;
+  var RECOVERY_TIME = 0.9;
   var SABOTEUR_AFTER = rescue ? 0 : 2;
   var PATTERNS = [
     [0, 1, 0, 1, 0],
@@ -79,6 +79,9 @@
   var APPROACH_SPEED = 58 * SPEED_MULT;
   var DEPART_SPEED = 260 * SPEED_MULT;
   var TRAIN_START = -380;
+  var APPROACH_SECONDS = (SWITCH_X - TRAIN_W - TRAIN_START) / APPROACH_SPEED;
+  // Rescue trains used a 15-second window including the approach. Halve just the hold.
+  var RESCUE_GRACE = APPROACH_SECONDS + (15 - APPROACH_SECONDS) / 2;
 
   /* trent.webp: six equal frames. Idle, idle, then four pull frames.
      Anchor is the sole point. */
@@ -282,7 +285,7 @@
   function armNextTrain() {
     levers = LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
-    switchGrace = rescue ? 15 : 0;
+    switchGrace = rescue ? RESCUE_GRACE : 0;
     blastT = 0;
     blastParts = [];
     flipTimer = 0;
@@ -415,6 +418,10 @@
     }
   }
 
+  function nextFlipInterval() {
+    return FLIP_INTERVAL / (0.8 + Math.random() * 0.4);
+  }
+
   /* Level 3 sabotages from the first approach; level 2 starts after two departures.
      The lever changes on that clock. The figure only shows who did it. */
   function updateSoldier(dt) {
@@ -422,9 +429,10 @@
     var mark;
     if (inspection || departures < SABOTEUR_AFTER) return;
     if (state === 'approach' && trainX + TRAIN_W < SWITCH_X) {
-      flipTimer += dt;
-      if (flipTimer >= FLIP_INTERVAL) {
-        flipTimer -= FLIP_INTERVAL;
+      if (flipTimer <= 0) flipTimer = nextFlipInterval();
+      flipTimer -= dt;
+      if (flipTimer <= 0) {
+        flipTimer += nextFlipInterval();
         index = Math.floor(Math.random() * LEVER_X.length);
         levers[index] = levers[index] === 1 ? 0 : 1;
         soldierTarget = LEVER_X[index] + 52;
