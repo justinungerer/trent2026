@@ -35,6 +35,7 @@
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
   var yardPassage = !cellPassage && !gateFight;
+  var YARD_GUARD_LIMIT = 2;
   var WALK = cellPassage ? 8520 : gateFight ? 1770 * 3 : Math.round(Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW)) * 3 * .8);
   var START_X = 340;
   var OUTBOUND = 1;
@@ -145,7 +146,9 @@
       originalPlan.forEach(function (wave) {
         WAVE_PLAN.push({
           at: (section + wave.at) / 3,
-          foes: gateFight ? wave.foes.concat(wave.foes, wave.foes) : wave.foes,
+          foes: gateFight ? Array.from({ length: Math.round(wave.foes.length * 4.5) }, function (_, i) {
+            return wave.foes[i % wave.foes.length];
+          }) : wave.foes,
           batches: gateFight ? 3 : 1,
           extraGroup: gateFight
         });
@@ -162,12 +165,13 @@
     }
     WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
       { k: 'warden', side: 'left' }, { k: 'enforcer', side: 'right' },
-      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }
+      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' },
+      { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }, { k: 'heavy', side: 'left' }
     ] : [{ k: 'enforcer', side: 'right' }] });
   }
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the exit halfway back.'
-    : gateFight ? 'Fight through three waves at each position, five seconds apart. An equally large reinforcement group then enters one guard every two seconds. At the gate, defeat both bosses and their three guards.'
+    : gateFight ? 'Fight through three waves at each position, five seconds apart. An equally large reinforcement group then enters one guard every two seconds. At the gate, defeat both bosses and their six guards.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
@@ -625,6 +629,7 @@
 
   function releaseEntrants(wave) {
     while (wave.pending.length && played >= wave.pending[0].at) {
+      if (yardPassage && living() >= YARD_GUARD_LIMIT) break;
       spawnFoe(wave, wave.pending.shift().index);
     }
   }
