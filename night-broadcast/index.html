@@ -29,7 +29,7 @@
       <button type="button" id="pause">Pause</button>
     </div>
     <div id="battery" class="battery" aria-label="Radio battery"><span id="battery-seconds">30s</span></div>
-    <div id="station-feedback" class="station-feedback" role="status" hidden>Wrong station</div>
+    <div id="station-feedback" class="station-feedback" role="status" hidden>Wrong signal</div>
 
     <div class="tune-pad">
       <button type="button" id="tune-down" aria-label="Tune lower">◀</button>
@@ -46,7 +46,7 @@
         <div id="standard-lock-instructions">
         <p>Keep the needle in a strong signal for 1 second. A red band then appears on that station. It stays hidden until that hold is done.</p>
         <p id="radio-lock-instructions"></p>
-        <p id="field-report-instructions">Any station can lock. The wrong ones do not finish the tune. Lock the field report.</p>
+        <p id="field-report-instructions">Finish a lock to check the signal.</p>
         </div>
         <button type="button" id="start">Switch on the lamp</button>
       </div>
@@ -88,7 +88,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=dial-touch"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=complete-radio-lock"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=chapter-level-music"></script></body>
 </html>

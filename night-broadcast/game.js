@@ -24,7 +24,7 @@
   var variant = new URLSearchParams(location.search).get('stage');
   var calibration = variant === 'find-the-carrier';
   var confirmDispatch = variant === 'confirm-the-dispatch';
-  var targets = calibration ? ['weather', 'music'] : confirmDispatch ? ['birch', 'lantern'] : ['santa'];
+  var targets = [];
   var targetIndex = 0;
 
   var VIEW_W = 844;
@@ -35,7 +35,7 @@
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = calibration ? 1.4 : confirmDispatch ? 3 : 2.1;
   var BATTERY_SECONDS = calibration ? 22.5 : confirmDispatch ? 41.25 : 30;
-  document.getElementById('battery-instructions').textContent = 'The radio has ' + BATTERY_SECONDS + ' seconds of battery. If it runs out, restart the stage. Incorrect stations disappear when tuned into.';
+  document.getElementById('battery-instructions').textContent = 'The radio has ' + BATTERY_SECONDS + ' seconds of battery. If it runs out, restart the stage. An incorrect station disappears after you finish locking onto it.';
   var battery = document.getElementById('battery');
   var batterySeconds = document.getElementById('battery-seconds');
   var batterySheet = document.getElementById('battery-sheet');
@@ -72,11 +72,11 @@
   trentImg.src = 'art/trent.webp';
 
   var stations = [
-    { id: 'canteen', name: 'Canteen', line: 'Canteen. Laughter and tin cups.', home: 0.16, homeDir: 1, speedScale: 1, correct: false },
-    { id: 'weather', name: 'Weather', line: 'Weather. Snow overnight, roads quiet.', home: 0.34, homeDir: -1, speedScale: 0.9, correct: false },
-    { id: 'music', name: 'Music box', line: 'A music box, thin and far.', home: 0.5, homeDir: 1, speedScale: 1.15, correct: false },
-    { id: 'chapel', name: 'Chapel', line: 'Chapel. A hymn under the wind.', home: 0.66, homeDir: -1, speedScale: 0.95, correct: false },
-    { id: 'santa', name: 'Field report', line: 'Field voice: Santa has been captured.', home: 0.84, homeDir: 1, speedScale: 1.08, correct: true }
+    { id: 'canteen', name: 'Canteen', line: 'Canteen. Laughter and tin cups.', home: 0.16, homeDir: 1, speedScale: 1 },
+    { id: 'weather', name: 'Weather', line: 'Weather. Snow overnight, roads quiet.', home: 0.34, homeDir: -1, speedScale: 0.9 },
+    { id: 'music', name: 'Music box', line: 'A music box, thin and far.', home: 0.5, homeDir: 1, speedScale: 1.15 },
+    { id: 'chapel', name: 'Chapel', line: 'Chapel. A hymn under the wind.', home: 0.66, homeDir: -1, speedScale: 0.95 },
+    { id: 'santa', name: 'Field report', line: 'Field voice: Santa has been captured.', home: 0.84, homeDir: 1, speedScale: 1.08 }
   ];
   if (confirmDispatch) {
     stations.splice(2, 1,
@@ -97,7 +97,7 @@
     document.getElementById('radio-stage-title').textContent = calibration ? 'Find the Carrier' : 'Confirm the Dispatch';
     var instructions = document.getElementById('radio-stage-instructions');
     instructions.textContent = calibration
-      ? 'Lock Weather and Music Box in order. Follow each red band and hold Lock.'
+      ? 'Find both assigned stations in order. Follow each red band and hold Lock.'
       : 'Tune the call sign shown on the dispatch readout and lock it. A second call sign appears after the first lock.';
     document.getElementById('field-report-instructions').hidden = true;
     document.getElementById('radio-win-title').textContent = calibration ? 'Carrier calibrated' : 'Dispatch confirmed';
@@ -261,7 +261,7 @@
     var station = heardStation();
     var line = station ? station.line : 'Static. Snow on the aerial.';
     var showingNote = performance.now() < statusUntil;
-    document.getElementById('station-feedback').hidden = state !== 'play' || !showingNote || statusNote !== 'wrong station';
+    document.getElementById('station-feedback').hidden = state !== 'play' || !showingNote || statusNote !== 'Wrong signal';
     var heard = showingNote ? statusNote : line;
     var sig = signalAt(freq);
     var inside = inStrongNow();
@@ -273,7 +273,7 @@
     var redInside = insideHalf(stationById(bandId), freq, RED_HALF);
     var hint = hintText();
     if (hearingEl.textContent !== heard) hearingEl.textContent = heard;
-    hearingEl.classList.toggle('miss', showingNote && statusNote === 'wrong station');
+    hearingEl.classList.toggle('miss', showingNote && statusNote === 'Wrong signal');
     if (showingNote) {
       if (statusEl.textContent !== statusNote) say(statusNote);
     } else if (line !== lastLine) {
@@ -322,7 +322,6 @@
     for (i = 0; i < stations.length; i++) {
       station = stations[i];
       station.dismissed = false;
-      station.correct = targets.indexOf(station.id) >= 0;
       station.center = station.home;
       station.dir = station.homeDir;
       station.half = STRONG_HALF;
@@ -334,7 +333,7 @@
     }
     document.getElementById('radio-stage-instructions').textContent = 'Find and lock ' + stationById(targets[0]).name + '.' +
       (targets.length > 1 ? ' The next call sign appears after the first lock.' : '') +
-      ' Incorrect stations disappear as soon as you tune into them.';
+      ' Finish locking onto a station to find out if it is the right signal.';
     document.getElementById('field-report-instructions').hidden = true;
   }
 
@@ -461,8 +460,11 @@
 
   function confirmStation(id) {
     if (id !== targets[targetIndex]) {
+      // Keep future targets available if the player locks onto them out of order.
+      if (!targets.includes(id)) stationById(id).dismissed = true;
+      lockHeld = false;
       clearBand();
-      announce('wrong station', 1500);
+      announce('Wrong signal', 1500);
       return;
     }
     stationById(id).dismissed = true;
@@ -489,12 +491,6 @@
     updateStations(dt * STATION_SPEED_SCALE);
     if (!bandId) {
       next = strongestInside();
-      if (next && targets.indexOf(next.id) < 0) {
-        next.dismissed = true;
-        clearBand();
-        announce('wrong station', 1500);
-        return;
-      }
       charged = stationById(chargeId);
       if (next && charged === next) {
         strongT += dt;
