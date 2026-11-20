@@ -268,10 +268,10 @@
     waves = [];
     nextWave = 1.2;
     waveLane = 0;
-    cameraX = -180;
     cameraY = 0;
     player.x = START_X;
     player.y = START_Y;
+    frameCamera();
     player.stumbles = 0;
     player.step = 0;
     player.facing = 1;
@@ -1183,8 +1183,7 @@
 
   function frameCamera() {
     var view = cssW / Math.max(scale, 0.001);
-    var maxCam = WALL_X + 220 - view;
-    cameraX = clamp(player.x - view * .75, -180, Math.max(-180, maxCam));
+    cameraX = player.x - view / 2;
     var screenY = worldToY(player.y);
     if (screenY > cssH * .75) cameraY += (screenY - cssH * .75) / scale;
     if (screenY < cssH * .25) cameraY -= (cssH * .25 - screenY) / scale;
