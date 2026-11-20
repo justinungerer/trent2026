@@ -16,7 +16,7 @@
     <div class="hud">
       <div class="hud-block grow">
         <span class="label" id="wrap-score-label">Points</span>
-        <strong id="run">0 / 50</strong>
+        <strong id="run">0 / 75</strong>
       </div>
       <div class="hud-block">
         <span class="label">Time</span>
@@ -25,6 +25,10 @@
       <div class="hud-block">
         <span class="label">Lives</span>
         <strong id="lives">7</strong>
+      </div>
+      <div class="hud-block">
+        <span class="label">Bows</span>
+        <strong id="bows">0</strong>
       </div>
       <div class="hud-block">
         <span class="label">Last</span>
@@ -44,9 +48,9 @@
       <div class="card">
         <p class="kicker">Chapter 9</p>
         <h1 id="wrap-stage-title">The wrapping line</h1>
-        <p>Earn about two-thirds of the points available from intact gifts before the belt stops.</p>
+        <p>You start with one bow per box on the belt. Every tap of Wrap uses one, even if you miss.</p>
         <p>Hold the up or down arrow to move the bow. Tap Wrap as a good box approaches the bow at the same height. Let damaged boxes pass.</p>
-        <p id="wrap-goal">Reach 50 points before the clock runs out. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs 5 points and one life.</p>
+        <p id="wrap-goal">Reach 75 points before the clock runs out. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs 5 points and one life.</p>
         <button type="button" id="start">Start the belt</button>
       </div>
     </div>
@@ -88,7 +92,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=intact-gift-timers"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=limited-bows-and-higher-goals"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

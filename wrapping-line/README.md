@@ -1,6 +1,6 @@
 # Chapter 9 — The Wrapping Line
 
-A belt brings presents through the workshop at different heights. The up and down buttons move a targeting bow. The score goals for Levels 1, 2, and 3 are 36, 50, and 75 points respectively.
+A belt brings presents through the workshop at different heights. The up and down buttons move a targeting bow. The score goals for Levels 1, 2, and 3 are 54, 75, and 113 points respectively.
 
 The workshop, Trent, presents, and targeting bow are original generated paintings in `art/`. There are no third-party assets and no build step.
 
@@ -31,7 +31,7 @@ If the device asks for reduced motion, a bad meet does not shake the shop.
 
 ## Win and lose
 
-Wrap a box near the bow to score. The horizontal hit window extends 94 game pixels on either side of the bow. Boxes that pass score nothing.
+Wrap a box near the bow to score. The horizontal hit window extends 94 game pixels on either side of the bow. Boxes that pass score nothing. You start each round with one bow per scheduled box, including damaged boxes. Every Wrap tap spends one bow, including a miss. Running out of bows before reaching the score goal ends the run.
 
 - Plain +1, ribbon +3, gilt +5.
 - Wrapping a torn or crushed box costs 5 points and one life.

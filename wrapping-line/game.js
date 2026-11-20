@@ -10,6 +10,7 @@
   var runEl = document.getElementById('run');
   var timeEl = document.getElementById('time');
   var livesEl = document.getElementById('lives');
+  var bowsEl = document.getElementById('bows');
   var lastEl = document.getElementById('last');
   var pauseBtn = document.getElementById('pause');
   var hintEl = document.getElementById('hint');
@@ -31,7 +32,7 @@
   var loading = stage === 'load-the-sleigh';
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
-  var NEED = sorting ? 36 : loading ? 75 : 50;
+  var NEED = sorting ? 54 : loading ? 113 : 75;
   var SPAWN_X = 920;
   var TARGET = 456;
   var MEET = 26;
@@ -94,6 +95,7 @@
   var parcels = [];
   var bag = [];
   var roundDeck = [];
+  var bowsLeft = 0;
   var bowT = 0;
   var markY = 262;
   var lastWord = 'Wait';
@@ -137,6 +139,7 @@
     runEl.textContent = score + ' / ' + NEED;
     timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
+    bowsEl.textContent = String(bowsLeft);
     lastEl.textContent = lastWord;
     lastEl.className = lastKind;
   }
@@ -199,6 +202,7 @@
   function resetBelt(keepLives) {
     score = 0;
     timeLeft = planRound();
+    bowsLeft = roundDeck.length;
     played = 0;
     spawnIn = FIRST_SPAWN;
     spawned = 0;
@@ -326,7 +330,8 @@
   }
 
   function tryWrap() {
-    if (state !== 'play') return;
+    if (state !== 'play' || bowsLeft === 0) return;
+    bowsLeft--;
     var box = null;
     var closest = HIT_HALF_WIDTH;
     for (var i = 0; i < parcels.length; i++) {
@@ -337,9 +342,18 @@
         closest = gap;
       }
     }
-    if (!box) return;
-    box.judged = true;
-    meetPresent(box);
+    if (box) {
+      box.judged = true;
+      meetPresent(box);
+    } else {
+      lastWord = 'Miss';
+      lastKind = 'bad';
+      say('Miss. ' + bowsLeft + (bowsLeft === 1 ? ' bow left.' : ' bows left.'));
+      renderHud();
+    }
+    if (bowsLeft === 0 && state === 'play') {
+      endRun('Out of bows', 'You ran out of bows before reaching ' + NEED + ' points.');
+    }
   }
 
   wrapButton.addEventListener('click', tryWrap);
