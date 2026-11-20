@@ -29,7 +29,7 @@
   var stage = new URLSearchParams(location.search).get('stage');
   var sorting = stage === 'sort-the-first-crates';
   var loading = stage === 'load-the-sleigh';
-  var manifests = sorting ? [[1, 1, 1]] : loading ? [[7, 4, 2], [3, 6, 5]] : [];
+  var manifests = sorting ? [[4, 4, 4]] : loading ? [[7, 4, 2], [3, 6, 5]] : [];
   var manifestIndex = 0;
   var packed = [0, 0, 0];
   /* trent.webp: idle 2, then three bow frames. */
@@ -55,10 +55,17 @@
     { id: 'torn', name: 'Torn', points: -1, weight: 2, src: 'art/present-torn.webp' },
     { id: 'crushed', name: 'Crushed', points: -3, weight: 1, src: 'art/present-crushed.webp' }
   ];
+  function cargoPoints(counts) {
+    return counts.reduce(function (total, count, index) {
+      return total + count * PRESENT_TYPES[index].points;
+    }, 0);
+  }
+
+  var sortingTarget = sorting ? cargoPoints(manifests[0]) : 0;
   if (manifests.length) {
     document.getElementById('wrap-stage-title').textContent = sorting ? 'Sort the First Crates' : 'Load the Sleigh';
     document.getElementById('wrap-goal').textContent = sorting
-      ? 'Wrap one intact box of each class (1, 3, and 5). Use the cargo counts at the top.'
+      ? 'Reach ' + sortingTarget + ' points by wrapping four intact boxes of each class (1, 3, and 5). The cargo counts show what you still need.'
       : 'Fill the first manifest, then the second. Track the remaining boxes by their tags (1, 3, and 5).';
     document.getElementById('wrap-score-label').textContent = sorting ? 'Boxes left' : 'Cargo left';
     document.getElementById('wrap-win-title').textContent = sorting ? 'First crates sorted' : 'The sleigh is loaded';
@@ -145,6 +152,7 @@
           return PRESENT_TYPES[index].points + '×' + Math.max(0, need - packed[index]);
         }).join('  ')
       : score + ' / ' + NEED;
+    if (sorting) runEl.textContent += ' · ' + cargoPoints(packed) + ' / ' + sortingTarget + ' pts';
     timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
