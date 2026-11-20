@@ -292,6 +292,37 @@ window.testMarkerRoutePhysics=()=>{
  }
  throw Error('No physical permanent-only route to goal '+JSON.stringify({reached:reached.size,trials,maxX:Math.max(...[...reached].map(i=>PLATFORMS[i].x)),goal:PLATFORMS[GOAL].x}));
 };
+window.testLanternGuide=()=>{
+ if(!eaves)return;
+ beginRun();
+ const label=ctx.fillText.bind(ctx),rotate=ctx.rotate.bind(ctx);
+ let shown,angle;
+ ctx.fillText=(text,...args)=>{if(text==='LANTERN')shown=true;return label(text,...args);};
+ ctx.rotate=value=>{angle=value;return rotate(value);};
+ const sample=()=>{shown=false;angle=0;drawLanternGuide();return {shown,angle};};
+ try{
+  if(sample().shown)throw Error('Lantern guide appeared before boarding');
+  body.x=SLEIGH_X;body.y=PLATFORMS[GOAL].y;
+  checkBoarding();if(state!=='boarding')throw Error('Missing lantern did not block takeoff');
+  document.getElementById('close-boarding').click();
+  if(body.x!==SLEIGH_X)throw Error('Lantern guide moved the player');
+  camX=body.x-310;camY=body.y-230;
+  const distant=sample();
+  if(!distant.shown||Math.cos(distant.angle)>=0)throw Error('Lantern guide did not point back across the roofs');
+  const lantern=objectives[0];
+  camX=lantern.x-300;camY=lantern.y-245;
+  const nearby=sample();
+  if(!nearby.shown||Math.sin(nearby.angle)<.99)throw Error('Lantern guide did not point down to the visible lantern');
+  body.x=lantern.x;body.y=lantern.y;body.ground=true;stood=lantern.roof;
+  update(0);
+  if(!lantern.taken||sample().shown)throw Error('Lantern guide did not clear after pickup');
+  body.x=SLEIGH_X;body.y=PLATFORMS[GOAL].y;checkBoarding();
+  if(state!=='win')throw Error('Lantern did not unlock takeoff');
+  beginRun();
+  if(lantern.taken||sample().shown)throw Error('Retry retained an old lantern guide');
+  return true;
+ }finally{ctx.fillText=label;ctx.rotate=rotate;}
+};
 window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun();state="boxing";fight.start();fight.begin();render(.02)};window.refreshPreview=()=>render(.02);
 `;
 (async()=>{const browser=await webkit.launch();try{
@@ -309,6 +340,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   await page.locator('#start').click();
   await page.setViewportSize({width:844,height:390});
   await page.locator('#start-sheet').waitFor({state:'hidden'});
+  console.log('LANTERN GUIDE',await page.evaluate(()=>testLanternGuide()));
   console.log('MAP',await page.evaluate(()=>testExpansion()));
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));

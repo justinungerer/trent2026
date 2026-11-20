@@ -268,6 +268,7 @@
   var played = 0;
   var victorySent = false;
   var boardingWarned = false;
+  var lanternGuide = false;
   var tutorialReachedTop = false;
   var tutorialAttempt = false;
   var tutorialDoubleJumpHint = false;
@@ -473,6 +474,7 @@
     airBuffer = 0;
     victorySent = false;
     boardingWarned = false;
+    lanternGuide = false;
     tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
     boardingSheet.hidden = true;
     boardingHint.hidden = true;
@@ -557,6 +559,7 @@
         return;
       }
       objectives.forEach(function (item) { item.taken = false; });
+      lanternGuide = false;
       tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
       falls = 0;
       placeOn(0);
@@ -597,6 +600,7 @@
     if (objectives.every(function (item) { return item.taken; })) {
       win();
     } else if (eaves) {
+      lanternGuide = true;
       if (!boardingWarned) {
         boardingWarned = true;
         state = 'boarding';
@@ -1085,6 +1089,7 @@
       var pickupWidth = eaves ? 64 : 28;
       if (item.taken || Math.abs(item.x - body.x) > pickupWidth || Math.abs(item.y - body.y) > 40) return;
       item.taken = true;
+      if (eaves) lanternGuide = false;
       say(eaves ? 'Lantern recovered.' : 'Route marker collected.');
 
     });
@@ -1408,6 +1413,39 @@
     }
   }
 
+  function drawLanternGuide() {
+    if (state !== 'play' || !lanternGuide || objectives[0].taken) return;
+    var lantern = objectives[0];
+    var targetX = lantern.x - camX;
+    var targetY = lantern.y - camY - 32;
+    var onScreen = targetX > 0 && targetX < VIEW_W && targetY > 0 && targetY < VIEW_H;
+    var x = clamp(targetX, 112, VIEW_W - 112);
+    var y = clamp(targetY - (onScreen ? 66 : 0), 100, VIEW_H - 105);
+    var angle = Math.atan2(targetY - y, targetX - x);
+
+    ctx.save();
+    ctx.fillStyle = '#102b3cf2';
+    ctx.fillRect(x - 57, y - 23, 114, 64);
+    ctx.fillStyle = '#ffdb54';
+    ctx.font = 'bold 16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('LANTERN', x, y + 27);
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(-17, -4);
+    ctx.lineTo(2, -4);
+    ctx.lineTo(2, -12);
+    ctx.lineTo(19, 0);
+    ctx.lineTo(2, 12);
+    ctx.lineTo(2, 4);
+    ctx.lineTo(-17, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawSleigh() {
     var w = SLEIGH_W;
     var h;
@@ -1504,6 +1542,7 @@
     drawLedgeCues();
     drawSnow();
     drawOpeningLesson();
+    drawLanternGuide();
     if (state === 'play' && objectiveNoticeUntil > played) {
       ctx.fillStyle = '#102b3cf2';
       ctx.fillRect(VIEW_W / 2 - 240, 64, 480, 46);
