@@ -350,6 +350,7 @@
       hp: MAX_HP,
       stamina: MAX_STAMINA,
       staminaWarning: 0,
+      areaWarning: 0,
       weapon: null,
       atk: '',
       atkT: 0,
@@ -432,6 +433,22 @@
       if (!waveClear(waves[i])) return Math.min(GATE_X, START_X + waves[i].at * WALK + VIEW_W * 0.55);
     }
     return GATE_X + 40;
+  }
+
+  function updateAreaWarning(forward, dt) {
+    if (!forward && !santa.areaWarning) return;
+    var limit = frontX();
+    var locked = cellPassage ? !keyTaken && !waveClear(waves[waves.length - 1]) : limit <= GATE_X;
+    if (!locked || santa.x < limit - 1) {
+      santa.areaWarning = 0;
+      return;
+    }
+    if (forward) {
+      if (!santa.areaWarning) say('Clear the area to move on.');
+      santa.areaWarning = 1.5;
+    } else {
+      santa.areaWarning = Math.max(0, santa.areaWarning - dt);
+    }
   }
 
   function initialCamera() {
@@ -1006,6 +1023,7 @@
       foes[i].x = clamp(foes[i].x, 20, WORLD_R);
     }
     updatePickups();
+    updateAreaWarning(mx > 0, dt);
     if (cellPassage) {
       if (keyTaken && Math.abs(santa.x - EXIT_X) < 58 && Math.abs(santa.y - EXIT_Y) < 62) win();
     } else if (allClear() && santa.x >= GATE_X - 18) win();
@@ -1247,15 +1265,15 @@
       );
     }
     if (!reduceMotion()) drawSnow();
-    if (santa.staminaWarning > 0) drawStaminaWarning();
+    if (state === 'play' && santa.areaWarning > 0) drawSantaNotice('Clear the area to move on');
+    else if (santa.staminaWarning > 0) drawSantaNotice('Out of stamina');
   }
 
-  function drawStaminaWarning() {
+  function drawSantaNotice(text) {
     ctx.save();
     ctx.font = '800 28px system-ui';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    var text = 'Out of stamina';
     var width = ctx.measureText(text).width;
     var santaX = santa.x - cam;
     var x = santaX + 62;
