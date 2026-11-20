@@ -10,7 +10,7 @@ button{font:800 14px system-ui;border:1px solid #83c3d9;background:#122b3a;color
 #progress{display:block;color:#afe0e4;font-size:11px}
 .resources{display:flex;align-items:center;gap:12px;font-size:13px;white-space:nowrap}.resources button{pointer-events:auto;padding:0 14px}
 .controls{position:absolute;inset:auto max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));display:flex;justify-content:space-between;pointer-events:none}
-.pad{position:relative;width:clamp(72px,15vh,112px);height:clamp(72px,15vh,112px);border:1px solid #c3dbd688;border-radius:50%;background:#102b3b99;display:grid;place-items:center;touch-action:none;pointer-events:auto;user-select:none;box-shadow:0 3px 22px #0005}
+.pad{position:relative;width:clamp(90px,18.75vh,140px);height:clamp(90px,18.75vh,140px);border:1px solid #c3dbd688;border-radius:50%;background:#102b3b99;display:grid;place-items:center;touch-action:none;pointer-events:auto;user-select:none;box-shadow:0 3px 22px #0005}
 .pad span{width:42%;height:42%;border-radius:50%;background:radial-gradient(at 35% 25%,#d1e5d6,#3b676b);pointer-events:none}
 .pad label{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.12em;color:#d4edf0;pointer-events:none;white-space:nowrap}
 .action-buttons{display:flex;align-items:end;gap:10px;pointer-events:auto}.action-buttons button{min-height:56px;min-width:58px;padding:8px 12px;touch-action:none}.action-buttons button:active{background:#28556b}

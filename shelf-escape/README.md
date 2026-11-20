@@ -10,7 +10,8 @@ The depot is a landscape, side-scrolling mission in three gated yards:
    transmit, shoot three locks on the mail train, then reach the mail hatch.
 
 Collecting each yard's objective triggers an alarm reinforcement while its
-relay is active. Guards telegraph and fire actual projectiles. Crates block
+relay is active. Defeated guards return only after their patrol and defeat
+positions have both scrolled out of view. Guards telegraph and fire actual projectiles. Crates block
 their shots; pull down while stationary behind one to hide. Moving or firing
 exposes Buddy. Follow the arrow and yellow marker to the current objective;
 relays require a brief interaction by standing next to them.
@@ -28,8 +29,7 @@ snow and character idle cycling and disables moving steam. Characters use
 actual animation frames. To replace the elf's original bow, the animation is
 cropped at render time and an original rotating ribbon launcher is drawn in
 front. Arms are not separately rigged to follow the aim angle. Guard fire uses
-the gun attack animation and a damaging projectile. A guard's defeat animation
-transitions into an original parcel effect.
+the gun attack animation and a damaging projectile. A defeated guard folds into a painted parcel using the current guard artwork.
 
 ### Third-party character art
 

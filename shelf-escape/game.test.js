@@ -157,28 +157,43 @@ test('a short valid tap fires once, while cancellation and cooldown taps do not 
  assert.equal(run('update(.02);shotsUsed'),1);
 });
 
-test('alarm bells need a jump, boxes block the ground, and interactions revive every defeated guard',()=>{
+test('alarm bells need a jump and boxes block the ground',()=>{
  const {run}=game();
  const result=JSON.parse(run(`start();guards=[{x:500,home:500,hp:2,dir:-1,stun:0,attack:0,cooldown:0}];player.x=400;player.y=0;update(.02);const cooldown=guards[0].cooldown;
   guards=[];documents[0].found=true;documents[0].pages.forEach(p=>p.found=true);
   player.x=relays[0].x;player.y=0;player.vy=0;update(.02);const grounded=!relays[0].done;
   player.vy=760;for(let n=0;n<40;n++)update(.02);const jumped=relays[0].done;
-  guards=[{x:100,home:100,hp:0,dir:1,stun:0,attack:0,cooldown:0,windup:0}];
-  keys.clear();player.x=parcels[0].x;player.y=80;player.vy=0;update(.02);
-  const revived=guards[0].hp===2&&parcels[0].found;
   player.y=0;player.vy=0;player.x=hurdles[0].x-90;keys.add('d');for(let n=0;n<40;n++)update(.02);
   const blocked=player.x<hurdles[0].x-hurdles[0].half;
   keys.clear();player.y=90;player.vy=0;player.x=hurdles[0].x;keys.add('d');update(.02);
   const cleared=player.x>hurdles[0].x;
-  JSON.stringify({grounded,jumped,revived,blocked,cleared,cooldown,alertedFire,calmFire})`));
+  JSON.stringify({grounded,jumped,blocked,cleared,cooldown,alertedFire,calmFire})`));
  assert.equal(result.grounded,true);
  assert.equal(result.jumped,true);
- assert.equal(result.revived,true);
  assert.equal(result.blocked,true);
  assert.equal(result.cleared,true);
  assert.ok(Math.abs(result.cooldown-3.5/1.3)<1e-9);
  assert.ok(Math.abs(result.alertedFire-3.5/1.3)<1e-12);
  assert.ok(Math.abs(result.calmFire-5/1.3)<1e-12);
+});
+
+test('defeated guards return only when their defeat and patrol positions leave the view',()=>{
+ for(const stage of ['', 'out-of-the-cell', 'the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const result=JSON.parse(run(`start();W=960;
+   const guard={x:500,home:950,hp:1,dir:-1,kind:'charger',stun:0,attack:0,cooldown:1};
+   guards=[guard];shots=[{x:500,y:400,vx:0,vy:0}];update(.02);
+   const defeated=guard.hp<=0&&wraps.length===1;
+   player.x=supplies[0];update(.02);
+   for(let tick=0;tick<125;tick++)update(.02);
+   const afterPickup=guard.hp<=0&&wraps.length===1&&collectedSupplies.has(0);
+   camera=630;updateDefeatedGuards(0);
+   const stillInView=guard.hp<=0&&wraps.length===1;
+   camera=1100;updateDefeatedGuards(0);
+   const respawned=guard.hp===1&&guard.x===guard.home&&wraps.length===0;
+   JSON.stringify({defeated,afterPickup,stillInView,respawned})`));
+  assert.deepEqual(result,{defeated:true,afterPickup:true,stillInView:true,respawned:true},stage);
+ }
 });
 
 test('low frame rates advance real time in small steps and bound long stalls',()=>{
