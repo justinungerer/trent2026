@@ -118,7 +118,7 @@
 
   var state = 'title';
   var pausedState = 'approach';
-  var levers = LEVER_X.map(function () { return 1; });
+  var levers = rescue ? PATTERNS[0].slice() : LEVER_X.map(function () { return 1; });
   var activeLever = 0;
   var patternIndex = 0;
   var departures = 0;
@@ -264,8 +264,8 @@
 
   function resetPuzzle() {
     patternIndex = 0;
-    levers = LEVER_X.map(function () { return Math.random() < 0.5 ? 0 : 1; });
-    if (matches()) {
+    levers = rescue ? currentPattern().slice() : LEVER_X.map(function () { return Math.random() < 0.5 ? 0 : 1; });
+    if (!rescue && matches()) {
       var index = Math.floor(Math.random() * levers.length);
       levers[index] = 1 - levers[index];
     }
@@ -285,7 +285,7 @@
   }
 
   function armNextTrain() {
-    levers = LEVER_X.map(function () { return 1; });
+    levers = rescue ? currentPattern().slice() : LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
     switchGrace = 0;
     blastT = 0;
