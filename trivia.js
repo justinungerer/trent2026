@@ -337,7 +337,7 @@
     return shuffle(questions).slice(0, PER_CHAPTER).map(presentQuestion);
   }
 
-  function startRound(chapter, questions, onClear, testMode) {
+  function startRound(chapter, questions, hooks) {
     var token = session;
     var round = drawRound(questions);
     var index = 0;
@@ -365,7 +365,9 @@
         appRoot.innerHTML = '';
         appRoot.hidden = true;
       }
-      if (score >= 5) onClear(score);
+      if (score >= 5) {
+        if (typeof hooks.onClear === 'function') hooks.onClear(score);
+      }
       else renderFail(appRoot.trentTriviaHome, {
         kicker: 'Game over', title: 'Briefing failed',
         copy: 'You got ' + score + ' of ' + round.length + ' right. You need at least five correct answers to enter the minigame.'
@@ -491,13 +493,17 @@
     function choiceButton(question, choice, choiceIndex, strikeStatus) {
       var button = document.createElement('button');
       var letter = document.createElement('span');
-      var text = document.createElement(testMode && choice.correct ? 'em' : 'span');
+      var text = document.createElement(hooks.testMode === true && choice.correct ? 'em' : 'span');
       button.type = 'button';
       button.className = 'choice';
       letter.className = 'letter';
       letter.textContent = String.fromCharCode(65 + choiceIndex);
       text.className = 'choice-text';
       text.textContent = choice.text;
+      if (hooks.highlightCorrect && choice.correct) {
+        button.classList.add('choice-quiz-correct');
+        button.setAttribute('aria-label', letter.textContent + ', ' + choice.text + ' (correct answer)');
+      }
       button.appendChild(letter);
       button.appendChild(text);
       button.onclick = function () {
@@ -585,9 +591,7 @@
       if (token !== session) return;
       function openRound() {
         if (token !== session) return;
-        startRound(chapter, questions, function (correct) {
-          if (typeof hooks.onClear === 'function') hooks.onClear(correct);
-        }, hooks.testMode === true);
+        startRound(chapter, questions, hooks);
       }
       if (story) renderStory(chapter, story, openRound);
       else openRound();

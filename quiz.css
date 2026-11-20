@@ -322,6 +322,17 @@ p {
   border-color: #d7b574;
 }
 
+.choice-quiz-correct,
+.choice-quiz-correct:hover {
+  background: #163a2d;
+  color: #b9f6c9;
+  border-color: #77c78c;
+}
+
+.choice-quiz-correct .letter {
+  color: inherit;
+}
+
 .letter {
   flex-shrink: 0;
   color: var(--gold);

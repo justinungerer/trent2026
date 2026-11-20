@@ -107,6 +107,7 @@ var CHAPTERS = [
     event: 'night-broadcast:complete',
     path: './night-broadcast/',
     pin: 'NIGHT',
+    quizPin: 'CARRIER7',
     nextId: 'frost',
     intro: {
       pan: 'x',
@@ -137,6 +138,7 @@ var CHAPTERS = [
     event: 'frosted-skies:complete',
     path: './frosted-skies/',
     pin: 'SKY',
+    quizPin: 'TAILWIND8',
     nextId: 'rail',
     intro: {
       pan: 'y',
@@ -167,6 +169,7 @@ var CHAPTERS = [
     event: 'white-rail:complete',
     path: './white-rail/',
     pin: 'RAIL',
+    quizPin: 'COASTLINE4',
     nextId: 'yard',
     intro: {
       pan: 'x',
@@ -197,6 +200,7 @@ var CHAPTERS = [
     event: 'special-delivery:complete',
     path: './chapter-2/',
     pin: 'YARD',
+    quizPin: 'BULLDOG2',
     nextId: 'tower',
     intro: {
       pan: 'x',
@@ -226,6 +230,7 @@ var CHAPTERS = [
     event: 'switch-tower:complete',
     path: './switch-tower/',
     pin: 'SWITCH',
+    quizPin: 'SIGNAL9',
     nextId: 'shelf',
     intro: {
       pan: 'x',
@@ -256,6 +261,7 @@ var CHAPTERS = [
     event: null,
     path: './shelf-escape/',
     pin: 'DEPOT',
+    quizPin: 'RIBBON3',
     nextId: 'wire',
     intro: {
       pan: 'x',
@@ -285,6 +291,7 @@ var CHAPTERS = [
     event: 'listening-wire:complete',
     path: './listening-wire/',
     pin: 'WIRE',
+    quizPin: 'LANTERN6',
     nextId: 'camp',
     intro: {
       pan: 'x',
@@ -315,6 +322,7 @@ var CHAPTERS = [
     event: 'holding-camp:complete',
     path: './holding-camp/',
     pin: 'CAMP',
+    quizPin: 'LOCKSMITH8',
     nextId: 'wrap',
     intro: {
       pan: 'x',
@@ -345,6 +353,7 @@ var CHAPTERS = [
     event: 'wrapping-line:complete',
     path: './wrapping-line/',
     pin: 'BOW',
+    quizPin: 'SLEDBELLS5',
     nextId: 'chimney',
     intro: {
       pan: 'x',
@@ -375,6 +384,7 @@ var CHAPTERS = [
     event: 'chimney-road:complete',
     path: './chimney-road/',
     pin: 'HOME',
+    quizPin: 'ROOFTOP7',
     nextId: null,
     intro: {
       pan: 'x',
@@ -481,7 +491,7 @@ function stopEndingVideo() {
   endingVideo.load();
 }
 
-function showChapterMenu(lastChapter, complete, canTest) {
+function showChapterMenu(lastChapter, complete, canTest, quizAssist) {
   if (!canTest) testMode = false;
   active = null;
   if (window.TrentTrivia) window.TrentTrivia.abort();
@@ -514,7 +524,7 @@ function showChapterMenu(lastChapter, complete, canTest) {
 
   var clips = document.createElement('div');
   clips.className = 'choices';
-  function back() { showChapterMenu(lastChapter, complete, canTest); }
+  function back() { showChapterMenu(lastChapter, complete, canTest, quizAssist); }
   if (canTest) {
     clips.appendChild(button('Opening film', function () { showOpeningFilm(back); }, 'secondary'));
     clips.appendChild(button('Ending video', complete ? showEnding : null, 'secondary'));
@@ -550,7 +560,9 @@ function showChapterMenu(lastChapter, complete, canTest) {
         lockedChapter.removeAttribute('aria-label');
         row.appendChild(lockedChapter);
       } else if (chapter.number === lastChapter && !complete) {
-        row.appendChild(button('Continue at ' + chapterLabel, function () { openChapter(chapter.id); }, 'choice'));
+        row.appendChild(button('Continue at ' + chapterLabel, function () {
+          openChapter(chapter.id, { highlightCorrect: quizAssist });
+        }, 'choice'));
       } else {
         var chapterHeading = document.createElement('h2');
         chapterHeading.className = 'chapter-replay-heading';
@@ -639,6 +651,7 @@ function showRules() {
     '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
     '<p>You get two guesses per question. Afterward, you can review why each answer is right or wrong.</p>' +
     '<p>Get at least five answers right to enter the chapter’s minigame. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses. Each level starts with your full earned loadout.</p>' +
+    '<p>Pass the quiz to earn a quiz password. Use it to restart that chapter with the correct answers highlighted in green.</p>' +
     '<p>Play the three minigame levels in order. If you lose, you can retry the level or start that minigame over.</p>' +
     '<p>Finish Level 3 to earn the password for the next chapter. Entering it lets you replay completed chapters with or without their quizzes.</p>' +
     '<button class="primary" type="button">Close</button></div>';
@@ -685,7 +698,7 @@ function showStart() {
   form.id = 'pin-form';
   label = document.createElement('label');
   label.htmlFor = 'pin';
-  label.textContent = 'Chapter password (optional)';
+  label.textContent = 'Chapter or quiz password (optional)';
   input = document.createElement('input');
   input.id = 'pin';
   input.name = 'pin';
@@ -729,15 +742,16 @@ function showStart() {
       showChapterMenu(CHAPTERS.length - 1, true);
       return;
     }
-    var id = PIN_TO_ID[pin];
-    if (!id) {
+    var quizChapter = CHAPTERS.find(function (chapter) { return chapter.quizPin === pin; });
+    var chapter = quizChapter || byId(PIN_TO_ID[pin]);
+    if (!chapter) {
       status.textContent = 'That password is not on the list.';
       input.setAttribute('aria-invalid', 'true');
       input.focus();
       return;
     }
-    storePin(pin);
-    showChapterMenu(byId(id).number, false);
+    storePin(chapter.pin);
+    showChapterMenu(chapter.number, false, false, Boolean(quizChapter));
   };
   section.appendChild(title);
   section.appendChild(form);
@@ -1172,7 +1186,8 @@ function afterIntro(chapter, options) {
   window.TrentTrivia.start(chapter, {
     story: chapter.story,
     testMode: testMode,
-    onClear: function (correct) { launchGame(chapter, correct, options.returnToMenu); },
+    highlightCorrect: options.highlightCorrect,
+    onClear: function (correct) { showQuizPin(chapter, correct, options.returnToMenu); },
     onHome: showStart
   });
 }
@@ -1191,6 +1206,24 @@ function openChapter(id, options) {
   stopEndingVideo();
   ending.hidden = true;
   playIntro(chapter, function () { afterIntro(chapter, options); });
+}
+
+function showQuizPin(chapter, score, returnToMenu) {
+  var section = document.createElement('section');
+  section.className = 'campaign-start pin-card';
+  section.innerHTML = '<p class="eyebrow"></p><h1 tabindex="-1">Quiz passed</h1>' +
+    '<p class="pin-code"></p><p class="lead">Write down this quiz password. Enter it at the start screen to restart this chapter with correct answers highlighted in green.</p>' +
+    '<button type="button" class="primary">Continue to minigame</button>';
+  section.querySelector('.eyebrow').textContent = chapter.kicker + ' · ' + score + ' of 10 correct';
+  var code = section.querySelector('.pin-code');
+  code.textContent = chapter.quizPin;
+  code.setAttribute('aria-label', 'Quiz password ' + code.textContent);
+  section.querySelector('button').onclick = function () {
+    launchGame(chapter, score, returnToMenu);
+  };
+  campaignRoot.replaceChildren(section);
+  campaignRoot.hidden = false;
+  section.querySelector('h1').focus({ preventScroll: true });
 }
 
 function showPin(chapter) {
