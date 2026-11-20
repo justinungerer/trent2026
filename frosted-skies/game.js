@@ -25,7 +25,7 @@ const CRAFT = {
 };
 const WEAPONS = {
   flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
-  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 1.92 },
+  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.75 },
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
   homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
@@ -43,6 +43,7 @@ function loadArt(name) {
 const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp']
   .map(name => [name, loadArt(name === 'valley' && scouts ? 'scout-valley' : name === 'valley' && workshop ? 'workshop-roofs' : name)]));
 const weaponPod = loadArt('painted-pod');
+const missileExplosion = loadArt('painted-missile-explosion');
 const healthHeart = new Image();
 healthHeart.src = '../chapter-2/art/painted-heart.webp';
 const finalBossArt = intercept ? loadArt(scouts ? 'scout-command-aircraft' : 'workshop-siege-bomber') : null;
@@ -958,7 +959,15 @@ function render() {
   }
   for (const p of sparks) {
     g.globalAlpha = clamp(p.life * 2, 0, 1);
-    if (p.ring) {
+    if (p.ring && ready(missileExplosion)) {
+      const progress = 1 - p.life / MISSILE_BLAST_TIME;
+      const frame = Math.min(3, Math.floor(4 * progress));
+      const cell = missileExplosion.naturalWidth / 2;
+      const radius = p.ring * (.8 + .2 * progress);
+      g.globalAlpha = Math.min(1, (1 - progress) * 4);
+      g.drawImage(missileExplosion, (frame % 2) * cell, Math.floor(frame / 2) * cell, cell, cell,
+        p.x - radius, p.y - radius, radius * 2, radius * 2);
+    } else if (p.ring) {
       g.strokeStyle = p.color;
       g.lineWidth = 3;
       g.beginPath();
