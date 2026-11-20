@@ -108,7 +108,7 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const radius=14;
 let mode='intro',run,stick,last=0;
 let escapeTime=0;
-const goal=freight?'Pass all three inspection checkpoints and reach the freight office.'
+const goal=freight?'Collect all three pieces of Intel and reach the freight office.'
  :stable?'Find Rudolph’s stall, the gate key, and five supply parcels, then reach the service gate.'
  :'Find Buddy’s five dispatches';
 if(freight||stable){
@@ -446,7 +446,7 @@ function update(dt){
   if(!item.taken&&distance(p,item)<30){
    item.taken=true;run.count++;
    announce(stable?(item===run.mail[0]?'Rudolph is here. Find the gate key and supply parcels.':item===run.mail[1]?'Gate key found. Collect the remaining supplies.':'Supply parcel found · '+run.count+'/'+caches.length)
-    :freight?(run.count===caches.length?'Checkpoints cleared. Reach the freight office.':'Inspection checkpoint cleared.')
+    :freight?(run.count===caches.length?'All Intel collected. Reach the freight office.':'Intel collected · '+run.count+'/'+caches.length)
     :run.count===caches.length?'All dispatches found. Head to the mail hatch.':'Dispatch found · '+run.count+'/'+caches.length);
    sync();
   }
@@ -601,7 +601,7 @@ function render(){
   const lift=Math.sin(run.time*5+item.x)*4;
   glow(item.x,item.y,41,'#69fbd18a');
   if(!sprite('mail',item.x,item.y+lift,36,29)){ctx.fillStyle='#96feda';ctx.fillRect(item.x-15,item.y-10,30,20);}
-  if(stable||freight)label(freight?'CHECKPOINT':item===run.mail[0]?'RUDOLPH’S STALL':item===run.mail[1]?'GATE KEY':'SUPPLY PARCEL',item.x,item.y-24);
+  if(stable||freight)label(freight?'INTEL':item===run.mail[0]?'RUDOLPH’S STALL':item===run.mail[1]?'GATE KEY':'SUPPLY PARCEL',item.x,item.y-24);
  }
  if(run.mac){
   const mac=run.mac;

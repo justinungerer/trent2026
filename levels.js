@@ -89,11 +89,11 @@ window.TrentLevels = {
   "yard": [
     {
       "id": "freight-gate",
-      "videoVersion": "three-checkpoints",
+      "videoVersion": "freight-intel",
       "title": "Freight Gate",
       "lines": [
-        "The manifest marked three checkpoints before the freight office.",
-        "Behind each booth, a patrol traced its own path between the wagons.",
+        "The manifest showed where three pieces of Intel were hidden.",
+        "Patrols traced their own paths between the wagons.",
         "Trent slipped into the inspection yard under a bank of cloud."
       ]
     },
