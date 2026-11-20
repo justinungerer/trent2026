@@ -34,17 +34,22 @@ const shelves=inEachSection(freight?[
  {x:129,y:267,w:215,h:64},{x:451,y:233,w:161,h:64},{x:725,y:266,w:190,h:64}
 ]);
 const spawn=inSection({x:95,y:613},southwest);
-const localCaches=freight?[{x:472,y:581},{x:818,y:201}]
- :stable?[{x:194,y:149},{x:695,y:192},{x:100,y:330},{x:920,y:430}]
+const localCaches=freight?[{x:472,y:581},{x:818,y:201},{x:850,y:480}]
+ :stable?[{x:194,y:149},{x:695,y:192},{x:100,y:330},{x:920,y:430},{x:760,y:140},{x:390,y:610},{x:500,y:390}]
  :[{x:145,y:142},{x:534,y:359},{x:942,y:598},{x:100,y:390},{x:868,y:160}];
-const cacheSections=freight?[northwest,southeast]
- :stable?[northwest,southeast,southwest,northeast]
+const cacheSections=freight?[northwest,southeast,northeast]
+ :stable?[northwest,southeast,southwest,northeast,northwest,southeast,northeast]
  :[southwest,northwest,southeast,southwest,northeast];
 const caches=localCaches.map((point,index)=>inSection(point,cacheSections[index]));
 const hearts=[
  inSection({x:150,y:564},southwest),
  inSection({x:560,y:370},northwest),
  inSection({x:935,y:510},northeast)
+];
+const macBones=[
+ inSection({x:680,y:650},southwest),
+ inSection({x:300,y:125},northwest),
+ inSection({x:760,y:398},southeast)
 ];
 const localPatrols=freight?[
  [[115,508],[115,367],[455,367],[455,508]],
@@ -92,7 +97,7 @@ const macRadius=11;
 const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const keys=new Set(), camera={x:0,y:0};
 const art=Object.fromEntries(['yard','elf','guard','shelf','mail','painted-mine','painted-mail-hatch',
- 'painted-heart','painted-mac','painted-shock'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
+ 'painted-heart','painted-mac','painted-mac-bone','painted-shock'].concat(stable?['rudolph','painted-stable-gate']:[]).map(name=>{
  const image=new Image();
  const file=name==='yard'?(stable?'stable-yard':freight?'inspection-yard':name):name;
  image.src='./art/'+file+'.webp';return [name,image];
@@ -102,8 +107,8 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const radius=14;
 let mode='intro',run,stick,last=0;
 let escapeTime=0;
-const goal=freight?'Pass both inspection checkpoints and reach the freight office.'
- :stable?'Find Rudolph’s stall, the gate key, and two supply parcels, then reach the service gate.'
+const goal=freight?'Pass all three inspection checkpoints and reach the freight office.'
+ :stable?'Find Rudolph’s stall, the gate key, and five supply parcels, then reach the service gate.'
  :'Find Buddy’s five dispatches';
 if(freight||stable){
  ui.title.textContent=freight?'Freight Gate':'The Stable Escape';
@@ -121,6 +126,7 @@ function reset(notice){
   }),
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
   hearts:hearts.map(p=>({...p,taken:false})),
+  bones:macBones.map(p=>({...p,taken:false})),
   mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,macUses:MAC_USES,mac:null,time:0,alarm:0,flash:notice?0.45:0,
   notice:notice||goal,noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
@@ -414,6 +420,13 @@ function update(dt){
  for(const item of run.hearts){
   if(!item.taken&&p.hull<3&&distance(p,item)<25){item.taken=true;p.hull++;announce('Heart recovered');sync();}
  }
+ for(const bone of run.bones){
+  if(bone.taken||distance(p,bone)>=25)continue;
+  bone.taken=true;
+  run.macUses++;
+  announce('Dog bone found · +1 Mac attack');
+  sync();
+ }
  for(const item of run.mail){
   if(stable&&item===run.mail[1]&&!run.mail[0].taken)continue;
   if(!item.taken&&distance(p,item)<30){
@@ -530,10 +543,7 @@ function drawYard(){
 }
 function render(){
  const width=canvas.width,height=canvas.height;
- let zoom=Math.min(width/370,height/460);
- if(!(zoom>0))zoom=1;
- if(height/zoom>world.h)zoom=height/world.h;
- if(width/zoom>world.w)zoom=width/world.w;
+ const zoom=Math.max(Math.min(width/370,height/460),height/yardSize.h,width/yardSize.w);
  const vw=width/zoom,vh=height/zoom;
  const mac=run.mac;
  const focusX=run.player.x+(mac?clamp((mac.x-run.player.x)*.5,-vw*.26,vw*.26):0);
@@ -565,6 +575,11 @@ function render(){
   ctx.fillStyle='#f06471';ctx.strokeStyle='#761e3c';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(0,10);ctx.bezierCurveTo(-26,-9,-8,-20,0,-9);
   ctx.bezierCurveTo(8,-20,26,-9,0,10);ctx.fill();ctx.stroke();ctx.restore();
+ }
+ for(const bone of run.bones){
+  if(bone.taken)continue;
+  glow(bone.x,bone.y,32,'#ffd39488');
+  if(!sprite('painted-mac-bone',bone.x,bone.y,45,23))label('BONE',bone.x,bone.y);
  }
  for(const item of run.mail){
   if(item.taken)continue;

@@ -1003,7 +1003,7 @@ function prepareIntroVideo(chapter, getElapsed, resetClock) {
     } else {
       if (!video.hasAttribute('src')) {
         var path = chapter.videoPath || './assets/intro-video/' + chapter.id + '.mp4';
-        video.src = path + '?v=' + FILM_VERSION;
+        video.src = path + '?v=' + (chapter.videoVersion || FILM_VERSION);
       }
       video.play().catch(function (error) {
         if (requested && error.name !== 'AbortError') {
@@ -1148,6 +1148,7 @@ function launchMissionLevel(run) {
       filmSeconds: 24,
       captionFrames: [0, 192, 384],
       videoPath: './assets/level-video/' + level.id + '.mp4',
+      videoVersion: level.videoVersion,
       allowSkip: run.seen.has(level.id)
     }, function () {
       run.seen.add(level.id);
