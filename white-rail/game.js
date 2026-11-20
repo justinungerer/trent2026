@@ -50,7 +50,7 @@
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
   var COAST = 1.15;
-  var MAX_SPEED = 121.5;
+  var MAX_SPEED = 164.025;
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;

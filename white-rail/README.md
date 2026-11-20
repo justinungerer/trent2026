@@ -1,6 +1,6 @@
 # Chapter 3 — White Rail
 
-Trent pumps his handcar toward the yard mouth over 1,560 meters. Levels 1 and 2 have three tracks, and level 3 has five. The top speed is 40.5 meters per second.
+Trent pumps his handcar toward the yard mouth over 1,560 meters. Levels 1 and 2 have three tracks, and level 3 has five. The top speed is about 164 meters per second.
 
 The sky, handcar, and Trent use painted artwork from `art/`. The renderer projects the tracks and obstacles from their positions along the route. There are no third-party assets, no downloaded images, and no build step.
 
