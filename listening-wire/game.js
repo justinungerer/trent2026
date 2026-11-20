@@ -458,6 +458,14 @@
       var xy = key.split(',').map(Number), x = xy[0], y = xy[1];
       g.fillStyle = MAP[y][x] === 1 ? '#a99c83' : '#e8d7b6';
       g.fillRect(x * size, y * size, size, size);
+      if (MAP[y][x] === 1) return;
+      PATROL_STEPS.forEach(function (step) {
+        var nx = x + step[0], ny = y + step[1];
+        var tile = MAP[ny] && MAP[ny][nx];
+        if ((tile !== 0 && tile !== 2) || discovered.has(nx + ',' + ny)) return;
+        g.fillStyle = '#66c884';
+        g.fillRect(nx * size, ny * size, size, size);
+      });
       if (MAP[y][x] === 2) {
         g.fillStyle = '#368f54';
         g.fillRect(x * size + 4, y * size + 4, size - 8, size - 8);

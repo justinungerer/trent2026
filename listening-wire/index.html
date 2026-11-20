@@ -44,7 +44,7 @@
         <h1 id="corridor-stage-title">The listening wire</h1>
         <p id="corridor-stage-goal">Trent is in the enemy wire room. The listening post is the green door at the end of the maze.</p>
         <p>An exclamation mark shows when a soldier has spotted you. Watch for bright incoming shots. Health and spare bullets are on the floor. A soldier who goes down leaves one bullet.</p>
-        <p>Two maps are hidden in each maze. Collect one to open your map, then use Map above Shoot to pause and review it. Only the tiles you visit and their bordering walls are revealed.</p>
+        <p>Two maps are hidden in each maze. Collect one to open your map, then use Map above Shoot to pause and review it. The map shows visited tiles, bordering walls, and one green tile into each unexplored opening.</p>
         <p id="loadout">Three life points, and 10 bullets.</p>
         <button type="button" id="start">Into the wire room</button>
       </div>
@@ -52,7 +52,7 @@
 
     <section id="map-sheet" class="sheet map-sheet" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
       <header><h2 id="map-title">Explored passages</h2><button type="button" id="close-map">Return to game</button></header>
-      <canvas id="maze-map" aria-label="Explored maze. Pale passages, stone walls, red player arrow, green exit. Dark areas are unexplored."></canvas>
+      <canvas id="maze-map" aria-label="Explored maze. Pale passages, stone walls, and a red player arrow. Light green tiles mark unexplored openings. A dark green square marks the exit once visited."></canvas>
       <p>Red arrow: you · Green: discovered exit · Dark: unexplored</p>
     </section>
     <div id="pause-sheet" class="sheet" hidden>
@@ -92,7 +92,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=corridor-balance"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=green-map-openings"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>
