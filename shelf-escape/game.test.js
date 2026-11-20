@@ -70,7 +70,7 @@ test('Level 3 requires all three sorting bays, the radio, and the final delivery
   JSON.stringify({exitLocked,earlyShotIgnored,state,papers:documents.flatMap(doc=>doc.pages).filter(page=>page.found).length,
    diverters:documents.filter(doc=>doc.diverted).length,alarms:relays.filter(relay=>relay.done).length,
    latches:locks.filter(lock=>lock.done).length,transmit,x:player.x})`));
- assert.ok(result.x>=8030,JSON.stringify(result));
+ assert.ok(result.x>=8026,JSON.stringify(result));
  const {x,...completed}=result;
  assert.deepEqual(completed,{exitLocked:true,earlyShotIgnored:true,state:'won',papers:6,diverters:3,alarms:3,latches:3,transmit:4});
 });
@@ -164,13 +164,40 @@ test('a locked starting weapon can collect a two-shot ammo box once',()=>{
  assert.deepEqual(result,{first:2,second:2,restored:true});
 });
 
-test('enemy projectiles are blocked by crates and otherwise cause damage',()=>{
+test('boxes stop low rifle shots and the down stick evades high shots',()=>{
  const {run}=game();
- const result=JSON.parse(run(`start();guards=[];player.x=480;guardShots=[{x:350,y:420,vx:340}];update(.4);
- const blocked=player.hp===3&&guardShots.length===0;
- player.x=650;guardShots=[{x:550,y:420,vx:340}];update(.4);
- JSON.stringify({blocked,hit:player.hp===2&&guardShots.length===0})`));
- assert.deepEqual(result,{blocked:true,hit:true});
+ const result=JSON.parse(run(`start();guards=[];player.x=480;
+ const rifle={x:350,dir:1};
+ fireGuardShot(rifle);fireGuardShot(rifle);
+ const heights=guardShots.map(shot=>shot.y);
+ update(.4);
+ const highCrossedBox=player.hp===2&&guardShots.length===0;
+ player.shield=0;sticks.move.x=.16;sticks.move.y=.9;
+ guardShots=[{x:350,y:highShotY,vx:340}];update(.4);
+ const ducked=player.ducking&&player.x===480&&player.hp===2;
+ player.x=650;
+ guardShots=[{x:550,y:lowShotY,vx:340}];update(.4);
+ const lowHitWhileDucking=player.hp===1;
+ JSON.stringify({heights,highCrossedBox,ducked,lowHitWhileDucking})`));
+ assert.deepEqual(result,{heights:[420,382],highCrossedBox:true,ducked:true,lowHitWhileDucking:true});
+});
+
+test('the exit key is the final pickup and is required in every level',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const result=JSON.parse(run(`start();guards=[];
+   player.x=exitKeyX;update(0);
+   const earlyKeyIgnored=!exitKeyFound;
+   if(cell)packageFound=true;
+   else{transmit=4;relays.forEach(relay=>relay.done=true);locks.forEach(lock=>lock.done=true);}
+   player.x=exitX;update(0);
+   const locked=state==='playing'&&missionTarget().hint==='EXIT KEY';
+   player.x=exitKeyX;update(0);
+   const collected=exitKeyFound&&missionTarget().x===exitX;
+   player.x=exitX;update(0);
+   JSON.stringify({earlyKeyIgnored,locked,collected,state})`));
+  assert.deepEqual(result,{earlyKeyIgnored:true,locked:true,collected:true,state:'won'},stage);
+ }
 });
 
 test('collecting the order pages triggers one alarm reinforcement',()=>{

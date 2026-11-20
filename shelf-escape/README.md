@@ -7,12 +7,12 @@ The depot is a landscape, side-scrolling mission in three gated yards:
    disable the switchyard alarm.
 3. Find the cipher, start the generator, install the fuse, and disable the
    signal-yard alarm. Connect three marked aerials, return to the radio to
-   transmit, shoot three locks on the mail train, then reach the mail hatch.
+   transmit, shoot three locks on the mail train, then collect the exit key and reach the mail hatch.
 
 Collecting each yard's objective triggers an alarm reinforcement while its
 relay is active. Defeated guards return only after their patrol and defeat
-positions have both scrolled out of view. Guards telegraph and fire actual projectiles. Crates block
-their shots. Pull down while stationary behind one to hide from ranged targeting.
+positions have both scrolled out of view. Crates block low rifle shots. Pull down
+to duck under high shots, or pull down behind a crate to hide from ranged targeting.
 Guard contact costs one life, and each defeated guard leaves two rounds.
 Moving or firing exposes Buddy. Follow the arrow and soft glow to the current objective;
 relays require a brief interaction by standing next to them.
@@ -49,7 +49,7 @@ the gun attack animation and a damaging projectile. A defeated guard folds into 
   assets; [OpenGameArt's FAQ](https://opengameart.org/content/oga-by-30-faq)
   explains the terms. The sprite sheets total approximately 0.97 MB.
 
-On a landscape phone, use the left stick to move and aim. Tap Jump to clear crates, reach ribbon parcels, or reach an alarm bell. A relay counts when Buddy touches the bell at the top of his jump. Tap Fire once per shot. Pull the left stick down behind a crate to hide. Green supply boxes refill the earned magazine on entry;
+On a landscape phone, use the left stick to move and aim. Tap Jump to clear crates, reach ribbon parcels, or reach an alarm bell. A relay counts when Buddy touches the bell at the top of his jump. Tap Fire once per shot. Pull the left stick down to duck or hide behind a crate. Green supply boxes refill the earned magazine on entry;
 each box also restores one heart once per attempt. Leave and return for another
 ammo refill. Pause with
 the pause button; switching tabs or losing focus also pauses. A
