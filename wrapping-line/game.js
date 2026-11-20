@@ -31,14 +31,12 @@
   var loading = stage === 'load-the-sleigh';
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
-  var NEED = sorting ? 36 : loading ? 75 : 30;
-  // The score round needs enough time for the wider-spaced boxes to reach the mark.
-  var ROUND_SECONDS = loading ? 90 : sorting ? 30 : 22;
-  document.getElementById('round-limit').textContent = 'You have ' + ROUND_SECONDS + ' seconds per round.';
+  var NEED = sorting ? 36 : loading ? 75 : 50;
+  var SPAWN_X = 920;
   var TARGET = 456;
   var MEET = 26;
   var HIT_HALF_WIDTH = 94;
-  var SPEED = (232 / 0.3) * 0.25;
+  var SPEED = (232 / 0.3) * 0.25 * (loading ? 1.2 : 1);
   var INTERVAL = 0.8 * 0.3 * 3;
   var FIRST_SPAWN = 0.4 * 0.3;
   var LANES = [150, 206, 262, 318];
@@ -49,11 +47,11 @@
     { id: 'plain', name: 'Plain', points: 1, weight: 4, src: 'art/present-plain.webp' },
     { id: 'ribbon', name: 'Ribbon', points: 3, weight: 3, src: 'art/present-ribbon.webp' },
     { id: 'gilt', name: 'Gilt', points: 5, weight: 2, src: 'art/present-gilt.webp' },
-    { id: 'torn', name: 'Torn', points: -1, weight: 2, src: 'art/present-torn.webp' },
-    { id: 'crushed', name: 'Crushed', points: -3, weight: 1, src: 'art/present-crushed.webp' }
+    { id: 'torn', name: 'Torn', points: -5, weight: 2, src: 'art/present-torn.webp' },
+    { id: 'crushed', name: 'Crushed', points: -5, weight: 1, src: 'art/present-crushed.webp' }
   ];
   document.getElementById('wrap-goal').textContent =
-    'Reach ' + NEED + ' points to win. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs points and one life.';
+    'Reach ' + NEED + ' points to win. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs 5 points and one life.';
   if (sorting || loading) {
     document.getElementById('wrap-stage-title').textContent = sorting ? 'Sort the First Crates' : 'Load the Sleigh';
     document.getElementById('wrap-win-title').textContent = sorting ? 'First crates wrapped' : 'The sleigh is loaded';
@@ -89,12 +87,13 @@
   var lastFrame = 0;
   var shake = 0;
   var score = 0;
-  var timeLeft = ROUND_SECONDS;
+  var timeLeft = 0;
   var lives = readLives();
   var spawnIn = FIRST_SPAWN;
   var spawned = 0;
   var parcels = [];
   var bag = [];
+  var roundDeck = [];
   var bowT = 0;
   var markY = 262;
   var lastWord = 'Wait';
@@ -135,7 +134,6 @@
   function renderHud() {
     var shown = Math.ceil(timeLeft);
     if (shown < 0) shown = 0;
-    if (shown > Math.ceil(ROUND_SECONDS)) shown = Math.ceil(ROUND_SECONDS);
     runEl.textContent = score + ' / ' + NEED;
     timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
@@ -163,12 +161,12 @@
     });
   }
 
-  function nextType() {
+  function nextType(index) {
     var i;
     var n;
     var swap;
     var held;
-    if (sorting && spawned < 4) return PRESENT_TYPES[[0, 1, 3, 2][spawned]];
+    if (sorting && index < 4) return PRESENT_TYPES[[0, 1, 3, 2][index]];
     if (!bag.length) {
       for (i = 0; i < PRESENT_TYPES.length; i++) {
         for (n = 0; n < PRESENT_TYPES[i].weight; n++) bag.push(PRESENT_TYPES[i]);
@@ -183,14 +181,28 @@
     return bag.pop();
   }
 
+  function planRound() {
+    bag = [];
+    roundDeck = [];
+    var intactPoints = 0;
+    var pointBudget = Math.ceil(NEED * 3 / 2);
+    while (intactPoints < pointBudget) {
+      var type = nextType(roundDeck.length);
+      roundDeck.push(type);
+      intactPoints += Math.max(0, type.points);
+    }
+    var finalSpawn = FIRST_SPAWN + (roundDeck.length - 1) * INTERVAL;
+    var timeToPassBow = (SPAWN_X - TARGET + HIT_HALF_WIDTH) / SPEED;
+    return Math.ceil(finalSpawn + timeToPassBow);
+  }
+
   function resetBelt(keepLives) {
     score = 0;
-    timeLeft = ROUND_SECONDS;
+    timeLeft = planRound();
     played = 0;
     spawnIn = FIRST_SPAWN;
     spawned = 0;
     parcels = [];
-    bag = [];
     bowT = 0;
     shake = 0;
     markY = 262;
@@ -343,13 +355,13 @@
     }
     timeLeft -= dt;
     spawnIn -= dt;
-    if (spawnIn <= 0) {
+    if (spawnIn <= 0 && spawned < roundDeck.length) {
       parcels.push({
-        x: 920,
+        x: SPAWN_X,
         y: LANES[(spawned * 3) % LANES.length],
         judged: false,
         hit: false,
-        type: nextType()
+        type: roundDeck[spawned]
       });
       spawned += 1;
       spawnIn += INTERVAL;
@@ -730,6 +742,7 @@
     });
   }
 
+  resetBelt(false);
   resize();
   syncPortrait();
   renderHud();

@@ -1,6 +1,6 @@
 # Chapter 9 — The Wrapping Line
 
-A belt brings presents through the workshop at different heights. The up and down buttons move a targeting bow. The score goals for Levels 1, 2, and 3 are 36, 30, and 75 points respectively.
+A belt brings presents through the workshop at different heights. The up and down buttons move a targeting bow. The score goals for Levels 1, 2, and 3 are 36, 50, and 75 points respectively.
 
 The workshop, Trent, presents, and targeting bow are original generated paintings in `art/`. There are no third-party assets and no build step.
 
@@ -34,8 +34,8 @@ If the device asks for reduced motion, a bad meet does not shake the shop.
 Wrap a box near the bow to score. The horizontal hit window extends 94 game pixels on either side of the bow. Boxes that pass score nothing.
 
 - Plain +1, ribbon +3, gilt +5.
-- Torn −1, crushed −3. Meeting either damaged present also costs one life.
-- The clocks for Levels 1, 2, and 3 are 30, 22, and 90 seconds respectively. At zero, Level 2 restarts its round with the same lives. Levels 1 and 3 show the retry screen.
+- Wrapping a torn or crushed box costs 5 points and one life.
+- Each round has about 1.5 times the goal in intact gift points. The clock covers the time those boxes take to pass the bow. Damaged boxes add no points to that budget. At zero, Level 2 restarts with the same lives, while Levels 1 and 3 show the retry screen.
 - Lives still come from `?lives=10|9|8|7` (7 when the value is missing or anything else). At 0 lives the run ends.
 
 ## Victory event
