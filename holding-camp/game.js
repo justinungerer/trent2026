@@ -43,6 +43,14 @@
   var EXIT_X = cellPassage ? START_X + WALK / 2 : GATE_X;
   var EXIT_Y = BAND_TOP + 156;
   var WORLD_R = GATE_X + 240;
+  var CRATE_HALF_WIDTH = 62;
+  var CRATE_HALF_DEPTH = 42;
+  var obstacles = [
+    [0.10, 0.62], [0.20, 0.30], [0.31, 0.78], [0.43, 0.13],
+    [0.54, 0.91], [0.66, 0.45], [0.77, 0.73], [0.88, 0.27]
+  ].map(function (slot) {
+    return { x: START_X + WALK * slot[0], y: BAND_TOP + BAND_H * slot[1] };
+  });
   var SANTA_H = Math.round(VIEW_H * 0.28);
   var MAX_HP = 5 + (window.TrentMissionBonus || 0);
   var MAX_STAMINA = 10;
@@ -123,8 +131,11 @@
       ? 'Fight across the passage, take the key at the far right, then return to the exit halfway back.'
       : 'Clear both gatehouse groups and reach the yard gate.';
     WAVE_PLAN = cellPassage ? [
-      { at: 0.24, foes: [{ k: 'light', side: 'left' }] },
-      { at: 0.64, foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] }
+      { at: 0.12, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
+      { at: 0.29, foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
+      { at: 0.47, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
+      { at: 0.65, foes: [{ k: 'mid', side: 'left' }, { k: 'light', side: 'right' }, { k: 'light', side: 'left' }] },
+      { at: 0.80, foes: [{ k: 'mid', side: 'right' }, { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] }
     ] : [
       { at: 0.19, foes: [{ k: 'light', side: 'right' }, { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }] },
       { at: 0.66, foes: [{ k: 'mid', side: 'left' }, { k: 'heavy', side: 'right' }, { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }] }
@@ -137,9 +148,13 @@
     WAVE_PLAN = [];
     for (var half = 0; half < 2; half++) {
       originalPlan.forEach(function (wave) {
-        WAVE_PLAN.push({ at: (half + wave.at) / 2, foes: wave.foes.concat(wave.foes) });
+        WAVE_PLAN.push({ at: (half + wave.at) / 2, foes: wave.foes });
       });
     }
+    PICK_PLAN = [
+      { at: 0.16, y: 0.79 }, { at: 0.35, y: 0.30 },
+      { at: 0.57, y: 0.65 }, { at: 0.81, y: 0.43 }
+    ];
     WAVE_PLAN.push({ at: 0.94, foes: [{ k: 'warden', side: 'right' }] });
   } else {
     WAVE_PLAN = [];
@@ -177,6 +192,8 @@
   var yardImg = new Image();
   var gateImg = new Image();
   var cocoaImg = new Image();
+  var crateImg = new Image();
+  crateImg.src = cellPassage ? '../shelf-escape/art/props/wood-crate.webp' : '../white-rail/art/painted-crate.webp';
   var cookieImg = new Image();
   cookieImg.src = 'art/stamina-cookie.webp';
   var keyImg = new Image();
@@ -255,6 +272,19 @@
     if (v < a) return a;
     if (v > b) return b;
     return v;
+  }
+
+  function blockedByCrate(x, y) {
+    return obstacles.some(function (crate) {
+      return Math.abs(x - crate.x) < CRATE_HALF_WIDTH && Math.abs(y - crate.y) < CRATE_HALF_DEPTH;
+    });
+  }
+
+  function moveSanta(dx, dy) {
+    var x = clamp(santa.x + dx, 48, frontX());
+    if (!blockedByCrate(x, santa.y)) santa.x = x;
+    var y = clamp(santa.y + dy, BAND_TOP + 12, BAND_BOT - 8);
+    if (!blockedByCrate(santa.x, y)) santa.y = y;
   }
 
   function makeWaves() {
@@ -591,8 +621,7 @@
     santa.atk = '';
     santa.buffer = '';
     santa.face = from.x < santa.x ? -1 : 1;
-    santa.x = clamp(santa.x - santa.face * 34, 48, WORLD_R);
-    santa.y = clamp(santa.y + (santa.y < from.y ? -16 : 16), BAND_TOP + 12, BAND_BOT - 8);
+    moveSanta(-santa.face * 34, santa.y < from.y ? -16 : 16);
     if (!reduceMotion()) shake = 7;
     sfx('wrong');
     if (santa.hp <= 0) {
@@ -639,12 +668,13 @@
   }
 
   function spawnFoe(wave, i) {
-    var slots = [0.24, 0.43, 0.63, 0.81];
+    var slots = [0.22, 0.75, 0.39, 0.86, 0.54];
+    var slot = (waves.indexOf(wave) + wave.members.length) % slots.length;
     var spec = wave.foes[i];
     var e = {
       kind: spec.k,
       x: spec.side === 'right' ? cam + VIEW_W + 36 + i * 38 : cam - 36 - i * 38,
-      y: BAND_TOP + BAND_H * slots[i % slots.length],
+      y: BAND_TOP + BAND_H * slots[slot],
       face: spec.side === 'right' ? -1 : 1,
       hp: KIND[spec.k].hp,
       state: 'go',
@@ -874,8 +904,7 @@
       }
       if (mx < 0) santa.face = -1;
       if (mx > 0) santa.face = 1;
-      santa.x += mx * 360 * dt;
-      santa.y += my * 230 * dt;
+      moveSanta(mx * 360 * dt, my * 230 * dt);
       moving = mx !== 0 || my !== 0;
       if (santa.anim !== (moving ? 'walk' : 'idle')) {
         santa.anim = moving ? 'walk' : 'idle';
@@ -1030,6 +1059,20 @@
     }
   }
 
+  function drawCrate(crate) {
+    var x = crate.x - cam;
+    var bottom = crate.y + 24;
+    shadow(x, bottom, 56, false);
+    if (imageReady(crateImg)) {
+      var w = 136;
+      var h = w * crateImg.naturalHeight / crateImg.naturalWidth;
+      ctx.drawImage(crateImg, x - w / 2, bottom - h, w, h);
+    } else {
+      ctx.fillStyle = '#725442';
+      ctx.fillRect(x - 62, bottom - 92, 124, 92);
+    }
+  }
+
   function render() {
     var mag = reduceMotion() ? 0 : shake;
     var list = [];
@@ -1046,6 +1089,11 @@
     );
     drawYard();
     drawGate();
+    obstacles.forEach(function (crate) {
+      if (Math.abs(crate.x - cam - VIEW_W / 2) < VIEW_W / 2 + 80) {
+        list.push({ y: crate.y + 24, crate: crate });
+      }
+    });
     if (picks) {
       for (i = 0; i < picks.length; i++) {
         if (!picks[i].got) list.push({ y: picks[i].y, pick: picks[i] });
@@ -1061,6 +1109,10 @@
     if (santa) list.push({ y: santa.y, hero: true });
     list.sort(function (a, b) { return a.y - b.y; });
     for (i = 0; i < list.length; i++) {
+      if (list[i].crate) {
+        drawCrate(list[i].crate);
+        continue;
+      }
       if (list[i].pick) {
         drawCocoa(list[i].pick);
         continue;
