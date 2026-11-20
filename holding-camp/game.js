@@ -200,7 +200,7 @@
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Defeat the Key Warden and take his key at the far right. Guards return as you head back to the exit halfway through the passage.'
     : gateFight ? 'Clear two guard waves and their reinforcements in each section. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
-    : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
+    : 'Clear the guards across the yard. Then defeat the Yard Enforcer at the far end and reach the gate.';
 
   var yardImg = new Image();
   var gateImg = new Image();
@@ -770,7 +770,10 @@
       if (waveClear(wave)) continue;
       line = wave.at * WALK;
       if ((!wave.spawned && (santa.x - START_X) * OUTBOUND >= line - 6) ||
-          (wave.spawned && wave.sent < wave.batches && played >= wave.nextAt)) spawnWave(wave);
+          (wave.spawned && wave.sent < wave.batches && played >= wave.nextAt)) {
+        if (yardPassage && i === waves.length - 1 && !waves.slice(0, i).every(waveClear)) return;
+        spawnWave(wave);
+      }
       if (gateFight) return;
     }
   }
