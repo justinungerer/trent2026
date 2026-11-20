@@ -13,13 +13,14 @@ const startingAmmo=params.get('weapon')==='locked'?0:params.get('charges')==='2'
 const damage=params.get('ribbon')==='plain'?1:2;
 const reload=params.get('reload')==='slow'?.57:.27;
 const art=Object.fromEntries(['elf-idle','elf-walk','elf-fire','elf-hurt','elf-die','guard-idle','guard-walk','guard-attack','guard-hurt'].map(name=>{const img=new Image();img.src='./art/animated/'+name+'.png';return [name,img]}));
-const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate','order-page','rail-switch','cipher-book','generator','signal-fuse','gift-parcel','radio-aerial','field-radio','padlock','mail-hatch','wrapped-guard','depot-wall','guard-types'].map(name=>{const img=new Image();img.src='./art/props/'+name+'.webp';return [name,img]}));
+const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate','order-page','rail-switch','cipher-book','generator','signal-fuse','gift-parcel','radio-aerial','field-radio','padlock','mail-hatch','wrapped-guard','depot-wall','guard-types','buddy-painted-atlas','alternate-objectives'].map(name=>{const img=new Image();img.src='./art/props/'+name+'.webp';return [name,img]}));
 const stageScenery=new Image();
 stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex.webp':'./art/freight-depot.webp';
 const alertedFire=3.5/1.3,calmFire=5/1.3;
 const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
 const wrapDuration=.7;
+const ammoDropTime=.28;
 const keys=new Set(),sticks={move:{id:null,x:0,y:0}};
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
@@ -30,7 +31,7 @@ const supplies=Array.from({length:Math.floor((exitX-450)/250)+1},(_,index)=>{
  return x;
 }).filter(x=>x<exitX-60);
 const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
-let state='intro',player,guards,shots,guardShots,particles,wraps,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,collectedSupplies,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
+let state='intro',player,guards,shots,guardShots,particles,wraps,ammoDrops,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,collectedSupplies,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const origin=params.get('parentOrigin');
 if(parent!==window&&origin){try{const u=new URL(origin);if(u.origin===origin&&(u.protocol==='https:'||(u.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(u.hostname)))){
@@ -82,7 +83,7 @@ function reset(){
   const x=450+index*(exitX-1050)/(Math.ceil(baseline*1.5)-1);
   return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:1.8+index%3*.4};
  });
- shots=[];guardShots=[];particles=[];wraps=[];
+ shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:1600,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850,3700],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
  relays=[950,3500,6200].map(x=>({x,progress:0,done:false}));gates=[2600,5400,8100];locks=[10650,11650,12650].map(x=>({x,done:false}));terminal={x:9000};elapsed=0;camera=0;ammo=startingAmmo;shotsUsed=0;nextShot=0;transmit=0;finished=false;collectedSupplies=new Set();alarmNotice=0;for(const parcel of parcels)parcel.found=false;clearInput();updateHud();
  if(alternate){
@@ -174,7 +175,7 @@ function update(dt){
  }
  for(const shot of shots){
   shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;
-  for(const guard of guards)if(guard.hp>0&&Math.abs(shot.x-guard.x)<23&&shot.y>340&&shot.y<450){guard.hp-=damage;guard.stun=.35;guard.attack=0;guard.windup=0;shot.y=-100;if(guard.hp<=0)wraps.push({guard,x:guard.x,age:0,facing:guardFacing(guard)});burst(guard.x,380,guard.hp<=0?'#f8cb7b':'#9aeaf0',guard.hp<=0?24:7);break}
+  for(const guard of guards)if(guard.hp>0&&Math.abs(shot.x-guard.x)<23&&shot.y>340&&shot.y<450){guard.hp-=damage;guard.stun=.35;guard.attack=0;guard.windup=0;shot.y=-100;if(guard.hp<=0){wraps.push({guard,x:guard.x,age:0,facing:guardFacing(guard)});ammoDrops.push({x:guard.x,age:0});}burst(guard.x,380,guard.hp<=0?'#f8cb7b':'#9aeaf0',guard.hp<=0?24:7);break}
   const lock=transmit===4?locks.find(l=>!l.done&&Math.abs(shot.x-l.x)<23&&shot.y>365&&shot.y<425):null;if(lock){lock.done=true;shot.y=-100;interact(lock.x,394,'#ffd895',20)}
  }
  shots=shots.filter(s=>s.y>0&&s.y<H&&s.x>0&&s.x<worldEnd);
@@ -205,8 +206,18 @@ function update(dt){
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=alternate||sector===3||!relays[sector].done;
   if(!guard.stun&&!guard.attack&&!guard.windup){const sees=!player.hidden&&distance<(alerted?350:220);if(sees){guard.dir=Math.sign(player.x-guard.x)||guard.dir;if(guard.cooldown<=0){guard.windup=alerted?.8:1.2;guard.cooldown=alerted?alertedFire:calmFire}else if(distance>170)guard.moving=true}else{if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;guard.moving=(elapsed+guard.home/100)%4>.65}if(guard.moving)guard.x=clamp(guard.x+guard.dir*46*dt,35,worldEnd-30)}
-  if(!player.hidden&&player.y<10&&distance<22&&player.shield<=0){hurtBuddy();if(player.dying)return}
  }
+ if(player.y<65&&player.shield<=0&&guards.some(guard=>guard.hp>0&&Math.abs(guard.x-player.x)<22)){
+  hurtBuddy();
+  if(player.dying)return;
+ }
+ ammoDrops=ammoDrops.filter(drop=>{
+  drop.age+=dt;
+  if(drop.age<ammoDropTime||player.y>36||Math.abs(player.x-drop.x)>=28)return true;
+  ammo+=2;
+  burst(drop.x,418,'#c7e9ae',8);
+  return false;
+ });
  for(const bullet of guardShots){const old=bullet.x;bullet.x+=bullet.vx*dt;if(crates.some(x=>(old-x)*(bullet.x-x)<=0)||hurdles.some(h=>(old-h.x)*(bullet.x-h.x)<=0)){bullet.dead=true;burst(bullet.x,420,'#f4d18e',3);continue}if(!player.hidden&&player.shield<=0&&player.y<10&&(old-player.x)*(bullet.x-player.x)<=0){bullet.dead=true;hurtBuddy()}}
  guardShots=guardShots.filter(b=>!b.dead&&b.x>0&&b.x<worldEnd);
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
@@ -235,6 +246,13 @@ function updateDefeatedGuards(dt){
 function interact(x,y,color,n=12){burst(x,y,color,n)}
 function painted(name,x,y,w,h){const img=props[name];if(!img.complete||!img.naturalWidth)return false;g.drawImage(img,x-w/2,y-h/2,w,h);return true}
 function glow(x,y,r,color){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,color);gr.addColorStop(1,'#0000');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)}
+function paintedFrame(name,frame,columns,rows,x,y,w,h){
+ const image=props[name];
+ if(!image.complete||!image.naturalWidth)return false;
+ const sw=image.naturalWidth/columns,sh=image.naturalHeight/rows;
+ g.drawImage(image,frame%columns*sw,Math.floor(frame/columns)*sh,sw,sh,x-w/2,y-h/2,w,h);
+ return true;
+}
 function pickupGlow(x,y,r,color='#ffd274'){
  const pulse=reduceMotion.matches?.26:.26+.08*Math.sin(elapsed*2);
  g.save();
@@ -260,6 +278,25 @@ function drawPaintedGuard(guard,motion,facing,fold=0){
  return true;
 }
 function sprite(name,x,y,frame,flip=false,scale=1){const img=art[name];if(!img.complete||!img.naturalWidth)return;const count=img.naturalWidth/192,width=name.startsWith('elf-')?123:192;g.save();g.translate(x,y);if(flip)g.scale(-1,1);g.drawImage(img,(Math.floor(frame)%count)*192,0,width,160,-96*scale,-155*scale,width*scale,160*scale);g.restore()}
+function drawBuddy(motion){
+ let frame=0;
+ if(player.dying)frame=player.dying<.3?6:7;
+ else if(player.shield>1.45)frame=5;
+ else if(player.fire)frame=4;
+ else if(player.y>0)frame=3;
+ else if(player.moving&&!reduceMotion.matches)frame=[1,0,2,0][Math.floor(motion*12)%4];
+ g.save();
+ const bob=reduceMotion.matches?0:player.moving&&player.y===0?Math.sin(motion*24)*1.5:0;
+ g.translate(player.x,445-player.y+bob);
+ g.scale(player.face,1);
+ const painted=paintedFrame('buddy-painted-atlas',frame,4,2,0,-72,149,149);
+ g.restore();
+ if(painted)return;
+ const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';
+ const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);
+ sprite('elf-'+pose,player.x,445-player.y,poseFrame,player.face<0,.85);
+ launcher();
+}
 function launcher(){
  if(player.dying)return;
  let angle=player.aim;if(Math.hypot(moveStick.x,moveStick.y)>.2)angle=Math.atan2(moveStick.y,Math.abs(moveStick.x));
@@ -361,6 +398,12 @@ function render(){
  for(let i=0;i<documents[2].power.length;i++){const x=documents[2].power[i];if(i){if(documents[2].found&&documents[2].step===i)pickupGlow(x,360,45);if(!painted('signal-fuse',x,360,52,18)){g.fillStyle='#d7b15a';g.fillRect(x-22,354,10,12);g.fillRect(x+12,354,10,12);g.fillStyle='#d5e7ef';g.fillRect(x-12,356,24,8);g.fillStyle='#f0b14a';g.fillRect(x-8,359,16,2)}}else if(!painted('generator',x,352,52,52)){g.fillStyle='#5f6b3e';g.fillRect(x-22,336,44,40);g.fillStyle='#e2b44a';g.beginPath();g.arc(x,328,7,0,7);g.fill();g.strokeStyle='#2c2a28';g.lineWidth=3;g.beginPath();g.arc(x+16,354,7,0,7);g.stroke()}}
  const marker=missionTarget();if(marker.x!==terminal.x&&marker.x!==14100){const markerX=marker.action==='shoot'?locks.find(l=>!l.done).x:marker.x;const markerTop=marker.hint==='ALARM RELAY'?bellY-58:305;glow(markerX,markerTop,50,'#ffe29166');g.fillStyle='#ff3030';g.beginPath();g.moveTo(markerX,markerTop+29);g.lineTo(markerX-20,markerTop-7);g.lineTo(markerX+20,markerTop-7);g.closePath();g.fill()}
  for(const [supplyIndex,x] of supplies.entries()){if(collectedSupplies.has(supplyIndex))continue;pickupGlow(x,418,38,'#c7e9ae');if(!painted('ammo-box',x,418,62,46)){g.fillStyle='#6d5a32';g.fillRect(x-24,404,48,30);g.strokeStyle='#d7b15a';g.lineWidth=2;g.strokeRect(x-24,404,48,30);g.strokeStyle='#c4453a';g.beginPath();g.moveTo(x-14,412);g.quadraticCurveTo(x,424,x+14,412);g.stroke()}}
+ for(const drop of ammoDrops){
+  const fall=Math.min(1,drop.age/ammoDropTime);
+  const y=382+36*fall*fall;
+  pickupGlow(drop.x,y,31,'#c7e9ae');
+  painted('ammo-box',drop.x,y,40,34);
+ }
  for(const parcel of parcels)if(!parcel.found){pickupGlow(parcel.x,parcel.y,40);if(!painted('gift-parcel',parcel.x,parcel.y,36,36)){g.fillStyle='#f7e7c2';g.fillRect(parcel.x-12,parcel.y-14,24,24);g.fillStyle='#d4534c';g.fillRect(parcel.x-12,parcel.y-4,24,5);g.fillRect(parcel.x-3,parcel.y-14,6,24)}}
  for(const box of hurdles){if(!painted('wood-crate',box.x,445-box.clear/2,box.half*2+22,box.clear+10)){g.fillStyle='#8c5c3b';g.fillRect(box.x-box.half,445-box.clear,box.half*2,box.clear);g.strokeStyle='#3d2a22';g.strokeRect(box.x-box.half,445-box.clear,box.half*2,box.clear)}}
  for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,140);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
@@ -370,9 +413,10 @@ function render(){
   if(!packageFound){
    const y=cell?305:375;
    pickupGlow(objectiveX,y,52);
-   painted(cell?'gift-parcel':'order-page',objectiveX,y,46,48);
+   if(!paintedFrame('alternate-objectives',cell?0:1,2,2,objectiveX,y,58,55))painted(cell?'gift-parcel':'order-page',objectiveX,y,46,48);
   }
-  painted(dispatch?'mail-hatch':'wood-crate',exitX,356,70,84);
+  if(packageFound&&locks.every(lock=>lock.done))pickupGlow(exitX,393,74);
+  if(!paintedFrame('alternate-objectives',cell?2:3,2,2,exitX,cell?376:398,cell?142:82,cell?138:94))painted(dispatch?'mail-hatch':'wood-crate',exitX,356,70,84);
  }
  for(let i=0;i<locks.length;i++){const lock=locks[i],x=lock.x;if(!lock.done){if(!painted('padlock',x,392,30,40)){g.fillStyle='#e2b44a';g.fillRect(x-10,386,20,22);g.strokeStyle='#e2b44a';g.lineWidth=4;g.beginPath();g.arc(x,384,8,Math.PI,0);g.stroke()}}g.fillStyle=lock.done?'#5c8b74':'#9a4a4b';g.fillRect(x+263,250,14,140);g.fillStyle=lock.done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x+270,249,10,0,7);g.fill()}
  if(!painted('mail-hatch',14108,318,58,84)){g.fillStyle=transmit>=4&&locks.every(l=>l.done)?'#2f6a52':'#243e40';g.beginPath();g.arc(14108,300,26,Math.PI,0);g.fill();g.fillRect(14082,300,52,64)}
@@ -393,7 +437,7 @@ function render(){
   const scale=clamp((progress-.45)/.55,0,1);
   if(scale>0)painted('wrapped-guard',wrap.x,444-20*scale,48*scale,40*scale);
  }
- g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);sprite('elf-'+pose,player.x,445-player.y,poseFrame,player.face<0,.85);launcher();
+ g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();drawBuddy(motion);
  for(const x of crates){if(!painted('wood-crate',x,424,74,50)){g.fillStyle='#8c5c3b';g.strokeStyle='#533c34';g.lineWidth=4;g.fillRect(x-35,406,70,42);g.strokeRect(x-35,406,70,42);g.beginPath();g.moveTo(x-30,410);g.lineTo(x+30,444);g.moveTo(x+30,410);g.lineTo(x-30,444);g.stroke()}}
  if(endWall-camera<W+50){
   painted('depot-wall',endWall-78,285,186,323);
@@ -424,6 +468,6 @@ if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  :'Pick up the sealed dispatch. Shoot the shutter latch and carry the dispatch to the Allied drop box. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Rifle guards fire from range. Assault guards charge into melee. Jump to evade them.';
+$('brief').textContent+=' Rifle guards fire from range. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots. Jump to evade them.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

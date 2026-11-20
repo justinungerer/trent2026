@@ -69,14 +69,38 @@ test('failure retry resets the earned loadout and pause clears input',()=>{
  assert.deepEqual(result,{paused:true,failed:'lost',ammo:12,hp:3,x:100});
 });
 
-test('crate concealment protects stationary player but not when moving or firing',()=>{
+test('crate concealment prevents ranged targeting until Buddy moves or fires',()=>{
  const {run}=game();
- const result=JSON.parse(run(`start();player.x=420;guards=[{x:420,home:420,hp:2,dir:1,stun:0,attack:0}];
- keys.add('s');update(.02);const hidden=player.hidden&&player.hp===3;
- keys.add(' ');update(.02);const exposed=!player.hidden&&player.hp===2;
- keys.delete(' ');player.shield=0;keys.add('d');update(.02);
- JSON.stringify({hidden,exposed,moving:!player.hidden&&player.hp===1})`));
+ const result=JSON.parse(run(`start();player.x=420;guards=[{x:540,home:540,hp:2,kind:'rifleman',dir:1,stun:0,attack:0,cooldown:0}];
+ keys.add('s');update(.02);const hidden=player.hidden&&!guards[0].windup&&player.hp===3;
+ keys.add(' ');update(.02);const exposed=!player.hidden&&guards[0].windup>0;
+ keys.delete(' ');keys.add('d');update(.02);
+ JSON.stringify({hidden,exposed,moving:!player.hidden})`));
  assert.deepEqual(result,{hidden:true,exposed:true,moving:true});
+});
+
+test('both guard types inflict one contact hit and drop two rounds per defeat in every level',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  for(const kind of ['rifleman','charger']){
+   const {run}=game('?ribbon=plain&stage='+stage);
+   const result=JSON.parse(run(`start();
+    const guard={x:650,home:650,hp:2,kind:'${kind}',dir:-1,stun:1,attack:0,cooldown:10};
+    guards=[guard];player.x=650;player.y=110;update(0);
+    const jumped=player.hp===3;
+    player.y=0;update(.02);update(.02);
+    const contact=player.hp===2&&player.shield>0;
+    player.x=500;ammo=0;
+    shots=[{x:650,y:400,vx:0,vy:0}];update(.02);
+    const nonfatal=guard.hp===1&&ammoDrops.length===0;
+    shots=[{x:650,y:400,vx:0,vy:0}];update(.02);
+    const defeated=guard.hp===0&&ammoDrops.length===1;
+    player.x=650;
+    update(.3);update(.02);
+    const collected=ammo===2&&ammoDrops.length===0&&player.hp===2;
+    JSON.stringify({jumped,contact,nonfatal,defeated,collected})`));
+   assert.deepEqual(result,{jumped:true,contact:true,nonfatal:true,defeated:true,collected:true},stage+' '+kind);
+  }
+ }
 });
 
 test('shots and guard hits drive real animation state timers',()=>{

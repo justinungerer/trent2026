@@ -12,8 +12,9 @@ The depot is a landscape, side-scrolling mission in three gated yards:
 Collecting each yard's objective triggers an alarm reinforcement while its
 relay is active. Defeated guards return only after their patrol and defeat
 positions have both scrolled out of view. Guards telegraph and fire actual projectiles. Crates block
-their shots; pull down while stationary behind one to hide. Moving or firing
-exposes Buddy. Follow the arrow and yellow marker to the current objective;
+their shots. Pull down while stationary behind one to hide from ranged targeting.
+Guard contact costs one life, and each defeated guard leaves two rounds.
+Moving or firing exposes Buddy. Follow the arrow and soft glow to the current objective;
 relays require a brief interaction by standing next to them.
 
 Serve the repository root over HTTP and open `shelf-escape/`, or play from the
