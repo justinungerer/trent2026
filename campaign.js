@@ -767,6 +767,19 @@ function showStart() {
   title.focus({ preventScroll: true });
 }
 
+function showFrostedSkiesReplay() {
+  closeMission();
+  active = null;
+  campaignRoot.hidden = false;
+  campaignRoot.innerHTML = '<section class="campaign-start"><p class="eyebrow">Chapter 2</p>' +
+    '<h1 tabindex="-1">Frosted Skies</h1><p class="lead">Watch the chapter films and play all three levels. The quiz is skipped.</p>' +
+    '<button type="button" class="primary">Play Chapter 2</button></section>';
+  campaignRoot.querySelector('h1').focus({ preventScroll: true });
+  campaignRoot.querySelector('button').onclick = function () {
+    openChapter('frost', { skipQuiz: true, returnToMenu: showFrostedSkiesReplay });
+  };
+}
+
 function showLogo() {
   if (window.TrentMusic) window.TrentMusic.startScene();
   var section = document.createElement('section');
@@ -921,6 +934,7 @@ function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
   var menuButton = document.getElementById('mission-menu');
   var returnToMenu = active && active.returnToMenu;
+  menuButton.textContent = returnToMenu === showFrostedSkiesReplay ? 'Chapter start' : 'Chapter menu';
   menuButton.hidden = !returnToMenu;
   menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
@@ -1443,4 +1457,5 @@ window.TrentCampaign = {
   }
 };
 
-showStart();
+if (new URLSearchParams(location.search).get('play') === 'chapter-2') showFrostedSkiesReplay();
+else showStart();

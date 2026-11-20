@@ -266,6 +266,40 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       await page.locator(sheet).waitFor({ state: 'hidden' });
       assert.equal(await page.locator(gameplayGate).isHidden(), true, game);
     }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('http://localhost/?play=chapter-2');
+    const playChapter = page.getByRole('button', { name: 'Play Chapter 2' });
+    await playChapter.tap();
+    assert.equal(await page.locator('#intro-title').textContent(), 'Frosted Skies');
+    assert.match(await page.locator('#intro-video').getAttribute('src'), /intro-video\/frost\.mp4/);
+    await page.evaluate(() => introDone());
+    const frostFrame = page.frameLocator('#game');
+    for (const [index, stage, title] of [
+      [1, 'the-scout-screen', 'The Scout Screen'],
+      [2, 'workshop-approach', 'Workshop Approach'],
+      [3, null, null]
+    ]) {
+      if (stage) {
+        await page.getByRole('heading', { name: title, exact: true }).waitFor();
+        assert.ok((await page.locator('#intro-video').getAttribute('src')).includes('/level-video/' + stage + '.mp4'));
+        await page.evaluate(() => introDone());
+      }
+      await page.waitForFunction(index => {
+        const search = document.getElementById('game').contentWindow.location.search;
+        return new URLSearchParams(search).get('sequence') === String(index);
+      }, index, { polling: 50 });
+      const frost = page.frames().find(frame => frame.url().includes('/frosted-skies/'));
+      assert.equal(new URL(frost.url()).searchParams.get('stage'), stage);
+      await frostFrame.locator('#action').tap();
+      await frostFrame.locator('#sheet').waitFor({ state: 'hidden' });
+      assert.equal(await page.locator('#turn-gate').isHidden(), true);
+      await frost.evaluate(() => clearFlight('Level cleared.'));
+      await frostFrame.getByRole('button', { name: 'Continue', exact: true }).tap();
+    }
+    await playChapter.waitFor();
+    assert.equal(await page.evaluate(() => active), null);
+    assert.equal(await page.locator('.quiz-modal').count(), 0);
+    console.log('PASS: the Chapter 2 share link plays all three existing films and all three levels in order without a quiz.');
     assert.deepEqual(errors, []);
     console.log('PASS: touch starts across all 33 minigame levels, normalized URLs, missed rotation events, and standalone links.');
     console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
