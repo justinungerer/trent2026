@@ -8,12 +8,14 @@ const macButton=ui['send-mac'];
 const MAC_USES=2;
 const MAC_SECONDS=6+(window.TrentMissionBonus||0)*0.75;
 const MAC_SPEED=205;
+const MAC_MIN_SEARCH_SECONDS=10;
 const FLEE_RANGE=145;
 const GUARD_RADIUS=12;
 const stage=new URLSearchParams(location.search).get('stage');
 const freight=stage==='freight-gate';
 const stable=stage==='the-stable-escape';
 const yardSize={w:1080,h:720};
+const YARD_ZOOM=1.25;
 const world={w:yardSize.w*2,h:yardSize.h*2};
 const [southwest,northwest,southeast,northeast]=[
  {x:0,y:yardSize.h},{x:0,y:0},{x:yardSize.w,y:yardSize.h},{x:yardSize.w,y:0}
@@ -133,7 +135,7 @@ function reset(notice){
 }
 function sync(){
  ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/'+caches.length;
- macButton.textContent='SEND MAC · '+run.macUses;
+ macButton.textContent=(run.mac?'MAC CHASING · ':'SEND MAC · ')+run.macUses;
  macButton.disabled=mode!=='play'||run.macUses===0||Boolean(run.mac);
 }
 function announce(message){run.notice=message;run.noticeUntil=run.time+3.5;}
@@ -203,8 +205,9 @@ function sendMac(){
  const p=run.player;
  const target=nearestGuard(p);
  if(!target)return;
+ const searchSeconds=Math.max(MAC_MIN_SEARCH_SECONDS,3*distance(p,target)/MAC_SPEED);
  run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),until:Infinity,
-  target,waypoint:null,pathDue:0,retreat:null};
+  searchUntil:run.time+searchSeconds,target,waypoint:null,pathDue:0,retreat:null};
  run.macUses--;
  announce('Mac is after the guards.');
  sync();
@@ -289,6 +292,13 @@ function updateMac(player,dt){
  if(mac.until<=run.time){
   run.mac=null;
   mac.target.waypoint=null;
+  sync();
+  return;
+ }
+ if(mac.until===Infinity&&mac.searchUntil<=run.time){
+  run.mac=null;
+  run.macUses++;
+  announce('Mac couldn’t reach the guard. Attack returned.');
   sync();
   return;
  }
@@ -543,7 +553,7 @@ function drawYard(){
 }
 function render(){
  const width=canvas.width,height=canvas.height;
- const zoom=Math.max(Math.min(width/370,height/460),height/yardSize.h,width/yardSize.w);
+ const zoom=YARD_ZOOM*Math.max(Math.min(width/370,height/460),height/yardSize.h,width/yardSize.w);
  const vw=width/zoom,vh=height/zoom;
  const mac=run.mac;
  const focusX=run.player.x+(mac?clamp((mac.x-run.player.x)*.5,-vw*.26,vw*.26):0);
