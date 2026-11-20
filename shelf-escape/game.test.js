@@ -46,7 +46,7 @@ test('all reachable quiz loadouts complete through the actual mission update loo
  }
 });
 
-test('Level 3 sends Buddy back to each ledger and across both aerials before the radio and exit',()=>{
+test('Level 3 reuses the same alarm bell and returns the far-end key to the center exit',()=>{
  const {run}=game('?stage=the-last-dispatch&charges=2&reload=slow&ribbon=plain');
  const result=JSON.parse(run(`start();player.x=exitX;update(0);
   const exitLocked=state==='playing';
@@ -56,12 +56,16 @@ test('Level 3 sends Buddy back to each ledger and across both aerials before the
   const earlyShotIgnored=!firstLock.done;
   shots=[];
   let steps=0;
-  const route=new Map();
+  const route=new Map(),bellVisits=new Map();
   while(state==='playing'&&steps++<20000){
    keys.clear();
    const target=missionTarget(),dir=target.x>=player.x?1:-1;
    if(target.hint==='ROUTE LEDGER'||target.hint.startsWith('AERIAL')) {
     if(!route.has(target.x))route.set(target.x,dir);
+   }
+   if(target.hint==='ALARM RELAY'){
+    const bay=locks.findIndex(lock=>!lock.done);
+    if(!bellVisits.has(bay))bellVisits.set(bay,[target.x,dir]);
    }
    if(Math.abs(target.x-player.x)>3)keys.add(dir===1?'d':'a');
    const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
@@ -73,13 +77,14 @@ test('Level 3 sends Buddy back to each ledger and across both aerials before the
    update(.02);
   }
   JSON.stringify({exitLocked,earlyShotIgnored,state,papers:documents.flatMap(doc=>doc.pages).filter(page=>page.found).length,
-   diverters:documents.filter(doc=>doc.diverted).length,alarms:relays.filter(relay=>relay.done).length,
+   diverters:documents.filter(doc=>doc.diverted).length,alarms:documents.filter(doc=>doc.alarmCleared).length,
    ledgers:documents.filter(doc=>doc.stamped).length,latches:locks.filter(lock=>lock.done).length,
-   transmit,x:player.x,route:[...route]})`));
- assert.ok(result.x>=8026,JSON.stringify(result));
- const {x,route,...completed}=result;
+   transmit,x:player.x,center:worldEnd/2,bellVisits:[...bellVisits.values()],route:[...route]})`));
+ const {x,center,bellVisits,route,...completed}=result;
+ assert.ok(Math.abs(x-center)<32,JSON.stringify(result));
  assert.deepEqual(completed,{exitLocked:true,earlyShotIgnored:true,state:'won',papers:6,diverters:3,alarms:3,ledgers:3,latches:3,transmit:4});
- assert.deepEqual(route,[[1040,-1],[2990,-1],[5330,-1],[7700,1],[6600,-1]]);
+ assert.deepEqual(bellVisits,[[1880,1],[1880,-1],[1880,-1]]);
+ assert.deepEqual(route,[[1040,-1],[2990,1],[5330,1],[7700,1],[6600,-1]]);
 });
 
 test('local handshake checks parent origin and source, then reports completion once',()=>{
@@ -201,9 +206,11 @@ test('the exit key is the final pickup and is required in every level',()=>{
    const locked=state==='playing'&&missionTarget().hint==='EXIT KEY';
    player.x=exitKeyX;update(0);
    const collected=exitKeyFound&&missionTarget().x===exitX;
+   if(dispatch){player.x=routeEnd;update(0);}
+   const farEndIsNotExit=state==='playing';
    player.x=exitX;update(0);
-   JSON.stringify({earlyKeyIgnored,locked,collected,state})`));
-  assert.deepEqual(result,{earlyKeyIgnored:true,locked:true,collected:true,state:'won'},stage);
+   JSON.stringify({earlyKeyIgnored,locked,collected,farEndIsNotExit,state})`));
+  assert.deepEqual(result,{earlyKeyIgnored:true,locked:true,collected:true,farEndIsNotExit:true,state:'won'},stage);
  }
 });
 
@@ -265,6 +272,18 @@ test('alarm bells need a jump and boxes block the ground',()=>{
  assert.ok(Math.abs(result.calmFire-5/1.3)<1e-12);
 });
 
+test('Level 3 riflemen shoot twice as often as the other alternate level',()=>{
+ const shotGap=stage=>game('?stage='+stage).run(`start();player.x=400;player.shield=60;
+  guards=[{x:500,home:500,hp:2,kind:'rifleman',dir:-1,stun:0,attack:0,cooldown:0}];
+  const shotTimes=[];
+  const shoot=fireGuardShot;
+  fireGuardShot=guard=>{shotTimes.push(elapsed);shoot(guard);};
+  for(let tick=0;tick<400&&shotTimes.length<2;tick++)update(.01);
+  shotTimes[1]-shotTimes[0]`);
+ const normal=shotGap('out-of-the-cell'),fast=shotGap('the-last-dispatch');
+ assert.ok(Math.abs(normal-2*fast)<.03,JSON.stringify({normal,fast}));
+});
+
 test('defeated guards return only when their defeat and patrol positions leave the view',()=>{
  for(const stage of ['', 'out-of-the-cell', 'the-last-dispatch']){
   const {run}=game('?stage='+stage);
@@ -277,6 +296,7 @@ test('defeated guards return only when their defeat and patrol positions leave t
    const afterPickup=guard.hp<=0&&wraps.length===1&&collectedSupplies.has(0);
    camera=630;updateDefeatedGuards(0);
    const stillInView=guard.hp<=0&&wraps.length===1;
+   if(dispatch)wraps[0].age=0;
    camera=1100;updateDefeatedGuards(0);
    const respawned=guard.hp===1&&guard.x===guard.home&&wraps.length===0;
    JSON.stringify({defeated,afterPickup,stillInView,respawned})`));

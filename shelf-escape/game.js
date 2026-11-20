@@ -6,14 +6,17 @@ const params=new URLSearchParams(location.search);
 const cell=params.get('stage')==='out-of-the-cell';
 const dispatch=params.get('stage')==='the-last-dispatch';
 const alternate=cell||dispatch;
-const exitX=cell?6340:dispatch?8030:14100;
+const routeEnd=cell?6340:dispatch?8030:14100;
+const worldEnd=alternate?routeEnd+250:14300;
+const exitX=dispatch?worldEnd/2:routeEnd;
 const kitX=2160;
-const exitKeyX=exitX-195;
+const exitKeyX=routeEnd-195;
+const dispatchBellX=1880;
 const lowShotY=420,highShotY=382;
 const dispatchBays=[
- {pages:[600,1430],diverterX:1650,relayX:1880,ledgerX:1040,latchX:2250},
- {pages:[2800,3290],diverterX:3720,relayX:4050,ledgerX:2990,latchX:4550},
- {pages:[5100,5630],diverterX:5980,relayX:6320,ledgerX:5330,latchX:6880}
+ {pages:[600,1430],diverterX:1650,ledgerX:1040,latchX:2250},
+ {pages:[2800,3290],diverterX:3720,ledgerX:2990,latchX:4550},
+ {pages:[5100,5630],diverterX:5980,ledgerX:5330,latchX:6880}
 ];
 const dispatchRadioX=7440;
 const dispatchAerials=[7700,6600];
@@ -26,7 +29,8 @@ const art=Object.fromEntries(['elf-idle','elf-walk','elf-fire','elf-hurt','elf-d
 const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate','order-page','rail-switch','cipher-book','generator','signal-fuse','gift-parcel','radio-aerial','field-radio','padlock','mail-hatch','wrapped-guard','depot-wall','guard-types','buddy-painted-atlas','alternate-objectives','buddy-duck-atlas','sorting-shutters'].map(name=>{const img=new Image();img.src='./art/props/'+name+'.webp';return [name,img]}));
 const stageScenery=new Image();
 stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex-aligned.webp':'./art/freight-depot.webp';
-const alertedFire=3.5/1.3,calmFire=5/1.3;
+const firingRate=dispatch?2:1;
+const alertedFire=3.5/1.3/firingRate,calmFire=5/1.3/firingRate;
 const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500,4780,5850,7090]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
 const wrapDuration=.7;
@@ -34,12 +38,12 @@ const ammoDropTime=.28;
 const keys=new Set(),sticks={move:{id:null,x:0,y:0}};
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
-const worldEnd=alternate?exitX+250:14300,endWall=worldEnd-36, crates=alternate?[405,890,1510,2150,2670,3050,3850,4450,5050,5750,6150].filter(x=>x<exitX):[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
-const supplies=Array.from({length:Math.floor((exitX-450)/250)+1},(_,index)=>{
+const endWall=worldEnd-36, crates=alternate?[405,890,1510,2150,2670,3050,3850,4450,5050,5750,6150].filter(x=>x<routeEnd):[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
+const supplies=Array.from({length:Math.floor((routeEnd-450)/250)+1},(_,index)=>{
  let x=300+index*250;
  while(crates.some(box=>Math.abs(box-x)<72)||hurdles.some(box=>Math.abs(box.x-x)<72))x+=84;
  return x;
-}).filter(x=>x<exitX-60);
+}).filter(x=>x<routeEnd-60);
 const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
 let state='intro',player,guards,shots,guardShots,particles,wraps,ammoDrops,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,collectedSupplies,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -91,8 +95,8 @@ function reset(){
  player={x:100,y:0,vy:0,hp:3,shield:0,face:1,aim:0,fire:0,dying:0,moving:false,duckPose:0};
  const baseline=cell?3:dispatch?4:16;
  guards=Array.from({length:Math.ceil(baseline*1.5)},(_,index)=>{
-  const x=450+index*(exitX-1050)/(Math.ceil(baseline*1.5)-1);
-  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:1.8+index%3*.4};
+  const x=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
+  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)/(index%2?1:firingRate)};
  });
  shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
@@ -104,9 +108,8 @@ function reset(){
  }
  if(dispatch){
   documents=dispatchBays.map(({pages,diverterX,ledgerX})=>({
-   pages:pages.map(x=>({x,found:false})),diverterX,ledgerX,diverted:false,stamped:false
+   pages:pages.map(x=>({x,found:false})),diverterX,ledgerX,diverted:false,alarmCleared:false,stamped:false
   }));
-  relays=dispatchBays.map(bay=>({x:bay.relayX,done:false}));
   locks=dispatchBays.map(bay=>({x:bay.latchX,done:false}));
   terminal={x:dispatchRadioX};
  }
@@ -143,7 +146,7 @@ function dispatchTarget(){
  const page=doc.pages.find(item=>!item.found);
  if(page)return {x:page.x,title:'Collect the route papers',hint:'ROUTE PAPERS'};
  if(!doc.diverted)return {x:doc.diverterX,title:'Set the mail diverter',hint:'MAIL DIVERTER'};
- if(!relays[bay].done)return {x:relays[bay].x,title:'Jump to disable the shutter alarm',hint:'ALARM RELAY'};
+ if(!doc.alarmCleared)return {x:dispatchBellX,title:'Return to the first alarm bell and jump to silence it',hint:'ALARM RELAY'};
  if(!doc.stamped)return {x:doc.ledgerX,title:'Return to the ledger to stamp the route papers',hint:'ROUTE LEDGER'};
  return {x:locks[bay].x-120,title:'Shoot the shutter latch',hint:'SHUTTER LATCH',action:'shoot'};
 }
@@ -176,7 +179,8 @@ function tryEscape(title,copy){
   exitKeyFound=true;
   interact(exitKeyX,376,'#f9d487',18);
  }
- if(!exitKeyFound||player.x<exitX-4)return false;
+ const reachedExit=dispatch?Math.abs(player.x-exitX)<32:player.x>=exitX-4;
+ if(!exitKeyFound||!reachedExit)return false;
  overlay('won',title,copy,session?'Continue the story':'Play again');
  return true;
 }
@@ -194,12 +198,11 @@ function updateDispatch(){
    doc.diverted=true;
    interact(doc.diverterX,350,'#8feafa',12);
   }
-  const relay=relays[bay];
-  if(doc.diverted&&!relay.done&&Math.abs(player.x-relay.x)<34&&player.y>=108){
-   relay.done=true;
-   interact(relay.x,bellY,'#8feafa',24);
+  if(doc.diverted&&!doc.alarmCleared&&Math.abs(player.x-dispatchBellX)<34&&player.y>=108){
+   doc.alarmCleared=true;
+   interact(dispatchBellX,bellY,'#8feafa',24);
   }
-  if(relay.done&&!doc.stamped&&Math.abs(player.x-doc.ledgerX)<30){
+  if(doc.alarmCleared&&!doc.stamped&&Math.abs(player.x-doc.ledgerX)<30){
    doc.stamped=true;
    interact(doc.ledgerX,356,'#f9d487',18);
   }
@@ -354,7 +357,7 @@ function updateDefeatedGuards(dt){
  wraps=wraps.filter(wrap=>{
   wrap.age+=dt;
   const guard=wrap.guard;
-  if(wrap.age<wrapDuration||!offscreen(wrap.x)||!offscreen(guard.home))return true;
+  if((!dispatch&&wrap.age<wrapDuration)||!offscreen(wrap.x)||!offscreen(guard.home))return true;
   Object.assign(guard,{x:guard.home,hp:guard.kind==='charger'?1:2,stun:0,attack:0,
    windup:0,moving:false,cooldown:calmFire});
   return false;
@@ -469,7 +472,7 @@ function scenery(){
  g.fillStyle='#dcebea';g.fillRect(0,373,W,13);
 }
 function drawDispatchObjectives(){
- for(const [index,doc] of documents.entries()){
+ for(const doc of documents){
   for(const page of doc.pages){
    if(page.found||page.x<camera-60||page.x>camera+W+60)continue;
    pickupGlow(page.x,370,52);
@@ -477,7 +480,7 @@ function drawDispatchObjectives(){
   }
   if(!doc.diverted)pickupGlow(doc.diverterX,348,44);
   painted('rail-switch',doc.diverterX,348,34,62);
-  const ledgerReady=relays[index].done&&!doc.stamped;
+  const ledgerReady=doc.alarmCleared&&!doc.stamped;
   if(ledgerReady)pickupGlow(doc.ledgerX,358,48);
   painted('cipher-book',doc.ledgerX,358,48,52);
  }
@@ -530,7 +533,8 @@ function render(){
  }
  for(let x=190;x<worldEnd;x+=760){if(x<camera-150||x>camera+W)continue;g.fillStyle='#694b3c';g.fillRect(x,330,125,55);g.fillStyle='#916548';g.fillRect(x+5,335,115,46);g.strokeStyle='#49392f';g.strokeRect(x,330,125,55);g.fillStyle='#d7bd86';g.fillRect(x+38,335,10,46);g.fillRect(x+85,335,10,46);g.fillStyle='#f1d8a2';g.font='bold 11px system-ui';g.fillText('NORTH DEPOT',x+20,362)}
  }
- for(const r of relays){g.strokeStyle=r.done?'#5d6e66':'#5c4034';g.lineWidth=5;g.beginPath();g.moveTo(r.x+16,bellY+28);g.lineTo(r.x+16,404);g.stroke();glow(r.x,bellY,58,r.done?'#86d2a433':'#ff6a5588');if(!painted('alarm-bell',r.x,bellY,64,86)){g.fillStyle=r.done?'#6e7a72':'#d23b32';g.beginPath();g.arc(r.x,bellY-8,16,Math.PI,0);g.fill();g.fillStyle=r.done?'#8d7848':'#e2b44a';g.beginPath();g.moveTo(r.x-20,bellY-6);g.lineTo(r.x+20,bellY-6);g.lineTo(r.x+14,bellY+16);g.lineTo(r.x-14,bellY+16);g.closePath();g.fill();g.fillStyle='#c4322c';g.beginPath();g.arc(r.x,bellY+26,5,0,7);g.fill()}}
+ const visibleRelays=dispatch?[{x:dispatchBellX,done:missionTarget().hint!=='ALARM RELAY'}]:relays;
+ for(const r of visibleRelays){g.strokeStyle=r.done?'#5d6e66':'#5c4034';g.lineWidth=5;g.beginPath();g.moveTo(r.x+16,bellY+28);g.lineTo(r.x+16,404);g.stroke();glow(r.x,bellY,58,r.done?'#86d2a433':'#ff6a5588');if(!painted('alarm-bell',r.x,bellY,64,86)){g.fillStyle=r.done?'#6e7a72':'#d23b32';g.beginPath();g.arc(r.x,bellY-8,16,Math.PI,0);g.fill();g.fillStyle=r.done?'#8d7848':'#e2b44a';g.beginPath();g.moveTo(r.x-20,bellY-6);g.lineTo(r.x+20,bellY-6);g.lineTo(r.x+14,bellY+16);g.lineTo(r.x-14,bellY+16);g.closePath();g.fill();g.fillStyle='#c4322c';g.beginPath();g.arc(r.x,bellY+26,5,0,7);g.fill()}}
  if(!alternate){
  for(const p of documents[0].pages)if(!p.found){pickupGlow(p.x,352,47);if(!painted('order-page',p.x,352,40,46)){g.fillStyle='#f4e2b8';g.fillRect(p.x-14,336,28,32);g.fillStyle='#c4453a';g.beginPath();g.arc(p.x,352,6,0,7);g.fill()}}
  if(!documents[1].found){pickupGlow(documents[1].x,358,48);if(!painted('depot-key',documents[1].x,358,28,48)){g.strokeStyle='#e2b44a';g.fillStyle='#e2b44a';g.lineWidth=4;g.beginPath();g.arc(documents[1].x,342,8,0,7);g.stroke();g.fillRect(documents[1].x-2,348,4,22);g.fillRect(documents[1].x-2,364,8,3);g.fillRect(documents[1].x-2,370,6,3)}}
@@ -620,7 +624,7 @@ resize();
 reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move and aim. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
 if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  ?'Jump to recover Buddy’s kit from the supply bench, then find the exit key and reach the depot floor. Use the stick to move and aim. Tap Jump or Fire.'
- :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, jump to disable the alarm, then head back to stamp the papers in the ledger before shooting the shutter latch. Connect both aerials and radio the route. Find the exit key and reach the Allied drop box. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
+ :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
 $('brief').textContent+=' Boxes stop low rifle shots. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
