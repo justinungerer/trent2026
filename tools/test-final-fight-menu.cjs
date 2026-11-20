@@ -300,6 +300,52 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     assert.equal(await page.evaluate(() => active), null);
     assert.equal(await page.locator('.quiz-modal').count(), 0);
     console.log('PASS: the Chapter 2 share link plays all three existing films and all three levels in order without a quiz.');
+    const replays = await page.evaluate(() => CHAPTERS.map(chapter => ({
+      slug: chapter.number ? 'chapter-' + chapter.number : 'prologue',
+      id: chapter.id,
+      title: chapter.title
+    })));
+    assert.equal(replays.length, 11);
+    for (const chapter of replays) {
+      await page.goto('http://localhost/?play=' + chapter.slug);
+      await page.getByRole('button', { name: /^Play (the Prologue|Chapter \d+)$/ }).tap();
+      assert.equal(await page.locator('#intro-title').textContent(), chapter.title);
+      await page.evaluate(() => introDone());
+      assert.deepEqual(await page.evaluate(() => [active.chapter.id, active.levels.length, active.score]), [chapter.id, 3, 0]);
+      assert.equal(await page.locator('.quiz-card').count(), 0);
+    }
+
+    await page.goto('http://localhost/?play=chapter-2&quiz=1');
+    for (const correctCount of [4, 5]) {
+      await playChapter.tap();
+      await page.evaluate(() => introDone());
+      await page.getByRole('button', { name: 'Begin questions' }).tap();
+      assert.equal(await page.evaluate(() => active), null);
+      await page.evaluate(async correctCount => {
+        const bank = await TrentTrivia.load();
+        for (let i = 0; i < 10; i++) {
+          const prompt = document.querySelector('.quiz-question').textContent;
+          const question = bank.find(entry => entry.prompt === prompt);
+          const choices = [...document.querySelectorAll('.choice')];
+          const correct = choices.find(button => button.querySelector('.choice-text').textContent ===
+            question.choices.find(answer => answer.correct).text);
+          if (i < correctCount) correct.click();
+          else choices.filter(button => button !== correct).slice(0, 2).forEach(button => button.click());
+          document.querySelector('.quiz-review button').click();
+        }
+      }, correctCount);
+      if (correctCount === 4) {
+        await page.getByRole('heading', { name: 'Briefing failed' }).waitFor();
+        assert.equal(await page.evaluate(() => active), null);
+        await page.getByRole('button', { name: 'Start screen' }).tap();
+      } else {
+        await page.getByRole('heading', { name: 'Quiz passed' }).waitFor();
+        await page.getByRole('button', { name: 'Continue to minigame' }).tap();
+        assert.deepEqual(await page.evaluate(() => [active.chapter.id, active.levelIndex, active.levels.length]),
+          ['frost', 0, 3]);
+      }
+    }
+    console.log('PASS: all 11 quiz-free share links and the required-quiz share link at the 4/10 and 5/10 thresholds.');
     assert.deepEqual(errors, []);
     console.log('PASS: touch starts across all 33 minigame levels, normalized URLs, missed rotation events, and standalone links.');
     console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');

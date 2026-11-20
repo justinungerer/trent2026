@@ -767,17 +767,25 @@ function showStart() {
   title.focus({ preventScroll: true });
 }
 
-function showFrostedSkiesReplay() {
+function showSharedChapter() {
   closeMission();
   active = null;
   campaignRoot.hidden = false;
-  campaignRoot.innerHTML = '<section class="campaign-start"><p class="eyebrow">Chapter 2</p>' +
-    '<h1 tabindex="-1">Frosted Skies</h1><p class="lead">Watch the chapter films and play all three levels. The quiz is skipped.</p>' +
-    '<button type="button" class="primary">Play Chapter 2</button></section>';
-  campaignRoot.querySelector('h1').focus({ preventScroll: true });
-  campaignRoot.querySelector('button').onclick = function () {
-    openChapter('frost', { skipQuiz: true, returnToMenu: showFrostedSkiesReplay });
+  campaignRoot.innerHTML = '<section class="campaign-start"><p class="eyebrow"></p>' +
+    '<h1 tabindex="-1"></h1><p class="lead"></p>' +
+    '<button type="button" class="primary"></button></section>';
+  campaignRoot.querySelector('.eyebrow').textContent = sharedChapter.kicker;
+  var title = campaignRoot.querySelector('h1');
+  title.textContent = sharedChapter.title;
+  campaignRoot.querySelector('.lead').textContent = sharedQuiz
+    ? 'Watch the chapter film, then get at least 5 of 10 quiz questions right to play the minigame.'
+    : 'Watch the films and play all three levels.' + (sharedChapter.number ? ' The quiz is skipped.' : '');
+  var play = campaignRoot.querySelector('button');
+  play.textContent = sharedChapter.number ? 'Play ' + sharedChapter.kicker : 'Play the Prologue';
+  play.onclick = function () {
+    openChapter(sharedChapter.id, { skipQuiz: !sharedQuiz, returnToMenu: showSharedChapter, quizHome: showSharedChapter });
   };
+  title.focus({ preventScroll: true });
 }
 
 function showLogo() {
@@ -934,7 +942,7 @@ function openMissionFrame(url, title) {
   document.getElementById('game').title = title;
   var menuButton = document.getElementById('mission-menu');
   var returnToMenu = active && active.returnToMenu;
-  menuButton.textContent = returnToMenu === showFrostedSkiesReplay ? 'Chapter start' : 'Chapter menu';
+  menuButton.textContent = returnToMenu === showSharedChapter ? 'Chapter start' : 'Chapter menu';
   menuButton.hidden = !returnToMenu;
   menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
@@ -1213,7 +1221,7 @@ function afterIntro(chapter, options) {
     testMode: testMode,
     highlightCorrect: options.highlightCorrect,
     onClear: function (correct) { showQuizPin(chapter, correct, options.returnToMenu); },
-    onHome: showStart
+    onHome: options.quizHome || showStart
   });
 }
 
@@ -1457,5 +1465,10 @@ window.TrentCampaign = {
   }
 };
 
-if (new URLSearchParams(location.search).get('play') === 'chapter-2') showFrostedSkiesReplay();
+var shareParams = new URLSearchParams(location.search);
+var sharedChapter = CHAPTERS.find(function (chapter) {
+  return shareParams.get('play') === (chapter.number ? 'chapter-' + chapter.number : 'prologue');
+});
+var sharedQuiz = sharedChapter && sharedChapter.number > 0 && shareParams.get('quiz') === '1';
+if (sharedChapter) showSharedChapter();
 else showStart();
