@@ -30,7 +30,7 @@ const WEAPONS = {
   homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
 const KILLS_PER_DROP = 9;
-const HEALTH_DROP_RATIO = .25;
+const HEALTH_DROP_RATIO = .25 * (workshop ? 1.25 : 1);
 const MISSILE_BLAST_TIME = .42;
 const PODS = ['flame', 'missile', 'laser', 'homing'];
 const FLAME_REACH = 0.6 * H;
