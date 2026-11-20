@@ -307,7 +307,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     })));
     assert.equal(replays.length, 11);
     for (const chapter of replays) {
-      await page.goto('http://localhost/play/' + chapter.slug + '.html');
+      await page.goto('http://localhost/play/' + chapter.slug.replace('-', '') + '/');
       await page.waitForURL('**/#play=' + chapter.slug);
       await page.getByRole('button', { name: /^Play (the Prologue|Chapter \d+)$/ }).tap();
       assert.equal(await page.locator('#intro-title').textContent(), chapter.title);
@@ -316,7 +316,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       assert.equal(await page.locator('.quiz-card').count(), 0);
     }
 
-    await page.goto('http://localhost/play/chapter-2-quiz.html');
+    await page.goto('http://localhost/play/chapter2quiz/');
     await page.waitForURL('**/#play=chapter-2&quiz=1');
     for (const correctCount of [4, 5]) {
       await playChapter.tap();
@@ -347,7 +347,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
           ['frost', 0, 3]);
       }
     }
-    await page.goto('http://localhost/play/final-boss.html');
+    await page.goto('http://localhost/play/finalboss/');
     await page.waitForURL('**/chimney-road/#final-fight');
     await page.locator('#box-start').waitFor();
     assert.equal(await page.locator('#start-sheet').isHidden(), true);
