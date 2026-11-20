@@ -37,6 +37,7 @@
   var TRAIN_COUNT = inspection ? 2 : rescue ? 7 : 5;
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
+  var FLIP_RATE_VARIATION = rescue ? 0.35 : 0.2;
   var RECOVERY_TIME = 0.9;
   var SABOTEUR_AFTER = rescue ? 0 : 2;
   var PATTERNS = [
@@ -423,7 +424,8 @@
   }
 
   function nextFlipInterval() {
-    return FLIP_INTERVAL / (0.8 + Math.random() * 0.4);
+    var rateMultiplier = 1 + (2 * Math.random() - 1) * FLIP_RATE_VARIATION;
+    return FLIP_INTERVAL / rateMultiplier;
   }
 
   /* Level 3 sabotages from the first approach; level 2 starts after two departures.
@@ -463,10 +465,12 @@
     var front;
     var mid;
     if (state === 'approach') {
+      var approachingJunction = trainX + TRAIN_W < SWITCH_X;
       switchGrace = Math.max(0, switchGrace - dt);
       trainX = Math.min(SWITCH_X - TRAIN_W, trainX + APPROACH_SPEED * dt);
       front = trainX + TRAIN_W;
       if (front >= SWITCH_X) {
+        if (rescue && approachingJunction) switchGrace = Math.max(switchGrace, RECOVERY_TIME);
         if (matches()) {
           state = 'depart';
           say('The route is open.');
