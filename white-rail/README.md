@@ -4,8 +4,6 @@ Trent pumps his handcar toward the yard mouth over 1,560 meters. Levels 1 and 2 
 
 The sky, handcar, and Trent use painted artwork from `art/`. The renderer projects the tracks and obstacles from their positions along the route. There are no third-party assets, no downloaded images, and no build step.
 
-A careful run that holds Pump and misses the obstacles finishes in about one minute.
-
 ## Open it
 
 Serve the repository root (the folder that contains `white-rail/`), then open the white-rail path. Links are relative, so the same files work on GitHub Pages under a repository subpath.
@@ -25,13 +23,13 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 Touch first. Nothing you need is hover-only.
 
 - Left thumb: Left and Right pick the track. Swipe sideways on the left half of the picture to change tracks.
-- Right thumb: Pump. Hold it and the lever keeps stroking. Each stroke pushes the car. Let go and the car slows.
+- Right thumb: tap Pump once per stroke. Each stroke pushes the car. Stop tapping to coast.
 - Hold Brake above Pump to slow at twice the coasting rate. Brake takes priority over Pump.
 
 Levels 2 and 3 have painted roadside tanks. Each tank fires when its center reaches about 20% of the screen height and targets the player's current track. Level 2 tanks fire twice, 1.5 seconds apart, and aim at the current track each time. Changing tracks after the shot avoids it. Tank shells count as one hit. New bomb gaps and shell markers reserve clear stretches across every track.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the line over returns to the start and does not count as reaching the yard.
 
-Buttons are at least 48 pixels. Left, Right, and Pump are larger so a thumb can hold them.
+Buttons are at least 48 pixels. Left, Right, and Pump are larger for easy tapping.
 
 If the device asks for reduced motion, a slip does not shake the picture.
 

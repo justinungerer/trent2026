@@ -25,7 +25,7 @@ Horizontal strip of equal frames on a transparent background. The feet share one
 - Frame count: 6
 - Order, left to right: high, down, forward, low, rising, high
 - Foot anchor: (168, 495) in every frame. X is the center of the soles. Y is the shared sole baseline.
-- Milliseconds per frame: about 53. One pump stroke moves the animation from 0 to 1 in 320 ms, and the six frames play in that order across the stroke. Holding Pump starts the stroke again whenever the pump cooldown allows. When the stroke is finished, frame 0 holds.
+- Milliseconds per frame: about 53. One pump stroke moves the animation from 0 to 1 in 320 ms, and the six frames play in that order across the stroke. A new tap starts another stroke when the pump cooldown allows. When the stroke is finished, frame 0 holds.
 
 
 ## Painted tank and track additions

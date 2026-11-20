@@ -59,6 +59,7 @@
   var MAX_SPEED = 164.025;
   var SPEED_FLOOR = 0.45;
   var PUMP_COOLDOWN = 0.34;
+  var PUMP_TAP_SECONDS = 0.15;
   var PUMP_RATE_MAX = 1 / PUMP_COOLDOWN;
   var START_SPEED = 4.6;
   var SWITCH_TIME = 0.2;
@@ -187,6 +188,7 @@
   var rotateHold = false;
   var lastFrame = 0;
   var pumpHeld = false;
+  var pumpTapLeft = 0;
   var spaceHeld = false;
   var pumpId = 0;
   var brakeHeld = false;
@@ -300,7 +302,7 @@
   }
 
   function refreshPump() {
-    var held = (pumpHeld || spaceHeld) && playing();
+    var held = pumpTapLeft > 0 && (pumpHeld || spaceHeld) && playing();
     pumpBtn.classList.toggle('held', held);
     pumpBtn.setAttribute('aria-pressed', held ? 'true' : 'false');
     brakeBtn.classList.toggle('held', brakeHeld && playing());
@@ -317,6 +319,7 @@
     toLane = CENTER_LANE;
     laneT = 1;
     pumpCool = 0;
+    pumpTapLeft = 0;
     pumpRate = 0;
     sincePump = 8;
     pumpAnim = 1;
@@ -512,7 +515,7 @@
   }
 
   function integrate(dt) {
-    var pumping = (pumpHeld || spaceHeld) && !brakeHeld;
+    var pumping = pumpTapLeft > 0 && (pumpHeld || spaceHeld) && !brakeHeld;
     var effort;
     var target;
     var rate;
@@ -521,7 +524,7 @@
       pumpRate += (0 - pumpRate) * (1 - Math.exp(-2.2 * dt));
     }
     if (pumpCool > 0) pumpCool -= dt;
-    if (pumping) doPump();
+    pumpTapLeft = Math.max(0, pumpTapLeft - dt);
     effort = pumpRate / PUMP_RATE_MAX;
     if (effort < 0.04) effort = 0;
     if (effort > 1) effort = 1;
@@ -1237,9 +1240,10 @@
   bindStep(trackDownBtn, 1);
 
   pumpBtn.addEventListener('pointerdown', function (event) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || !playing()) return;
     event.preventDefault();
     pumpHeld = true;
+    pumpTapLeft = PUMP_TAP_SECONDS;
     pumpId = event.pointerId;
     doPump();
     if (pumpBtn.setPointerCapture) pumpBtn.setPointerCapture(event.pointerId);
@@ -1347,7 +1351,9 @@
     if (event.code === 'Space' || key === ' ') {
       if (fromButton(event)) return;
       event.preventDefault();
+      if (event.repeat || !playing()) return;
       spaceHeld = true;
+      pumpTapLeft = PUMP_TAP_SECONDS;
       doPump();
     }
   });
