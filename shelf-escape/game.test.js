@@ -45,6 +45,36 @@ test('all reachable quiz loadouts complete through the actual mission update loo
  }
 });
 
+test('Level 3 requires all three sorting bays, the radio, and the final delivery',()=>{
+ const {run}=game('?stage=the-last-dispatch&charges=2&reload=slow&ribbon=plain');
+ const result=JSON.parse(run(`start();player.x=exitX;update(0);
+  const exitLocked=state==='playing';
+  player.x=100;
+  const firstLock=locks[0];
+  shots=[{x:firstLock.x,y:394,vx:0,vy:0}];update(0);
+  const earlyShotIgnored=!firstLock.done;
+  shots=[];
+  let steps=0;
+  while(state==='playing'&&steps++<20000){
+   keys.clear();
+   const target=missionTarget(),dir=target.x>=player.x?1:-1;
+   if(Math.abs(target.x-player.x)>3)keys.add(dir===1?'d':'a');
+   const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
+   const bell=target.hint==='ALARM RELAY'&&Math.abs(player.x-target.x)<36;
+   const enemy=guards.find(g=>g.hp>0&&Math.abs(g.x-player.x)<190);
+   const enemyShot=guardShots.some(shot=>Math.abs(shot.x-player.x)<180);
+   if(hurdle||bell||((enemy||enemyShot)&&player.y<12&&Math.abs(target.x-player.x)>12))keys.add('w');
+   if((enemy||(target.action==='shoot'&&Math.abs(target.x-player.x)<10))&&!shots.length&&elapsed>=nextShot&&player.y<8)keys.add(' ');
+   update(.02);
+  }
+  JSON.stringify({exitLocked,earlyShotIgnored,state,papers:documents.flatMap(doc=>doc.pages).filter(page=>page.found).length,
+   diverters:documents.filter(doc=>doc.diverted).length,alarms:relays.filter(relay=>relay.done).length,
+   latches:locks.filter(lock=>lock.done).length,transmit,x:player.x})`));
+ assert.ok(result.x>=8030,JSON.stringify(result));
+ const {x,...completed}=result;
+ assert.deepEqual(completed,{exitLocked:true,earlyShotIgnored:true,state:'won',papers:6,diverters:3,alarms:3,latches:3,transmit:4});
+});
+
 test('local handshake checks parent origin and source, then reports completion once',()=>{
  const origin='http://127.0.0.1:18764', {host,listeners,run}=game(`?parentOrigin=${encodeURIComponent(origin)}`);
  assert.equal(host.messages[0].message.type,'trent:ready');

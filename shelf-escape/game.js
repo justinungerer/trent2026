@@ -6,8 +6,14 @@ const params=new URLSearchParams(location.search);
 const cell=params.get('stage')==='out-of-the-cell';
 const dispatch=params.get('stage')==='the-last-dispatch';
 const alternate=cell||dispatch;
-const exitX=cell?6340:dispatch?4370:14100;
-const objectiveX=cell?2160:dispatch?1430:0;
+const exitX=cell?6340:dispatch?8030:14100;
+const kitX=2160;
+const dispatchBays=[
+ {pages:[600,1430],diverterX:1650,relayX:1880,latchX:2250},
+ {pages:[2800,3290],diverterX:3720,relayX:4050,latchX:4550},
+ {pages:[5100,5630],diverterX:5980,relayX:6320,latchX:6880}
+];
+const dispatchRadioX=7440;
 let packageFound=false;
 const startingAmmo=params.get('weapon')==='locked'?0:params.get('charges')==='2'?12:24;
 const damage=params.get('ribbon')==='plain'?1:2;
@@ -15,9 +21,9 @@ const reload=params.get('reload')==='slow'?.57:.27;
 const art=Object.fromEntries(['elf-idle','elf-walk','elf-fire','elf-hurt','elf-die','guard-idle','guard-walk','guard-attack','guard-hurt'].map(name=>{const img=new Image();img.src='./art/animated/'+name+'.png';return [name,img]}));
 const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate','order-page','rail-switch','cipher-book','generator','signal-fuse','gift-parcel','radio-aerial','field-radio','padlock','mail-hatch','wrapped-guard','depot-wall','guard-types','buddy-painted-atlas','alternate-objectives'].map(name=>{const img=new Image();img.src='./art/props/'+name+'.webp';return [name,img]}));
 const stageScenery=new Image();
-stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex.webp':'./art/freight-depot.webp';
+stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex-aligned.webp':'./art/freight-depot.webp';
 const alertedFire=3.5/1.3,calmFire=5/1.3;
-const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
+const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500,4780,5850,7090]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
 const wrapDuration=.7;
 const ammoDropTime=.28;
@@ -85,13 +91,19 @@ function reset(){
  });
  shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:1600,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850,3700],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
- relays=[950,3500,6200].map(x=>({x,progress:0,done:false}));gates=[2600,5400,8100];locks=[10650,11650,12650].map(x=>({x,done:false}));terminal={x:9000};elapsed=0;camera=0;ammo=startingAmmo;shotsUsed=0;nextShot=0;transmit=0;finished=false;collectedSupplies=new Set();alarmNotice=0;for(const parcel of parcels)parcel.found=false;clearInput();updateHud();
+ relays=[950,3500,6200].map(x=>({x,progress:0,done:false}));gates=[2600,5400,8100];locks=[10650,11650,12650].map(x=>({x,done:false}));terminal={x:9000};elapsed=0;camera=0;ammo=startingAmmo;shotsUsed=0;nextShot=0;transmit=0;finished=false;collectedSupplies=new Set();alarmNotice=0;for(const parcel of parcels)parcel.found=false;clearInput();
  if(alternate){
   packageFound=false;
   documents=[{found:true,pages:[]},{found:true,routes:[]},{found:true,power:[]}];
-  relays=[];gates=[];locks=dispatch?[{x:exitX-510,done:false}]:[];terminal={x:-1000};
-  updateHud();
+  relays=[];gates=[];locks=[];terminal={x:-1000};
  }
+ if(dispatch){
+  documents=dispatchBays.map(bay=>({pages:bay.pages.map(x=>({x,found:false})),diverterX:bay.diverterX,diverted:false}));
+  relays=dispatchBays.map(bay=>({x:bay.relayX,done:false}));
+  locks=dispatchBays.map(bay=>({x:bay.latchX,done:false}));
+  terminal={x:dispatchRadioX};
+ }
+ updateHud();
 }
 function overlay(mode,title,brief,label){
  state=mode;clearInput();$('title').textContent=title;$('brief').textContent=brief;
@@ -107,12 +119,22 @@ window.addEventListener('blur',pause);document.addEventListener('visibilitychang
 window.addEventListener('keydown',e=>{const key=e.key.toLowerCase();if([' ','arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(key)){if(state==='playing')e.preventDefault();keys.add(key)}if(key==='escape'&&!e.repeat){if(state==='paused')start();else pause()}});
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function burst(x,y,color,n=12){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*110;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.35+Math.random()*.35,color})}}
+function lockReady(index){return dispatch?relays[index].done:transmit===4}
+function dispatchTarget(){
+ const bay=locks.findIndex(lock=>!lock.done);
+ if(bay<0)return transmit===4?{x:exitX,title:'Reach the Allied drop box',hint:'DROP BOX'}
+  :{x:terminal.x,title:'Radio the recovered camp route',hint:'FIELD RADIO'};
+ const doc=documents[bay];
+ const page=doc.pages.find(item=>!item.found);
+ if(page)return {x:page.x,title:'Collect the route papers',hint:'ROUTE PAPERS'};
+ if(!doc.diverted)return {x:doc.diverterX,title:'Set the mail diverter',hint:'MAIL DIVERTER'};
+ if(!relays[bay].done)return {x:relays[bay].x,title:'Jump to disable the shutter alarm',hint:'ALARM RELAY'};
+ return {x:locks[bay].x-120,title:'Shoot the shutter latch',hint:'SHUTTER LATCH',action:'shoot'};
+}
 function missionTarget(){
- if(alternate){
-  if(!packageFound)return {x:objectiveX,title:cell?'Recover Buddy’s ribbon kit':'Recover the sealed dispatch',hint:cell?'RIBBON KIT':'DISPATCH'};
-  if(dispatch&&!locks[0].done)return {x:locks[0].x-120,title:'Shoot the shutter latch',hint:'SHUTTER LATCH',action:'shoot'};
-  return {x:exitX,title:cell?'Reach the depot floor':'Reach the Allied drop box',hint:cell?'DEPOT FLOOR':'DROP BOX'};
- }
+ if(dispatch)return dispatchTarget();
+ if(cell)return packageFound?{x:exitX,title:'Reach the depot floor',hint:'DEPOT FLOOR'}
+  :{x:kitX,title:'Recover Buddy’s ribbon kit',hint:'RIBBON KIT'};
  const count=relays.filter(r=>r.done).length,doc=documents[count];
  if(count===0&&!doc.found){const page=doc.pages.find(p=>!p.found);return {x:page.x,title:'Collect the transport orders',hint:`ORDER PAGES ${doc.pages.filter(p=>p.found).length}/3`}}
  if(count===1&&doc.found&&doc.route<doc.routes.length)return {x:doc.routes[doc.route],title:'Set the rail switches',hint:`SWITCH ${doc.route+1}/3`};
@@ -126,11 +148,41 @@ function missionTarget(){
 function updateHud(){
  const count=relays.filter(r=>r.done).length,target=missionTarget();
  $('objective').textContent=target.title;
- $('progress').textContent=alternate?(packageFound?'Package recovered':'Find the package')
+ $('progress').textContent=dispatch?`Sorting bays ${locks.filter(lock=>lock.done).length} / ${dispatchBays.length} · Papers ${documents.reduce((total,doc)=>total+doc.pages.filter(page=>page.found).length,0)} / 6`
+  :cell?(packageFound?'Package recovered':'Find the package')
   :alarmNotice>0?'ALARM · REINFORCEMENT INBOUND':count<3?`${['Freight yard','Switchyard','Signal yard'][count]} · ${count} / 3 relays`:transmit<3?`${transmit} / 3 aerials` :transmit<4?'Return to the radio':locks.some(l=>!l.done)?`${locks.filter(l=>l.done).length} / 3 locks`:'Exit is open';
  $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(3-player.hp);
  $('ammo').textContent=ammo+' SHOTS';
  $('hint').innerHTML=`${target.x<player.x?'‹':'›'} ${target.hint} <span>${target.x<player.x?'‹':'›'}</span>`;
+}
+function updateDispatch(){
+ const bay=locks.findIndex(lock=>!lock.done);
+ if(bay>=0){
+  const doc=documents[bay];
+  for(const page of doc.pages){
+   if(page.found||Math.abs(player.x-page.x)>=35)continue;
+   page.found=true;
+   interact(page.x,360,'#f9d487',16);
+  }
+  if(!doc.pages.every(page=>page.found))return false;
+  if(!doc.diverted&&Math.abs(player.x-doc.diverterX)<30){
+   doc.diverted=true;
+   interact(doc.diverterX,350,'#8feafa',12);
+  }
+  const relay=relays[bay];
+  if(doc.diverted&&!relay.done&&Math.abs(player.x-relay.x)<34&&player.y>=108){
+   relay.done=true;
+   interact(relay.x,bellY,'#8feafa',24);
+  }
+  return false;
+ }
+ if(transmit<4&&Math.abs(player.x-terminal.x)<28){
+  transmit=4;
+  interact(terminal.x,350,'#8feafa',20);
+ }
+ if(transmit!==4||player.x<exitX)return false;
+ overlay('won','DISPATCH DELIVERED','The camp route is in Allied hands.',session?'Continue the story':'Play again');
+ return true;
 }
 function update(dt){
  elapsed+=dt;alarmNotice=Math.max(0,alarmNotice-dt);player.shield=Math.max(0,player.shield-dt);player.fire=Math.max(0,player.fire-dt);
@@ -142,12 +194,14 @@ function update(dt){
  const up=jumpQueued||keys.has('w')||keys.has('arrowup');jumpQueued=false;if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
  for(const box of hurdles){const reach=box.half+16;if(player.y<box.clear&&Math.abs(player.x-box.x)<reach)player.x=player.x<box.x?box.x-reach:box.x+reach}
  const count=relays.filter(r=>r.done).length;
- if(alternate){
-  if(!packageFound&&Math.abs(player.x-objectiveX)<36&&(!cell||player.y>48)){
-   packageFound=true;transmit=4;burst(objectiveX,350,'#f9d487',18);
+ if(dispatch){
+  if(updateDispatch())return;
+ }else if(cell){
+  if(!packageFound&&Math.abs(player.x-kitX)<36&&player.y>48){
+   packageFound=true;transmit=4;burst(kitX,350,'#f9d487',18);
   }
-  if(packageFound&&locks.every(lock=>lock.done)&&player.x>=exitX){
-   overlay('won',cell?'DEPOT FLOOR REACHED':'DISPATCH DELIVERED',cell?'Buddy has his kit again.':'The camp route is in Allied hands.',session?'Continue the story':'Play again');return;
+  if(packageFound&&player.x>=exitX){
+   overlay('won','DEPOT FLOOR REACHED','Buddy has his kit again.',session?'Continue the story':'Play again');return;
   }
  }else if(count<3){const doc=documents[count],r=relays[count];
   if(count===0){for(const p of doc.pages)if(!p.found&&Math.abs(player.x-p.x)<35){p.found=true;interact(p.x,360,'#f9d487',16)}if(!doc.found&&doc.pages.every(p=>p.found)){doc.found=true;raiseAlarm(0,1190)}}
@@ -156,9 +210,9 @@ function update(dt){
   else if(count===2&&doc.found&&doc.step<doc.power.length&&Math.abs(player.x-doc.power[doc.step])<30){interact(player.x,350,'#8feafa',12);doc.step++}
   const ready=doc.found&&(count!==1||doc.route===doc.routes.length)&&(count!==2||doc.step===doc.power.length);
   if(ready&&!r.done&&Math.abs(player.x-r.x)<34&&player.y>=108){r.done=true;r.progress=1.2;interact(r.x,bellY,'#8feafa',24)}}
- if(count===3&&transmit<3&&Math.abs(player.x-[8500,9250,9700][transmit])<28){interact(player.x,350,'#8feafa',12);transmit++}
- if(count===3&&transmit===3&&Math.abs(player.x-terminal.x)<28){transmit=4;interact(player.x,350,'#8feafa',20)}
- if(count===3&&transmit===4&&locks.every(l=>l.done)&&player.x>14060){overlay('won','MESSAGE RECEIVED','Buddy slips out with Santa’s orders and a stolen stapler. Command calls that a successful extraction.',session?'Continue the story':'Play again');return}
+ if(!alternate&&count===3&&transmit<3&&Math.abs(player.x-[8500,9250,9700][transmit])<28){interact(player.x,350,'#8feafa',12);transmit++}
+ if(!alternate&&count===3&&transmit===3&&Math.abs(player.x-terminal.x)<28){transmit=4;interact(player.x,350,'#8feafa',20)}
+ if(!alternate&&count===3&&transmit===4&&locks.every(l=>l.done)&&player.x>14060){overlay('won','MESSAGE RECEIVED','Buddy slips out with Santa’s orders and a stolen stapler. Command calls that a successful extraction.',session?'Continue the story':'Play again');return}
  supplies.forEach((x,index)=>{
   if(collectedSupplies.has(index)||Math.abs(player.x-x)>=28)return;
   collectedSupplies.add(index);
@@ -170,13 +224,13 @@ function update(dt){
  const spaceDown=keys.has(' '),wantsShot=fireQueued||(spaceDown&&!spaceWasDown);spaceWasDown=spaceDown;fireQueued=false;
  if(wantsShot&&elapsed>=nextShot&&ammo>0){
   let dx=moveStick.x,dy=moveStick.y;
-  if(Math.hypot(dx,dy)<.2){const target=guards.filter(q=>q.hp>0&&Math.abs(q.x-player.x)<350).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0]||(transmit===4?locks.find(l=>!l.done&&Math.abs(l.x-player.x)<400):null);dx=target?Math.sign(target.x-player.x)||player.face:player.face;dy=0;player.face=dx}else{const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face=Math.sign(dx)||player.face}
+  if(Math.hypot(dx,dy)<.2){const target=guards.filter(q=>q.hp>0&&Math.abs(q.x-player.x)<350).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0]||locks.find((lock,index)=>lockReady(index)&&!lock.done&&Math.abs(lock.x-player.x)<400);dx=target?Math.sign(target.x-player.x)||player.face:player.face;dy=0;player.face=dx}else{const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face=Math.sign(dx)||player.face}
   player.aim=Math.atan2(dy,Math.abs(dx));shots.push({x:player.x+player.face*24,y:394-player.y,vx:dx*560,vy:dy*560});ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;burst(player.x+player.face*25,394-player.y,'#ffd895',5);
  }
  for(const shot of shots){
   shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;
   for(const guard of guards)if(guard.hp>0&&Math.abs(shot.x-guard.x)<23&&shot.y>340&&shot.y<450){guard.hp-=damage;guard.stun=.35;guard.attack=0;guard.windup=0;shot.y=-100;if(guard.hp<=0){wraps.push({guard,x:guard.x,age:0,facing:guardFacing(guard)});ammoDrops.push({x:guard.x,age:0});}burst(guard.x,380,guard.hp<=0?'#f8cb7b':'#9aeaf0',guard.hp<=0?24:7);break}
-  const lock=transmit===4?locks.find(l=>!l.done&&Math.abs(shot.x-l.x)<23&&shot.y>365&&shot.y<425):null;if(lock){lock.done=true;shot.y=-100;interact(lock.x,394,'#ffd895',20)}
+  const lock=locks.find((lock,index)=>lockReady(index)&&!lock.done&&Math.abs(shot.x-lock.x)<23&&shot.y>365&&shot.y<425);if(lock){lock.done=true;shot.y=-100;interact(lock.x,394,'#ffd895',20)}
  }
  shots=shots.filter(s=>s.y>0&&s.y<H&&s.x>0&&s.x<worldEnd);
  for(const guard of guards){
@@ -312,7 +366,7 @@ function building(x,y,w,h,roof){
  g.strokeStyle='#d9eced';g.lineWidth=7;g.beginPath();g.moveTo(x-5,y-3);g.lineTo(x+w/2,y-51);g.lineTo(x+w+5,y-3);g.stroke();
  for(let a=x+23;a<x+w-12;a+=46){g.fillStyle='#f3c76e';g.fillRect(a,y+27,24,35);g.strokeStyle='#855e45';g.lineWidth=3;g.strokeRect(a,y+27,24,35);g.beginPath();g.moveTo(a+12,y+27);g.lineTo(a+12,y+62);g.moveTo(a,y+44);g.lineTo(a+24,y+44);g.stroke()}
 }
-function drawIntakeRoom(){
+function drawAlignedInterior(){
  const width=H*stageScenery.naturalWidth/stageScenery.naturalHeight;
  // Mirror alternate panels so the same wall and floor edges meet as the room scrolls.
  for(let tile=Math.floor(camera/width);tile*width<camera+W;tile++){
@@ -326,7 +380,7 @@ function drawIntakeRoom(){
 }
 function scenery(){
  if(stageScenery.complete&&stageScenery.naturalWidth){
-  if(cell){drawIntakeRoom();return;}
+  if(alternate){drawAlignedInterior();return;}
   const width=Math.max(W,H*stageScenery.naturalWidth/stageScenery.naturalHeight);
   const height=width*stageScenery.naturalHeight/stageScenery.naturalWidth;
   const offset=(camera*.34)%width;
@@ -347,6 +401,17 @@ function scenery(){
  }
  g.restore();
  g.fillStyle='#dcebea';g.fillRect(0,373,W,13);
+}
+function drawDispatchObjectives(){
+ for(const doc of documents){
+  for(const page of doc.pages){
+   if(page.found||page.x<camera-60||page.x>camera+W+60)continue;
+   pickupGlow(page.x,370,52);
+   if(!paintedFrame('alternate-objectives',1,2,2,page.x,370,58,55))painted('order-page',page.x,370,46,48);
+  }
+  if(!doc.diverted)pickupGlow(doc.diverterX,348,44);
+  painted('rail-switch',doc.diverterX,348,34,62);
+ }
 }
 function render(){
  scenery();
@@ -371,7 +436,7 @@ function render(){
   g.globalAlpha=1;
  }
  g.save();g.translate(-camera,0);
- if(sceneryReady&&!cell){
+ if(sceneryReady&&!alternate){
   const tileWidth=H*stageScenery.naturalWidth/stageScenery.naturalHeight;
   const sourceY=stageScenery.naturalHeight*.72;
   for(let x=Math.floor(camera/tileWidth)*tileWidth;x<camera+W+tileWidth;x+=tileWidth){
@@ -391,11 +456,14 @@ function render(){
  for(let x=190;x<worldEnd;x+=760){if(x<camera-150||x>camera+W)continue;g.fillStyle='#694b3c';g.fillRect(x,330,125,55);g.fillStyle='#916548';g.fillRect(x+5,335,115,46);g.strokeStyle='#49392f';g.strokeRect(x,330,125,55);g.fillStyle='#d7bd86';g.fillRect(x+38,335,10,46);g.fillRect(x+85,335,10,46);g.fillStyle='#f1d8a2';g.font='bold 11px system-ui';g.fillText('NORTH DEPOT',x+20,362)}
  }
  for(const r of relays){g.strokeStyle=r.done?'#5d6e66':'#5c4034';g.lineWidth=5;g.beginPath();g.moveTo(r.x+16,bellY+28);g.lineTo(r.x+16,404);g.stroke();glow(r.x,bellY,58,r.done?'#86d2a433':'#ff6a5588');if(!painted('alarm-bell',r.x,bellY,64,86)){g.fillStyle=r.done?'#6e7a72':'#d23b32';g.beginPath();g.arc(r.x,bellY-8,16,Math.PI,0);g.fill();g.fillStyle=r.done?'#8d7848':'#e2b44a';g.beginPath();g.moveTo(r.x-20,bellY-6);g.lineTo(r.x+20,bellY-6);g.lineTo(r.x+14,bellY+16);g.lineTo(r.x-14,bellY+16);g.closePath();g.fill();g.fillStyle='#c4322c';g.beginPath();g.arc(r.x,bellY+26,5,0,7);g.fill()}}
+ if(!alternate){
  for(const p of documents[0].pages)if(!p.found){pickupGlow(p.x,352,47);if(!painted('order-page',p.x,352,40,46)){g.fillStyle='#f4e2b8';g.fillRect(p.x-14,336,28,32);g.fillStyle='#c4453a';g.beginPath();g.arc(p.x,352,6,0,7);g.fill()}}
  if(!documents[1].found){pickupGlow(documents[1].x,358,48);if(!painted('depot-key',documents[1].x,358,28,48)){g.strokeStyle='#e2b44a';g.fillStyle='#e2b44a';g.lineWidth=4;g.beginPath();g.arc(documents[1].x,342,8,0,7);g.stroke();g.fillRect(documents[1].x-2,348,4,22);g.fillRect(documents[1].x-2,364,8,3);g.fillRect(documents[1].x-2,370,6,3)}}
  if(!documents[2].found){pickupGlow(documents[2].x,356,48);if(!painted('cipher-book',documents[2].x,356,40,46)){g.fillStyle='#2f6a52';g.fillRect(documents[2].x-16,338,32,38);g.fillStyle='#d7b15a';g.fillRect(documents[2].x+6,346,8,16)}}
  for(let i=0;i<documents[1].routes.length;i++){const x=documents[1].routes[i];if(!painted('rail-switch',x,348,34,62)){g.fillStyle='#5c534c';g.fillRect(x-12,368,24,8);g.fillRect(x-2,332,5,38);g.fillStyle=i<documents[1].route?'#5eac80':'#d23b32';g.beginPath();g.arc(x,328,6,0,7);g.fill()}}
  for(let i=0;i<documents[2].power.length;i++){const x=documents[2].power[i];if(i){if(documents[2].found&&documents[2].step===i)pickupGlow(x,360,45);if(!painted('signal-fuse',x,360,52,18)){g.fillStyle='#d7b15a';g.fillRect(x-22,354,10,12);g.fillRect(x+12,354,10,12);g.fillStyle='#d5e7ef';g.fillRect(x-12,356,24,8);g.fillStyle='#f0b14a';g.fillRect(x-8,359,16,2)}}else if(!painted('generator',x,352,52,52)){g.fillStyle='#5f6b3e';g.fillRect(x-22,336,44,40);g.fillStyle='#e2b44a';g.beginPath();g.arc(x,328,7,0,7);g.fill();g.strokeStyle='#2c2a28';g.lineWidth=3;g.beginPath();g.arc(x+16,354,7,0,7);g.stroke()}}
+ }
+ if(dispatch)drawDispatchObjectives();
  const marker=missionTarget();if(marker.x!==terminal.x&&marker.x!==14100){const markerX=marker.action==='shoot'?locks.find(l=>!l.done).x:marker.x;const markerTop=marker.hint==='ALARM RELAY'?bellY-58:305;glow(markerX,markerTop,50,'#ffe29166');g.fillStyle='#ff3030';g.beginPath();g.moveTo(markerX,markerTop+29);g.lineTo(markerX-20,markerTop-7);g.lineTo(markerX+20,markerTop-7);g.closePath();g.fill()}
  for(const [supplyIndex,x] of supplies.entries()){if(collectedSupplies.has(supplyIndex))continue;pickupGlow(x,418,38,'#c7e9ae');if(!painted('ammo-box',x,418,62,46)){g.fillStyle='#6d5a32';g.fillRect(x-24,404,48,30);g.strokeStyle='#d7b15a';g.lineWidth=2;g.strokeRect(x-24,404,48,30);g.strokeStyle='#c4453a';g.beginPath();g.moveTo(x-14,412);g.quadraticCurveTo(x,424,x+14,412);g.stroke()}}
  for(const drop of ammoDrops){
@@ -409,17 +477,16 @@ function render(){
  for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,140);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
  glow(terminal.x,348,70,'#87eadb55');if(!painted('field-radio',terminal.x,356,78,52)){g.fillStyle='#4e6840';g.fillRect(terminal.x-28,338,56,36);g.fillStyle='#1d2420';g.fillRect(terminal.x-18,346,18,16);g.fillStyle='#e6d3a4';g.beginPath();g.arc(terminal.x+12,354,8,0,7);g.fill()}
  if(!alternate&&relays.every(r=>r.done)&&transmit<3){for(let i=0;i<3;i++){const x=[8500,9250,9700][i],active=transmit===i;if(active)glow(x,330,48,'#ffe29188');if(!painted('radio-aerial',x,318,36,86)){g.strokeStyle=active?'#ffe291':'#8aa9a5';g.lineWidth=4;g.beginPath();g.moveTo(x,360);g.lineTo(x,286);g.moveTo(x-12,304);g.lineTo(x+12,304);g.moveTo(x-9,292);g.lineTo(x+9,292);g.stroke()}}}
+ if(cell&&!packageFound){
+  pickupGlow(kitX,305,52);
+  if(!paintedFrame('alternate-objectives',0,2,2,kitX,305,58,55))painted('gift-parcel',kitX,305,46,48);
+ }
  if(alternate){
-  if(!packageFound){
-   const y=cell?305:375;
-   pickupGlow(objectiveX,y,52);
-   if(!paintedFrame('alternate-objectives',cell?0:1,2,2,objectiveX,y,58,55))painted(cell?'gift-parcel':'order-page',objectiveX,y,46,48);
-  }
-  if(packageFound&&locks.every(lock=>lock.done))pickupGlow(exitX,393,74);
+  if((cell&&packageFound)||(dispatch&&transmit===4))pickupGlow(exitX,393,74);
   if(!paintedFrame('alternate-objectives',cell?2:3,2,2,exitX,cell?376:398,cell?142:82,cell?138:94))painted(dispatch?'mail-hatch':'wood-crate',exitX,356,70,84);
  }
  for(let i=0;i<locks.length;i++){const lock=locks[i],x=lock.x;if(!lock.done){if(!painted('padlock',x,392,30,40)){g.fillStyle='#e2b44a';g.fillRect(x-10,386,20,22);g.strokeStyle='#e2b44a';g.lineWidth=4;g.beginPath();g.arc(x,384,8,Math.PI,0);g.stroke()}}g.fillStyle=lock.done?'#5c8b74':'#9a4a4b';g.fillRect(x+263,250,14,140);g.fillStyle=lock.done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x+270,249,10,0,7);g.fill()}
- if(!painted('mail-hatch',14108,318,58,84)){g.fillStyle=transmit>=4&&locks.every(l=>l.done)?'#2f6a52':'#243e40';g.beginPath();g.arc(14108,300,26,Math.PI,0);g.fill();g.fillRect(14082,300,52,64)}
+ if(!alternate&&!painted('mail-hatch',14108,318,58,84)){g.fillStyle=transmit>=4&&locks.every(l=>l.done)?'#2f6a52':'#243e40';g.beginPath();g.arc(14108,300,26,Math.PI,0);g.fill();g.fillRect(14082,300,52,64)}
  for(const guard of guards){
   if(guard.hp<=0)continue;
   g.fillStyle='#071a1a77';g.beginPath();g.ellipse(guard.x,447,32,8,0,0,7);g.fill();
@@ -465,7 +532,7 @@ resize();
 reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerials, transmit, shoot the three mail-train locks and reach the hatch. Use the left stick to move and aim. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
 if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  ?'Jump to recover Buddy’s kit from the supply bench, then reach the depot floor. Use the stick to move and aim. Tap Jump or Fire.'
- :'Pick up the sealed dispatch. Shoot the shutter latch and carry the dispatch to the Allied drop box. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
+ :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, jump to disable the alarm, then shoot the shutter latch. Radio the completed route and deliver it to the Allied drop box. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
 $('brief').textContent+=' Rifle guards fire from range. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots. Jump to evade them.';
