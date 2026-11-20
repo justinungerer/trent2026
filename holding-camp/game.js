@@ -165,7 +165,7 @@
           foes: yardPassage ? Array.from({ length: Math.round(wave.foes.length * 1.5) }, function (_, i) {
             return wave.foes[i % wave.foes.length];
           }) : wave.foes,
-          batches: gateFight ? 3 : 1,
+          batches: gateFight ? 2 : 1,
           extraGroup: gateFight
         });
       });
@@ -186,7 +186,7 @@
   }
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Defeat the Key Warden and take his key at the far right. Guards return as you head back to the exit halfway through the passage.'
-    : gateFight ? 'Clear the guard waves and reinforcements. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
+    : gateFight ? 'Clear two guard waves and their reinforcements in each section. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
@@ -274,17 +274,17 @@
     return v;
   }
 
-  function blockedByCrate(x, y) {
-    return obstacles.some(function (crate) {
+  function crateAt(x, y) {
+    return obstacles.find(function (crate) {
       return Math.abs(x - crate.x) < CRATE_HALF_WIDTH && Math.abs(y - crate.y) < CRATE_HALF_DEPTH;
     });
   }
 
   function moveSanta(dx, dy) {
     var x = clamp(santa.x + dx, 48, frontX());
-    if (!blockedByCrate(x, santa.y)) santa.x = x;
+    if (!crateAt(x, santa.y)) santa.x = x;
     var y = clamp(santa.y + dy, BAND_TOP + 12, BAND_BOT - 8);
-    if (!blockedByCrate(santa.x, y)) santa.y = y;
+    if (!crateAt(santa.x, y)) santa.y = y;
   }
 
   function makeWaves() {
@@ -569,6 +569,24 @@
     beginAttack(name);
   }
 
+  function dropGuardPickup(guard) {
+    var roll = Math.random();
+    if (roll >= 0.25) return;
+
+    var x = clamp(guard.x, 48, frontX());
+    var y = guard.y;
+    var crate = crateAt(x, y);
+    if (crate) {
+      var above = crate.y - CRATE_HALF_DEPTH - 8;
+      var below = crate.y + CRATE_HALF_DEPTH + 8;
+      y = below > BAND_BOT - 8 || (above >= BAND_TOP + 12 && y <= crate.y) ? above : below;
+    }
+
+    var stamina = roll < 0.125;
+    picks.push({ x: x, y: y, got: false, stamina: stamina });
+    say(stamina ? 'A guard dropped a stamina cookie.' : 'A guard dropped cocoa.');
+  }
+
   function hurtFoe(e, dmg) {
     e.hp -= dmg;
     e.x = clamp(e.x + santa.face * 22, 40, WORLD_R);
@@ -583,6 +601,7 @@
       e.animT = 0;
       e.alpha = 1;
       say('A guard flashes and vanishes.');
+      dropGuardPickup(e);
     } else {
       e.state = 'hurt';
       e.t = 0.26;
