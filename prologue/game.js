@@ -43,6 +43,7 @@
   var dispatches = [];
   var STUMBLE_TIME = 1.05;
   var START_AMMO = 10;
+  var AMMO_PER_PICKUP = 2;
   var SURF_SPEED = 220;
 
   var obstacles = [];
@@ -105,8 +106,9 @@
       { kind: 'log', x: gateX + 170, y: gapY < 400 ? gapY + 245 : gapY - 165, w: 245, h: 42 },
       { kind: 'hedgehog', x: gateX + 95, y: gapY + 20, r: 22 }
     );
-    if (column % 2 === 0) {
-      mines.push({ x: gateX + 355, y: gapY + 18, r: 16 });
+    if (column % 2 === 0) mines.push({ x: gateX + 355, y: gapY + 18, r: 16 });
+    // The seawall crossing adds one extra heart for every two regular ones.
+    if (column % 2 === 0 || (!rally && !breach && column % 4 === 1)) {
       hearts.push({ x: gateX + 460, y: gapY + 110, r: 18 });
     }
     if (rally || column % 3 === 1) packs.push({ x: gateX + 320, y: gapY + 103, r: 14 });
@@ -1033,9 +1035,9 @@
       dx = player.x - s.x;
       dy = player.y - s.y;
       if (dx * dx + dy * dy > 40 * 40) continue;
-      ammo += 1;
+      ammo += AMMO_PER_PICKUP;
       soldiers.splice(i, 1);
-      say('One more bullet.');
+      say('Two more bullets.');
     }
     for (i = 0; i < packs.length; i++) {
       pack = packs[i];
@@ -1044,8 +1046,8 @@
       dy = player.y - pack.y;
       if (dx * dx + dy * dy > (pack.r + RADIUS) * (pack.r + RADIUS)) continue;
       pack.taken = true;
-      ammo += 1;
-      say('One more bullet.');
+      ammo += AMMO_PER_PICKUP;
+      say('Two more bullets.');
     }
     return false;
   }
