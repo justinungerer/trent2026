@@ -25,12 +25,13 @@ const CRAFT = {
 };
 const WEAPONS = {
   flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
-  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.48 },
+  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 1.92 },
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
   homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
 const KILLS_PER_DROP = 9;
 const HEALTH_DROP_RATIO = .25;
+const MISSILE_BLAST_TIME = .42;
 const PODS = ['flame', 'missile', 'laser', 'homing'];
 const FLAME_REACH = 0.6 * H;
 const FLAME_HALF = 46;
@@ -522,6 +523,18 @@ function harm(enemy, dmg, x, y) {
   burst(x, y, colors.ice, 4);
   if (enemy.hp <= 0) fell(enemy);
 }
+function explodeMissile(shot, target, { x, y }) {
+  const radius = CRAFT[target.kind].size;
+  sparks.push({ x, y, vx: 0, vy: 0, color: colors.gold, life: MISSILE_BLAST_TIME, ring: radius });
+  burst(x, y, '#ff9750', 30);
+  for (const enemy of enemies) {
+    if (enemy.hp <= 0 || enemy.escaped) continue;
+    const { hx, hy } = CRAFT[enemy.kind];
+    const dx = Math.max(0, Math.abs(enemy.x - x) - hx);
+    const dy = Math.max(0, Math.abs(enemy.y - y) - hy);
+    if (Math.hypot(dx, dy) <= radius) harm(enemy, shot.dmg, enemy.x, enemy.y);
+  }
+}
 function segmentHit(shot, enemy, pad = 0) {
   const spec = CRAFT[enemy.kind];
   const dist = Math.hypot(shot.x - shot.px, shot.y - shot.py);
@@ -546,7 +559,7 @@ function guideMissile(shot, dt) {
   const aimX = target ? target.x : shot.x;
   const aimY = target ? target.y : shot.y - 240;
   const ang = Math.atan2(aimY - shot.y, aimX - shot.x);
-  const k = Math.min(1, dt * (shot.kind === 'homing' ? 18 : 12));
+  const k = Math.min(1, dt * 18);
   shot.vx += (Math.cos(ang) * speed - shot.vx) * k;
   shot.vy += (Math.sin(ang) * speed - shot.vy) * k;
 }
@@ -562,7 +575,7 @@ function fireSlot(index) {
   const kind = player.stack[index];
   const x = player.x + stackShift(index);
   if (kind === 'missile') {
-    shots.push({ kind, x, y: player.y - 18, vx: 0, vy: -240, dmg: 1, speed: 440, life: 2.4 });
+    shots.push({ kind, x, y: player.y - 18, vx: 0, vy: -440, dmg: 1, life: 2.4 });
   } else if (kind === 'laser') {
     for (const offset of [-6, 6]) {
       shots.push({ kind, x: x + offset, y: player.y - (index === 0 ? 49 : 30), vx: 0, vy: -1280, dmg: 1, pierce: true, hit: [] });
@@ -635,7 +648,7 @@ function update(dt) {
     shot.px = shot.x;
     shot.py = shot.y;
     if (shot.kind === 'missile' || shot.kind === 'homing') {
-      guideMissile(shot, dt);
+      if (shot.kind === 'homing') guideMissile(shot, dt);
       shot.life -= dt;
       if (shot.life <= 0) shot.dead = true;
     }
@@ -654,7 +667,8 @@ function update(dt) {
         continue;
       }
       shot.dead = true;
-      harm(enemy, shot.dmg, hitAt.x, hitAt.y);
+      if (shot.kind === 'missile') explodeMissile(shot, enemy, hitAt);
+      else harm(enemy, shot.dmg, hitAt.x, hitAt.y);
       break;
     }
     if (state !== 'playing') break;
@@ -948,7 +962,7 @@ function render() {
       g.strokeStyle = p.color;
       g.lineWidth = 3;
       g.beginPath();
-      g.arc(p.x, p.y, p.ring * (1.2 - p.life), 0, Math.PI * 2);
+      g.arc(p.x, p.y, p.ring * (1 - .55 * p.life / MISSILE_BLAST_TIME), 0, Math.PI * 2);
       g.stroke();
     } else {
       g.fillStyle = p.color;
