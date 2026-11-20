@@ -925,6 +925,7 @@ function openMissionFrame(url, title) {
   menuButton.onclick = returnToMenu || null;
   var address = new URL(url, location.href);
   address.searchParams.set('layout', 'painted-obstacles');
+  address.searchParams.set('briefing', 'portrait-start');
   var game = address.pathname.split('/').filter(Boolean).pop();
   missionLandscape = window.TrentOrientation.gameUsesLandscape(game);
   missionInstructionsAccepted = false;
@@ -1424,7 +1425,7 @@ document.getElementById('intro-skip').onclick = function () {
 };
 window.TrentOrientation.acceptMissionInstructions = function (source) {
   var frame = document.getElementById('game');
-  if (document.getElementById('mission').hidden || source !== frame.contentWindow || source.location.href !== frame.src) return false;
+  if (document.getElementById('mission').hidden || source !== frame.contentWindow) return false;
   missionInstructionsAccepted = true;
   syncTurn();
   return true;

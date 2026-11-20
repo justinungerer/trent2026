@@ -177,34 +177,46 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await page.getByRole('button', { name: 'Play level · The Chimney Road', exact: true }).click();
     assert.equal(await page.evaluate(() => active.finalFight && active.practice), true);
     assert.ok(await page.evaluate(() => document.getElementById('game').src.includes('stage=final-fight')));
-    for (const [game, accept, sheet] of [
-      ['prologue', '#start', '#start-sheet'],
-      ['night-broadcast', '#start', '#start-sheet'],
-      ['frosted-skies', '#action', '#sheet'],
-      ['white-rail', '#start', '#start-sheet'],
-      ['chapter-2', '#start', '#panel'],
-      ['switch-tower', '#start', '#start-sheet'],
-      ['shelf-escape', '#action', '#sheet'],
-      ['listening-wire', '#start', '#start-sheet'],
-      ['holding-camp', '#start', '#start-sheet'],
-      ['wrapping-line', '#start', '#start-sheet'],
-      ['chimney-road', '#start', '#start-sheet']
-    ]) {
-      await page.evaluate(game => {
+    const levelsToStart = await page.evaluate(() => CHAPTERS.flatMap(chapter =>
+      TrentLevels[chapter.id].map((level, index) => {
+        const url = new URL(chapter.path, location.href);
+        url.searchParams.set('sequence', index + 1);
+        if (level) url.searchParams.set('stage', level.id);
+        return { game: url.pathname.split('/')[1], url: url.href };
+      })
+    ));
+    assert.equal(levelsToStart.length, 33);
+    for (const { game, url } of levelsToStart) {
+      const sheet = { 'frosted-skies': '#sheet', 'shelf-escape': '#sheet', 'chapter-2': '#panel' }[game] || '#start-sheet';
+      const accept = sheet === '#sheet' ? '#action' : '#start';
+      await page.evaluate(({ game, url }) => {
         closeMission();
-        openMissionFrame('./' + game + '/', game);
-      }, game);
+        openMissionFrame(url, game);
+      }, { game, url });
       const gameFrame = page.frameLocator('#game');
       await page.waitForFunction(game => document.getElementById('game').contentWindow.location.pathname === '/' + game + '/', game, { polling: 50 });
       await gameFrame.locator(accept).waitFor();
       assert.equal(await page.locator('#turn-gate').isHidden(), true, game);
       const cardWidth = await gameFrame.locator(sheet + ' .card').evaluate(card => card.getBoundingClientRect().width);
       assert.ok(cardWidth <= 390, game + ' portrait card overflows');
-      await gameFrame.locator(accept).click();
+      if (game === 'holding-camp') {
+        await gameFrame.locator(accept).evaluate(button => {
+          const win = button.ownerDocument.defaultView;
+          const current = new URL(win.location.href);
+          current.searchParams.delete('briefing');
+          win.history.replaceState(null, '', current.href);
+        });
+        await page.evaluate(() => Object.defineProperty(window, 'orientation', { value: 0, configurable: true }));
+      }
+      await gameFrame.locator(accept).tap();
       if (game !== 'frosted-skies') {
         assert.equal(await page.locator('#turn-gate').isVisible(), true, game);
         assert.equal(await gameFrame.locator(sheet).isVisible(), true, game + ' started before rotation');
         await page.setViewportSize({ width: 844, height: 390 });
+        if (game === 'holding-camp') {
+          assert.equal(await page.locator('#turn-gate').isVisible(), true, game);
+          await page.evaluate(() => Object.defineProperty(window, 'orientation', { value: 90, configurable: true }));
+        }
       }
       await gameFrame.locator(sheet).waitFor({ state: 'hidden' });
       assert.equal(await page.locator('#turn-gate').isHidden(), true, game);
@@ -212,9 +224,25 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       if (game !== 'frosted-skies') {
         assert.match(await page.locator('#turn-heading').textContent(), /upright/);
         await page.setViewportSize({ width: 390, height: 844 });
+        if (game === 'holding-camp') {
+          await page.evaluate(() => {
+            delete window.orientation;
+            window.dispatchEvent(new Event('orientationchange'));
+          });
+        }
         await page.locator('#turn-gate').waitFor({ state: 'hidden' });
       }
     }
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.evaluate(() => {
+      delete TrentOrientation.acceptMissionInstructions;
+      openMissionFrame('./holding-camp/', 'Holding Camp');
+      missionInstructionsAccepted = true;
+      syncTurn();
+    });
+    const legacyCamp = page.frameLocator('#game');
+    await legacyCamp.locator('#start').tap();
+    await legacyCamp.locator('#start-sheet').waitFor({ state: 'hidden' });
     for (const [game, accept, sheet, gameplayGate] of [
       ['prologue', '#start', '#start-sheet', '#portrait'],
       ['shelf-escape', '#action', '#sheet', '#turn-gate'],
@@ -239,7 +267,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       assert.equal(await page.locator(gameplayGate).isHidden(), true, game);
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: portrait instructions and deferred rotation across all 11 minigames, plus standalone links.');
+    console.log('PASS: touch starts across all 33 minigame levels, normalized URLs, missed rotation events, and standalone links.');
     console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();

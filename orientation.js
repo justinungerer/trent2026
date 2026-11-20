@@ -6,7 +6,8 @@
     try { host = window.parent.TrentOrientation; } catch (error) {}
   }
   var game = typeof document === 'undefined' ? null : document.documentElement.getAttribute('data-game');
-  var readingInstructions = Boolean(game);
+  var acceptsBriefings = host && typeof host.acceptMissionInstructions === 'function';
+  var readingInstructions = Boolean(game && (!host || acceptsBriefings));
 
   var pointer = window.matchMedia('(pointer: coarse)');
   var viewport = window.matchMedia('(orientation: portrait)');
@@ -56,7 +57,7 @@
     blocked: blocked, subscribe: subscribe, embedded: Boolean(host), gameUsesLandscape: gameUsesLandscape
   };
 
-  if (!game) return;
+  if (!readingInstructions) return;
   var root = document.documentElement;
   var stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
@@ -65,6 +66,7 @@
   root.classList.add('reading-game-instructions');
 
   var pendingStart = null;
+  var startPoll;
   var briefingGate = null;
   var gameScreen = document.querySelector('main');
   if (!host) {
@@ -85,28 +87,32 @@
         if (wait) briefingGate.focus({ preventScroll: true });
       }
     }
-    if (pendingStart && !rotationNeeded(gameUsesLandscape(game))) {
-      var button = pendingStart;
-      pendingStart = null;
-      button.click();
-    }
+    if (!pendingStart || document.readyState === 'loading' || rotationNeeded(gameUsesLandscape(game))) return;
+    var button = pendingStart;
+    pendingStart = null;
+    clearInterval(startPoll);
+    // Clear the overlay before starting, even if Safari missed the rotation event.
+    if (host && !host.acceptMissionInstructions(window)) return;
+    if (!host) window.dispatchEvent(new Event('orientationchange'));
+    button.click();
   }
 
   document.addEventListener('click', function (event) {
     if (!readingInstructions) return;
     var button = event.target.closest('button:is(#start, #action, #box-start)');
     if (!button) return;
-    if (rotationNeeded(false) || (host && host.acceptMissionInstructions && !host.acceptMissionInstructions(window))) {
+    if (rotationNeeded(false) || (host && !host.acceptMissionInstructions(window))) {
       event.preventDefault();
       event.stopImmediatePropagation();
       return;
     }
     readingInstructions = false;
     root.classList.remove('reading-game-instructions');
-    if (rotationNeeded(gameUsesLandscape(game))) {
+    if (document.readyState === 'loading' || rotationNeeded(gameUsesLandscape(game))) {
       event.preventDefault();
       event.stopImmediatePropagation();
       pendingStart = button;
+      startPoll = setInterval(syncBriefing, 150);
       if (!host) window.dispatchEvent(new Event('orientationchange'));
     }
   }, true);
