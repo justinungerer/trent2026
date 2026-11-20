@@ -26,8 +26,8 @@
         <meter id="stamina-meter" min="0" max="10" value="10" aria-labelledby="stamina-label"></meter>
       </div>
       <div class="hud-block" hidden>
-        <span class="label">Club hits left</span>
-        <strong id="club-hits">0</strong>
+        <span class="label" id="weapon-label">Weapon hits left</span>
+        <strong id="weapon-hits">0</strong>
       </div>
       <div class="hud-block grow">
         <span class="label">Yard</span>
@@ -50,7 +50,7 @@
         <h1 id="camp-stage-title">The holding camp</h1>
         <p id="camp-goal">Santa is escaping a snowy holding camp. Nazi guards in military winter uniforms enter from either side. The wreath gate is at the far end.</p>
         <p class="how">How to play</p>
-        <p>Drag the left joystick to move. Punch is a fast jab. Upper is slower and hits three times as hard. Step up or down to go around crates and dodge swings. A beaten guard flashes and vanishes. Punch costs 1 stamina and Upper costs 3. Stamina refills in about 6.7 seconds. Cookies refill stamina and cocoa restores one hit point. Guards rarely drop a billy club. Either attack button swings it for 3 damage without using stamina. It breaks after five hits.</p>
+        <p>Drag the left joystick to move. Punch is a fast jab. Upper is slower and hits three times as hard. Step up or down to go around crates and dodge swings. A beaten guard flashes and vanishes. Punch costs 1 stamina and Upper costs 3. Stamina refills in about 6.7 seconds. Cookies refill stamina and cocoa restores one hit point. Guards rarely drop weapons. A club gives either attack button five stamina-free hits at 3 damage. Brass knuckles give Punch ten stamina-free hits at 1 damage. Upper still uses stamina with the knuckles. Santa carries one weapon at a time.</p>
         <button type="button" id="start">Step into the yard</button>
       </div>
     </div>
@@ -91,8 +91,8 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=portrait-start"></script>
-  <script src="art/frames.js?v=painted-guards"></script>
-  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=camp-joystick-and-club"></script>
+  <script src="art/frames.js?v=painted-weapons"></script>
+  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-weapon-attacks"></script>
   <script src="../level-retry.js"></script>
   <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script>
 </body>

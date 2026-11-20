@@ -10,6 +10,16 @@ var CAMP_FRAMES = {
   },
 };
 
+['club', 'knuckles'].forEach(function (weapon) {
+  var src = 'art/brawl-santa-' + weapon + '-painted.webp';
+  function clip(frames) {
+    return { src: src, n: frames.length, columns: 4, rows: 2, frames: frames, anchorX: 0.44, anchorY: 0.982 };
+  }
+  CAMP_FRAMES.santa[weapon + 'Idle'] = clip([0]);
+  CAMP_FRAMES.santa[weapon + 'Walk'] = clip([0, 1, 0, 2]);
+  CAMP_FRAMES.santa[weapon] = clip([3, 4, 5, 6]);
+});
+
 // Painted four-pose boss atlases: idle, two walking poses, striking pose.
 ['warden', 'enforcer'].forEach(function (kind) {
   var src = 'art/boss-' + kind + '-painted.webp';

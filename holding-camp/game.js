@@ -57,10 +57,14 @@
   var STAMINA_REFILL = (MAX_STAMINA / 5) * 0.75;
   var staminaEl = document.getElementById('stamina');
   var staminaMeter = document.getElementById('stamina-meter');
-  var clubHitsEl = document.getElementById('club-hits');
+  var weaponHitsEl = document.getElementById('weapon-hits');
+  var weaponLabelEl = document.getElementById('weapon-label');
   var movePad = document.getElementById('move-pad');
   var moveStick = { pointer: null, x: 0, y: 0 };
-  var CLUB_HITS = 5;
+  var WEAPON = {
+    club: { name: 'Billy club', label: 'Club hits left', hits: 5 },
+    knuckles: { name: 'Brass knuckles', label: 'Knuckle hits left', hits: 10 }
+  };
   var FR = window.CAMP_FRAMES;
 
   var KIND = {
@@ -78,6 +82,7 @@
       punch: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
       upper: { ms: 120, hit: 2, dmg: 3, reach: 84, cool: 0.26 },
       club: { ms: 85, hit: 2, dmg: 3, reach: 115, cool: 0.19 },
+      knuckles: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
       hit: { ms: 140, hold: true },
       defeat: { ms: 200, hold: true }
     },
@@ -107,7 +112,8 @@
     }
   };
 
-  FR.santa.club = FR.santa.punch;
+  CLIP.santa.clubIdle = CLIP.santa.knucklesIdle = CLIP.santa.idle;
+  CLIP.santa.clubWalk = CLIP.santa.knucklesWalk = CLIP.santa.walk;
   CLIP.warden = CLIP.mid;
   CLIP.enforcer = CLIP.heavy;
 
@@ -203,6 +209,8 @@
   var cookieImg = new Image();
   var clubImg = new Image();
   clubImg.src = 'art/billy-club.webp';
+  var knucklesImg = new Image();
+  knucklesImg.src = 'art/brass-knuckles.webp';
   cookieImg.src = 'art/stamina-cookie.webp';
   var keyImg = new Image();
   if (cellPassage) keyImg.src = '../shelf-escape/art/props/depot-key.webp';
@@ -341,7 +349,7 @@
       hp: MAX_HP,
       stamina: MAX_STAMINA,
       staminaWarning: 0,
-      clubHits: 0,
+      weapon: null,
       atk: '',
       atkT: 0,
       cool: 0,
@@ -449,8 +457,11 @@
     pipsEl.textContent = pipsText();
     staminaEl.textContent = Math.floor(santa.stamina) + '/' + MAX_STAMINA;
     staminaMeter.value = santa.stamina;
-    clubHitsEl.textContent = String(santa.clubHits);
-    clubHitsEl.parentElement.hidden = santa.clubHits === 0;
+    weaponHitsEl.parentElement.hidden = !santa.weapon;
+    if (santa.weapon) {
+      weaponLabelEl.textContent = WEAPON[santa.weapon.kind].label;
+      weaponHitsEl.textContent = String(santa.weapon.hits);
+    }
   }
 
   function beginRun() {
@@ -552,8 +563,8 @@
   }
 
   function beginAttack(name) {
-    if (santa.clubHits > 0) name = 'club';
-    var cost = name === 'club' ? 0 : name === 'upper' ? 3 : 1;
+    if (santa.weapon && (santa.weapon.kind === 'club' || name === 'punch')) name = santa.weapon.kind;
+    var cost = name === 'upper' ? 3 : name === 'punch' ? 1 : 0;
     if (santa.stamina < cost) {
       santa.buffer = '';
       santa.staminaWarning = 1.25;
@@ -583,7 +594,7 @@
 
   function dropGuardPickup(guard) {
     var roll = Math.random();
-    if (roll >= 0.29) return;
+    if (roll >= 0.33) return;
 
     var x = clamp(guard.x, 48, frontX());
     var y = guard.y;
@@ -594,10 +605,12 @@
       y = below > BAND_BOT - 8 || (above >= BAND_TOP + 12 && y <= crate.y) ? above : below;
     }
 
-    var club = roll >= 0.25;
+    var weapon = roll >= 0.29 ? 'knuckles' : roll >= 0.25 ? 'club' : null;
     var stamina = roll < 0.125;
-    picks.push({ x: x, y: y, got: false, stamina: stamina, club: club });
-    say(club ? 'A guard dropped a billy club.' : stamina ? 'A guard dropped a stamina cookie.' : 'A guard dropped cocoa.');
+    picks.push({ x: x, y: y, got: false, stamina: stamina, weapon: weapon });
+    say(weapon === 'knuckles' ? 'A guard dropped brass knuckles.' :
+      weapon === 'club' ? 'A guard dropped a billy club.' :
+      stamina ? 'A guard dropped a stamina cookie.' : 'A guard dropped cocoa.');
   }
 
   function hurtFoe(e, dmg) {
@@ -644,9 +657,9 @@
     }
     if (!best) return;
     hurtFoe(best, clip.dmg);
-    if (santa.atk === 'club') {
-      santa.clubHits--;
-      if (santa.clubHits === 0) say('The billy club broke.');
+    if (santa.weapon && santa.atk === santa.weapon.kind && --santa.weapon.hits === 0) {
+      say(santa.weapon.kind === 'club' ? 'The billy club broke.' : 'The brass knuckles broke.');
+      santa.weapon = null;
     }
   }
 
@@ -887,13 +900,14 @@
       p = picks[i];
       if (p.got) continue;
       if (Math.abs(p.x - santa.x) < 36 && Math.abs(p.y - santa.y) < 42) {
-        if (p.club) {
-          if (santa.clubHits > 0) continue;
-          santa.clubHits = CLUB_HITS;
+        if (p.weapon) {
+          if (santa.weapon) continue;
+          var gear = WEAPON[p.weapon];
+          santa.weapon = { kind: p.weapon, hits: gear.hits };
           santa.staminaWarning = 0;
           p.got = true;
           sfx('right');
-          say('Billy club collected. Five hits remaining.');
+          say(gear.name + ' collected. ' + gear.hits + ' hits remaining.');
           continue;
         }
         if (p.stamina) {
@@ -1028,7 +1042,11 @@
     var s;
     var i;
     if (!imageReady(img)) return;
-    s = height / pack.h;
+    var frameW = spec.rows ? img.naturalWidth / spec.columns : pack.w;
+    var frameH = spec.rows ? img.naturalHeight / spec.rows : pack.h;
+    var anchorX = spec.rows ? frameW * spec.anchorX : pack.ax;
+    var anchorY = spec.rows ? frameH * spec.anchorY : pack.ay;
+    s = height / frameH;
     i = frame;
     if (i < 0) i = 0;
     if (i >= spec.n) i = spec.n - 1;
@@ -1040,11 +1058,11 @@
     var columns = spec.columns || spec.n;
     ctx.drawImage(
       img,
-      (sourceFrame % columns) * pack.w, Math.floor(sourceFrame / columns) * pack.h, pack.w, pack.h,
-      -pack.ax * s,
-      -pack.ay * s,
-      pack.w * s,
-      pack.h * s
+      (sourceFrame % columns) * frameW, Math.floor(sourceFrame / columns) * frameH, frameW, frameH,
+      -anchorX * s,
+      -anchorY * s,
+      frameW * s,
+      frameH * s
     );
     ctx.restore();
   }
@@ -1091,14 +1109,14 @@
     var bob = reduceMotion() ? 0 : Math.sin(visualTime * 3 + p.x) * 3;
     var s = 46;
     var gh;
-    var art = p.club ? clubImg : p.stamina ? cookieImg : cocoaImg;
+    var art = p.weapon === 'club' ? clubImg : p.weapon === 'knuckles' ? knucklesImg : p.stamina ? cookieImg : cocoaImg;
     if (!imageReady(art)) return;
-    if (p.club) {
-      gh = 66;
+    if (p.weapon) {
+      gh = p.weapon === 'club' ? 66 : 39;
       s = gh * art.naturalWidth / art.naturalHeight;
       ctx.save();
       ctx.translate(p.x - cam, p.y - 27 + bob);
-      ctx.rotate(0.54);
+      ctx.rotate(p.weapon === 'club' ? 0.54 : 0.18);
       ctx.shadowColor = '#ffd078';
       ctx.shadowBlur = 10;
       ctx.drawImage(art, -s / 2, -gh / 2, s, gh);
@@ -1207,10 +1225,16 @@
       }
       h = SANTA_H * depthMul(santa.y);
       shadow(santa.x - cam, santa.y, h * 0.2, false);
+      var anim = santa.anim;
+      if (santa.weapon && anim === 'idle') anim = santa.weapon.kind + 'Idle';
+      if (santa.weapon && anim === 'walk') anim = santa.weapon.kind + 'Walk';
+      if (!imageReady(FR.santa[anim].img)) {
+        anim = santa.anim === 'club' || santa.anim === 'knuckles' ? 'punch' : santa.anim;
+      }
       drawSheet(
         'santa',
-        santa.anim,
-        clipFrame('santa', santa.anim, santa.animT),
+        anim,
+        clipFrame('santa', anim, santa.animT),
         santa.x - cam,
         santa.y,
         santa.face,
@@ -1219,23 +1243,7 @@
       );
     }
     if (!reduceMotion()) drawSnow();
-    if ((santa.clubHits > 0 || santa.atk === 'club') && !santa.down) drawHeldClub();
     if (santa.staminaWarning > 0) drawStaminaWarning();
-  }
-
-  function drawHeldClub() {
-    if (!imageReady(clubImg)) return;
-    var height = SANTA_H * depthMul(santa.y);
-    var progress = santa.atk === 'club' ? clamp(santa.atkT / swingDur('santa', 'club'), 0, 1) : 0;
-    var sweep = Math.sin(progress * Math.PI);
-    var length = height * 0.52;
-    var width = length * clubImg.naturalWidth / clubImg.naturalHeight;
-    ctx.save();
-    ctx.translate(santa.x - cam + santa.face * height * (0.21 + 0.23 * sweep),
-      santa.y - height * (0.54 + 0.08 * sweep));
-    ctx.rotate(santa.face * (-0.22 + sweep * 1.9));
-    ctx.drawImage(clubImg, -width / 2, -length * 0.91, width, length);
-    ctx.restore();
   }
 
   function drawStaminaWarning() {
