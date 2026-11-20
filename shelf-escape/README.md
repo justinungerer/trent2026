@@ -2,12 +2,12 @@
 
 The depot is a landscape, side-scrolling mission in three gated yards:
 
-1. Recover three pages of transport orders and disable the freight alarm.
-2. Find the switchyard key, set three marked rail switches in sequence, and
+1. Recover two pages of transport orders and disable the freight alarm.
+2. Find the switchyard key, set two marked rail switches in sequence, and
    disable the switchyard alarm.
 3. Find the cipher, start the generator, install the fuse, and disable the
-   signal-yard alarm. Connect three marked aerials, return to the radio to
-   transmit, shoot three locks on the mail train, then collect the exit key and reach the mail hatch.
+   signal-yard alarm. Connect the marked aerial, return to the radio to
+   transmit, shoot two locks on the mail train, then collect the exit key and reach the mail hatch.
 
 Collecting each yard's objective triggers an alarm reinforcement while its
 relay is active. Defeated guards return only after their patrol and defeat

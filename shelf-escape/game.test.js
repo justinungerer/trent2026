@@ -35,10 +35,11 @@ test('all reachable quiz loadouts complete through the actual mission update loo
    if(hurdle||alarm||(threat&&player.y<12))keys.add('w');
    const enemy=guards.filter(x=>x.hp>0&&Math.abs(x.x-player.x)<340).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0];
    if((enemy||(missionTarget().action==='shoot'&&Math.abs(player.x-target)<10))&&!shots.length&&elapsed>=nextShot&&player.y<8)keys.add(' ');update(.02);
-  } JSON.stringify({state,x:player.x,hp:player.hp,elapsed,documents:documents.filter(d=>d.found).length,relays:relays.filter(r=>r.done).length,transmit,locks:locks.filter(l=>l.done).length,ammo,startingAmmo,damage,reload})`);
+  } JSON.stringify({state,x:player.x,hp:player.hp,elapsed,documents:documents.filter(d=>d.found).length,relays:relays.filter(r=>r.done).length,transmit,locks:locks.filter(l=>l.done).length,pages:documents[0].pages.length,switches:documents[1].route,aerials:depotAerials.length,ammo,startingAmmo,damage,reload})`);
   const value=JSON.parse(result);
   assert.equal(value.state,'won',`${charges} ${reload} ${ribbon} ${result}`);
-  assert.equal(value.documents,3);assert.equal(value.relays,3);assert.equal(value.transmit,4);assert.equal(value.locks,3);
+  assert.equal(value.documents,3);assert.equal(value.relays,3);assert.equal(value.transmit,4);assert.equal(value.locks,2);
+  assert.equal(value.pages,2);assert.equal(value.switches,2);assert.equal(value.aerials,1);
   assert.equal(value.startingAmmo,charges==='2'?12:24);
   assert.equal(value.damage,ribbon==='plain'?1:2);
   assert.equal(value.reload,reload==='slow'?.57:.27);
@@ -202,8 +203,8 @@ test('the exit key is the final pickup and is required in every level',()=>{
 
 test('collecting the order pages triggers one alarm reinforcement',()=>{
  const {run}=game();
- const result=JSON.parse(run(`start();guards=[];documents[0].pages[0].found=true;documents[0].pages[1].found=true;
- player.x=documents[0].pages[2].x;update(.02);update(.02);
+ const result=JSON.parse(run(`start();guards=[];documents[0].pages[0].found=true;
+ player.x=documents[0].pages.at(-1).x;update(.02);update(.02);
  JSON.stringify({found:documents[0].found,reinforcements:guards.length,notice:alarmNotice>0})`));
  assert.deepEqual(result,{found:true,reinforcements:1,notice:true});
 });
