@@ -185,7 +185,7 @@
     ] : [{ k: 'enforcer', side: 'right' }] });
   }
   document.getElementById('camp-goal').textContent = cellPassage
-    ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the exit halfway back.'
+    ? 'Defeat the Key Warden and take his key at the far right. Guards return as you head back to the exit halfway through the passage.'
     : gateFight ? 'Clear the guard waves and reinforcements. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
@@ -299,7 +299,7 @@
       for (j = 0; j < src.foes.length; j++) {
         foesPlan.push({ k: src.foes[j].k, side: src.foes[j].side });
       }
-      out.push({ at: src.at, foes: foesPlan, spawned: false, members: [], pending: [], extraGroup: !!src.extraGroup, batches: src.batches || 1, sent: 0, nextAt: 0 });
+      out.push({ at: src.at, foes: foesPlan, spawned: false, returnSpawned: false, members: [], pending: [], extraGroup: !!src.extraGroup, batches: src.batches || 1, sent: 0, nextAt: 0 });
     }
     return out;
   }
@@ -691,7 +691,25 @@
     wave.members.push(e);
   }
 
+  function spawnReturningGuards() {
+    // The final wave is the Key Warden. Only the regular guards on the way back return.
+    for (var i = waves.length - 2; i >= 0; i--) {
+      var wave = waves[i];
+      var checkpoint = START_X + wave.at * WALK;
+      if (checkpoint <= EXIT_X) break;
+      if (wave.returnSpawned || santa.x > checkpoint) continue;
+      wave.returnSpawned = true;
+      wave.members.slice().forEach(function (guard, index) {
+        if (guard.hp <= 0) spawnFoe(wave, index);
+      });
+    }
+  }
+
   function considerSpawns() {
+    if (cellPassage && keyTaken) {
+      spawnReturningGuards();
+      return;
+    }
     var i;
     var wave;
     var line;
@@ -824,7 +842,7 @@
     if (cellPassage && !keyTaken && waveClear(waves[waves.length - 1]) && Math.abs(cellKey.x - santa.x) < 48 &&
         Math.abs(cellKey.y - santa.y) < 46) {
       keyTaken = true;
-      say('Key collected. Return to the exit halfway back.');
+      say('Key collected. Watch for returning guards on the way to the exit.');
     }
     var i;
     var p;
