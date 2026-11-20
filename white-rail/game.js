@@ -423,9 +423,9 @@
 
   function failLine() {
     showLose(
-      'Back at the start',
+      'Game over',
       'The handcar took ' + slipLimit + ' hits and is back at the start of the line.',
-      slipLimit + ' hits. Back at the start of the line.'
+      'Game over. The handcar took ' + slipLimit + ' hits.'
     );
   }
 
@@ -1158,9 +1158,9 @@
       visualTime += dt;
       if (!reduceMotion()) updateFlakes(dt);
     }
-    // Substep fast travel so the cart cannot skip narrow obstacles on a slow frame.
+    // Substep fast travel and let a fatal slip finish before showing game over.
     var remaining = dt;
-    while (remaining > 0 && playing()) {
+    while (remaining > 0 && (state === 'play' || state === 'slip')) {
       var step = Math.min(remaining, .02);
       if (state === 'play') updatePlay(step);
       else updateSlip(step);
@@ -1372,7 +1372,7 @@
   document.getElementById('resume').addEventListener('click', closePause);
   document.getElementById('restart').addEventListener('click', restartLine);
   document.getElementById('retry').addEventListener('click', beginRun);
-  document.getElementById('retry-lose').addEventListener('click', beginRun);
+  document.getElementById('retry-lose').addEventListener('click', restartLine);
   pauseBtn.addEventListener('click', function () {
     if (state === 'play' || state === 'slip') openPause();
     else if (state === 'pause') closePause();
