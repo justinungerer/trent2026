@@ -71,8 +71,15 @@ test('Level 3 reuses the same alarm bell and returns the far-end key to the cent
    const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
    const bell=target.hint==='ALARM RELAY'&&Math.abs(player.x-target.x)<36;
    const enemy=guards.find(g=>g.hp>0&&Math.abs(g.x-player.x)<190);
-   const enemyShot=guardShots.some(shot=>Math.abs(shot.x-player.x)<180);
-   if(hurdle||bell||((enemy||enemyShot)&&player.y<12&&Math.abs(target.x-player.x)>12))keys.add('w');
+   const incoming=shot=>Math.sign(shot.vx)===Math.sign(player.x-shot.x);
+   const highShot=guardShots.some(shot=>shot.y===highShotY&&incoming(shot)&&Math.abs(shot.x-player.x)<90);
+   const lowShot=guardShots.some(shot=>shot.y===lowShotY&&incoming(shot)&&Math.abs(shot.x-player.x)<145);
+   if(highShot&&player.y===0&&!bell){
+    keys.clear();
+    keys.add('s');
+   }else if(hurdle||bell||((enemy?.kind==='charger'||lowShot)&&player.y<12&&Math.abs(target.x-player.x)>12)){
+    keys.add('w');
+   }
    if((enemy||(target.action==='shoot'&&Math.abs(target.x-player.x)<10))&&!shots.length&&elapsed>=nextShot&&player.y<8)keys.add(' ');
    update(.02);
   }
@@ -150,7 +157,7 @@ test('shots and guard hits drive real animation state timers',()=>{
  const result=JSON.parse(run(`start();guards=[{x:160,home:160,hp:2,dir:-1,stun:0,attack:0,cooldown:2}];
  keys.add(' ');update(.02);const firing=player.fire>0;
  update(.05);const guardHurt=guards[0].stun>0;
- player.x=100;guards[0].x=240;player.shield=0;guards[0].stun=0;guards[0].cooldown=0;keys.clear();update(.02);for(let n=0;n<40;n++)update(.02);
+ player.x=100;guards[0].x=240;player.shield=0;guards[0].stun=0;guards[0].cooldown=0;keys.clear();update(.02);for(let n=0;n<32;n++)update(.02);
  JSON.stringify({firing,guardHurt,guardAttack:guards[0].attack>0,guardProjectile:guardShots.length>0})`));
  assert.deepEqual(result,{firing:true,guardHurt:true,guardAttack:true,guardProjectile:true});
 });
@@ -191,7 +198,7 @@ test('boxes stop low rifle shots and the down stick evades high shots',()=>{
  guardShots=[{x:550,y:lowShotY,vx:340}];update(.4);
  const lowHitWhileDucking=player.hp===1;
  JSON.stringify({heights,highCrossedBox,ducked,lowHitWhileDucking})`));
- assert.deepEqual(result,{heights:[420,382],highCrossedBox:true,ducked:true,lowHitWhileDucking:true});
+ assert.deepEqual(result,{heights:[420,334],highCrossedBox:true,ducked:true,lowHitWhileDucking:true});
 });
 
 test('rifle guards hold position while assault guards cross obstacles in all three levels',()=>{
@@ -295,12 +302,12 @@ test('alarm bells need a jump and boxes block the ground',()=>{
  assert.equal(result.jumped,true);
  assert.equal(result.blocked,true);
  assert.equal(result.cleared,true);
- assert.ok(Math.abs(result.cooldown-3.5/1.3*2/3)<1e-9);
- assert.ok(Math.abs(result.alertedFire-3.5/1.3)<1e-12);
- assert.ok(Math.abs(result.calmFire-5/1.3)<1e-12);
+ assert.ok(Math.abs(result.cooldown-3.5/1.3/1.25*2/3)<1e-9);
+ assert.ok(Math.abs(result.alertedFire-3.5/1.3/1.25)<1e-12);
+ assert.ok(Math.abs(result.calmFire-5/1.3/1.25)<1e-12);
 });
 
-test('two high shots fit between low shots without changing the low-shot interval',()=>{
+test('guards keep the low-high-high pattern at the faster firing rate in every level',()=>{
  for(const stage of ['out-of-the-cell','','the-last-dispatch']){
   const {run}=game('?stage='+stage);
   const shots=JSON.parse(run(`start();player.x=400;player.shield=60;
@@ -310,10 +317,10 @@ test('two high shots fit between low shots without changing the low-shot interva
    fireGuardShot=guard=>{shoot(guard);fired.push({time:elapsed,height:guardShots.at(-1).y});};
    for(let tick=0;tick<800&&fired.length<4;tick++)update(.01);
    JSON.stringify(fired)`));
-  assert.deepEqual(shots.map(shot=>shot.height),[420,382,382,420],stage);
+  assert.deepEqual(shots.map(shot=>shot.height),[420,334,334,420],stage);
   const lowGap=shots[3].time-shots[0].time;
   const previousLowGap=stage==='the-last-dispatch'?3.5/1.3:2*3.5/1.3;
-  assert.ok(Math.abs(lowGap-previousLowGap)<.03,JSON.stringify({stage,lowGap,previousLowGap}));
+  assert.ok(Math.abs(lowGap-previousLowGap/1.25)<.03,JSON.stringify({stage,lowGap,previousLowGap}));
  }
 });
 
@@ -344,9 +351,9 @@ test('low frame rates advance real time in small steps and bound long stalls',()
  frame(1150);const at10={elapsed,x:player.x};
  frame(2150);JSON.stringify({at20,at10,stalled:{elapsed,x:player.x}})`));
  assert.ok(Math.abs(result.at20.elapsed-.05)<1e-9);
- assert.ok(Math.abs(result.at20.x-109.5)<1e-9);
+ assert.ok(Math.abs(result.at20.x-114.25)<1e-9);
  assert.ok(Math.abs(result.at10.elapsed-.15)<1e-9);
- assert.ok(Math.abs(result.at10.x-128.5)<1e-9);
+ assert.ok(Math.abs(result.at10.x-142.75)<1e-9);
  assert.ok(Math.abs(result.stalled.elapsed-.4)<1e-9);
- assert.ok(Math.abs(result.stalled.x-176)<1e-9);
+ assert.ok(Math.abs(result.stalled.x-214)<1e-9);
 });

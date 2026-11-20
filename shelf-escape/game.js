@@ -12,7 +12,8 @@ const exitX=dispatch?worldEnd/2:routeEnd;
 const kitX=2160;
 const exitKeyX=routeEnd-195;
 const dispatchBellX=1880;
-const lowShotY=420,highShotY=382;
+const lowShotY=420,highShotY=334;
+const playerSpeed=285;
 const dispatchBays=[
  {pages:[600,1430],diverterX:1650,ledgerX:1040,latchX:2250},
  {pages:[2800,3290],diverterX:3720,ledgerX:2990,latchX:4550},
@@ -29,7 +30,8 @@ const art=Object.fromEntries(['elf-idle','elf-walk','elf-fire','elf-hurt','elf-d
 const props=Object.fromEntries(['alarm-bell','depot-key','ammo-box','wood-crate','order-page','rail-switch','cipher-book','generator','signal-fuse','gift-parcel','radio-aerial','field-radio','padlock','mail-hatch','wrapped-guard','depot-wall','guard-types','buddy-painted-atlas','alternate-objectives','buddy-duck-atlas','sorting-shutters'].map(name=>{const img=new Image();img.src='./art/props/'+name+'.webp';return [name,img]}));
 const stageScenery=new Image();
 stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex-aligned.webp':'./art/freight-depot.webp';
-const firingRate=dispatch?2:1;
+const rifleRate=1.25;
+const firingRate=rifleRate*(dispatch?2:1);
 const alertedFire=3.5/1.3/firingRate,calmFire=5/1.3/firingRate;
 const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500,4780,5850,7090]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
@@ -228,7 +230,7 @@ function update(dt){
  const stickDown=sticks.move.y>.5&&Math.abs(sticks.move.x)<.35;
  const axis=(stickDown?0:sticks.move.x)+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
  player.moving=Math.abs(axis)>.1;
- if(Math.abs(axis)>.1){const before=player.x;let next=clamp(player.x+clamp(axis,-1,1)*190*dt,35,endWall-16);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&next>=gates[i]-20)next=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&next>=barrier-20)next=barrier-20}for(const box of hurdles){const left=box.x-box.half-16,right=box.x+box.half+16;if(player.y<box.clear&&next>left&&next<right)next=before<box.x?Math.min(next,left):Math.max(next,right)}player.x=next;player.face=Math.sign(axis)}
+ if(Math.abs(axis)>.1){const before=player.x;let next=clamp(player.x+clamp(axis,-1,1)*playerSpeed*dt,35,endWall-16);for(let i=0;i<gates.length;i++)if(!relays[i].done&&before<gates[i]&&next>=gates[i]-20)next=gates[i]-20;for(let i=0;i<locks.length;i++){const barrier=locks[i].x+270;if(!locks[i].done&&before<barrier&&next>=barrier-20)next=barrier-20}for(const box of hurdles){const left=box.x-box.half-16,right=box.x+box.half+16;if(player.y<box.clear&&next>left&&next<right)next=before<box.x?Math.min(next,left):Math.max(next,right)}player.x=next;player.face=Math.sign(axis)}
  const up=jumpQueued||keys.has('w')||keys.has('arrowup');jumpQueued=false;if(player.y<=0){if(up)player.vy=760}else player.vy-=2300*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0}
  for(const box of hurdles){const reach=box.half+16;if(player.y<box.clear&&Math.abs(player.x-box.x)<reach)player.x=player.x<box.x?box.x-reach:box.x+reach}
  const down=stickDown||keys.has('s')||keys.has('arrowdown');
@@ -302,7 +304,7 @@ function update(dt){
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=alternate||sector===3||!relays[sector].done;
   if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&distance<(alerted?350:220)){
-   guard.windup=alerted?.8:1.2;
+   guard.windup=(alerted?.8:1.2)/rifleRate;
    // Fit two high shots between low shots without changing the low-shot interval.
    guard.cooldown=(alerted?alertedFire:calmFire)*2/3;
   }
@@ -332,7 +334,7 @@ function fireGuardShot(guard){
  burst(guard.x,y,'#ffd895',4);
 }
 function updateGuardShots(dt){
- const top=(player.ducking?406:350)-player.y,bottom=430-player.y;
+ const top=(player.ducking?406:330)-player.y,bottom=430-player.y;
  for(const bullet of guardShots){
   const old=bullet.x;
   bullet.x+=bullet.vx*dt;
@@ -646,6 +648,6 @@ if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
+$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under shots aimed at Buddy’s head. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
