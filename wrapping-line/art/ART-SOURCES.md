@@ -36,3 +36,9 @@ Five original paintings, one present each, on a transparent background. They wer
 | present-crushed.webp | 411 × 411 | −3 | A squashed red package, split at the seam, with slack twine. |
 
 If a picture has not loaded, the belt paints a matching stand-in: kraft, crimson with a green cross, gold with a red bow, a torn kraft box, or a flattened red box.
+
+## Targeting bow
+
+The built-in image generator produced `targeting-bow.webp` from this prompt.
+
+> One isolated, hand-painted gift ribbon bow for a vintage Christmas workshop side-scrolling game. A broad open bow with two equal side loops, a prominent central knot at the exact center of the image, and short tails curling below. Deep jewel-red satin, fine cream-gold edging and warm golden highlights, clear bold silhouette and textured gouache brushwork. Front view, evenly lit, horizontally centered, fully contained with small clear margins. Keep the bow readable at 70 pixels wide. Wide 3:2 composition, genuine transparent alpha background. Only the ribbon bow. No package, cast shadow, letters, numbers, outlines, border, or UI.

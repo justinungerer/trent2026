@@ -11,7 +11,7 @@
   <main class="stage">
     <canvas id="shop" width="844" height="390" aria-label="Trent meeting presents that travel at different heights"></canvas>
 
-    <p id="hint" class="hint">Move the mark</p>
+    <p id="hint" class="hint">Move the bow</p>
 
     <div class="hud">
       <div class="hud-block grow">
@@ -33,7 +33,7 @@
       <button type="button" id="pause">Pause</button>
     </div>
 
-    <div class="mark-controls" role="group" aria-label="Move the targeting line">
+    <div class="mark-controls" role="group" aria-label="Move the targeting bow">
       <button type="button" id="mark-up" aria-label="Move up">▲</button>
       <button type="button" id="mark-down" aria-label="Move down">▼</button>
     </div>
@@ -45,8 +45,8 @@
         <p class="kicker">Chapter 9</p>
         <h1 id="wrap-stage-title">The wrapping line</h1>
         <p id="round-limit"></p>
-        <p>Boxes arrive at different heights. Press the up or down arrow to move the line. Hold it to keep moving. Tap Wrap when a good box reaches the mark. Let damaged boxes pass.</p>
-        <p id="wrap-goal">Reach 30 points before the clock runs out. A plain present is 1, a ribbon present is 3, and a gilt present is 5. A torn present takes 1 point. A crushed present takes 3. Damaged boxes explode and cost a life if you meet them. If the clock hits zero, that round starts over.</p>
+        <p>Hold the up or down arrow to move the bow. Tap Wrap as a good box approaches the bow at the same height. Let damaged boxes pass.</p>
+        <p id="wrap-goal">Reach 30 points before the clock runs out. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs points and one life.</p>
         <button type="button" id="start">Start the belt</button>
       </div>
     </div>
@@ -54,7 +54,7 @@
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
         <h1>Paused</h1>
-        <p>The belt holds. The parcels wait on the mark you left them.</p>
+        <p>The belt and bow stay where you left them.</p>
         <button type="button" id="resume">Resume</button>
         <button type="button" id="give-up" class="ghost">Give up</button>
       </div>
@@ -72,7 +72,7 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The wrapping line</p>
-        <h1 id="wrap-win-title">Thirty points</h1>
+        <h1 id="wrap-win-title">Target reached</h1>
         <p>The line is wrapped.</p>
         <p id="win-time">Wrapped in 0 seconds.</p>
         <button type="button" id="retry">Run the line again</button>
@@ -88,7 +88,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=first-crates-fourfold"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-bow-score"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

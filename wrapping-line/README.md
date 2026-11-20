@@ -1,8 +1,8 @@
 # Chapter 9 — The Wrapping Line
 
-A belt brings presents through the workshop at different heights. The up and down buttons move a targeting line to meet them. Only the point total matters. Thirty points clear the line.
+A belt brings presents through the workshop at different heights. The up and down buttons move a targeting bow. The score goals for Levels 1, 2, and 3 are 36, 30, and 75 points respectively.
 
-The pictures are original generated paintings in `art/`: the workshop, Trent, and five presents. The mark and the bow that lands on a good present are small canvas drawings. There are no third-party assets and no build step.
+The workshop, Trent, presents, and targeting bow are original generated paintings in `art/`. There are no third-party assets and no build step.
 
 ## Open it
 
@@ -22,7 +22,7 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 Touch first. Nothing you need is hover-only.
 
-- Hold the up or down button to move the line and tap Wrap when a good box reaches it.
+- Hold the up or down button to move the bow and tap Wrap when a good box reaches its height.
 - Tap Pause to take a break. Pause also opens when the page is hidden. Resume continues the same belt. Give up returns to the start and does not keep the run.
 
 Both movement buttons are 60 pixels tall.
@@ -31,12 +31,11 @@ If the device asks for reduced motion, a bad meet does not shake the shop.
 
 ## Win and lose
 
-Meet a present with the mark to take its points. A present that passes unmatched scores nothing, and the total does not reset.
+Wrap a box near the bow to score. The horizontal hit window extends 94 game pixels on either side of the bow. Boxes that pass score nothing.
 
 - Plain +1, ribbon +3, gilt +5.
 - Torn −1, crushed −3. Meeting either damaged present also costs one life.
-- Thirty points win.
-- The clock is 27 seconds. If it hits zero first, that round starts over: points and the clock return to the start, and lives stay where they are.
+- The clocks for Levels 1, 2, and 3 are 30, 22, and 90 seconds respectively. At zero, Level 2 restarts its round with the same lives. Levels 1 and 3 show the retry screen.
 - Lives still come from `?lives=10|9|8|7` (7 when the value is missing or anything else). At 0 lives the run ends.
 
 ## Victory event

@@ -29,17 +29,15 @@
   var stage = new URLSearchParams(location.search).get('stage');
   var sorting = stage === 'sort-the-first-crates';
   var loading = stage === 'load-the-sleigh';
-  var manifests = sorting ? [[4, 4, 4]] : loading ? [[7, 4, 2], [3, 6, 5]] : [];
-  var manifestIndex = 0;
-  var packed = [0, 0, 0];
   /* trent.webp: idle 2, then three bow frames. */
   var TRENT = { w: 302, h: 676, ax: 127, ay: 666, n: 5 };
-  var NEED = 30;
+  var NEED = sorting ? 36 : loading ? 75 : 30;
   // The score round needs enough time for the wider-spaced boxes to reach the mark.
   var ROUND_SECONDS = loading ? 90 : sorting ? 30 : 22;
   document.getElementById('round-limit').textContent = 'You have ' + ROUND_SECONDS + ' seconds per round.';
   var TARGET = 456;
   var MEET = 26;
+  var HIT_HALF_WIDTH = 94;
   var SPEED = (232 / 0.3) * 0.25;
   var INTERVAL = 0.8 * 0.3 * 3;
   var FIRST_SPAWN = 0.4 * 0.3;
@@ -47,7 +45,6 @@
   var MARK_MIN = 150;
   var MARK_MAX = 318;
   var MARK_SPEED = 460;
-  var MARK_HALF_HEIGHT = 34.5;
   var PRESENT_TYPES = [
     { id: 'plain', name: 'Plain', points: 1, weight: 4, src: 'art/present-plain.webp' },
     { id: 'ribbon', name: 'Ribbon', points: 3, weight: 3, src: 'art/present-ribbon.webp' },
@@ -55,20 +52,11 @@
     { id: 'torn', name: 'Torn', points: -1, weight: 2, src: 'art/present-torn.webp' },
     { id: 'crushed', name: 'Crushed', points: -3, weight: 1, src: 'art/present-crushed.webp' }
   ];
-  function cargoPoints(counts) {
-    return counts.reduce(function (total, count, index) {
-      return total + count * PRESENT_TYPES[index].points;
-    }, 0);
-  }
-
-  var sortingTarget = sorting ? cargoPoints(manifests[0]) : 0;
-  if (manifests.length) {
+  document.getElementById('wrap-goal').textContent =
+    'Reach ' + NEED + ' points to win. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs points and one life.';
+  if (sorting || loading) {
     document.getElementById('wrap-stage-title').textContent = sorting ? 'Sort the First Crates' : 'Load the Sleigh';
-    document.getElementById('wrap-goal').textContent = sorting
-      ? 'Reach ' + sortingTarget + ' points by wrapping four intact boxes of each class (1, 3, and 5). The cargo counts show what you still need.'
-      : 'Fill the first manifest, then the second. Track the remaining boxes by their tags (1, 3, and 5).';
-    document.getElementById('wrap-score-label').textContent = sorting ? 'Boxes left' : 'Cargo left';
-    document.getElementById('wrap-win-title').textContent = sorting ? 'First crates sorted' : 'The sleigh is loaded';
+    document.getElementById('wrap-win-title').textContent = sorting ? 'First crates wrapped' : 'The sleigh is loaded';
   }
 
   var sceneImg = new Image();
@@ -79,6 +67,8 @@
   trentImg.src = 'art/trent.webp';
   var goodBoxImg = new Image();
   var damagedBoxImg = new Image();
+  var targetingBowImg = new Image();
+  targetingBowImg.src = 'art/targeting-bow.webp';
   goodBoxImg.src = 'art/box-good.webp';
   damagedBoxImg.src = 'art/box-damaged.webp';
   var typeIndex;
@@ -146,13 +136,7 @@
     var shown = Math.ceil(timeLeft);
     if (shown < 0) shown = 0;
     if (shown > Math.ceil(ROUND_SECONDS)) shown = Math.ceil(ROUND_SECONDS);
-    runEl.textContent = manifests.length
-      ? (loading ? (manifestIndex + 1) + '/2 · ' : '') +
-        manifests[manifestIndex].map(function (need, index) {
-          return PRESENT_TYPES[index].points + '×' + Math.max(0, need - packed[index]);
-        }).join('  ')
-      : score + ' / ' + NEED;
-    if (sorting) runEl.textContent += ' · ' + cargoPoints(packed) + ' / ' + sortingTarget + ' pts';
+    runEl.textContent = score + ' / ' + NEED;
     timeEl.textContent = String(shown);
     livesEl.textContent = String(lives);
     lastEl.textContent = lastWord;
@@ -187,8 +171,7 @@
     if (sorting && spawned < 4) return PRESENT_TYPES[[0, 1, 3, 2][spawned]];
     if (!bag.length) {
       for (i = 0; i < PRESENT_TYPES.length; i++) {
-        var extra = loading && manifestIndex === 1 && (i === 1 || i === 3) ? 1 : 0;
-        for (n = 0; n < PRESENT_TYPES[i].weight + extra; n++) bag.push(PRESENT_TYPES[i]);
+        for (n = 0; n < PRESENT_TYPES[i].weight; n++) bag.push(PRESENT_TYPES[i]);
       }
       for (i = bag.length - 1; i > 0; i--) {
         swap = Math.floor(Math.random() * (i + 1));
@@ -201,8 +184,6 @@
   }
 
   function resetBelt(keepLives) {
-    manifestIndex = 0;
-    packed = [0, 0, 0];
     score = 0;
     timeLeft = ROUND_SECONDS;
     played = 0;
@@ -229,14 +210,13 @@
     outSheet.hidden = true;
     hintEl.hidden = false;
     renderHud();
-    say(manifests.length ? document.getElementById('wrap-goal').textContent :
-      'Move the mark. Reach 30 points before time runs out.');
+    say('Move the bow. Reach ' + NEED + ' points before time runs out.');
   }
 
   function restartRound() {
     if (state !== 'play') return;
-    if (manifests.length) {
-      endRun('Time expired', 'The cargo list was still incomplete when the belt stopped.');
+    if (sorting || loading) {
+      endRun('Time expired', 'The belt stopped before you reached ' + NEED + ' points.');
       return;
     }
     resetBelt(true);
@@ -278,7 +258,7 @@
     clearMovement();
     winTimeEl.textContent = 'Wrapped in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say((loading ? 'Sleigh packed.' : sorting ? 'Crates sorted.' : '30 points.') + ' ' + seconds + ' seconds.');
+    say(NEED + ' points reached in ' + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('wrapping-line:complete', {
@@ -315,30 +295,13 @@
     lastKind = points > 0 ? 'good' : 'bad';
     if (points > 0) {
       bowT = 0.36;
-      if (manifests.length) {
-        var kind = PRESENT_TYPES.indexOf(parcel.type);
-        var need = manifests[manifestIndex];
-        if (packed[kind] < need[kind]) packed[kind]++;
-        if (need.every(function (count, index) { return packed[index] === count; })) {
-          renderHud();
-          if (manifestIndex + 1 === manifests.length) {
-            win();
-            return;
-          }
-          manifestIndex++;
-          packed = [0, 0, 0];
-          bag = [];
-          say('First cargo manifest filled. Second manifest ready.');
-        }
-        renderHud();
-        return;
-      }
       say(parcel.type.name + ' present. ' + score + (score === 1 ? ' point.' : ' points.'));
       renderHud();
       if (score >= NEED) win();
       return;
     }
     parcel.explodedAt = visualTime;
+    parcel.explodedX = parcel.x;
     if (!reduceMotion()) shake = 6;
     lives -= 1;
     if (lives < 0) lives = 0;
@@ -353,7 +316,7 @@
   function tryWrap() {
     if (state !== 'play') return;
     var box = null;
-    var closest = 47;
+    var closest = HIT_HALF_WIDTH;
     for (var i = 0; i < parcels.length; i++) {
       var candidate = parcels[i];
       var gap = Math.abs(candidate.x - TARGET);
@@ -478,7 +441,7 @@
       var angle = index * Math.PI * 2 / count;
       var radius = 8 + phase * (35 + (index % 4) * 9);
       ctx.beginPath();
-      ctx.arc(TARGET + Math.cos(angle) * radius, parcel.y + Math.sin(angle) * radius, 3 + index % 3, 0, Math.PI * 2);
+      ctx.arc(parcel.explodedX + Math.cos(angle) * radius, parcel.y + Math.sin(angle) * radius, 3 + index % 3, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -598,13 +561,14 @@
     }
   }
 
-  function drawMark() {
-    ctx.strokeStyle = 'rgba(255, 214, 140, 0.95)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(TARGET, markY - MARK_HALF_HEIGHT);
-    ctx.lineTo(TARGET, markY + MARK_HALF_HEIGHT);
-    ctx.stroke();
+  function drawBow() {
+    if (!imageReady(targetingBowImg)) return;
+    var width = 78;
+    var height = width * targetingBowImg.naturalHeight / targetingBowImg.naturalWidth;
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    ctx.drawImage(targetingBowImg, TARGET - width / 2, markY - height / 2, width, height);
+    ctx.restore();
   }
 
   function drawTrent() {
@@ -638,7 +602,7 @@
     drawCover(sceneImg);
     if (imageReady(beltImg)) ctx.drawImage(beltImg, 439, 320, 363, 64);
     drawParcels();
-    drawMark();
+    drawBow();
     drawTrent();
   }
 
