@@ -29,8 +29,8 @@ const WEAPONS = {
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
   homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
-// A full clear now yields eleven pickups, down from twenty-three.
 const KILLS_PER_DROP = 9;
+const HEALTH_DROP_RATIO = .25;
 const PODS = ['flame', 'missile', 'laser', 'homing'];
 const FLAME_REACH = 0.6 * H;
 const FLAME_HALF = 46;
@@ -42,6 +42,8 @@ function loadArt(name) {
 const art = Object.fromEntries(['valley', 'sleigh', 'drone', 'boss', 'skiff', 'hauler', 'wisp']
   .map(name => [name, loadArt(name === 'valley' && scouts ? 'scout-valley' : name === 'valley' && workshop ? 'workshop-roofs' : name)]));
 const weaponPod = loadArt('painted-pod');
+const healthHeart = new Image();
+healthHeart.src = '../chapter-2/art/painted-heart.webp';
 const finalBossArt = intercept ? loadArt(scouts ? 'scout-command-aircraft' : 'workshop-siege-bomber') : null;
 let valleyTile = null;
 function backgroundTile() {
@@ -126,7 +128,7 @@ function reset() {
   enemies = []; shots = []; bolts = []; sparks = []; parcels = [];
   wraps = []; recoil = 0; shake = 0; time = 0; score = 0; wave = 0; bossSpawned = false; flagshipAt = null; aim = null; drag = null; kills = 0;
   ui.score.textContent = '000000';
-  ui.hull.textContent = '◆'.repeat(MAX_HULL);
+  paintHull();
   ui.phase.textContent = scouts || workshop ? stageTitle : 'THE FROZEN VALLEY';
   paintStack();
 }
@@ -136,7 +138,7 @@ if (intercept) {
 } else {
   ui.controls.textContent += ' Defeat the commander and then the final flagship to clear the level.';
 }
-ui.controls.textContent += ' Sideways patrols return lower after each pass. Elite aircraft drop a weapon for every quarter of hull lost.';
+ui.controls.textContent += ' Sideways patrols return lower after each pass. Elite aircraft drop a weapon for every quarter of hull lost. Collect a heart to restore one hull point.';
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
   ui.stack.replaceChildren(...player.stack.slice(1).map(name => {
@@ -409,6 +411,9 @@ function fly(enemy, dt) {
   enemy.y += speed * dt;
   enemy.x = clamp(enemy.base + Math.sin(enemy.age * freq) * enemy.side * amp, 22, W - 22);
 }
+function paintHull() {
+  ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(MAX_HULL - player.hull);
+}
 function hit() {
   if (player.shield > 0) return;
   shake = .28;
@@ -420,7 +425,7 @@ function hit() {
     paintStack();
   }
   burst(player.x, player.y, colors.gold, 23);
-  ui.hull.textContent = '◆'.repeat(player.hull) + '◇'.repeat(MAX_HULL - player.hull);
+  paintHull();
   if (!player.hull) {
     if (bossesCleared) {
       clearFlight('Santa’s last broadcast is recovered.');
@@ -432,7 +437,13 @@ function hit() {
   }
 }
 function grant(pod) {
-  const kind = WEAPONS[pod.kind] ? pod.kind : 'flame';
+  if (pod.kind === 'health') {
+    player.hull = Math.min(MAX_HULL, player.hull + 1);
+    paintHull();
+    burst(pod.x, pod.y, colors.mint, 16);
+    return;
+  }
+  const kind = pod.kind;
   if (player.stack.length >= 5) {
     player.stack.splice(1, 1);
     player.cool.splice(1, 1);
@@ -442,15 +453,24 @@ function grant(pod) {
   burst(pod.x, pod.y, WEAPONS[kind].color, 16);
   paintStack();
 }
+function rollHealthDrop(x, y, chance) {
+  if (Math.random() < chance) parcels.push({ x: clamp(x, 18, W - 18), y, kind: 'health' });
+}
 function fell(enemy) {
   const boss = largeCraft(enemy.kind);
   wraps.push({ x: enemy.x, y: enemy.y, age: 0, kind: enemy.kind });
   score += CRAFT[enemy.kind].score;
   burst(enemy.x, enemy.y, colors.gold, boss ? 60 : 22);
-  if (!boss && ++kills % KILLS_PER_DROP === 0) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
+  if (!boss) {
+    const dropsWeapon = ++kills % KILLS_PER_DROP === 0;
+    if (dropsWeapon) parcels.push({ x: enemy.x, y: enemy.y, kind: PODS[((kills / KILLS_PER_DROP) - 1) % PODS.length] });
+    const healthX = enemy.x + (enemy.x > W / 2 ? -38 : 38);
+    rollHealthDrop(dropsWeapon || enemy.objective ? healthX : enemy.x, enemy.y, HEALTH_DROP_RATIO / KILLS_PER_DROP);
+  }
   if (enemy.objective) {
     bossAt = time + bossDelay;
     parcels.push({ x: enemy.x, y: enemy.y, kind: scouts ? 'laser' : 'homing' });
+    rollHealthDrop(enemy.x, enemy.y + 44, HEALTH_DROP_RATIO);
     ui.phase.textContent = targetName.toUpperCase() + ' DOWN · COMMANDER INBOUND';
   }
   if (enemy.kind === 'boss') {
@@ -494,6 +514,7 @@ function harm(enemy, dmg, x, y) {
         y: enemy.y + CRAFT.flagship.hy + 14,
         kind: PODS[enemy.weaponDrops % PODS.length]
       });
+      rollHealthDrop(enemy.x, enemy.y + CRAFT.flagship.hy + 58, HEALTH_DROP_RATIO);
       enemy.weaponDrops++;
     }
   }
@@ -657,8 +678,8 @@ function update(dt) {
   for (const pod of parcels) {
     pod.y += 108 * dt;
     if (Math.hypot(pod.x - player.x, pod.y - player.y) < 30) {
-      pod.y = 900;
       grant(pod);
+      pod.y = 900;
     }
   }
   enemies = enemies.filter(e => e.hp > 0 && !e.escaped && e.y < H + 40);
@@ -676,7 +697,21 @@ function polygon(color, points) {
   g.fill();
 }
 function drawPod(pod) {
-  const spec = WEAPONS[pod.kind] || WEAPONS.flame;
+  if (pod.kind === 'health') {
+    if (ready(healthHeart)) {
+      g.drawImage(healthHeart, pod.x - 18, pod.y - 17, 36, 34);
+    } else {
+      g.save();
+      g.fillStyle = colors.red;
+      g.font = '800 30px system-ui';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('♥', pod.x, pod.y);
+      g.restore();
+    }
+    return;
+  }
+  const spec = WEAPONS[pod.kind];
   const look = spec.color;
   const mark = spec.mark;
   g.save();
