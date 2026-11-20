@@ -38,7 +38,7 @@
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
   var FLIP_RATE_VARIATION = rescue ? 0.35 : 0.2;
-  var RECOVERY_TIME = 0.9;
+  var RECOVERY_TIME = rescue ? 0 : 0.9;
   var SABOTEUR_AFTER = rescue ? 0 : 2;
   var PATTERNS = [
     [0, 1, 0, 1, 0],
@@ -80,9 +80,6 @@
   var APPROACH_SPEED = 58 * SPEED_MULT;
   var DEPART_SPEED = 260 * SPEED_MULT;
   var TRAIN_START = -380;
-  var APPROACH_SECONDS = (SWITCH_X - TRAIN_W - TRAIN_START) / APPROACH_SPEED;
-  // Rescue trains used a 15-second window including the approach. Halve just the hold.
-  var RESCUE_GRACE = APPROACH_SECONDS + (15 - APPROACH_SECONDS) / 2;
 
   /* trent.webp: six equal frames. Idle, idle, then four pull frames.
      Anchor is the sole point. */
@@ -290,7 +287,7 @@
   function armNextTrain() {
     levers = LEVER_X.map(function () { return 1; });
     trainX = TRAIN_START;
-    switchGrace = rescue ? RESCUE_GRACE : 0;
+    switchGrace = 0;
     blastT = 0;
     blastParts = [];
     flipTimer = 0;
@@ -465,12 +462,10 @@
     var front;
     var mid;
     if (state === 'approach') {
-      var approachingJunction = trainX + TRAIN_W < SWITCH_X;
       switchGrace = Math.max(0, switchGrace - dt);
       trainX = Math.min(SWITCH_X - TRAIN_W, trainX + APPROACH_SPEED * dt);
       front = trainX + TRAIN_W;
       if (front >= SWITCH_X) {
-        if (rescue && approachingJunction) switchGrace = Math.max(switchGrace, RECOVERY_TIME);
         if (matches()) {
           state = 'depart';
           say('The route is open.');
