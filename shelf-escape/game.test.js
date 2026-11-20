@@ -46,7 +46,7 @@ test('all reachable quiz loadouts complete through the actual mission update loo
  }
 });
 
-test('Level 3 requires all three sorting bays, the radio, and the final delivery',()=>{
+test('Level 3 sends Buddy back to each ledger and across both aerials before the radio and exit',()=>{
  const {run}=game('?stage=the-last-dispatch&charges=2&reload=slow&ribbon=plain');
  const result=JSON.parse(run(`start();player.x=exitX;update(0);
   const exitLocked=state==='playing';
@@ -56,9 +56,13 @@ test('Level 3 requires all three sorting bays, the radio, and the final delivery
   const earlyShotIgnored=!firstLock.done;
   shots=[];
   let steps=0;
+  const route=new Map();
   while(state==='playing'&&steps++<20000){
    keys.clear();
    const target=missionTarget(),dir=target.x>=player.x?1:-1;
+   if(target.hint==='ROUTE LEDGER'||target.hint.startsWith('AERIAL')) {
+    if(!route.has(target.x))route.set(target.x,dir);
+   }
    if(Math.abs(target.x-player.x)>3)keys.add(dir===1?'d':'a');
    const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
    const bell=target.hint==='ALARM RELAY'&&Math.abs(player.x-target.x)<36;
@@ -70,10 +74,12 @@ test('Level 3 requires all three sorting bays, the radio, and the final delivery
   }
   JSON.stringify({exitLocked,earlyShotIgnored,state,papers:documents.flatMap(doc=>doc.pages).filter(page=>page.found).length,
    diverters:documents.filter(doc=>doc.diverted).length,alarms:relays.filter(relay=>relay.done).length,
-   latches:locks.filter(lock=>lock.done).length,transmit,x:player.x})`));
+   ledgers:documents.filter(doc=>doc.stamped).length,latches:locks.filter(lock=>lock.done).length,
+   transmit,x:player.x,route:[...route]})`));
  assert.ok(result.x>=8026,JSON.stringify(result));
- const {x,...completed}=result;
- assert.deepEqual(completed,{exitLocked:true,earlyShotIgnored:true,state:'won',papers:6,diverters:3,alarms:3,latches:3,transmit:4});
+ const {x,route,...completed}=result;
+ assert.deepEqual(completed,{exitLocked:true,earlyShotIgnored:true,state:'won',papers:6,diverters:3,alarms:3,ledgers:3,latches:3,transmit:4});
+ assert.deepEqual(route,[[1040,-1],[2990,-1],[5330,-1],[7700,1],[6600,-1]]);
 });
 
 test('local handshake checks parent origin and source, then reports completion once',()=>{
