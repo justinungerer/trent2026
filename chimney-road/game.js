@@ -221,7 +221,13 @@
   var RUN = 260;
   var LONG = 7;
   var BALLS = 20;
-  var ROW = 15;
+  var smokeStacks = eaves ? [] : flags ? [
+    { roof: authoredRoof(3), offset: 0.4, phase: 0 },
+    { roof: authoredRoof(6), offset: 0.8, phase: 1.9 }
+  ] : [
+    { roof: widestRoofSection(11), offset: 0.5, phase: 0 },
+    { roof: widestRoofSection(18), offset: 0.5, phase: 1.9 }
+  ];
 
   var trentVisibleBounds = [];
   var climbVisibleBounds = [];
@@ -337,9 +343,19 @@
   }
 
   function hazardRoof(kind) {
-    var index = { crate: flags ? 4 : LONG, snowball: flags ? 5 : BALLS,
-      lantern: flags ? 10 : 14, smoke: flags ? 6 : ROW, ice1: flags ? 4 : 10, ice2: flags ? 6 : 22 }[kind];
+    return authoredRoof({ crate: flags ? 4 : LONG, snowball: flags ? 5 : BALLS,
+      lantern: flags ? 10 : 14, ice1: flags ? 4 : 10, ice2: flags ? 6 : 22 }[kind]);
+  }
+
+  function authoredRoof(index) {
     return PLATFORMS.find(function (roof) { return roof.originalIndex === index; }) || PLATFORMS[index] || PLATFORMS[0];
+  }
+
+  function widestRoofSection(index) {
+    var original = authoredRoof(index);
+    return PLATFORMS.reduce(function (widest, roof) {
+      return roof.name === original.name && roof.w > widest.w ? roof : widest;
+    }, original);
   }
 
   function crateBox() {
@@ -399,14 +415,11 @@
   }
 
   function smokeList() {
-    if (eaves) return [];
-    var roof = hazardRoof('smoke');
-    if (roof.destroyed) return [];
-    var y = roof.y;
-    return [
-      puffAt(roof.x + roof.w * .55, y, 0),
-      puffAt(roof.x + roof.w * .8, y, 1.9)
-    ];
+    return smokeStacks.filter(function (stack) {
+      return !stack.roof.destroyed;
+    }).map(function (stack) {
+      return puffAt(stack.roof.x + stack.roof.w * stack.offset, stack.roof.y, stack.phase);
+    });
   }
 
   function puffAt(x, roofY, phase) {

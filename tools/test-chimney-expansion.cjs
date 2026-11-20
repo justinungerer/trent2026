@@ -3,13 +3,30 @@ const {webkit}=require('playwright');
 const root=path.resolve(__dirname,'..'),hook=String.raw`
 window.testExpansion=()=>{
  beginRun();hurt=999;
- if(eaves)return {stage,unchangedWidth:WORLD_W};
+ if(eaves){
+  if(smokeList().length)throw Error('Level 1 gained smoke stacks');
+  return {stage,unchangedWidth:WORLD_W};
+ }
  const scale=flags?2:4;
  if(WORLD_BOTTOM-WORLD_TOP!==1740*scale)throw Error('Wrong vertical size');
  for(const roof of expansion.authored)if(Math.abs(roof.y-(300+(roof.authoredY-300)*scale))>.01)throw Error('Roof not vertically repositioned');
  if(escapeMode&&WORLD_W!==12870)throw Error('Escape not 1.5 times horizontal length');
  for(const item of objectives)if(!PLATFORMS.some(r=>Math.abs(r.y-item.y)<1&&item.x>=r.x&&item.x<=r.x+r.w))throw Error('Marker not on roof');
  if(flags&&(!crateBox().w||!snowball().r||smokeList().length!==2||!lanternBob().r))throw Error('Level 2 missing obstacle families');
+ const smoke=smokeList(),icicles=[firstIcicle(),secondIcicle()];
+ if(smoke.length!==2||Math.abs(smoke[0].x-smoke[1].x)<400)throw Error('Smoke stacks are too close together');
+ if(smoke.some(stack=>icicles.some(ice=>Math.abs(stack.x-ice.x)<80)))throw Error('A smoke stack overlaps an icicle');
+ for(const stack of smoke){
+  if(!PLATFORMS.some(roof=>roof.y===stack.y&&stack.x-20>=roof.x&&stack.x+20<=roof.x+roof.w))
+   throw Error('A smoke stack does not fit on its roof');
+ }
+ if(escapeMode){
+  const a=smokeStacks[0].roof;
+  a.destroyed=true;
+  const remaining=smokeList();
+  a.destroyed=false;
+  if(remaining.length!==1||remaining[0].x!==smoke[1].x)throw Error('Bombing one stack removed both');
+ }
  const sequences=[expansion.route,...expansion.branches];
  let reversals=0,up=0,down=0;
  for(const sequence of sequences)for(let i=1;i<sequence.length;i++){
