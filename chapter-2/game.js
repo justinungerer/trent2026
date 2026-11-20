@@ -13,9 +13,17 @@ const GUARD_RADIUS=12;
 const stage=new URLSearchParams(location.search).get('stage');
 const freight=stage==='freight-gate';
 const stable=stage==='the-stable-escape';
-const world={w:1080,h:720};
-const depot=stable?{x:982,y:602}:{x:981,y:94};
-const shelves=freight?[
+const yardSize={w:1080,h:720};
+const world={w:yardSize.w*2,h:yardSize.h*2};
+const [southwest,northwest,southeast,northeast]=[
+ {x:0,y:yardSize.h},{x:0,y:0},{x:yardSize.w,y:yardSize.h},{x:yardSize.w,y:0}
+];
+const yardSections=[southwest,northwest,southeast,northeast];
+const inSection=(point,section)=>({...point,x:point.x+section.x,y:point.y+section.y});
+const inEachSection=items=>yardSections.flatMap(section=>items.map(item=>inSection(item,section)));
+const routeInSection=(route,section)=>route.map(([x,y])=>[x+section.x,y+section.y]);
+const depot=inSection(stable?{x:982,y:602}:{x:981,y:94},northeast);
+const shelves=inEachSection(freight?[
  {x:185,y:486,w:250,h:68},{x:528,y:468,w:261,h:72},
  {x:343,y:225,w:170,h:72},{x:699,y:267,w:250,h:70}
 ]:stable?[
@@ -24,13 +32,21 @@ const shelves=freight?[
 ]:[
  {x:215,y:497,w:185,h:64},{x:450,y:465,w:180,h:64},{x:759,y:518,w:155,h:64},
  {x:129,y:267,w:215,h:64},{x:451,y:233,w:161,h:64},{x:725,y:266,w:190,h:64}
-];
-const spawn={x:95,y:613};
-const caches=freight?[{x:472,y:581},{x:818,y:201}]
+]);
+const spawn=inSection({x:95,y:613},southwest);
+const localCaches=freight?[{x:472,y:581},{x:818,y:201}]
  :stable?[{x:194,y:149},{x:695,y:192},{x:100,y:330},{x:920,y:430}]
  :[{x:145,y:142},{x:534,y:359},{x:942,y:598},{x:100,y:390},{x:868,y:160}];
-const hearts=[{x:150,y:564},{x:560,y:370},{x:935,y:510}];
-const patrols=freight?[
+const cacheSections=freight?[northwest,southeast]
+ :stable?[northwest,southeast,southwest,northeast]
+ :[southwest,northwest,southeast,southwest,northeast];
+const caches=localCaches.map((point,index)=>inSection(point,cacheSections[index]));
+const hearts=[
+ inSection({x:150,y:564},southwest),
+ inSection({x:560,y:370},northwest),
+ inSection({x:935,y:510},northeast)
+];
+const localPatrols=freight?[
  [[115,508],[115,367],[455,367],[455,508]],
  [[520,580],[968,580],[968,388],[520,388]],
  [[195,180],[910,180],[910,95],[195,95]],
@@ -52,15 +68,17 @@ const patrols=freight?[
  [[400,390],[680,390]],
  [[220,590],[740,590]]
 ];
-const mines=[
+const patrols=yardSections.flatMap(section=>localPatrols.map(route=>routeInSection(route,section)));
+const mines=inEachSection([
  {x:500,y:430},{x:590,y:120},{x:900,y:470},
  {x:210,y:210},{x:680,y:430},{x:150,y:360}
-];
-const beams=[
+]);
+const localBeams=[
  {route:[[220,200],[480,200],[480,360],[220,360]],r:58,speed:64},
  {route:[[700,180],[990,180],[990,360],[700,360]],r:58,speed:58},
  {route:[[280,600],[860,600]],r:52,speed:90}
 ];
+const beams=yardSections.flatMap(section=>localBeams.map(beam=>({...beam,route:routeInSection(beam.route,section)})));
 const trentSpeed=178;
 const guardPace=freight?.9:stable?1.15:1;
 const guardSpeedRatio=0.75*guardPace;
@@ -122,9 +140,9 @@ function show(next,title,copy,label){
 function pause(){if(mode==='play')show('paused','Hold the mail','Trent stops to check whether the stamps have diplomatic immunity.','Resume');}
 ui.start.onclick=()=>{if(mode!=='paused')reset();mode='play';ui.panel.hidden=true;document.getElementById('help').hidden=true;sync();};
 ui.pause.onclick=pause;
-function blocked(x,y,r){
+function blocked(x,y,r,obstacles=shelves){
  if(x<r||y<r||x>world.w-r||y>world.h-r)return true;
- return shelves.some(s=>Math.hypot(x-clamp(x,s.x,s.x+s.w),y-clamp(y,s.y,s.y+s.h))<r);
+ return obstacles.some(s=>Math.hypot(x-clamp(x,s.x,s.x+s.w),y-clamp(y,s.y,s.y+s.h))<r);
 }
 function lineBlocked(a,b){
  const steps=12;
@@ -192,10 +210,13 @@ function nearestGuard(actor){
 }
 
 function clearPath(a,b,bodyRadius){
+ const left=Math.min(a.x,b.x)-bodyRadius,right=Math.max(a.x,b.x)+bodyRadius;
+ const top=Math.min(a.y,b.y)-bodyRadius,bottom=Math.max(a.y,b.y)+bodyRadius;
+ const nearby=shelves.filter(s=>s.x<right&&s.x+s.w>left&&s.y<bottom&&s.y+s.h>top);
  const steps=Math.max(1,Math.ceil(distance(a,b)/8));
  for(let i=1;i<=steps;i++){
   const t=i/steps;
-  if(blocked(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,bodyRadius))return false;
+  if(blocked(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,bodyRadius,nearby))return false;
  }
  return true;
 }
@@ -486,7 +507,27 @@ function drawMine(mine){
  ctx.strokeStyle='#f3d48a';ctx.lineWidth=1.5;
  ctx.beginPath();ctx.moveTo(mine.x,mine.y-7);ctx.lineTo(mine.x,mine.y+7);ctx.moveTo(mine.x-7,mine.y);ctx.lineTo(mine.x+7,mine.y);ctx.stroke();
 }
-const snow=Array.from({length:60},(_,i)=>[i*137.7%1080,i*97.3%720,1+i%3]);
+const snow=Array.from({length:60},(_,i)=>[i*137.7%world.w,i*97.3%world.h,1+i%3]);
+const yardEdges=freight?[.22,.77,.2,.73]:stable?[.18,.85,.25,.76]:[.08,.92,.15,.83];
+function drawYard(){
+ const yard=art.yard;
+ if(!yard.complete||!yard.naturalWidth){
+  ctx.fillStyle='#465365';ctx.fillRect(0,0,world.w,world.h);
+  return;
+ }
+ // Keep the perimeter artwork around the expanded yard, with clear crossings between sections.
+ const [left,right,top,bottom]=yardEdges;
+ const columns=[0,left,right,1],rows=[0,top,bottom,1];
+ const x=[0,left*yardSize.w,world.w-(1-right)*yardSize.w,world.w];
+ const y=[0,top*yardSize.h,world.h-(1-bottom)*yardSize.h,world.h];
+ for(let row=0;row<3;row++){
+  for(let col=0;col<3;col++){
+   ctx.drawImage(yard,columns[col]*yard.naturalWidth,rows[row]*yard.naturalHeight,
+    (columns[col+1]-columns[col])*yard.naturalWidth,(rows[row+1]-rows[row])*yard.naturalHeight,
+    x[col],y[row],x[col+1]-x[col],y[row+1]-y[row]);
+  }
+ }
+}
 function render(){
  const width=canvas.width,height=canvas.height;
  let zoom=Math.min(width/370,height/460);
@@ -502,9 +543,7 @@ function render(){
  const offsetX=Math.max(0,(vw-world.w)/2),offsetY=Math.max(0,(vh-world.h)/2);
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#101624';ctx.fillRect(0,0,width,height);
  ctx.setTransform(zoom,0,0,zoom,(offsetX-camera.x)*zoom,(offsetY-camera.y)*zoom);
- const yard=art.yard;
- if(yard.complete&&yard.naturalWidth)ctx.drawImage(yard,0,0,world.w,world.h);
- else{ctx.fillStyle='#465365';ctx.fillRect(0,0,world.w,world.h);}
+ drawYard();
  for(const s of shelves){
   ctx.fillStyle='#10162475';ctx.fillRect(s.x+4,s.y+9,s.w,s.h);
   if(!sprite('shelf',s.x+s.w/2,s.y+s.h/2,s.w,s.h)){ctx.fillStyle='#774b34';ctx.fillRect(s.x,s.y,s.w,s.h);}
@@ -548,8 +587,10 @@ function render(){
   ctx.fillStyle='rgba(35,48,71,'+Math.min(.28,(print.until-run.time)*.12)+')';
   ctx.beginPath();ctx.ellipse(print.x,print.y,5,2.8,print.angle,0,7);ctx.fill();
  }
- for(const g of run.guards)if(!g.fleeing)drawVision(g);
- for(const g of run.guards){
+ const visibleGuards=run.guards.filter(g=>g.x>=camera.x-sightRange&&g.x<=camera.x+vw+sightRange
+  &&g.y>=camera.y-sightRange&&g.y<=camera.y+vh+sightRange);
+ for(const g of visibleGuards)if(!g.fleeing)drawVision(g);
+ for(const g of visibleGuards){
   const bob=reducedMotion.matches?0:Math.sin(run.time*12+g.x*.03)*1.4;
   const lamp=lampPoint(g);
   const beam=g.chase?'#ff8a3d99':'#ffc16b80';
