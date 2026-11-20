@@ -2,7 +2,7 @@
    Side view of a small snowy yard. Three or five levers set the route.
    Five trains come, one after another, at 1.5x the original speed.
    The board shows that train's pattern.
-   A wrong pattern explodes the train and costs a try. Three losses restart the puzzle.
+   A wrong pattern explodes the train and costs a try. Reaching the miss limit restarts the puzzle.
    The final level has sabotage from train one; the middle level starts after two departures.
    The stage train count must depart correctly to send switch-tower:complete once.
    Scene, board, levers, train, and Trent are painted pictures in art/.
@@ -123,7 +123,7 @@
   var patternIndex = 0;
   var departures = 0;
   var misses = 0;
-  var missLimit = 3 + (window.TrentMissionBonus || 0);
+  var missLimit = (rescue ? 4 : 3) + (window.TrentMissionBonus || 0);
   var doomed = false;
   var blastT = 0;
   var blastParts = [];
@@ -370,12 +370,14 @@
     }
   }
 
-  /* Three lost trains restart the puzzle. No victory event. */
+  /* Reaching the miss limit restarts the puzzle. No victory event. */
   function failPuzzle() {
     if (state === 'win' || state === 'lose') return;
     state = 'lose';
     loseSheet.hidden = false;
-    say('Three trains lost. The puzzle starts over.');
+    var message = misses + ' trains lost. The puzzle starts over.';
+    document.getElementById('lose-copy').textContent = message;
+    say(message);
   }
 
   function boomAt(x, y) {
