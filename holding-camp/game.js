@@ -23,6 +23,7 @@
      Old walk was the gate at 752 minus the start at 88 = 664.
      This lane is five times that distance, in the same screen-widths. */
   var VIEW_W = 1280;
+  var CAMERA_MARGIN = VIEW_W / 3;
   var VIEW_H = 592;
   var stage = new URLSearchParams(location.search).get('stage');
   var cellPassage = stage === 'the-cell-passage';
@@ -44,7 +45,7 @@
   var SANTA_H = Math.round(VIEW_H * 0.28);
   var MAX_HP = 5 + (window.TrentMissionBonus || 0);
   var MAX_STAMINA = 10;
-  var STAMINA_REFILL = MAX_STAMINA / 5;
+  var STAMINA_REFILL = (MAX_STAMINA / 5) * 0.75;
   var staminaEl = document.getElementById('stamina');
   var FR = window.CAMP_FRAMES;
 
@@ -875,13 +876,9 @@
     }
     santa.y = clamp(santa.y, BAND_TOP + 12, BAND_BOT - 8);
     santa.x = clamp(santa.x, 48, frontX());
-    if (mx > 0 && santa.x - cam > VIEW_W * 0.9) {
-      cam = Math.max(cam, Math.min(santa.x - VIEW_W * 0.9, frontX() - VIEW_W + 62));
-    } else if (mx < 0 && santa.x - cam < VIEW_W * 0.22) {
-      cam = santa.x - VIEW_W * 0.22;
-    }
-    if (cam < 0) cam = 0;
-    if (cam > WORLD_R - VIEW_W) cam = WORLD_R - VIEW_W;
+    var leftLimit = santa.x - CAMERA_MARGIN * 2;
+    var rightLimit = santa.x - CAMERA_MARGIN;
+    cam = clamp(clamp(cam, leftLimit, rightLimit), 0, WORLD_R - VIEW_W);
     considerSpawns();
     santa.x = clamp(santa.x, 48, frontX());
     for (i = 0; i < foes.length; i++) updateFoe(foes[i], dt);
