@@ -8,6 +8,7 @@
   var ctx = canvas.getContext('2d');
   var speedEl = document.getElementById('speed');
   var slipsEl = document.getElementById('slips');
+  var protectionEl = document.getElementById('hit-protection');
   var distanceEl = document.getElementById('distance');
   var pauseBtn = document.getElementById('pause');
   var trackUpBtn = document.getElementById('track-up');
@@ -46,6 +47,7 @@
   var TANK_SHOTS = !siding && !loadingSpur ? 2 : 1;
   var TANK_SHOT_INTERVAL = 1.5;
   var SHELL_TIME = 1.25;
+  var HIT_PROTECTION_SECONDS = 3;
   document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line across ' + TRACK_COUNT + ' tracks to win. Any track will do.';
   var tankHelp = document.getElementById('tank-help');
   tankHelp.hidden = TANK_COUNT === 0;
@@ -164,6 +166,7 @@
   var pumpAnim = 1;
   var slipT = 0;
   var shake = 0;
+  var hitProtection = 0;
   var safeLane = -1;
   var safeUntil = 0;
   var obstacles = makeObstacles();
@@ -283,6 +286,7 @@
     if (speedEl.textContent !== kmh) speedEl.textContent = kmh;
     if (distanceEl.textContent !== left) distanceEl.textContent = left;
     if (slipsEl.textContent !== slipLine) slipsEl.textContent = slipLine;
+    protectionEl.hidden = !playing() || hitProtection <= 0;
     hintEl.hidden = hintDismissed || (state !== 'play' && state !== 'slip');
   }
 
@@ -318,6 +322,7 @@
     pumpAnim = 1;
     slipT = 0;
     shake = 0;
+    hitProtection = 0;
     safeLane = -1;
     safeUntil = 0;
     obstacles = makeObstacles();
@@ -463,6 +468,8 @@
   }
 
   function beginSlip(ob) {
+    if (hitProtection > 0) return;
+    hitProtection = HIT_PROTECTION_SECONDS;
     var hits = ob.kind === 'gap' ? 2 : 1;
     slips = Math.min(slipLimit, slips + hits);
     speed *= 0.5;
@@ -1175,6 +1182,7 @@
     var remaining = dt;
     while (remaining > 0 && (state === 'play' || state === 'slip')) {
       var step = Math.min(remaining, .02);
+      hitProtection = hitProtection > step + 1e-9 ? hitProtection - step : 0;
       if (state === 'play') updatePlay(step);
       else updateSlip(step);
       if (playing()) updateFlyovers(step);

@@ -21,6 +21,7 @@
       <div class="hud-block">
         <span class="label">Hits</span>
         <strong id="slips">0 / 3</strong>
+        <span id="hit-protection" class="label" hidden>Protected</span>
       </div>
       <div class="hud-block">
         <span class="label">Distance</span>
@@ -44,7 +45,7 @@
         <p id="rail-goal">Reach the end of the 1,560 m line to win. Any track will do.</p>
         <p>Use Left and Right or swipe sideways to pick a track. Use your right thumb to pump. Let go to coast, or hold Brake above Pump to slow down twice as fast. Brake takes priority while held.</p>
         <p>Every plane bombs the rail you are on when it drops its bomb. Switch tracks when you see the orange impact marker. Slow down when you need time to pick a safe track.</p>
-        <p>You start with a three-hit limit. Each quiz bonus adds one extra hit to your limit. Crates and lowered signal arms count as one hit each. Rail gaps count as two.</p>
+        <p>You start with a three-hit limit. Each quiz bonus adds one extra hit to your limit. Crates and lowered signal arms count as one hit each. Rail gaps count as two. After a hit, you are protected for 3 seconds.</p>
         <p id="tank-help">Distant tanks fire at your current track. Change tracks after a tank fires to dodge its shell. A shell counts as one hit.</p>
         <button type="button" id="start">Roll out</button>
       </div>
@@ -86,7 +87,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=rotation3"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rail-tank-follow-up"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rail-hit-protection"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=chapter-level-music"></script></body>
 </html>
