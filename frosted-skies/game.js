@@ -420,7 +420,7 @@ function hit() {
   if (player.shield > 0) return;
   shake = .28;
   player.hull--;
-  player.shield = 1.6;
+  player.shield = 2;
   if (player.stack.length > 1) {
     player.stack = [player.stack[0]];
     player.cool = [player.cool[0] || 0];
