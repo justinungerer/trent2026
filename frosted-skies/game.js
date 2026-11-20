@@ -25,7 +25,7 @@ const CRAFT = {
 };
 const WEAPONS = {
   flame: { label: 'FLAME', mark: 'F', color: '#ff7a3c', rate: 0.18 },
-  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 0.75 },
+  missile: { label: 'MISSILE', mark: 'M', color: colors.gold, rate: 1.2 },
   laser: { label: 'LASER', mark: 'L', color: '#e7fdff', rate: 0.11 },
   homing: { label: 'HOMING', mark: 'H', color: '#ff868c', rate: 0.68 }
 };
