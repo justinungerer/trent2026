@@ -194,7 +194,7 @@ test('boxes stop low rifle shots and the down stick evades high shots',()=>{
  assert.deepEqual(result,{heights:[420,382],highCrossedBox:true,ducked:true,lowHitWhileDucking:true});
 });
 
-test('both guard types cross obstacles while cover stops rifle shots in all three levels',()=>{
+test('rifle guards hold position while assault guards cross obstacles in all three levels',()=>{
  for(const stage of ['out-of-the-cell','','the-last-dispatch']){
   const {run}=game('?stage='+stage);
   const result=JSON.parse(run(`start();
@@ -204,7 +204,7 @@ test('both guard types cross obstacles while cover stops rifle shots in all thre
     const guard={x:obstacle-30,home:obstacle-30,hp:2,kind,dir:1,cooldown:60};
     guards=[guard];player.x=obstacle+280;
     for(let tick=0;tick<60;tick++)update(.02);
-    moved.push(guard.x>obstacle);
+    moved.push(guard.x!==obstacle-30);
    }
    const hit=(y,dir)=>{
     guardShots=[{x:obstacle-60*dir,y,vx:340*dir}];
@@ -218,7 +218,7 @@ test('both guard types cross obstacles while cover stops rifle shots in all thre
    else if(!cell)relays[0].done=true;
    const openHighHits=hit(highShotY,1);
    JSON.stringify({moved,lowBlocked,highBlocked,openHighHits})`));
-  assert.deepEqual(result,{moved:[true,true],lowBlocked:true,highBlocked:stage!=='out-of-the-cell',openHighHits:true},stage);
+  assert.deepEqual(result,{moved:[false,true],lowBlocked:true,highBlocked:stage!=='out-of-the-cell',openHighHits:true},stage);
  }
 });
 
@@ -295,21 +295,26 @@ test('alarm bells need a jump and boxes block the ground',()=>{
  assert.equal(result.jumped,true);
  assert.equal(result.blocked,true);
  assert.equal(result.cleared,true);
- assert.ok(Math.abs(result.cooldown-3.5/1.3)<1e-9);
+ assert.ok(Math.abs(result.cooldown-3.5/1.3*2/3)<1e-9);
  assert.ok(Math.abs(result.alertedFire-3.5/1.3)<1e-12);
  assert.ok(Math.abs(result.calmFire-5/1.3)<1e-12);
 });
 
-test('Level 3 riflemen shoot twice as often as the other alternate level',()=>{
- const shotGap=stage=>game('?stage='+stage).run(`start();player.x=400;player.shield=60;
-  guards=[{x:500,home:500,hp:2,kind:'rifleman',dir:-1,stun:0,attack:0,cooldown:0}];
-  const shotTimes=[];
-  const shoot=fireGuardShot;
-  fireGuardShot=guard=>{shotTimes.push(elapsed);shoot(guard);};
-  for(let tick=0;tick<400&&shotTimes.length<2;tick++)update(.01);
-  shotTimes[1]-shotTimes[0]`);
- const normal=shotGap('out-of-the-cell'),fast=shotGap('the-last-dispatch');
- assert.ok(Math.abs(normal-2*fast)<.03,JSON.stringify({normal,fast}));
+test('two high shots fit between low shots without changing the low-shot interval',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const shots=JSON.parse(run(`start();player.x=400;player.shield=60;
+   guards=[{x:500,home:500,hp:2,kind:'rifleman',dir:-1,stun:0,attack:0,cooldown:0}];
+   const fired=[];
+   const shoot=fireGuardShot;
+   fireGuardShot=guard=>{shoot(guard);fired.push({time:elapsed,height:guardShots.at(-1).y});};
+   for(let tick=0;tick<800&&fired.length<4;tick++)update(.01);
+   JSON.stringify(fired)`));
+  assert.deepEqual(shots.map(shot=>shot.height),[420,382,382,420],stage);
+  const lowGap=shots[3].time-shots[0].time;
+  const previousLowGap=stage==='the-last-dispatch'?3.5/1.3:2*3.5/1.3;
+  assert.ok(Math.abs(lowGap-previousLowGap)<.03,JSON.stringify({stage,lowGap,previousLowGap}));
+ }
 });
 
 test('defeated guards return only when their defeat and patrol positions leave the view',()=>{

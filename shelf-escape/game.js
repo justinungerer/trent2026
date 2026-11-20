@@ -301,7 +301,11 @@ function update(dt){
   guard.moving=false;
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=alternate||sector===3||!relays[sector].done;
-  if(!guard.stun&&!guard.attack&&!guard.windup){const sees=!player.hidden&&distance<(alerted?350:220);if(sees){guard.dir=Math.sign(player.x-guard.x)||guard.dir;if(guard.cooldown<=0){guard.windup=alerted?.8:1.2;guard.cooldown=alerted?alertedFire:calmFire}else if(distance>170)guard.moving=true}else{if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;guard.moving=(elapsed+guard.home/100)%4>.65}if(guard.moving)guard.x=clamp(guard.x+guard.dir*46*dt,35,worldEnd-30)}
+  if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&distance<(alerted?350:220)){
+   guard.windup=alerted?.8:1.2;
+   // Fit two high shots between low shots without changing the low-shot interval.
+   guard.cooldown=(alerted?alertedFire:calmFire)*2/3;
+  }
  }
  if(player.y<65&&player.shield<=0&&guards.some(guard=>guard.hp>0&&Math.abs(guard.x-player.x)<22)){
   hurtBuddy();
@@ -322,8 +326,8 @@ function update(dt){
 }
 function fireGuardShot(guard){
  guard.attack=.48;
- const facing=guardFacing(guard),y=guard.nextShotHigh?highShotY:lowShotY;
- guard.nextShotHigh=!guard.nextShotHigh;
+ const facing=guardFacing(guard),y=guard.shotInCycle?highShotY:lowShotY;
+ guard.shotInCycle=((guard.shotInCycle||0)+1)%3;
  guardShots.push({x:guard.x,y,vx:facing*340});
  burst(guard.x,y,'#ffd895',4);
 }
@@ -603,7 +607,7 @@ function render(){
    const frame=guard.stun?(.35-guard.stun)*25:guard.attack?(.48-guard.attack)*20:motion*(guard.moving?9:5);
    sprite('guard-'+anim,guard.x,445,frame,facing<0,.82);
   }
-  if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText(guard.nextShotHigh?'HIGH':'!',guard.x-4,318)}
+  if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText(guard.shotInCycle?'HIGH':'!',guard.x-4,318)}
  }
  for(const wrap of wraps){
   const progress=reduceMotion.matches?1:Math.min(1,wrap.age/wrapDuration);
@@ -642,6 +646,6 @@ if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
+$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
