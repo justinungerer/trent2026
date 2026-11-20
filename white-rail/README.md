@@ -37,7 +37,7 @@ If the device asks for reduced motion, a slip does not shake the picture.
 
 Three rails run side by side. The car starts on the middle one. Crates, missing rail, and a lowered signal arm each sit on one rail. One rail is always open.
 
-Touch an obstacle and the car slips, losing speed and taking a hit. Rail gaps count as two hits. After a hit, the handcar is protected for three seconds of play. The run ends at three hits plus any quiz bonuses.
+Touch an obstacle and the car slips, losing speed and taking a hit. Rail gaps cost two hits in Levels 1 and 2 and one hit in Level 3. After a hit, the handcar is protected for three seconds of play. The run ends at three hits plus any quiz bonuses.
 
 Reach the open mouth of the yard to win. The distance on the HUD is meters left to that mouth. Speed is in km/h. Slips are counted out of three.
 

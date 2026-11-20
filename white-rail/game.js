@@ -39,6 +39,7 @@
   var siding = stage === 'siding-signals';
   var loadingSpur = stage === 'the-loading-spur';
   var middleLevel = !siding && !loadingSpur;
+  var GAP_HITS = loadingSpur ? 1 : 2;
   var TRACK_COUNT = loadingSpur ? 5 : 3;
   var CENTER_LANE = (TRACK_COUNT - 1) / 2;
   var FINISH = 1560;
@@ -50,6 +51,7 @@
   var SHELL_TIME = 1.25;
   var HIT_PROTECTION_SECONDS = 3;
   document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line across ' + TRACK_COUNT + ' tracks to win. Any track will do.';
+  document.getElementById('rail-gap-hits').textContent = GAP_HITS === 1 ? 'one' : 'two';
   var tankHelp = document.getElementById('tank-help');
   tankHelp.hidden = TANK_COUNT === 0;
   if (TANK_SHOTS === 2) tankHelp.textContent += ' Each tank fires twice, 1.5 seconds apart.';
@@ -474,7 +476,7 @@
   function beginSlip(ob) {
     if (hitProtection > 0) return;
     hitProtection = HIT_PROTECTION_SECONDS;
-    var hits = ob.kind === 'gap' ? 2 : 1;
+    var hits = ob.kind === 'gap' ? GAP_HITS : 1;
     slips = Math.min(slipLimit, slips + hits);
     speed *= 0.5;
     if (speed < SPEED_FLOOR) speed = SPEED_FLOOR;
@@ -487,7 +489,7 @@
     if (slips >= slipLimit) speed = 0;
     if (!reduceMotion()) shake = 8;
     renderHud();
-    say((hits === 2 ? 'Rail gap. Two hits. ' : 'One hit. ') + slips + ' of ' + slipLimit + '.');
+    say((ob.kind === 'gap' ? 'Rail gap. ' : '') + (hits === 2 ? 'Two hits. ' : 'One hit. ') + slips + ' of ' + slipLimit + '.');
   }
 
   function hitTest(ob) {
