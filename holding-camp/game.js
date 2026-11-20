@@ -191,16 +191,23 @@
           { at: wave.at + .018, foes: wave.foes.slice(split) }
         ];
       }).filter(function (wave) { return wave.foes.length; });
+      WAVE_PLAN.push({
+        at: 0.955,
+        foes: [{ k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }]
+      });
+      WAVE_PLAN.sort(function (left, right) { return left.at - right.at; });
     }
-    WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
-      { k: 'warden', side: 'left' }, { k: 'enforcer', side: 'right' },
-      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }
-    ] : [{ k: 'enforcer', side: 'right' }] });
+    var enforcer = { k: 'enforcer', side: 'right' };
+    WAVE_PLAN.push({
+      at: 0.98,
+      together: yardPassage,
+      foes: yardPassage ? [{ k: 'warden', side: 'left' }, enforcer] : [enforcer]
+    });
   }
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Defeat the Key Warden and take his key at the far right. Guards return as you head back to the exit halfway through the passage.'
-    : gateFight ? 'Clear two guard waves and their reinforcements in each section. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
-    : 'Clear the guards across the yard. Then defeat the Yard Enforcer at the far end and reach the gate.';
+    : gateFight ? 'Clear two guard waves and their reinforcements in each section. Up to two enemies fight at once. Defeat the Yard Enforcer to reach the gate.'
+    : 'Clear the guards across the yard. The Key Warden and Yard Enforcer arrive together for the final fight.';
 
   var yardImg = new Image();
   var gateImg = new Image();
@@ -315,7 +322,7 @@
       for (j = 0; j < src.foes.length; j++) {
         foesPlan.push({ k: src.foes[j].k, side: src.foes[j].side });
       }
-      out.push({ at: src.at, foes: foesPlan, spawned: false, returnSpawned: false, members: [], pending: [], extraGroup: !!src.extraGroup, batches: src.batches || 1, sent: 0, nextAt: 0 });
+      out.push({ at: src.at, foes: foesPlan, spawned: false, returnSpawned: false, members: [], pending: [], extraGroup: !!src.extraGroup, together: !!src.together, batches: src.batches || 1, sent: 0, nextAt: 0 });
     }
     return out;
   }
@@ -713,7 +720,7 @@
     wave.sent++;
     wave.nextAt = played + 5;
     for (var i = 0; i < wave.foes.length; i++) {
-      if (yardPassage || gateFight) wave.pending.push({ index: i, at: played + i * .45 });
+      if (!wave.together && (yardPassage || gateFight)) wave.pending.push({ index: i, at: played + i * .45 });
       else spawnFoe(wave, i);
     }
     // The gatehouse gets a second, individually timed group.
@@ -754,6 +761,7 @@
       alpha: 1,
       aimY: 0
     };
+    if (wave.together) e.x = cam + (spec.side === 'right' ? VIEW_W - 155 : 155);
     e.x = clamp(e.x, 24, WORLD_R);
     foes.push(e);
     wave.members.push(e);
