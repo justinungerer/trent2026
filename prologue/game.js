@@ -45,6 +45,9 @@
   var START_AMMO = 10;
   var AMMO_PER_PICKUP = 2;
   var SURF_SPEED = 220;
+  var SURF_TEXTURE_SCALE = 4;
+  var SURF_ART_WIDTH = 128;
+  var SURF_ART_CREST_OFFSET = SURF_ART_WIDTH / 4;
 
   var obstacles = [];
   var waves = [];
@@ -215,6 +218,12 @@
   wallImg.src = 'art/seawall.webp';
   hedgehogImg.src = 'art/hedgehog.webp';
   wireImg.src = 'art/wire.webp';
+  var surfArt = [1, 2, 3].map(function (variant) {
+    var image = new Image();
+    image.src = 'art/painted-surf-' + variant + '.webp';
+    return { image: image, texture: null };
+  });
+  var surfRandom = new Uint32Array(1);
   var mineImg = new Image();
   var logImg = new Image();
   var heartImg = new Image();
@@ -1133,7 +1142,8 @@
     var ys = [0.72, 0.27, 0.55, 0.38];
     var reach = clamp(cameraY + (cssH * ys[waveLane % ys.length] - sandTop) / scale, 75, BEACH_W - 75);
     waves = [{ x0: cameraX, x1: cameraX + cssW / scale + 25, born: seaTime,
-      reach: reach, amp: [94, 134, 112, 120][waveLane % 4], push: 360 }];
+      reach: reach, amp: [94, 134, 112, 120][waveLane % 4], push: 360,
+      paint: crypto.getRandomValues(surfRandom)[0] % surfArt.length }];
     waveLane++;
     nextWave = seaTime + cssW / scale / SURF_SPEED + 2;
   }
@@ -1392,6 +1402,25 @@
     return any;
   }
 
+  function surfTexture(art) {
+    if (art.texture) return art.texture;
+    var image = art.image;
+    if (!imageReady(image)) return null;
+    var texture = document.createElement('canvas');
+    texture.width = Math.ceil((SURF_ART_WIDTH + crestPoint(0, 0, 1, 0).x) * SURF_TEXTURE_SCALE);
+    texture.height = image.naturalHeight;
+    var paint = texture.getContext('2d');
+    // Bend the painted foam once so its leading edge follows the collision curve.
+    for (var row = 0; row < texture.height; row++) {
+      var height = 2 * (row + 0.5) / texture.height - 1;
+      var point = crestPoint(0, 0, 1, 0.5 + Math.asin(height) / Math.PI);
+      paint.drawImage(image, 0, row, image.naturalWidth, 1,
+        Math.round(point.x * SURF_TEXTURE_SCALE), row, SURF_ART_WIDTH * SURF_TEXTURE_SCALE, 1);
+    }
+    art.texture = texture;
+    return texture;
+  }
+
   function drawSurf() {
     var i;
     var wave;
@@ -1405,6 +1434,17 @@
       if (worldToX(wave.x1) < -50 || worldToX(wave.x0) > cssW + 50) continue;
       shape = crestShape(wave);
       head = crestPose(wave);
+      var texture = surfTexture(surfArt[wave.paint]);
+      if (texture) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(worldToX(wave.x0), 0, (wave.x1 - wave.x0) * scale, cssH);
+        ctx.clip();
+        ctx.drawImage(texture, worldToX(head - SURF_ART_CREST_OFFSET), worldToY(shape.mid - shape.amp),
+          texture.width * scale / SURF_TEXTURE_SCALE, 2 * shape.amp * scale);
+        ctx.restore();
+        continue;
+      }
       if (!traceCrest(wave, head, shape.mid, shape.amp)) continue;
       ctx.strokeStyle = 'rgba(118, 164, 174, 0.5)';
       ctx.lineWidth = Math.max(4, 34 * scale);
