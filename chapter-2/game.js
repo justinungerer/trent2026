@@ -74,9 +74,15 @@ const localPatrols=freight?[
  [[400,390],[680,390]],
  [[220,590],[740,590]]
 ];
-const patrols=yardSections.flatMap(section=>{
- const removed=section===southwest?0:section===northeast?7:-1;
- return localPatrols.filter((_,index)=>!stable||index!==removed).map(route=>routeInSection(route,section));
+const stablePatrolOmissions=[
+ [0,6], // Southwest
+ [1,4], // Northwest
+ [3,5], // Southeast
+ [7]    // Northeast
+];
+const patrols=yardSections.flatMap((section,sectionIndex)=>{
+ const omitted=stablePatrolOmissions[sectionIndex];
+ return localPatrols.filter((_,index)=>!stable||!omitted.includes(index)).map(route=>routeInSection(route,section));
 });
 const mines=inEachSection([
  {x:500,y:430},{x:590,y:120},{x:900,y:470},
