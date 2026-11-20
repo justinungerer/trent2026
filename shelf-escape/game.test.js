@@ -194,6 +194,34 @@ test('boxes stop low rifle shots and the down stick evades high shots',()=>{
  assert.deepEqual(result,{heights:[420,382],highCrossedBox:true,ducked:true,lowHitWhileDucking:true});
 });
 
+test('both guard types cross obstacles while cover stops rifle shots in all three levels',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const result=JSON.parse(run(`start();
+   const obstacle=dispatch?locks[0].x+270:cell?hurdles[0].x:gates[0];
+   const moved=[];
+   for(const kind of ['rifleman','charger']){
+    const guard={x:obstacle-30,home:obstacle-30,hp:2,kind,dir:1,cooldown:60};
+    guards=[guard];player.x=obstacle+280;
+    for(let tick=0;tick<60;tick++)update(.02);
+    moved.push(guard.x>obstacle);
+   }
+   const hit=(y,dir)=>{
+    guardShots=[{x:obstacle-60*dir,y,vx:340*dir}];
+    player.x=obstacle+60*dir;player.shield=0;player.hp=3;
+    updateGuardShots(.4);
+    return player.hp===2;
+   };
+   const lowBlocked=!hit(lowShotY,1)&&!hit(lowShotY,-1);
+   const highBlocked=!hit(highShotY,1)&&!hit(highShotY,-1);
+   if(dispatch)locks[0].done=true;
+   else if(!cell)relays[0].done=true;
+   const openHighHits=hit(highShotY,1);
+   JSON.stringify({moved,lowBlocked,highBlocked,openHighHits})`));
+  assert.deepEqual(result,{moved:[true,true],lowBlocked:true,highBlocked:stage!=='out-of-the-cell',openHighHits:true},stage);
+ }
+});
+
 test('the exit key is the final pickup and is required in every level',()=>{
  for(const stage of ['out-of-the-cell','','the-last-dispatch']){
   const {run}=game('?stage='+stage);

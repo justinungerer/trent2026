@@ -323,25 +323,40 @@ function update(dt){
 function fireGuardShot(guard){
  guard.attack=.48;
  const facing=guardFacing(guard),y=guard.nextShotHigh?highShotY:lowShotY;
- const x=guard.x+facing*35;
  guard.nextShotHigh=!guard.nextShotHigh;
- guardShots.push({x,y,vx:facing*340});
- burst(x,y,'#ffd895',4);
+ guardShots.push({x:guard.x,y,vx:facing*340});
+ burst(guard.x,y,'#ffd895',4);
 }
 function updateGuardShots(dt){
  const top=(player.ducking?406:350)-player.y,bottom=430-player.y;
  for(const bullet of guardShots){
   const old=bullet.x;
   bullet.x+=bullet.vx*dt;
-  const crossed=x=>(old-x)*(bullet.x-x)<=0;
-  const buddyHit=player.shield<=0&&bullet.y>=top&&bullet.y<bottom&&crossed(player.x);
+  const start=Math.min(old,bullet.x),end=Math.max(old,bullet.x);
+  const buddyHit=player.shield<=0&&bullet.y>=top&&bullet.y<bottom&&player.x>=start&&player.x<=end;
+  let impactX;
+  let nearest=buddyHit?Math.abs(player.x-old):Infinity;
+  const checkCover=(left,right)=>{
+   if(end<left||start>right)return;
+   const x=clamp(old,left,right),distance=Math.abs(x-old);
+   if(distance>nearest)return;
+   impactX=x;
+   nearest=distance;
+  };
   if(bullet.y===lowShotY){
-   const blockedBeforeBuddy=x=>crossed(x)&&(!buddyHit||Math.abs(x-old)<=Math.abs(player.x-old));
-   if(crates.some(blockedBeforeBuddy)||hurdles.some(box=>blockedBeforeBuddy(box.x))){
-    bullet.dead=true;burst(bullet.x,bullet.y,'#f4d18e',3);continue;
-   }
+   for(const x of crates)checkCover(x-35,x+35);
+   for(const box of hurdles)checkCover(box.x-box.half,box.x+box.half);
   }
-  if(buddyHit){bullet.dead=true;hurtBuddy();}
+  for(const [index,x] of gates.entries()){
+   if(!relays[index].done)checkCover(x-7,x+7);
+  }
+  for(const lock of locks){
+   if(!lock.done)checkCover(lock.x+263,lock.x+277);
+  }
+  if(impactX!==undefined){
+   bullet.dead=true;
+   burst(impactX,bullet.y,'#f4d18e',3);
+  }else if(buddyHit){bullet.dead=true;hurtBuddy();}
  }
  guardShots=guardShots.filter(bullet=>!bullet.dead&&bullet.x>0&&bullet.x<worldEnd);
 }
@@ -557,7 +572,7 @@ function render(){
  }
  for(const parcel of parcels)if(!parcel.found){pickupGlow(parcel.x,parcel.y,40);if(!painted('gift-parcel',parcel.x,parcel.y,36,36)){g.fillStyle='#f7e7c2';g.fillRect(parcel.x-12,parcel.y-14,24,24);g.fillStyle='#d4534c';g.fillRect(parcel.x-12,parcel.y-4,24,5);g.fillRect(parcel.x-3,parcel.y-14,6,24)}}
  for(const box of hurdles){if(!painted('wood-crate',box.x,445-box.clear/2,box.half*2+22,box.clear+10)){g.fillStyle='#8c5c3b';g.fillRect(box.x-box.half,445-box.clear,box.half*2,box.clear);g.strokeStyle='#3d2a22';g.strokeRect(box.x-box.half,445-box.clear,box.half*2,box.clear)}}
- for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,140);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
+ for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,relays[i].done?140:195);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
  glow(terminal.x,348,70,'#87eadb55');if(!painted('field-radio',terminal.x,356,78,52)){g.fillStyle='#4e6840';g.fillRect(terminal.x-28,338,56,36);g.fillStyle='#1d2420';g.fillRect(terminal.x-18,346,18,16);g.fillStyle='#e6d3a4';g.beginPath();g.arc(terminal.x+12,354,8,0,7);g.fill()}
  if(!alternate&&relays.every(r=>r.done)&&transmit<depotAerials.length){for(let i=0;i<depotAerials.length;i++){const x=depotAerials[i],active=transmit===i;if(active)glow(x,330,48,'#ffe29188');if(!painted('radio-aerial',x,318,36,86)){g.strokeStyle=active?'#ffe291':'#8aa9a5';g.lineWidth=4;g.beginPath();g.moveTo(x,360);g.lineTo(x,286);g.moveTo(x-12,304);g.lineTo(x+12,304);g.moveTo(x-9,292);g.lineTo(x+9,292);g.stroke()}}}
  if(cell&&!packageFound){
@@ -575,7 +590,7 @@ function render(){
   }
   const barrier=x+270;
   if(dispatch&&paintedFrame('sorting-shutters',done?1:0,2,1,barrier,340,142,210))continue;
-  g.fillStyle=done?'#5c8b74':'#9a4a4b';g.fillRect(barrier-7,250,14,140);
+  g.fillStyle=done?'#5c8b74':'#9a4a4b';g.fillRect(barrier-7,250,14,done?140:195);
   g.fillStyle=done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(barrier,249,10,0,7);g.fill();
  }
  if(!alternate&&!painted('mail-hatch',14108,318,58,84)){g.fillStyle=transmit>=4&&locks.every(l=>l.done)?'#2f6a52':'#243e40';g.beginPath();g.arc(14108,300,26,Math.PI,0);g.fill();g.fillRect(14082,300,52,64)}
@@ -627,6 +642,6 @@ if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Boxes stop low rifle shots. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
+$('brief').textContent+=' Guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under high shots. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
