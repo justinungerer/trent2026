@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071422">
   <title>The Holding Camp</title>
-  <link rel="stylesheet" href="style.css?v=stamina-hud">
+  <link rel="stylesheet" href="style.css?v=camp-joystick">
 </head>
 <body>
   <main class="stage">
     <canvas id="yard" width="1280" height="592" aria-label="Santa walking a snowy yard, fighting painted WWII enemy guards on the way to the wreath gate"></canvas>
 
-    <p id="hint" class="hint">Left thumb moves in four directions. Punch is fast. Upper hits harder.</p>
+    <p id="hint" class="hint">Drag the left joystick to move. Punch is fast. Upper hits harder.</p>
 
     <div class="hud">
       <div class="hud-block">
@@ -25,6 +25,10 @@
         </div>
         <meter id="stamina-meter" min="0" max="10" value="10" aria-labelledby="stamina-label"></meter>
       </div>
+      <div class="hud-block" hidden>
+        <span class="label">Club hits left</span>
+        <strong id="club-hits">0</strong>
+      </div>
       <div class="hud-block grow">
         <span class="label">Yard</span>
         <strong id="gate">Walk on</strong>
@@ -32,11 +36,8 @@
       <button type="button" id="pause">Pause</button>
     </div>
 
-    <div class="pad" aria-label="Move">
-      <button type="button" id="up" aria-label="Move up">▲</button>
-      <button type="button" id="left" aria-label="Move left">◀</button>
-      <button type="button" id="down" aria-label="Move down">▼</button>
-      <button type="button" id="right" aria-label="Move right">▶</button>
+    <div class="move-pad" id="move-pad" role="group" aria-label="Movement joystick">
+      <span aria-hidden="true"></span>
     </div>
     <div class="attacks">
       <button type="button" id="upper" aria-label="Uppercut">Upper</button>
@@ -49,7 +50,7 @@
         <h1 id="camp-stage-title">The holding camp</h1>
         <p id="camp-goal">Santa is escaping a snowy holding camp. Nazi guards in military winter uniforms enter from either side. The wreath gate is at the far end.</p>
         <p class="how">How to play</p>
-        <p>The left thumb moves up, down, left, and right. Punch is a fast jab. Upper is slower and hits three times as hard. Step up or down to go around crates and dodge swings. A beaten guard flashes and vanishes. Punch costs 1 stamina and Upper costs 3. Stamina refills in about 6.7 seconds. Guards sometimes drop cookies or cocoa. Cookies refill stamina. Cocoa restores one hit point. Paused time does not count.</p>
+        <p>Drag the left joystick to move. Punch is a fast jab. Upper is slower and hits three times as hard. Step up or down to go around crates and dodge swings. A beaten guard flashes and vanishes. Punch costs 1 stamina and Upper costs 3. Stamina refills in about 6.7 seconds. Cookies refill stamina and cocoa restores one hit point. Guards rarely drop a billy club. Either attack button swings it for 3 damage without using stamina. It breaks after five hits.</p>
         <button type="button" id="start">Step into the yard</button>
       </div>
     </div>
@@ -91,7 +92,7 @@
   </main>
   <script src="../orientation.js?v=portrait-start"></script>
   <script src="art/frames.js?v=painted-guards"></script>
-  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=guard-pickup-drops"></script>
+  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=camp-joystick-and-club"></script>
   <script src="../level-retry.js"></script>
   <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script>
 </body>

@@ -57,6 +57,10 @@
   var STAMINA_REFILL = (MAX_STAMINA / 5) * 0.75;
   var staminaEl = document.getElementById('stamina');
   var staminaMeter = document.getElementById('stamina-meter');
+  var clubHitsEl = document.getElementById('club-hits');
+  var movePad = document.getElementById('move-pad');
+  var moveStick = { pointer: null, x: 0, y: 0 };
+  var CLUB_HITS = 5;
   var FR = window.CAMP_FRAMES;
 
   var KIND = {
@@ -73,6 +77,7 @@
       walk: { ms: 91, loop: true },
       punch: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
       upper: { ms: 120, hit: 2, dmg: 3, reach: 84, cool: 0.26 },
+      club: { ms: 85, hit: 2, dmg: 3, reach: 115, cool: 0.19 },
       hit: { ms: 140, hold: true },
       defeat: { ms: 200, hold: true }
     },
@@ -102,6 +107,7 @@
     }
   };
 
+  FR.santa.club = FR.santa.punch;
   CLIP.warden = CLIP.mid;
   CLIP.enforcer = CLIP.heavy;
 
@@ -195,6 +201,8 @@
   var crateImg = new Image();
   crateImg.src = cellPassage ? '../shelf-escape/art/props/wood-crate.webp' : '../white-rail/art/painted-crate.webp';
   var cookieImg = new Image();
+  var clubImg = new Image();
+  clubImg.src = 'art/billy-club.webp';
   cookieImg.src = 'art/stamina-cookie.webp';
   var keyImg = new Image();
   if (cellPassage) keyImg.src = '../shelf-escape/art/props/depot-key.webp';
@@ -232,7 +240,6 @@
   var shake = 0;
   var cam = 0;
   var held = { left: false, right: false, up: false, down: false };
-  var pointers = {};
   var santa;
   var foes;
   var waves;
@@ -334,6 +341,7 @@
       hp: MAX_HP,
       stamina: MAX_STAMINA,
       staminaWarning: 0,
+      clubHits: 0,
       atk: '',
       atkT: 0,
       cool: 0,
@@ -441,9 +449,12 @@
     pipsEl.textContent = pipsText();
     staminaEl.textContent = Math.floor(santa.stamina) + '/' + MAX_STAMINA;
     staminaMeter.value = santa.stamina;
+    clubHitsEl.textContent = String(santa.clubHits);
+    clubHitsEl.parentElement.hidden = santa.clubHits === 0;
   }
 
   function beginRun() {
+    resetMoveStick();
     keyTaken = false;
     santa = freshSanta();
     foes = [];
@@ -467,6 +478,7 @@
   function openPause() {
     if (state !== 'play') return;
     state = 'pause';
+    resetMoveStick();
     pauseSheet.hidden = false;
   }
 
@@ -540,7 +552,8 @@
   }
 
   function beginAttack(name) {
-    var cost = name === 'upper' ? 3 : 1;
+    if (santa.clubHits > 0) name = 'club';
+    var cost = name === 'club' ? 0 : name === 'upper' ? 3 : 1;
     if (santa.stamina < cost) {
       santa.buffer = '';
       santa.staminaWarning = 1.25;
@@ -555,8 +568,7 @@
     santa.buffer = '';
     santa.cool = 0;
     if (foe) santa.face = foe.x < santa.x ? -1 : 1;
-    else if (held.left && !held.right) santa.face = -1;
-    else if (held.right && !held.left) santa.face = 1;
+    else santa.face = Math.sign(horizontalInput()) || santa.face;
   }
 
   function requestAttack(name) {
@@ -571,7 +583,7 @@
 
   function dropGuardPickup(guard) {
     var roll = Math.random();
-    if (roll >= 0.25) return;
+    if (roll >= 0.29) return;
 
     var x = clamp(guard.x, 48, frontX());
     var y = guard.y;
@@ -582,9 +594,10 @@
       y = below > BAND_BOT - 8 || (above >= BAND_TOP + 12 && y <= crate.y) ? above : below;
     }
 
+    var club = roll >= 0.25;
     var stamina = roll < 0.125;
-    picks.push({ x: x, y: y, got: false, stamina: stamina });
-    say(stamina ? 'A guard dropped a stamina cookie.' : 'A guard dropped cocoa.');
+    picks.push({ x: x, y: y, got: false, stamina: stamina, club: club });
+    say(club ? 'A guard dropped a billy club.' : stamina ? 'A guard dropped a stamina cookie.' : 'A guard dropped cocoa.');
   }
 
   function hurtFoe(e, dmg) {
@@ -629,7 +642,12 @@
         bestD = dx;
       }
     }
-    if (best) hurtFoe(best, clip.dmg);
+    if (!best) return;
+    hurtFoe(best, clip.dmg);
+    if (santa.atk === 'club') {
+      santa.clubHits--;
+      if (santa.clubHits === 0) say('The billy club broke.');
+    }
   }
 
   function hurtSanta(from) {
@@ -869,6 +887,15 @@
       p = picks[i];
       if (p.got) continue;
       if (Math.abs(p.x - santa.x) < 36 && Math.abs(p.y - santa.y) < 42) {
+        if (p.club) {
+          if (santa.clubHits > 0) continue;
+          santa.clubHits = CLUB_HITS;
+          santa.staminaWarning = 0;
+          p.got = true;
+          sfx('right');
+          say('Billy club collected. Five hits remaining.');
+          continue;
+        }
         if (p.stamina) {
           if (santa.stamina >= MAX_STAMINA) continue;
           santa.stamina = MAX_STAMINA;
@@ -931,14 +958,11 @@
       beginAttack(santa.buffer);
     }
     if (!santa.atk && santa.stun <= 0) {
-      if (held.left) mx -= 1;
-      if (held.right) mx += 1;
-      if (held.up) my -= 1;
-      if (held.down) my += 1;
-      if (mx && my) {
-        mx *= 0.707;
-        my *= 0.707;
-      }
+      mx = horizontalInput();
+      my = moveStick.pointer === null ? Number(held.down) - Number(held.up) : moveStick.y;
+      var length = Math.max(1, Math.hypot(mx, my));
+      mx /= length;
+      my /= length;
       if (mx < 0) santa.face = -1;
       if (mx > 0) santa.face = 1;
       moveSanta(mx * 360 * dt, my * 230 * dt);
@@ -1063,12 +1087,24 @@
     ctx.drawImage(gateImg, GATE_X - cam - gw * 0.5, BAND_BOT - gh + 8, gw, gh);
   }
 
-  function drawCocoa(p) {
+  function drawPickup(p) {
     var bob = reduceMotion() ? 0 : Math.sin(visualTime * 3 + p.x) * 3;
     var s = 46;
     var gh;
-    var art = p.stamina ? cookieImg : cocoaImg;
+    var art = p.club ? clubImg : p.stamina ? cookieImg : cocoaImg;
     if (!imageReady(art)) return;
+    if (p.club) {
+      gh = 66;
+      s = gh * art.naturalWidth / art.naturalHeight;
+      ctx.save();
+      ctx.translate(p.x - cam, p.y - 27 + bob);
+      ctx.rotate(0.54);
+      ctx.shadowColor = '#ffd078';
+      ctx.shadowBlur = 10;
+      ctx.drawImage(art, -s / 2, -gh / 2, s, gh);
+      ctx.restore();
+      return;
+    }
     gh = s * (art.naturalHeight / art.naturalWidth);
     ctx.drawImage(art, p.x - cam - s * 0.5, p.y - gh + bob, s, gh);
   }
@@ -1151,7 +1187,7 @@
         continue;
       }
       if (list[i].pick) {
-        drawCocoa(list[i].pick);
+        drawPickup(list[i].pick);
         continue;
       }
       if (list[i].foe) {
@@ -1183,7 +1219,23 @@
       );
     }
     if (!reduceMotion()) drawSnow();
+    if ((santa.clubHits > 0 || santa.atk === 'club') && !santa.down) drawHeldClub();
     if (santa.staminaWarning > 0) drawStaminaWarning();
+  }
+
+  function drawHeldClub() {
+    if (!imageReady(clubImg)) return;
+    var height = SANTA_H * depthMul(santa.y);
+    var progress = santa.atk === 'club' ? clamp(santa.atkT / swingDur('santa', 'club'), 0, 1) : 0;
+    var sweep = Math.sin(progress * Math.PI);
+    var length = height * 0.52;
+    var width = length * clubImg.naturalWidth / clubImg.naturalHeight;
+    ctx.save();
+    ctx.translate(santa.x - cam + santa.face * height * (0.21 + 0.23 * sweep),
+      santa.y - height * (0.54 + 0.08 * sweep));
+    ctx.rotate(santa.face * (-0.22 + sweep * 1.9));
+    ctx.drawImage(clubImg, -width / 2, -length * 0.91, width, length);
+    ctx.restore();
   }
 
   function drawStaminaWarning() {
@@ -1274,27 +1326,53 @@
     }
   }
 
-  function bindHold(button, key) {
-    button.addEventListener('pointerdown', function (event) {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      held[key] = true;
-      pointers[event.pointerId] = key;
-      button.classList.add('held');
-      hintEl.hidden = true;
-      if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
-    });
-    function release(event) {
-      if (pointers[event.pointerId] !== key) return;
-      held[key] = false;
-      delete pointers[event.pointerId];
-      button.classList.remove('held');
-    }
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
-    button.addEventListener('lostpointercapture', release);
-    button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+  function horizontalInput() {
+    return moveStick.pointer === null ? Number(held.right) - Number(held.left) : moveStick.x;
   }
+
+  function setMoveStick(x, y, radius) {
+    moveStick.x = x;
+    moveStick.y = y;
+    movePad.style.setProperty('--stick-x', x * radius + 'px');
+    movePad.style.setProperty('--stick-y', y * radius + 'px');
+  }
+
+  function resetMoveStick() {
+    var pointer = moveStick.pointer;
+    moveStick.pointer = null;
+    setMoveStick(0, 0, 0);
+    if (pointer !== null && movePad.hasPointerCapture(pointer)) movePad.releasePointerCapture(pointer);
+  }
+
+  function aimMoveStick(event) {
+    if (event.pointerId !== moveStick.pointer) return;
+    var rect = movePad.getBoundingClientRect();
+    var radius = rect.width * 0.31;
+    var dx = event.clientX - rect.left - rect.width / 2;
+    var dy = event.clientY - rect.top - rect.height / 2;
+    var distance = Math.hypot(dx, dy);
+    if (distance < radius * 0.14 || radius === 0) {
+      setMoveStick(0, 0, radius);
+      return;
+    }
+    var scale = Math.max(distance, radius);
+    setMoveStick(dx / scale, dy / scale, radius);
+  }
+
+  movePad.addEventListener('pointerdown', function (event) {
+    if (state !== 'play' || event.button !== 0 || moveStick.pointer !== null) return;
+    event.preventDefault();
+    moveStick.pointer = event.pointerId;
+    movePad.setPointerCapture(event.pointerId);
+    hintEl.hidden = true;
+    aimMoveStick(event);
+  });
+  movePad.addEventListener('pointermove', aimMoveStick);
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (type) {
+    movePad.addEventListener(type, function (event) {
+      if (event.pointerId === moveStick.pointer) resetMoveStick();
+    });
+  });
 
   function bindAttack(button, name) {
     button.addEventListener('pointerdown', function (event) {
@@ -1312,10 +1390,6 @@
     button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   }
 
-  bindHold(document.getElementById('up'), 'up');
-  bindHold(document.getElementById('down'), 'down');
-  bindHold(document.getElementById('left'), 'left');
-  bindHold(document.getElementById('right'), 'right');
   bindAttack(document.getElementById('punch'), 'punch');
   bindAttack(document.getElementById('upper'), 'upper');
 
@@ -1373,6 +1447,7 @@
   });
 
   window.addEventListener('blur', function () {
+    resetMoveStick();
     held.left = false;
     held.right = false;
     held.up = false;
