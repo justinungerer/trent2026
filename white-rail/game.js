@@ -38,13 +38,14 @@
   var stage = new URLSearchParams(location.search).get('stage');
   var siding = stage === 'siding-signals';
   var loadingSpur = stage === 'the-loading-spur';
+  var middleLevel = !siding && !loadingSpur;
   var TRACK_COUNT = loadingSpur ? 5 : 3;
   var CENTER_LANE = (TRACK_COUNT - 1) / 2;
   var FINISH = 1560;
   var DENSITY_SCALE = FINISH / 1200 * TRACK_COUNT / 3;
   var BOMBER_COUNT = Math.round((siding ? 16 : loadingSpur ? 36 : 26) * DENSITY_SCALE);
-  var TANK_COUNT = siding ? 0 : 3 * TRACK_COUNT;
-  var TANK_SHOTS = !siding && !loadingSpur ? 2 : 1;
+  var TANK_COUNT = siding ? 0 : Math.round(3 * TRACK_COUNT * (middleLevel ? 1.5 : 1));
+  var TANK_SHOTS = middleLevel ? 2 : 1;
   var TANK_SHOT_INTERVAL = 1.5;
   var SHELL_TIME = 1.25;
   var HIT_PROTECTION_SECONDS = 3;
@@ -113,7 +114,7 @@
       Math.floor(index * obstacleCount / obstacles.length);
   });
   var sourcePattern = PATTERN;
-  var scaledCount = Math.round(sourcePattern.length * DENSITY_SCALE);
+  var scaledCount = Math.round(sourcePattern.length * DENSITY_SCALE * (middleLevel ? 0.5 : 1));
   PATTERN = Array.from({ length: scaledCount }, function (_, index) {
     var source = sourcePattern[index % sourcePattern.length];
     return {
