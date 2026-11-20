@@ -128,7 +128,7 @@ function reset(notice){
   lights:beams.map(beam=>({route:beam.route,r:beam.r,speed:beam.speed,x:beam.route[0][0],y:beam.route[0][1],index:1})),
   hearts:hearts.map(p=>({...p,taken:false})),
   bones:macBones.map(p=>({...p,taken:false})),
-  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,macUses:MAC_USES,mac:null,time:0,alarm:0,flash:notice?0.45:0,
+  mail:caches.map(p=>({...p,taken:false})),prints:[],count:0,macUses:MAC_USES,mac:null,time:0,inSpotlight:false,flash:notice?0.45:0,
   notice:notice||goal,noticeUntil:notice?3.5:5};
  camera.x=spawn.x;camera.y=spawn.y;sync();
 }
@@ -212,7 +212,14 @@ function sendMac(){
  announce('Mac is after the guards.');
  sync();
 }
-macButton.onclick=sendMac;
+macButton.addEventListener('pointerdown',event=>{
+ if(event.button!==0)return;
+ event.preventDefault();
+ sendMac();
+});
+macButton.addEventListener('click',event=>{
+ if(event.detail===0)sendMac();
+});
 
 function nearestGuard(actor){
  return run.guards.reduce((nearest,guard)=>!nearest||distance(actor,guard)<distance(actor,nearest)?guard:nearest,null);
@@ -222,6 +229,7 @@ function clearPath(a,b,bodyRadius){
  const left=Math.min(a.x,b.x)-bodyRadius,right=Math.max(a.x,b.x)+bodyRadius;
  const top=Math.min(a.y,b.y)-bodyRadius,bottom=Math.max(a.y,b.y)+bodyRadius;
  const nearby=shelves.filter(s=>s.x<right&&s.x+s.w>left&&s.y<bottom&&s.y+s.h>top);
+ if(!nearby.length)return !blocked(b.x,b.y,bodyRadius,nearby);
  const steps=Math.max(1,Math.ceil(distance(a,b)/8));
  for(let i=1;i<=steps;i++){
   const t=i/steps;
@@ -312,6 +320,7 @@ function updateMac(player,dt){
  }
  if(!mac.scared&&distance(target,mac)<FLEE_RANGE&&!lineBlocked(target,mac)){
   mac.scared=true;
+  target.spotlightChase=false;
   mac.retreat=retreatPoint(target,player);
   target.waypoint=null;
   announce('Mac chased off the nearest guard.');
@@ -330,7 +339,7 @@ window.addEventListener('blur',pause);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 function readStick(event){
  const rect=pad.getBoundingClientRect();
- const max=Math.max(16,rect.width*0.5-24);
+ const max=Math.max(16,(rect.width-knob.offsetWidth)/2-2);
  let x=event.clientX-(rect.left+rect.width/2),y=event.clientY-(rect.top+rect.height/2);
  const mag=Math.hypot(x,y)||1;
  const clipped=Math.min(mag,max);
@@ -353,10 +362,18 @@ for(const name of ['pointerup','pointercancel','lostpointercapture']){
  pad.addEventListener(name,event=>{if(stick?.id===event.pointerId)releaseStick();});
 }
 function alertHalf(){
+ const activeMac=run.mac;
+ const available=run.guards.filter(guard=>!(activeMac?.scared&&!activeMac.returning&&guard===activeMac.target));
+ for(const guard of run.guards)guard.spotlightChase=false;
  const quota=Math.round(run.guards.length/2);
- const idle=run.guards.filter(guard=>!guard.chase&&!guard.fleeing).sort((a,b)=>distance(a,run.player)-distance(b,run.player));
- idle.slice(0,quota).forEach(guard=>{guard.angle=Math.atan2(run.player.y-guard.y,run.player.x-guard.x);});
- if(idle.length)announce('Spotlight. Half the yard is looking');
+ for(let index=0;index<quota&&index<available.length;index++){
+  const next=index+Math.floor(Math.random()*(available.length-index));
+  [available[index],available[next]]=[available[next],available[index]];
+  const guard=available[index];
+  guard.spotlightChase=true;
+  guard.waypoint=null;
+ }
+ announce('Spotlight! Half the guards are chasing you.');
 }
 function update(dt){
  run.time+=dt;
@@ -394,6 +411,16 @@ function update(dt){
  }
  run.prints=run.prints.filter(print=>print.until>run.time);
  updateMac(p,dt);
+ let inSpotlight=false;
+ for(const light of run.lights){
+  const [x,y]=light.route[light.index];
+  light.aim={x,y};
+  if(!glide(light,light.speed,dt))light.index=(light.index+1)%light.route.length;
+  if(distance(light,p)<light.r)inSpotlight=true;
+ }
+ const enteredSpotlight=inSpotlight&&!run.inSpotlight;
+ run.inSpotlight=inSpotlight;
+ if(enteredSpotlight)alertHalf();
  let spotted=false;
  for(const guard of run.guards){
   const mac=run.mac;
@@ -405,6 +432,10 @@ function update(dt){
    }else{
     steer(guard,Math.atan2(guard.y-p.y,guard.x-p.x),155*guardPace,dt,GUARD_RADIUS);
    }
+  }else if(guard.spotlightChase){
+   guard.chase=true;
+   moveAlongPath(guard,p,trentSpeed*guardSpeedRatio,dt,GUARD_RADIUS);
+   if(distance(guard,p)<29)guard.spotlightChase=false;
   }else if(sees(guard,p)){
    if(!guard.chase)spotted=true;
    guard.chase=true;
@@ -421,16 +452,7 @@ function update(dt){
    if(!p.hull){show('lost','Return to sender','The inspectors impounded Trent for unauthorized festivity.','Try again');return;}
   }
  }
- if(spotted)announce('An inspector spotted you');
- for(const light of run.lights){
-  const [x,y]=light.route[light.index];
-  light.aim={x,y};
-  if(!glide(light,light.speed,dt))light.index=(light.index+1)%light.route.length;
-  if(distance(light,p)<light.r&&run.alarm<=run.time){
-   run.alarm=run.time+3.2;
-   alertHalf();
-  }
- }
+ if(spotted&&!enteredSpotlight)announce('An inspector spotted you');
  for(const item of run.hearts){
   if(!item.taken&&p.hull<3&&distance(p,item)<25){item.taken=true;p.hull++;announce('Heart recovered');sync();}
  }
