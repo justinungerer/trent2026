@@ -261,9 +261,13 @@
   }
 
   function resetPuzzle() {
-    levers = LEVER_X.map(function () { return 1; });
-    activeLever = 0;
     patternIndex = 0;
+    levers = LEVER_X.map(function () { return Math.random() < 0.5 ? 0 : 1; });
+    if (matches()) {
+      var index = Math.floor(Math.random() * levers.length);
+      levers[index] = 1 - levers[index];
+    }
+    activeLever = 0;
     departures = 0;
     misses = 0;
     doomed = false;
