@@ -61,6 +61,7 @@
   var weaponLabelEl = document.getElementById('weapon-label');
   var movePad = document.getElementById('move-pad');
   var moveStick = { pointer: null, x: 0, y: 0 };
+  var KNUCKLE_PUNCH_RATE = 1.3;
   var WEAPON = {
     club: { name: 'Billy club', label: 'Club hits left', hits: 5 },
     knuckles: { name: 'Brass knuckles', label: 'Knuckle hits left', hits: 10 }
@@ -82,7 +83,7 @@
       punch: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
       upper: { ms: 120, hit: 2, dmg: 3, reach: 84, cool: 0.26 },
       club: { ms: 85, hit: 2, dmg: 3, reach: 115, cool: 0.19 },
-      knuckles: { ms: 50, hit: 2, dmg: 1, reach: 92, cool: 0.1 },
+      knuckles: { ms: 50 / KNUCKLE_PUNCH_RATE, hit: 2, dmg: 1, reach: 92, cool: 0.1 / KNUCKLE_PUNCH_RATE },
       hit: { ms: 140, hold: true },
       defeat: { ms: 200, hold: true }
     },
