@@ -6,9 +6,8 @@ const knob=document.getElementById('knob');
 const ui=Object.fromEntries(['status','panel','title','copy','start','pause','send-mac'].map(id=>[id,document.getElementById(id)]));
 const macButton=ui['send-mac'];
 const MAC_USES=2;
-const MAC_SECONDS=6+(window.TrentMissionBonus||0)*0.75;
+const MAC_CHASE_SECONDS=5;
 const MAC_SPEED=205;
-const MAC_MIN_SEARCH_SECONDS=10;
 const FLEE_RANGE=145;
 const GUARD_RADIUS=12;
 const stage=new URLSearchParams(location.search).get('stage');
@@ -135,7 +134,8 @@ function reset(notice){
 }
 function sync(){
  ui.status.textContent='♥'.repeat(run.player.hull)+'♡'.repeat(3-run.player.hull)+' · '+run.count+'/'+caches.length;
- macButton.textContent=(run.mac?'MAC CHASING · ':'SEND MAC · ')+run.macUses;
+ const macAction=run.mac?.returning?'MAC RETURNING':run.mac?'MAC CHASING':'SEND MAC';
+ macButton.textContent=macAction+' · '+run.macUses;
  macButton.disabled=mode!=='play'||run.macUses===0||Boolean(run.mac);
 }
 function announce(message){run.notice=message;run.noticeUntil=run.time+3.5;}
@@ -205,9 +205,9 @@ function sendMac(){
  const p=run.player;
  const target=nearestGuard(p);
  if(!target)return;
- const searchSeconds=Math.max(MAC_MIN_SEARCH_SECONDS,3*distance(p,target)/MAC_SPEED);
- run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),until:Infinity,
-  searchUntil:run.time+searchSeconds,target,waypoint:null,pathDue:0,retreat:null};
+ run.mac={x:p.x,y:p.y,angle:Math.atan2(target.y-p.y,target.x-p.x),
+  chaseUntil:run.time+MAC_CHASE_SECONDS,target,waypoint:null,pathDue:0,retreat:null,
+  returning:false,scared:false};
  run.macUses--;
  announce('Mac is after the guards.');
  sync();
@@ -289,25 +289,29 @@ function moveAlongPath(actor,target,speed,dt,bodyRadius,stopDistance=3){
 function updateMac(player,dt){
  const mac=run.mac;
  if(!mac)return;
- if(mac.until<=run.time){
-  run.mac=null;
-  mac.target.waypoint=null;
-  sync();
-  return;
- }
- if(mac.until===Infinity&&mac.searchUntil<=run.time){
-  run.mac=null;
-  run.macUses++;
-  announce('Mac couldn’t reach the guard. Attack returned.');
-  sync();
-  return;
- }
  const target=mac.target;
+ if(!mac.returning&&run.time+1e-9>=mac.chaseUntil){
+  mac.returning=true;
+  mac.waypoint=null;
+  target.waypoint=null;
+  announce('Mac is coming back.');
+  sync();
+ }
  const before={x:mac.x,y:mac.y};
- moveAlongPath(mac,target,MAC_SPEED,dt,macRadius,30);
+ moveAlongPath(mac,mac.returning?player:target,MAC_SPEED,dt,macRadius,mac.returning?12:30);
  mac.running=distance(mac,before)>.1;
- if(mac.until===Infinity&&distance(target,mac)<FLEE_RANGE&&!lineBlocked(target,mac)){
-  mac.until=run.time+MAC_SECONDS;
+ if(mac.returning){
+  if(distance(mac,player)>18)return;
+  run.mac=null;
+  if(!mac.scared){
+   run.macUses++;
+   announce('Mac couldn’t reach the guard. Attack returned.');
+  }
+  sync();
+  return;
+ }
+ if(!mac.scared&&distance(target,mac)<FLEE_RANGE&&!lineBlocked(target,mac)){
+  mac.scared=true;
   mac.retreat=retreatPoint(target,player);
   target.waypoint=null;
   announce('Mac chased off the nearest guard.');
@@ -393,7 +397,7 @@ function update(dt){
  let spotted=false;
  for(const guard of run.guards){
   const mac=run.mac;
-  guard.fleeing=Boolean(mac&&guard===mac.target&&mac.until!==Infinity);
+  guard.fleeing=Boolean(mac&&guard===mac.target&&mac.scared&&!mac.returning);
   if(guard.fleeing){
    guard.chase=false;
    if(mac.retreat&&distance(guard,mac.retreat)>9){
