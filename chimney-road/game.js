@@ -23,7 +23,7 @@
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
   var levelParams = new URLSearchParams(location.search);
-  var stage = levelParams.get('stage');
+  var stage = levelParams.get('stage') || (location.hash === '#final-fight' ? 'final-fight' : null);
   var finalFightOnly = stage === 'final-fight';
   var eaves = stage === 'the-eaves';
   var flags = stage === 'above-the-lanterns';

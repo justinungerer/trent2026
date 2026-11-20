@@ -307,7 +307,8 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     })));
     assert.equal(replays.length, 11);
     for (const chapter of replays) {
-      await page.goto('http://localhost/?play=' + chapter.slug);
+      await page.goto('http://localhost/play/' + chapter.slug + '.html');
+      await page.waitForURL('**/#play=' + chapter.slug);
       await page.getByRole('button', { name: /^Play (the Prologue|Chapter \d+)$/ }).tap();
       assert.equal(await page.locator('#intro-title').textContent(), chapter.title);
       await page.evaluate(() => introDone());
@@ -315,7 +316,8 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       assert.equal(await page.locator('.quiz-card').count(), 0);
     }
 
-    await page.goto('http://localhost/?play=chapter-2&quiz=1');
+    await page.goto('http://localhost/play/chapter-2-quiz.html');
+    await page.waitForURL('**/#play=chapter-2&quiz=1');
     for (const correctCount of [4, 5]) {
       await playChapter.tap();
       await page.evaluate(() => introDone());
@@ -345,7 +347,12 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
           ['frost', 0, 3]);
       }
     }
-    console.log('PASS: all 11 quiz-free share links and the required-quiz share link at the 4/10 and 5/10 thresholds.');
+    await page.goto('http://localhost/play/final-boss.html');
+    await page.waitForURL('**/chimney-road/#final-fight');
+    await page.locator('#box-start').waitFor();
+    assert.equal(await page.locator('#start-sheet').isHidden(), true);
+    assert.deepEqual(await page.evaluate(() => menuFightState()), { state: 'boxing', mode: 'intro', gunfire: false });
+    console.log('PASS: path-only links for all 11 quiz-free replays, the required quiz, and the direct final boss.');
     assert.deepEqual(errors, []);
     console.log('PASS: touch starts across all 33 minigame levels, normalized URLs, missed rotation events, and standalone links.');
     console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');

@@ -1466,6 +1466,7 @@ window.TrentCampaign = {
 };
 
 var shareParams = new URLSearchParams(location.search);
+if (!shareParams.has('play')) shareParams = new URLSearchParams(location.hash.slice(1));
 var sharedChapter = CHAPTERS.find(function (chapter) {
   return shareParams.get('play') === (chapter.number ? 'chapter-' + chapter.number : 'prologue');
 });
