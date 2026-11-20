@@ -80,7 +80,16 @@ test('Level 3 reuses the same alarm bell and returns the far-end key to the cent
    }else if(hurdle||bell||((enemy?.kind==='charger'||lowShot)&&player.y<12&&Math.abs(target.x-player.x)>12)){
     keys.add('w');
    }
-   if((enemy||(target.action==='shoot'&&Math.abs(target.x-player.x)<10))&&!shots.length&&elapsed>=nextShot&&player.y<8)keys.add(' ');
+   const targetX=enemy?.x??(target.action==='shoot'&&Math.abs(target.x-player.x)<10?locks.find(lock=>!lock.done).x:null);
+   if(targetX!==null&&!highShot&&!shots.length&&elapsed>=nextShot&&player.y<8){
+    const face=Math.sign(targetX-player.x)||player.face;
+    const movementFacing=keys.has('a')?-1:keys.has('d')?1:player.face;
+    if(movementFacing!==face){
+     keys.delete('a');keys.delete('d');
+     keys.add(face<0?'a':'d');
+    }
+    keys.add(' ');
+   }
    update(.02);
   }
   JSON.stringify({exitLocked,earlyShotIgnored,state,papers:documents.flatMap(doc=>doc.pages).filter(page=>page.found).length,
@@ -285,6 +294,23 @@ test('a short valid tap fires once, while cancellation and cooldown taps do not 
  assert.equal(run('update(.4);shotsUsed'),1);
  elements.fire.handlers.pointerdown(event);elements.fire.handlers.pointercancel(event);
  assert.equal(run('update(.02);shotsUsed'),1);
+});
+
+test('ribbon shots follow Buddy’s facing at a constant height with no automatic aim',()=>{
+ const {run}=game();
+ const result=JSON.parse(run(`start();
+  guards=[{x:180,home:180,hp:2,dir:-1,cooldown:10}];
+  player.face=-1;queueFire();update(.02);
+  const behind=[player.face,shots[0].vx,shots[0].y];
+  guards=[];shots=[];nextShot=0;
+  sticks.move.x=.6;sticks.move.y=-.8;queueFire();update(.02);
+  const diagonal=[player.face,shots[0].vx,shots[0].y];
+  shots=[];nextShot=0;
+  sticks.move.x=0;sticks.move.y=1;queueFire();update(.02);
+  const duck=[player.face,shots[0].vx,shots[0].y,player.ducking];
+  update(.1);
+  JSON.stringify({behind,diagonal,duck,stillHorizontal:shots[0].y===394})`));
+ assert.deepEqual(result,{behind:[-1,-560,394],diagonal:[1,560,394],duck:[1,560,394,true],stillHorizontal:true});
 });
 
 test('alarm bells need a jump and boxes block the ground',()=>{

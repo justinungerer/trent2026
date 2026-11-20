@@ -94,7 +94,7 @@ $('jump').addEventListener('pointerdown',queueJump);
 $('jump').addEventListener('click',e=>{if(e.detail===0)queueJump();});
 function reset(){
  exitKeyFound=false;
- player={x:100,y:0,vy:0,hp:3,shield:0,face:1,aim:0,fire:0,dying:0,moving:false,duckPose:0};
+ player={x:100,y:0,vy:0,hp:3,shield:0,face:1,fire:0,dying:0,moving:false,duckPose:0};
  const baseline=cell?3:dispatch?4:16;
  guards=Array.from({length:Math.ceil(baseline*1.5)},(_,index)=>{
   const x=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
@@ -267,12 +267,13 @@ function update(dt){
  for(const parcel of parcels)if(!parcel.found&&Math.abs(player.x-parcel.x)<36&&player.y>=parcel.need){parcel.found=true;if(player.hp<3)player.hp++;else ammo+=2;interact(parcel.x,parcel.y,'#f9d487',14)}
  const spaceDown=keys.has(' '),wantsShot=fireQueued||(spaceDown&&!spaceWasDown);spaceWasDown=spaceDown;fireQueued=false;
  if(wantsShot&&elapsed>=nextShot&&ammo>0){
-  let dx=moveStick.x,dy=moveStick.y;
-  if(Math.hypot(dx,dy)<.2){const target=guards.filter(q=>q.hp>0&&Math.abs(q.x-player.x)<350).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0]||locks.find((lock,index)=>lockReady(index)&&!lock.done&&Math.abs(lock.x-player.x)<400);dx=target?Math.sign(target.x-player.x)||player.face:player.face;dy=0;player.face=dx}else{const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face=Math.sign(dx)||player.face}
-  player.aim=Math.atan2(dy,Math.abs(dx));shots.push({x:player.x+player.face*24,y:394-player.y,vx:dx*560,vy:dy*560});ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;burst(player.x+player.face*25,394-player.y,'#ffd895',5);
+  const y=394-player.y;
+  shots.push({x:player.x+player.face*24,y,vx:player.face*560});
+  ammo--;shotsUsed++;nextShot=elapsed+reload;player.fire=.35;
+  burst(player.x+player.face*25,y,'#ffd895',5);
  }
  for(const shot of shots){
-  shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;
+  shot.x+=shot.vx*dt;
   for(const guard of guards)if(guard.hp>0&&Math.abs(shot.x-guard.x)<23&&shot.y>340&&shot.y<450){guard.hp-=damage;guard.stun=.35;guard.attack=0;guard.windup=0;shot.y=-100;if(guard.hp<=0){wraps.push({guard,x:guard.x,age:0,facing:guardFacing(guard)});ammoDrops.push({x:guard.x,age:0});}burst(guard.x,380,guard.hp<=0?'#f8cb7b':'#9aeaf0',guard.hp<=0?24:7);break}
   const lock=locks.find((lock,index)=>lockReady(index)&&!lock.done&&Math.abs(shot.x-lock.x)<23&&shot.y>365&&shot.y<425);if(lock){lock.done=true;shot.y=-100;interact(lock.x,394,'#ffd895',20)}
  }
@@ -443,8 +444,7 @@ function drawBuddy(motion){
 }
 function launcher(){
  if(player.dying)return;
- let angle=player.aim;if(Math.hypot(moveStick.x,moveStick.y)>.2)angle=Math.atan2(moveStick.y,Math.abs(moveStick.x));
- g.save();g.translate(player.x+player.face*13,397-player.y);g.scale(player.face,1);g.rotate(angle);g.lineWidth=3;g.strokeStyle='#553e33';
+ g.save();g.translate(player.x+player.face*13,397-player.y);g.scale(player.face,1);g.lineWidth=3;g.strokeStyle='#553e33';
  g.fillStyle='#885c3c';g.fillRect(-6,4,9,16);g.strokeRect(-6,4,9,16);
  g.fillStyle='#d9ad55';g.fillRect(-10,-8,40,17);g.strokeRect(-10,-8,40,17);
  g.fillStyle='#ba5950';g.fillRect(22,-6,12,13);g.strokeRect(22,-6,12,13);
@@ -609,7 +609,7 @@ function render(){
    const frame=guard.stun?(.35-guard.stun)*25:guard.attack?(.48-guard.attack)*20:motion*(guard.moving?9:5);
    sprite('guard-'+anim,guard.x,445,frame,facing<0,.82);
   }
-  if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText(guard.shotInCycle?'HIGH':'!',guard.x-4,318)}
+  if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText(guard.shotInCycle?'DUCK':'!',guard.x-4,318)}
  }
  for(const wrap of wraps){
   const progress=reduceMotion.matches?1:Math.min(1,wrap.age/wrapDuration);
@@ -642,12 +642,12 @@ function resize(){
 }
 window.addEventListener('resize',resize);
 resize();
-reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move and aim. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
+reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
 if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
- ?'Jump to recover Buddy’s kit from the supply bench, then find the exit key and reach the depot floor. Use the stick to move and aim. Tap Jump or Fire.'
- :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move and aim. Tap Jump or Fire.','Begin escape');
+ ?'Jump to recover Buddy’s kit from the supply bench, then find the exit key and reach the depot floor. Use the stick to move. Tap Jump or Fire.'
+ :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Hold Down on the stick to duck under shots aimed at Buddy’s head. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
+$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Shots travel straight in the direction Buddy faces. When you see DUCK, hold Down on the stick to avoid the high shot. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

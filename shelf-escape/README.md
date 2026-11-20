@@ -28,8 +28,7 @@ Interactive props (alarm bell, key, order page, cipher book, rail switch, genera
 Snow, steam, lights and parallax animate; reduced-motion preference freezes
 snow and character idle cycling and disables moving steam. Characters use
 actual animation frames. To replace the elf's original bow, the animation is
-cropped at render time and an original rotating ribbon launcher is drawn in
-front. Arms are not separately rigged to follow the aim angle. Guard fire uses
+cropped at render time and an original ribbon launcher is drawn facing the same direction as Buddy. Guard fire uses
 the gun attack animation and a damaging projectile. A defeated guard folds into a painted parcel using the current guard artwork.
 
 ### Third-party character art
@@ -49,7 +48,7 @@ the gun attack animation and a damaging projectile. A defeated guard folds into 
   assets; [OpenGameArt's FAQ](https://opengameart.org/content/oga-by-30-faq)
   explains the terms. The sprite sheets total approximately 0.97 MB.
 
-On a landscape phone, use the left stick to move and aim. Tap Jump to clear crates, reach ribbon parcels, or reach an alarm bell. A relay counts when Buddy touches the bell at the top of his jump. Tap Fire once per shot. Pull the left stick down to duck or hide behind a crate. Green supply boxes refill the earned magazine on entry;
+On a landscape phone, use the left stick to move. Tap Jump to clear crates, reach ribbon parcels, or reach an alarm bell. A relay counts when Buddy touches the bell at the top of his jump. Tap Fire to shoot straight in the direction Buddy faces. Pull the left stick down when a guard displays DUCK, or use it to hide behind a crate. Green supply boxes refill the earned magazine on entry;
 each box also restores one heart once per attempt. Leave and return for another
 ammo refill. Pause with
 the pause button; switching tabs or losing focus also pauses. A
