@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071422">
   <title>The Holding Camp</title>
-  <link rel="stylesheet" href="style.css?v=red-arrows">
+  <link rel="stylesheet" href="style.css?v=stamina-hud">
 </head>
 <body>
   <main class="stage">
@@ -18,7 +18,13 @@
         <span class="label">Santa</span>
         <strong id="pips">♥♥♥♥♥</strong>
       </div>
-      <div class="hud-block"><span class="label">Stamina</span><strong id="stamina">10/10</strong></div>
+      <div class="hud-block stamina">
+        <div class="stamina-heading">
+          <span class="label" id="stamina-label">Stamina</span>
+          <strong id="stamina" aria-hidden="true">10/10</strong>
+        </div>
+        <meter id="stamina-meter" min="0" max="10" value="10" aria-labelledby="stamina-label"></meter>
+      </div>
       <div class="hud-block grow">
         <span class="label">Yard</span>
         <strong id="gate">Walk on</strong>
@@ -85,7 +91,7 @@
   </main>
   <script src="../orientation.js?v=rotation3"></script>
   <script src="art/frames.js?v=painted-guards"></script>
-  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=chapter-eight-level-two-cap"></script>
+  <script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=stamina-hud"></script>
   <script src="../level-retry.js"></script>
   <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script>
 </body>

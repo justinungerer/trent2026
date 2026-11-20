@@ -48,6 +48,7 @@
   var MAX_STAMINA = 10;
   var STAMINA_REFILL = (MAX_STAMINA / 5) * 0.75;
   var staminaEl = document.getElementById('stamina');
+  var staminaMeter = document.getElementById('stamina-meter');
   var FR = window.CAMP_FRAMES;
 
   var KIND = {
@@ -302,6 +303,7 @@
       face: OUTBOUND,
       hp: MAX_HP,
       stamina: MAX_STAMINA,
+      staminaWarning: 0,
       atk: '',
       atkT: 0,
       cool: 0,
@@ -408,6 +410,7 @@
     else gateEl.textContent = left + ' guards';
     pipsEl.textContent = pipsText();
     staminaEl.textContent = Math.floor(santa.stamina) + '/' + MAX_STAMINA;
+    staminaMeter.value = santa.stamina;
   }
 
   function beginRun() {
@@ -510,7 +513,8 @@
     var cost = name === 'upper' ? 3 : 1;
     if (santa.stamina < cost) {
       santa.buffer = '';
-      say('Catch your breath or grab a cookie.');
+      santa.staminaWarning = 1.25;
+      say('Out of stamina.');
       return;
     }
     santa.stamina -= cost;
@@ -824,6 +828,7 @@
     var clip;
     var i;
     santa.stamina = Math.min(MAX_STAMINA, santa.stamina + STAMINA_REFILL * dt);
+    santa.staminaWarning = Math.max(0, santa.staminaWarning - dt);
     if (santa.iframe > 0) santa.iframe -= dt;
     if (santa.cool > 0) santa.cool -= dt;
     if (santa.down > 0) {
@@ -1089,6 +1094,27 @@
       );
     }
     if (!reduceMotion()) drawSnow();
+    if (santa.staminaWarning > 0) drawStaminaWarning();
+  }
+
+  function drawStaminaWarning() {
+    ctx.save();
+    ctx.font = '800 28px system-ui';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    var text = 'Out of stamina';
+    var width = ctx.measureText(text).width;
+    var santaX = santa.x - cam;
+    var x = santaX + 62;
+    if (x + width > VIEW_W - 16) x = santaX - width - 62;
+    var y = santa.y - SANTA_H * depthMul(santa.y) * 0.62;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#161d29';
+    ctx.fillStyle = '#ffe3a6';
+    ctx.strokeText(text, x, y);
+    ctx.fillText(text, x, y);
+    ctx.restore();
   }
 
   function resize() {
