@@ -35,7 +35,7 @@
   var OLD_WALK = 664;
   var OLD_VIEW = 844;
   var yardPassage = !cellPassage && !gateFight;
-  var YARD_GUARD_LIMIT = 2;
+  var GATE_GUARD_LIMIT = 2;
   var WALK = cellPassage ? 8520 : gateFight ? 1770 * 3 : Math.round(Math.round(OLD_WALK * 5 * (VIEW_W / OLD_VIEW)) * 3 * .8);
   var START_X = 340;
   var OUTBOUND = 1;
@@ -130,7 +130,7 @@
     ];
   }
 
-  // Repeat the authored encounters over three times the route, preserving density.
+  // Repeat the authored encounters across three sections.
   var originalPlan = WAVE_PLAN;
   if (cellPassage) {
     WAVE_PLAN = [];
@@ -146,7 +146,7 @@
       originalPlan.forEach(function (wave) {
         WAVE_PLAN.push({
           at: (section + wave.at) / 3,
-          foes: gateFight ? Array.from({ length: Math.round(wave.foes.length * 4.5) }, function (_, i) {
+          foes: yardPassage ? Array.from({ length: Math.round(wave.foes.length * 1.5) }, function (_, i) {
             return wave.foes[i % wave.foes.length];
           }) : wave.foes,
           batches: gateFight ? 3 : 1,
@@ -165,13 +165,12 @@
     }
     WAVE_PLAN.push({ at: 0.98, foes: gateFight ? [
       { k: 'warden', side: 'left' }, { k: 'enforcer', side: 'right' },
-      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' },
-      { k: 'light', side: 'right' }, { k: 'mid', side: 'left' }, { k: 'heavy', side: 'left' }
+      { k: 'light', side: 'left' }, { k: 'mid', side: 'right' }, { k: 'heavy', side: 'right' }
     ] : [{ k: 'enforcer', side: 'right' }] });
   }
   document.getElementById('camp-goal').textContent = cellPassage
     ? 'Fight to the far-right key. Defeat the Key Warden, take his key, and return to the exit halfway back.'
-    : gateFight ? 'Fight through three waves at each position, five seconds apart. An equally large reinforcement group then enters one guard every two seconds. At the gate, defeat both bosses and their six guards.'
+    : gateFight ? 'Clear the guard waves and reinforcements. Up to two enemies fight at once. Defeat both bosses and their three guards to reach the gate.'
     : 'Cross the extended yard, defeat the Yard Enforcer at the far end, and reach the gate.';
 
   var yardImg = new Image();
@@ -613,13 +612,13 @@
     wave.sent++;
     wave.nextAt = played + 5;
     for (var i = 0; i < wave.foes.length; i++) {
-      if (yardPassage) wave.pending.push({ index: i, at: played + i * .45 });
+      if (yardPassage || gateFight) wave.pending.push({ index: i, at: played + i * .45 });
       else spawnFoe(wave, i);
     }
-    // Level 3 doubles every route encounter with a second, individually timed group.
+    // The gatehouse gets a second, individually timed group.
     // Its first guard follows the last original batch by two seconds.
     if (wave.extraGroup && wave.sent === wave.batches) {
-      var afterOriginal = played;
+      var afterOriginal = played + (wave.foes.length - 1) * .45;
       for (var extra = 0; extra < wave.foes.length * wave.batches; extra++) {
         wave.pending.push({ index: extra % wave.foes.length, at: afterOriginal + (extra + 1) * 2 });
       }
@@ -629,8 +628,9 @@
 
   function releaseEntrants(wave) {
     while (wave.pending.length && played >= wave.pending[0].at) {
-      if (yardPassage && living() >= YARD_GUARD_LIMIT) break;
+      if (gateFight && living() >= GATE_GUARD_LIMIT) break;
       spawnFoe(wave, wave.pending.shift().index);
+      if (gateFight && wave.pending.length) wave.pending[0].at = Math.max(wave.pending[0].at, played + .45);
     }
   }
 
