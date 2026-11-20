@@ -28,7 +28,7 @@ Touch first. Nothing you need is hover-only.
 - Right thumb: Pump. Hold it and the lever keeps stroking. Each stroke pushes the car. Let go and the car slows.
 - Hold Brake above Pump to slow at twice the coasting rate. Brake takes priority over Pump.
 
-Levels 2 and 3 have painted roadside tanks. Each tank fires when its center reaches about 20% of the screen height and targets the player's current track. Changing tracks after the shot avoids it. Tank shells count as one hit. New bomb gaps and shell markers reserve clear stretches across every track.
+Levels 2 and 3 have painted roadside tanks. Each tank fires when its center reaches about 20% of the screen height and targets the player's current track. Level 2 tanks fire twice, 1.5 seconds apart, and aim at the current track each time. Changing tracks after the shot avoids it. Tank shells count as one hit. New bomb gaps and shell markers reserve clear stretches across every track.
 - Pause also opens when the page is hidden. Resume continues the same run. Start the line over returns to the start and does not count as reaching the yard.
 
 Buttons are at least 48 pixels. Left, Right, and Pump are larger so a thumb can hold them.

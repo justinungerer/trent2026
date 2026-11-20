@@ -43,9 +43,13 @@
   var DENSITY_SCALE = FINISH / 1200 * TRACK_COUNT / 3;
   var BOMBER_COUNT = Math.round((siding ? 16 : loadingSpur ? 36 : 26) * DENSITY_SCALE);
   var TANK_COUNT = siding ? 0 : 3 * TRACK_COUNT;
+  var TANK_SHOTS = !siding && !loadingSpur ? 2 : 1;
+  var TANK_SHOT_INTERVAL = 1.5;
   var SHELL_TIME = 1.25;
   document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line across ' + TRACK_COUNT + ' tracks to win. Any track will do.';
-  document.getElementById('tank-help').hidden = TANK_COUNT === 0;
+  var tankHelp = document.getElementById('tank-help');
+  tankHelp.hidden = TANK_COUNT === 0;
+  if (TANK_SHOTS === 2) tankHelp.textContent += ' Each tank fires twice, 1.5 seconds apart.';
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */
@@ -594,7 +598,8 @@
       return {
         x: 190 + index * (FINISH - 300) / Math.max(1, TANK_COUNT - 1),
         side: index % 2 ? 1 : -1,
-        fired: false
+        shotsFired: 0,
+        followUpIn: 0
       };
     });
   }
@@ -606,12 +611,20 @@
   function updateTanks(dt) {
     if (!playing()) return;
     tanks.forEach(function (tank) {
-      var point = tankPoint(tank);
-      if (tank.fired || tank.x < distance || point.y - 80 * point.scale < VIEW_H * .2) return;
+      if (tank.shotsFired >= TANK_SHOTS) return;
+      if (tank.shotsFired) {
+        tank.followUpIn -= dt;
+        if (tank.followUpIn > 1e-9) return;
+      } else {
+        var point = tankPoint(tank);
+        if (tank.x < distance || point.y - 80 * point.scale < VIEW_H * .2) return;
+      }
       var impactX = placeGapX(distance + Math.max(12, speed * SHELL_TIME), .2);
-      if (impactX < 0) return;
-      tank.fired = true;
-      tankShots.push({ x: impactX, w: .2, lane: occupiedLane(), tank: tank, t: 0, evaded: false });
+      if (impactX < 0 && TANK_SHOTS === 1) return;
+      tank.shotsFired++;
+      tank.followUpIn = TANK_SHOT_INTERVAL;
+      // Level 2 volleys can still target the cart without reserving a clear rail segment.
+      tankShots.push({ x: impactX, w: .2, lane: occupiedLane(), tank: tank, t: 0, evaded: false, damagesTrack: impactX >= 0 });
       say('Tank fired. Change tracks to dodge its shell.');
     });
     for (var index = tankShots.length - 1; index >= 0; index--) {
