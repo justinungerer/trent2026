@@ -38,6 +38,7 @@
   var SPEED_MULT = 1.5;
   var FLIP_INTERVAL = 2.5 / 1.2;
   var FLIP_RATE_VARIATION = rescue ? 0.35 : 0.2;
+  var SABOTEUR_MOVE_TIME = 0.42;
   var RECOVERY_TIME = rescue ? 0 : 0.9;
   var SABOTEUR_AFTER = rescue ? 0 : 2;
   var PATTERNS = [
@@ -52,7 +53,7 @@
     document.getElementById('tower-stage-title').textContent = inspection ? 'Clear the Points' : 'Send the Rescue Train';
     document.getElementById('tower-goal').textContent = inspection
       ? 'Use three switches to match the board before each inspection train reaches the junction. Clear both incoming trains.'
-      : 'Guide seven rescue trains through the junction. Match all five switches to each train’s board. The Nazi opponent starts changing switches during the first train’s approach.';
+      : 'Guide seven rescue trains through the junction. Match all five switches to each train’s board. Two saboteurs start moving during the first train’s approach. Either one may flip a switch after moving.';
     document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'All seven rescue trains are away';
     PATTERNS = inspection ? [[0, 1, 1, 0, 0], [1, 0, 0, 1, 0]]
       : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0], [0, 0, 1, 1, 0],
@@ -143,11 +144,14 @@
   var victorySent = false;
   var rotateHold = false;
   var lastFrame = 0;
-  var flipTimer = 0;
-  var soldierX = 1180;
-  var soldierTarget = 1180;
-  var soldierFace = -1;
-  var soldierFlipT = 1;
+  var soldiers = newSoldiers();
+
+  function newSoldiers() {
+    if (inspection) return [];
+    return (rescue ? [1180, 100] : [1180]).map(function (x, index) {
+      return { x: x, target: x, face: index ? 1 : -1, flipT: 1, timer: 0, lever: -1, depth: index * -16 };
+    });
+  }
 
   var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -276,11 +280,7 @@
     trentX = LEVER_X[0] - 74;
     pullT = 1;
     shake = 0;
-    flipTimer = 0;
-    soldierX = 1180;
-    soldierTarget = 1180;
-    soldierFace = -1;
-    soldierFlipT = 1;
+    soldiers = newSoldiers();
     refreshLevers();
   }
 
@@ -290,11 +290,14 @@
     switchGrace = 0;
     blastT = 0;
     blastParts = [];
-    flipTimer = 0;
-    if (departures >= SABOTEUR_AFTER && soldierTarget > 1100) {
-      soldierTarget = LEVER_X[LEVER_X.length - 1] + 52;
-      soldierFace = -1;
-    }
+    soldiers.forEach(function (soldier) {
+      soldier.timer = 0;
+      soldier.lever = -1;
+      if (!rescue && departures >= SABOTEUR_AFTER && soldier.target > 1100) {
+        soldier.target = LEVER_X[LEVER_X.length - 1] + 52;
+        soldier.face = -1;
+      }
+    });
     refreshLevers();
     state = 'approach';
   }
@@ -425,36 +428,54 @@
     return FLIP_INTERVAL / rateMultiplier;
   }
 
-  /* Level 3 sabotages from the first approach; level 2 starts after two departures.
-     The lever changes on that clock. The figure only shows who did it. */
-  function updateSoldier(dt) {
-    var index;
-    var mark;
-    if (inspection || departures < SABOTEUR_AFTER) return;
+  function moveSoldierToLever(soldier, index) {
+    soldier.target = LEVER_X[index] + 52;
+    var distance = soldier.target - soldier.x;
+    soldier.face = rescue && distance > 0 ? 1 : -1;
+    soldier.x = soldier.target - clamp(distance, -160, 160);
+  }
+
+  function flipLever(soldier, index) {
+    levers[index] = 1 - levers[index];
+    soldier.flipT = 0;
+    switchGrace = Math.max(switchGrace, RECOVERY_TIME);
+    refreshLevers();
+    say('A soldier threw lever ' + (index + 1) + '.');
+  }
+
+  function updateSoldier(soldier, dt) {
+    if (departures < SABOTEUR_AFTER) return;
     if (state === 'approach' && trainX + TRAIN_W < SWITCH_X) {
-      if (flipTimer <= 0) flipTimer = nextFlipInterval();
-      flipTimer -= dt;
-      if (flipTimer <= 0) {
-        flipTimer += nextFlipInterval();
-        index = Math.floor(Math.random() * LEVER_X.length);
-        levers[index] = levers[index] === 1 ? 0 : 1;
-        soldierTarget = LEVER_X[index] + 52;
-        soldierFace = -1;
-        soldierFlipT = 0;
-        switchGrace = Math.max(switchGrace, RECOVERY_TIME);
-        mark = soldierTarget - soldierX;
-        if (mark > 160) soldierX = soldierTarget - 160;
-        else if (mark < -160) soldierX = soldierTarget + 160;
-        refreshLevers();
-        say('A soldier threw lever ' + (index + 1) + '.');
+      if (soldier.timer <= 0) soldier.timer = nextFlipInterval();
+      soldier.timer -= dt;
+      if (rescue && soldier.timer <= SABOTEUR_MOVE_TIME && soldier.lever < 0) {
+        var candidates = LEVER_X.map(function (_, index) { return index; }).filter(function (index) {
+          return LEVER_X[index] + 52 !== soldier.target && !soldiers.some(function (other) {
+            return other !== soldier && other.lever === index;
+          });
+        });
+        soldier.lever = candidates[Math.floor(Math.random() * candidates.length)];
+        moveSoldierToLever(soldier, soldier.lever);
+      }
+      if (soldier.timer <= 0) {
+        soldier.timer += nextFlipInterval();
+        if (rescue) {
+          soldier.x = soldier.target;
+          if (Math.random() < 0.5) flipLever(soldier, soldier.lever);
+          soldier.lever = -1;
+        } else {
+          var index = Math.floor(Math.random() * LEVER_X.length);
+          moveSoldierToLever(soldier, index);
+          flipLever(soldier, index);
+        }
       }
     }
     if (reduceMotion()) {
-      soldierX = soldierTarget;
-      soldierFlipT = 1;
+      soldier.x = soldier.target;
+      soldier.flipT = 1;
     } else {
-      soldierX += (soldierTarget - soldierX) * Math.min(1, dt * 8);
-      if (soldierFlipT < 1) soldierFlipT = Math.min(1, soldierFlipT + dt / 0.4);
+      soldier.x += (soldier.target - soldier.x) * Math.min(1, dt * 8);
+      if (soldier.flipT < 1) soldier.flipT = Math.min(1, soldier.flipT + dt / 0.4);
     }
   }
 
@@ -682,25 +703,26 @@
   }
 
   /* Plain field-gray cartoon soldier. No badge, armband, eagle, or rune. */
-  function drawSoldier() {
+  function drawSoldier(soldier) {
     var walking;
     var stride;
     var bob;
     var swing;
-    if (inspection || state === 'title') return;
-    walking = Math.abs(soldierTarget - soldierX) > 8 && !reduceMotion();
+    if (state === 'title') return;
+    var ground = GROUND_Y + soldier.depth;
+    walking = Math.abs(soldier.target - soldier.x) > 8 && !reduceMotion();
     stride = walking ? Math.sin(visualTime * 11) : 0;
     bob = walking ? Math.abs(stride) * 2 : 0;
-    swing = Math.sin(Math.PI * clamp(soldierFlipT, 0, 1));
+    swing = Math.sin(Math.PI * clamp(soldier.flipT, 0, 1));
     if (imageReady(paintedSoldier)) {
-      var frame = soldierFlipT < 1 ? 3 : walking ? [0, 1, 0, 2][Math.floor(visualTime * 9) % 4] : 0;
+      var frame = soldier.flipT < 1 ? 3 : walking ? [0, 1, 0, 2][Math.floor(visualTime * 9) % 4] : 0;
       var sw = paintedSoldier.naturalWidth / 2;
       var sh = paintedSoldier.naturalHeight / 2;
       var height = 208;
       var width = height * sw / sh;
       ctx.save();
-      ctx.translate(soldierX, GROUND_Y - bob);
-      if (soldierFace > 0) ctx.scale(-1, 1);
+      ctx.translate(soldier.x, ground - bob);
+      if (soldier.face > 0) ctx.scale(-1, 1);
       ctx.drawImage(paintedSoldier, frame % 2 * sw, Math.floor(frame / 2) * sh, sw, sh,
         -width / 2, -height * .938, width, height);
       ctx.restore();
@@ -709,12 +731,12 @@
 
     ctx.fillStyle = 'rgba(20, 32, 48, 0.28)';
     ctx.beginPath();
-    ctx.ellipse(soldierX, GROUND_Y + 4, 30, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(soldier.x, ground + 4, 30, 6, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
-    ctx.translate(soldierX, GROUND_Y - bob);
-    ctx.scale(soldierFace * 1.35, 1.35);
+    ctx.translate(soldier.x, ground - bob);
+    ctx.scale(soldier.face * 1.35, 1.35);
 
     ctx.strokeStyle = '#2c332c';
     ctx.lineWidth = 7;
@@ -839,7 +861,7 @@
     drawBlast();
     for (i = 0; i < LEVER_X.length; i++) drawLever(i);
     drawTrent();
-    drawSoldier();
+    soldiers.forEach(drawSoldier);
     drawSnow();
   }
 
@@ -908,7 +930,7 @@
       updateTrent(dt);
     }
     if (playingMotion()) updateObjective(dt);
-    if (state !== 'pause') updateSoldier(dt);
+    if (state !== 'pause') soldiers.forEach(function (soldier) { updateSoldier(soldier, dt); });
     if (state !== 'pause' && shake > 0) shake = Math.max(0, shake - dt * 26);
     renderHud();
     render();
