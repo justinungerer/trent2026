@@ -282,6 +282,7 @@ function spawn() {
   const cols = Math.min(6, count);
   const span = (W - 80) / (cols - 1);
   for (let i = 0; i < count; i++) {
+    if (workshop && (next * count + i + 1) % 5 === 0) continue;
     const col = i % cols;
     const row = Math.floor(i / cols);
     const x = 40 + col * span;
