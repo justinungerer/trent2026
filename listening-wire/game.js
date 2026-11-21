@@ -63,7 +63,7 @@
     document.getElementById('corridor-stage-title').textContent = 'Rudolph’s Cell';
     document.getElementById('corridor-stage-goal').textContent =
       'Find the cell key, then walk up to the barred cell to free Rudolph. Once he is free, reach the green exit.';
-    document.getElementById('map-objectives').textContent = 'K = cell key · R = Rudolph’s cell · Green marker = complete';
+    document.getElementById('map-objectives').textContent = 'K = cell key · R = Rudolph’s cell · E = exit · Green = complete or unlocked';
     document.getElementById('wire-win-title').textContent = 'Rudolph is free';
   } else {
     dispatchImg.src = '../chapter-2/art/mail.webp';
@@ -71,7 +71,7 @@
     document.getElementById('corridor-stage-goal').textContent = listening
       ? 'Recover the coded dispatch in the listening wing, then reach the green exit.'
       : 'Recover all three coded dispatches, then reach the green exit.';
-    document.getElementById('map-objectives').textContent = 'D = dispatch · Green marker = collected';
+    document.getElementById('map-objectives').textContent = 'D = dispatch · E = exit · Green = collected or unlocked';
     document.getElementById('wire-win-title').textContent = 'Dispatches secured';
   }
 
@@ -523,10 +523,6 @@
         g.fillStyle = '#66c884';
         g.fillRect(nx * size, ny * size, size, size);
       });
-      if (MAP[y][x] === 2) {
-        g.fillStyle = '#368f54';
-        g.fillRect(x * size + 4, y * size + 4, size - 8, size - 8);
-      }
     });
     var activeObjectives = pickups.filter(function (p) { return p.kind === 'dispatch' || p.kind === 'key'; });
     LEVEL.pickups.forEach(function (p) {
@@ -535,6 +531,7 @@
       drawObjectiveMarker(g, size, p, p.kind === 'key' ? 'K' : 'D', p.kind === 'key' ? '#ffdc75' : '#d9acff', collected);
     });
     if (LEVEL.cell) drawObjectiveMarker(g, size, LEVEL.cell, 'R', '#81e9ff', rudolphFreed);
+    drawObjectiveMarker(g, size, { x: EXIT_X, y: EXIT_Y }, 'E', '#ffb080', exitUnlocked());
     g.save();
     g.translate((Math.floor(player.x) + 0.5) * size, (Math.floor(player.y) + 0.5) * size);
     g.rotate(Math.atan2(player.dirY, player.dirX));
@@ -1286,6 +1283,10 @@
     showToast('Rudolph is free! Head to the green exit.');
   }
 
+  function exitUnlocked() {
+    return gatehouse ? rudolphFreed : dispatchesFound === dispatchesNeeded;
+  }
+
   function atExit() {
     var ex = player.x | 0;
     var ey = player.y | 0;
@@ -1341,7 +1342,7 @@
       if (bursts[i].life <= 0) bursts.splice(i, 1);
     }
     if (state === 'play' && atExit()) {
-      if (gatehouse ? rudolphFreed : dispatchesFound === dispatchesNeeded) win();
+      if (exitUnlocked()) win();
       else if (toastT <= 0) {
         showToast(gatehouse ? 'Exit locked. Free Rudolph first.' :
           'Exit locked. Dispatches: ' + dispatchesFound + '/' + dispatchesNeeded + '.');

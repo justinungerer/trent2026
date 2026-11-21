@@ -56,7 +56,7 @@
 
     <section id="map-sheet" class="sheet map-sheet" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
       <header><h2 id="map-title">Explored passages</h2><button type="button" id="close-map">Return to game</button></header>
-      <canvas id="maze-map" aria-label="Maze map with objective markers, explored passages and walls, and a red player arrow. Light green marks unexplored openings. Dark green marks the exit once visited."></canvas>
+      <canvas id="maze-map" aria-label="Maze map with objective markers, explored passages and walls, and a red player arrow. Light green marks unexplored openings. The exit appears from the start and turns green when unlocked."></canvas>
       <p id="map-objectives"></p>
     </section>
     <div id="pause-sheet" class="sheet" hidden>
@@ -96,7 +96,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rudolph-rescue"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=visible-exits"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

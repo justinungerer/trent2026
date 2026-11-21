@@ -20,7 +20,7 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 ## Map
 
-The Listening Post is 21 × 17. The Corridor uses the former Listening Post layout (25 × 19), and Rudolph’s Cell uses the former Corridor layout (33 × 25). Each successive maze has more junctions and guards. The map is available from the start and initially covered in fog. It reveals passages and bordering walls as Trent enters new tiles. Dispatches, the cell key, and Rudolph’s cell are marked from the start. Completed markers turn green. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
+The Listening Post is 21 × 17. The Corridor uses the former Listening Post layout (25 × 19), and Rudolph’s Cell uses the former Corridor layout (33 × 25). Each successive maze has more junctions and guards. The map is available from the start and initially covered in fog. It reveals passages and bordering walls as Trent enters new tiles. Dispatches, the cell key, Rudolph’s cell, and the exit are marked from the start. Completed objectives and unlocked exits turn green. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
 
 ## Controls
 
