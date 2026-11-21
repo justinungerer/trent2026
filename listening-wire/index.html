@@ -48,7 +48,7 @@
         <h1 id="corridor-stage-title">The listening wire</h1>
         <p id="corridor-stage-goal">Trent is in the enemy wire room. The listening post is the green door at the end of the maze.</p>
         <p>An exclamation mark shows when a soldier has spotted you. Watch for bright incoming shots. Health and spare bullets are on the floor. At full health, kits become armor and add one point, up to three. Armor takes damage before health. A fallen soldier leaves one bullet.</p>
-        <p>Tap Map above Shoot any time to pause and view the maze. Fog covers the map at the start. Enter a new tile to reveal the passage and nearby walls. Green tiles mark unexplored openings.</p>
+        <p>Tap Map above Shoot any time to pause and view the maze. Objective markers are visible from the start. Fog covers the routes. Enter a new tile to reveal the passage and nearby walls. Green tiles mark unexplored openings.</p>
         <p id="loadout">Three life points, and 10 bullets.</p>
         <button type="button" id="start">Into the wire room</button>
       </div>
@@ -56,8 +56,8 @@
 
     <section id="map-sheet" class="sheet map-sheet" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden>
       <header><h2 id="map-title">Explored passages</h2><button type="button" id="close-map">Return to game</button></header>
-      <canvas id="maze-map" aria-label="Explored maze. Pale passages, stone walls, and a red player arrow. Light green tiles mark unexplored openings. A dark green square marks the exit once visited."></canvas>
-      <p>Red arrow: you · Green: discovered exit · Dark: unexplored</p>
+      <canvas id="maze-map" aria-label="Maze map with objective markers, explored passages and walls, and a red player arrow. Light green marks unexplored openings. Dark green marks the exit once visited."></canvas>
+      <p id="map-objectives"></p>
     </section>
     <div id="pause-sheet" class="sheet" hidden>
       <div class="card">
@@ -71,7 +71,7 @@
     <div id="win-sheet" class="sheet" hidden>
       <div class="card">
         <p class="kicker">The listening wire</p>
-        <h1>The listening post</h1>
+        <h1 id="wire-win-title">The listening post</h1>
         <p>The green door is open.</p>
         <p id="win-time">Through in 0 seconds.</p>
         <button type="button" id="retry">Walk it again</button>
@@ -96,7 +96,7 @@
     <p id="status" class="sr" role="status"></p>
   </main>
   <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=simpler-maze-progression"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rudolph-rescue"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

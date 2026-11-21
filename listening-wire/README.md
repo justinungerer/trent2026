@@ -20,7 +20,7 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 ## Map
 
-The Listening Post is 21 × 17. The Corridor uses the former Listening Post layout (25 × 19), and Gatehouse Code uses the former Corridor layout (33 × 25). Each successive maze has more junctions and guards. The map is available from the start and initially covered in fog. It reveals passages and bordering walls as Trent enters new tiles. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
+The Listening Post is 21 × 17. The Corridor uses the former Listening Post layout (25 × 19), and Rudolph’s Cell uses the former Corridor layout (33 × 25). Each successive maze has more junctions and guards. The map is available from the start and initially covered in fog. It reveals passages and bordering walls as Trent enters new tiles. Dispatches, the cell key, and Rudolph’s cell are marked from the start. Completed markers turn green. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
 
 ## Controls
 
@@ -49,7 +49,7 @@ With bullets left, a soldier in the way shoves Trent back. With an empty gun, Tr
 
 ## Win
 
-Walk up to the green door. Reaching the listening post wins.
+Recover one dispatch in The Listening Post and three in The Corridor. In Rudolph’s Cell, collect the painted key and approach the barred cell to open it and free Rudolph. The green exit stays locked until the level’s objectives are complete.
 
 ## Victory event
 

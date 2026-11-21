@@ -163,11 +163,12 @@ window.TrentLevels = {
     null,
     {
       "id": "gatehouse-code",
-      "title": "Gatehouse Code",
+      "title": "Rudolph’s Cell",
+      "videoVersion": "rudolph-rescue",
       "lines": [
-        "The guard captain had split the gatehouse code between two wings.",
-        "One half went to the records room. A runner took the other.",
-        "Either route put Trent within earshot of the guards at the exit."
+        "At the gatehouse, Trent learned that the guards had locked Rudolph in a cell.",
+        "An informant slipped him a note showing where the guards kept the key.",
+        "Trent tucked the note away. He wasn’t leaving the gatehouse without Rudolph."
       ]
     }
   ],

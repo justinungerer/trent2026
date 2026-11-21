@@ -42,21 +42,37 @@
       { width: 25, height: 19, seed: 1944, shortcuts: 6, baseGuards: 26 };
   var MAP_W = maze.width;
   var MAP_H = maze.height;
-  var codeNeeded = listening ? 1 : gatehouse ? 2 : 0;
-  var codeFound = 0;
+  var dispatchesNeeded = gatehouse ? 0 : listening ? 1 : 3;
+  var dispatchesFound = 0;
+  var hasCellKey = false;
+  var rudolphFreed = false;
+  var closedCellTex = null;
+  var openCellTex = null;
   var armorImg = new Image();
   armorImg.src = 'art/painted-body-armor.webp';
-  var codeImg = new Image();
+  var dispatchImg = new Image();
+  var cellKeyImg = new Image();
   var medkitImg = new Image();
   var rifleImg = new Image();
   medkitImg.src = 'art/painted-medkit.webp';
   rifleImg.src = 'art/painted-rifle.webp';
-  if (codeNeeded) {
-    codeImg.src = '../chapter-2/art/mail.webp';
-    document.getElementById('corridor-stage-title').textContent = listening ? 'The Listening Post' : 'Gatehouse Code';
+  if (gatehouse) {
+    cellKeyImg.src = '../shelf-escape/art/props/depot-key.webp';
+    loadTex('art/rudolph-cell-closed.webp', function (tex) { closedCellTex = tex; });
+    loadTex('art/rudolph-cell-open.webp', function (tex) { openCellTex = tex; });
+    document.getElementById('corridor-stage-title').textContent = 'Rudolph’s Cell';
+    document.getElementById('corridor-stage-goal').textContent =
+      'Find the cell key, then walk up to the barred cell to free Rudolph. Once he is free, reach the green exit.';
+    document.getElementById('map-objectives').textContent = 'K = cell key · R = Rudolph’s cell · Green marker = complete';
+    document.getElementById('wire-win-title').textContent = 'Rudolph is free';
+  } else {
+    dispatchImg.src = '../chapter-2/art/mail.webp';
+    document.getElementById('corridor-stage-title').textContent = listening ? 'The Listening Post' : 'The Corridor';
     document.getElementById('corridor-stage-goal').textContent = listening
       ? 'Recover the coded dispatch in the listening wing, then reach the green exit.'
-      : 'Recover both code slips in either order and use them at the green gatehouse exit.';
+      : 'Recover all three coded dispatches, then reach the green exit.';
+    document.getElementById('map-objectives').textContent = 'D = dispatch · Green marker = collected';
+    document.getElementById('wire-win-title').textContent = 'Dispatches secured';
   }
 
   var KINDS = [
@@ -367,6 +383,7 @@
     var pickups = [];
     var boxes;
     var kits;
+    var cell = null;
     var i;
     var faceX = 1;
     var faceY = 0;
@@ -389,13 +406,15 @@
       }
     }
     cells.sort(function (a, b) { return a.d - b.d || a.x - b.x; });
-    if (codeNeeded) {
-      var codeCells = spreadTake(cells, function (cell) {
+    if (gatehouse) {
+      cell = placeRudolphCell(map, cells, best, placed, pickups);
+    } else {
+      var dispatchCells = spreadTake(cells, function (cell) {
         return cell.d > best * 0.3 && cell.d < best * 0.85;
-      }, codeNeeded, 9, placed);
-      codeCells.forEach(function (cell) {
+      }, dispatchesNeeded, 9, placed);
+      dispatchCells.forEach(function (cell) {
         placed.push(cell);
-        pickups.push({ x: cell.x, y: cell.y, kind: 'code', n: 1, bob: 0 });
+        pickups.push({ x: cell.x, y: cell.y, kind: 'dispatch', bob: 0 });
       });
     }
     var startingAmmo = spreadTake(cells, function (c) { return c.d >= 4 && c.d <= 8; }, 2, 2, placed);
@@ -427,11 +446,41 @@
       exitY: ey + 0.5,
       faceX: faceX,
       faceY: faceY,
+      cell: cell,
       enemies: enemies.map(function (c, index) {
         return { x: c.x, y: c.y, kind: index % 3, bob: index * 0.73 };
       }),
       pickups: pickups
     };
+  }
+
+  function placeRudolphCell(map, cells, farthest, placed, pickups) {
+    // Put the cell at a dead end and paint the wall opposite the approach.
+    var candidates = cells.filter(function (cell) {
+      return cell.d > farthest * 0.5 && openNeighbors(map, cell).length === 1;
+    });
+    var spot = candidates.reduce(function (closest, candidate) {
+      return Math.abs(candidate.d - farthest * 0.7) < Math.abs(closest.d - farthest * 0.7) ? candidate : closest;
+    });
+    spot.used = true;
+    placed.push(spot);
+    var approach = openNeighbors(map, spot)[0];
+    var key = spreadTake(cells, function (cell) {
+      return cell.d >= farthest * 0.23 && cell.d <= farthest * 0.47;
+    }, 1, 5, placed)[0];
+    placed.push(key);
+    pickups.push({ x: key.x, y: key.y, kind: 'key', bob: 0 });
+    return {
+      x: spot.x, y: spot.y,
+      wallX: Math.floor(spot.x) - approach[0],
+      wallY: Math.floor(spot.y) - approach[1]
+    };
+  }
+
+  function openNeighbors(map, cell) {
+    return PATROL_STEPS.filter(function (step) {
+      return map[Math.floor(cell.y) + step[1]][Math.floor(cell.x) + step[0]] !== 1;
+    });
   }
 
   function tileVariant(x, y) {
@@ -479,12 +528,31 @@
         g.fillRect(x * size + 4, y * size + 4, size - 8, size - 8);
       }
     });
+    var activeObjectives = pickups.filter(function (p) { return p.kind === 'dispatch' || p.kind === 'key'; });
+    LEVEL.pickups.forEach(function (p) {
+      if (p.kind !== 'dispatch' && p.kind !== 'key') return;
+      var collected = !activeObjectives.some(function (other) { return other.x === p.x && other.y === p.y; });
+      drawObjectiveMarker(g, size, p, p.kind === 'key' ? 'K' : 'D', p.kind === 'key' ? '#ffdc75' : '#d9acff', collected);
+    });
+    if (LEVEL.cell) drawObjectiveMarker(g, size, LEVEL.cell, 'R', '#81e9ff', rudolphFreed);
     g.save();
     g.translate((Math.floor(player.x) + 0.5) * size, (Math.floor(player.y) + 0.5) * size);
     g.rotate(Math.atan2(player.dirY, player.dirX));
     g.fillStyle = '#e63131';
     g.beginPath(); g.moveTo(10, 0); g.lineTo(-7, -7); g.lineTo(-7, 7); g.closePath(); g.fill();
     g.restore();
+  }
+
+  function drawObjectiveMarker(g, size, point, label, color, complete) {
+    var x = Math.floor(point.x) * size;
+    var y = Math.floor(point.y) * size;
+    g.fillStyle = complete ? '#bde9bb' : color;
+    g.fillRect(x + 1, y + 1, size - 2, size - 2);
+    g.fillStyle = '#17212a';
+    g.font = 'bold 18px system-ui';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(label, x + size / 2, y + size / 2);
   }
 
   function openMap() {
@@ -743,7 +811,9 @@
   }
 
   function beginRun() {
-    codeFound = 0;
+    dispatchesFound = 0;
+    hasCellKey = false;
+    rudolphFreed = false;
     discovered.clear();
     mapSheet.hidden = true;
     resetPlayer();
@@ -814,7 +884,7 @@
     releasePad();
     winTimeEl.textContent = 'Through in ' + seconds + ' seconds.';
     winSheet.hidden = false;
-    say('The listening post. ' + seconds + ' seconds.');
+    say((gatehouse ? 'Rudolph is free. ' : 'Dispatches secured. ') + seconds + ' seconds.');
     if (!victorySent) {
       victorySent = true;
       window.dispatchEvent(new CustomEvent('listening-wire:complete', {
@@ -1098,10 +1168,16 @@
     for (i = pickups.length - 1; i >= 0; i--) {
       p = pickups[i];
       if (Math.hypot(p.x - player.x, p.y - player.y) > 0.46) continue;
-      if (p.kind === 'code') {
+      if (p.kind === 'dispatch') {
         pickups.splice(i, 1);
-        codeFound++;
-        showToast('Code slips: ' + codeFound + '/' + codeNeeded);
+        dispatchesFound++;
+        showToast('Dispatches: ' + dispatchesFound + '/' + dispatchesNeeded + '.');
+        continue;
+      }
+      if (p.kind === 'key') {
+        pickups.splice(i, 1);
+        hasCellKey = true;
+        showToast('Cell key found. Follow the map marker to Rudolph.');
         continue;
       }
       if (p.kind === 'health') {
@@ -1198,6 +1274,18 @@
     hintEl.hidden = true;
   }
 
+  function checkRudolphCell() {
+    var cell = LEVEL.cell;
+    if (!cell || rudolphFreed) return;
+    if (Math.hypot(player.x - cell.x, player.y - cell.y) > 0.46) return;
+    if (!hasCellKey) {
+      if (toastT <= 0) showToast('Rudolph’s cell is locked. Find the key marked on the map.');
+      return;
+    }
+    rudolphFreed = true;
+    showToast('Rudolph is free! Head to the green exit.');
+  }
+
   function atExit() {
     var ex = player.x | 0;
     var ey = player.y | 0;
@@ -1244,7 +1332,7 @@
     removeDead();
     if (state !== 'play') return;
     collectPickups();
-    if (state !== 'play') return;
+    checkRudolphCell();
     updateEnemies(dt);
     if (state !== 'play') return;
     updateShots(dt);
@@ -1253,8 +1341,11 @@
       if (bursts[i].life <= 0) bursts.splice(i, 1);
     }
     if (state === 'play' && atExit()) {
-      if (codeFound === codeNeeded) win();
-      else if (toastT <= 0) showToast('Exit locked. Code slips: ' + codeFound + '/' + codeNeeded);
+      if (gatehouse ? rudolphFreed : dispatchesFound === dispatchesNeeded) win();
+      else if (toastT <= 0) {
+        showToast(gatehouse ? 'Exit locked. Free Rudolph first.' :
+          'Exit locked. Dispatches: ' + dispatchesFound + '/' + dispatchesNeeded + '.');
+      }
     }
   }
 
@@ -1386,12 +1477,19 @@
       if (fog > 0.4) fog = 0.4;
       texStep = 1 / lineH;
       texPos = (drawStart - horizon + lineH / 2) * texStep;
+      var wall = wallTiles[tileVariant(mapX, mapY)] || wallTex;
+      var cell = LEVEL.cell;
+      if (cell && mapX === cell.wallX && mapY === cell.wallY &&
+        mapX - (side === 0 ? stepXi : 0) === Math.floor(cell.x) &&
+        mapY - (side === 1 ? stepYi : 0) === Math.floor(cell.y)) {
+        wall = (rudolphFreed ? openCellTex : closedCellTex) || wall;
+      }
       for (y = drawStart; y <= drawEnd; y++) {
         v = texPos;
         if (v < 0) v = 0;
         if (v > 0.999) v = 0.999;
         texPos += texStep;
-        sample(wallTiles[tileVariant(mapX, mapY)] || wallTex, wallX, v, shade, fog, (y * BUF_W + x) * 4);
+        sample(wall, wallX, v, shade, fog, (y * BUF_W + x) * 4);
       }
     }
     bctx.putImageData(frame, 0, 0);
@@ -1478,7 +1576,8 @@
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
       list.push({
-        img: p.kind === 'code' && codeImg.naturalWidth ? codeImg :
+        img: p.kind === 'dispatch' ? dispatchImg :
+          p.kind === 'key' ? cellKeyImg :
           p.kind === 'health' ? (health === MAX_HEALTH && armorImg.naturalWidth ? armorImg : medkitImg.naturalWidth ? medkitImg : kitImg) :
             (bulletImg.naturalWidth ? bulletImg : bulletFallback),
         x: p.x,
