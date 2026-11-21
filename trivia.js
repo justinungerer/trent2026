@@ -6,8 +6,9 @@
 (function (root) {
   var HIDE_GRACE_MS = 700;
   var PER_CHAPTER = 10;
+  var PICTURES_PER_CHAPTER = 2;
   var ELF_USES = 2;
-  var BANK_URL = './WWII-TRIVIA-BANK.md';
+  var BANK_URL = './WWII-TRIVIA-BANK.md?v=equipment-pictures-1';
 
   var FAIL_CARDS = [
     { kicker: 'Caught', title: 'Gift-wrapped', copy: 'A patrol finds Trent under the table and uses the good ribbon. The tag reads DO NOT OPEN UNTIL FURTHER NOTICE.' },
@@ -62,6 +63,7 @@
     var tier = '';
     var current = null;
     var questions = [];
+    var ids = Object.create(null);
     var i;
     var line;
     var match;
@@ -75,11 +77,33 @@
       if (!current.id || !current.prompt || current.choices.length !== 4 || !current.correct || !current.sourceUrl) {
         throw new Error('Incomplete ' + (current.id || 'question'));
       }
+      if (current.choices.map(function (choice) { return choice.letter; }).sort().join('') !== 'ABCD') {
+        throw new Error('Invalid choices ' + current.id);
+      }
+      if (ids[current.id]) throw new Error('Duplicate question ' + current.id);
+      ids[current.id] = true;
+      if (Boolean(current.imagePath) !== Boolean(current.imageAlt) ||
+          Boolean(current.imagePath) !== Boolean(current.imageCreditUrl) ||
+          Boolean(current.imagePath) !== Boolean(current.imageCreditTitle)) {
+        throw new Error('Incomplete picture information ' + current.id);
+      }
+      if (Boolean(current.imageLicenseTitle) !== Boolean(current.imageLicenseUrl) ||
+          (current.imageLicenseUrl && !current.imagePath)) {
+        throw new Error('Incomplete picture license ' + current.id);
+      }
+      if (current.sources.some(function (source) { return !source.title || !researchUrl(source.url); }) ||
+          (current.imagePath && !researchUrl(current.imageCreditUrl)) ||
+          (current.imageLicenseUrl && !researchUrl(current.imageLicenseUrl))) {
+        throw new Error('Invalid source URL ' + current.id);
+      }
       for (n = 0; n < current.choices.length; n++) {
         note = current.notes[current.choices[n].letter];
         if (!note || !note.text) throw new Error('Missing explanation ' + current.id);
         current.choices[n].explanation = note.text;
         current.choices[n].correct = current.choices[n].letter === current.correct;
+        if ((note.verdict === 'Correct') !== current.choices[n].correct) {
+          throw new Error('Explanation mismatch ' + current.id);
+        }
       }
       if (letters[current.correct] === undefined) throw new Error('Bad key ' + current.id);
       if (current.choices.filter(function (choice) { return choice.correct; }).length !== 1) {
@@ -97,7 +121,7 @@
         tier = match[1].trim();
         continue;
       }
-      match = line.match(/^### (WWII-\d+)\s+[—–-]\s+(.+)$/);
+      match = line.match(/^### (WWII-[A-Z]*\d+)\s+[—–-]\s+(.+)$/);
       if (match) {
         finish();
         current = {
@@ -109,16 +133,45 @@
           notes: {},
           correct: '',
           sourceTitle: '',
-          sourceUrl: ''
+          sourceUrl: '',
+          sources: [],
+          imagePath: '',
+          imageAlt: '',
+          imageCreditTitle: '',
+          imageCreditUrl: '',
+          imageLicenseTitle: '',
+          imageLicenseUrl: ''
         };
         continue;
       }
+      if (/^### WWII-/.test(line)) throw new Error('Invalid question heading: ' + line);
       if (!current) continue;
       match = line.match(/^\*\*Topic:\*\*\s+(.+)$/);
       if (match) {
         current.topic = match[1].trim();
         continue;
       }
+      match = line.match(/^\*\*Image:\*\*\s+!\[([^\]]+)\]\((\.\/assets\/quiz-images\/[a-zA-Z0-9._-]+\.(?:webp|jpg|jpeg|png))\)\s*$/);
+      if (match) {
+        current.imageAlt = match[1].trim();
+        current.imagePath = match[2];
+        continue;
+      }
+      if (/^\*\*Image:\*\*/.test(line)) throw new Error('Invalid image ' + current.id);
+      match = line.match(/^\*\*Image credit:\*\*\s+\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)\s*$/);
+      if (match) {
+        current.imageCreditTitle = match[1].trim();
+        current.imageCreditUrl = match[2];
+        continue;
+      }
+      if (/^\*\*Image credit:\*\*/.test(line)) throw new Error('Invalid image credit ' + current.id);
+      match = line.match(/^\*\*Image license:\*\*\s+\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)\s*$/);
+      if (match) {
+        current.imageLicenseTitle = match[1].trim();
+        current.imageLicenseUrl = match[2];
+        continue;
+      }
+      if (/^\*\*Image license:\*\*/.test(line)) throw new Error('Invalid image license ' + current.id);
       match = line.match(/^- ([A-D])\. (.+)$/);
       if (match && !current.correct) {
         current.choices.push({
@@ -139,10 +192,19 @@
         current.notes[match[1]] = { verdict: match[2], text: match[3].trim() };
         continue;
       }
-      match = line.match(/^\*\*Source:\*\*\s+\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)\s*$/);
-      if (match) {
-        current.sourceTitle = match[1].trim();
-        current.sourceUrl = match[2];
+      if (/^\*\*Source:\*\*/.test(line)) {
+        var sourcePattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+        var sourceText = line.replace(/^\*\*Source:\*\*\s*/, '');
+        var sourceMatch;
+        while ((sourceMatch = sourcePattern.exec(sourceText))) {
+          current.sources.push({ title: sourceMatch[1].trim(), url: sourceMatch[2] });
+        }
+        if (!current.sources.length ||
+            sourceText.replace(sourcePattern, '').replace(/\band\b|[,;\s]/g, '')) {
+          throw new Error('Invalid source ' + current.id);
+        }
+        current.sourceTitle = current.sources[0].title;
+        current.sourceUrl = current.sources[0].url;
       }
     }
     finish();
@@ -222,6 +284,9 @@
       .then(function (text) {
         var questions = parseTriviaBank(text);
         if (questions.length < PER_CHAPTER) throw new Error('The briefing is short.');
+        if (questions.filter(function (question) { return question.imagePath; }).length < PICTURES_PER_CHAPTER) {
+          throw new Error('The briefing needs more picture questions.');
+        }
         return questions;
       })
       .catch(function (error) {
@@ -322,7 +387,17 @@
       tier: question.tier,
       topic: question.topic,
       prompt: question.prompt,
+      sourceTitle: question.sourceTitle,
       sourceUrl: researchUrl(question.sourceUrl),
+      sources: question.sources.map(function (source) {
+        return { title: source.title, url: researchUrl(source.url) };
+      }),
+      imagePath: question.imagePath,
+      imageAlt: question.imageAlt,
+      imageCreditTitle: question.imageCreditTitle,
+      imageCreditUrl: researchUrl(question.imageCreditUrl),
+      imageLicenseTitle: question.imageLicenseTitle,
+      imageLicenseUrl: researchUrl(question.imageLicenseUrl),
       choices: shuffle(question.choices.map(function (choice) {
         return {
           text: choice.text,
@@ -334,7 +409,17 @@
   }
 
   function drawRound(questions) {
-    return shuffle(questions).slice(0, PER_CHAPTER).map(presentQuestion);
+    var pictures = shuffle(questions.filter(function (question) { return question.imagePath; }));
+    var selected;
+    var selectedIds;
+    var remaining;
+    if (questions.length < PER_CHAPTER || pictures.length < PICTURES_PER_CHAPTER) {
+      throw new Error('Not enough questions for a complete briefing.');
+    }
+    selected = pictures.slice(0, PICTURES_PER_CHAPTER);
+    selectedIds = selected.map(function (question) { return question.id; });
+    remaining = shuffle(questions.filter(function (question) { return selectedIds.indexOf(question.id) === -1; }));
+    return shuffle(selected.concat(remaining.slice(0, PER_CHAPTER - PICTURES_PER_CHAPTER))).map(presentQuestion);
   }
 
   function startRound(chapter, questions, hooks) {
@@ -375,13 +460,40 @@
     }
 
     function paintElf(button, question) {
-      if (question.tier === 'Easy') {
-        button.textContent = 'Elves skip the easy ones';
-        button.disabled = true;
-        return;
-      }
       button.textContent = elves > 0 ? 'Phone an Elf · ' + elves + ' left' : 'Phone an Elf · 0 left';
       button.disabled = elves < 1 || !question.sourceUrl;
+    }
+
+    function allowExternalPage() {
+      elfTicket += 1;
+      elfAllow = true;
+      (function (ticket) {
+        setTimeout(function () {
+          if (ticket !== elfTicket) return;
+          if (!pageIsHidden()) elfAllow = false;
+        }, HIDE_GRACE_MS);
+      })(elfTicket);
+    }
+
+    function picture(question, onError, onLoad) {
+      var image = document.createElement('img');
+      image.className = 'quiz-picture';
+      image.alt = question.imageAlt;
+      image.addEventListener('error', onError, { once: true });
+      if (onLoad) image.addEventListener('load', onLoad, { once: true });
+      image.src = question.imagePath;
+      return image;
+    }
+
+    function pictureError() {
+      if (!stillHere()) return;
+      disarm();
+      session += 1;
+      renderStatus('A question picture could not load. Please restart the briefing.', function () {
+        start(chapter, hooks);
+      }, function () {
+        if (typeof hooks.onHome === 'function') hooks.onHome();
+      });
     }
 
     function showReview(question, correct) {
@@ -391,6 +503,8 @@
       var prompt = document.createElement('p');
       var answers = document.createElement('ol');
       var next = document.createElement('button');
+      var credit;
+      var license;
       section.className = 'campaign-start quiz-card quiz-review';
       title.tabIndex = -1;
       title.textContent = correct ? (struck ? 'Correct on the second guess' : 'Correct') : 'Question missed';
@@ -413,7 +527,40 @@
       next.className = 'primary';
       next.textContent = index + 1 === round.length ? 'Finish quiz' : 'Next question';
       next.addEventListener('click', advance, { once: true });
-      section.append(title, summary, prompt, answers, next);
+      section.append(title, summary, prompt);
+      if (question.imagePath) {
+        section.appendChild(picture(question, pictureError));
+        credit = document.createElement('a');
+        credit.className = 'quiz-picture-credit';
+        credit.href = question.imageCreditUrl;
+        credit.target = '_blank';
+        credit.rel = 'noopener noreferrer';
+        credit.textContent = question.imageCreditTitle;
+        credit.addEventListener('click', allowExternalPage);
+        section.appendChild(credit);
+        if (question.imageLicenseUrl) {
+          license = document.createElement('a');
+          license.className = 'quiz-picture-credit';
+          license.href = question.imageLicenseUrl;
+          license.target = '_blank';
+          license.rel = 'noopener noreferrer';
+          license.textContent = question.imageLicenseTitle;
+          license.addEventListener('click', allowExternalPage);
+          section.appendChild(license);
+        }
+      }
+      section.appendChild(answers);
+      question.sources.forEach(function (item) {
+        var source = document.createElement('a');
+        source.className = 'quiz-source';
+        source.href = item.url;
+        source.target = '_blank';
+        source.rel = 'noopener noreferrer';
+        source.textContent = 'Source: ' + item.title;
+        source.addEventListener('click', allowExternalPage);
+        section.appendChild(source);
+      });
+      section.appendChild(next);
       appRoot.replaceChildren(section);
       window.scrollTo(0, 0);
       focus(title);
@@ -434,6 +581,7 @@
       var choices = document.createElement('div');
       var strikeStatus = document.createElement('p');
       var elf = document.createElement('button');
+      var image;
       var n;
       if (!stillHere()) return;
       locked = false;
@@ -454,34 +602,38 @@
       strikeStatus.className = 'quiz-strike';
       strikeStatus.setAttribute('role', 'status');
       strikeStatus.tabIndex = -1;
-      strikeStatus.textContent = 'Two guesses available.';
+      strikeStatus.textContent = question.imagePath ? 'Loading the picture…' : 'Two guesses available.';
       choices.className = 'choices';
       for (n = 0; n < question.choices.length; n++) {
         choices.appendChild(choiceButton(question, question.choices[n], n, strikeStatus));
+      }
+      if (question.imagePath) {
+        Array.prototype.forEach.call(choices.children, function (button) { button.disabled = true; });
       }
       elf.type = 'button';
       elf.className = 'secondary elf-button';
       paintElf(elf, question);
       elf.onclick = function () {
-        if (!stillHere() || locked || question.tier === 'Easy' || elves < 1 || !question.sourceUrl) return;
+        if (!stillHere() || locked || elves < 1 || !question.sourceUrl) return;
         elves -= 1;
         paintElf(elf, question);
         if (window.TrentSfx) window.TrentSfx.play('elf');
-        elfTicket += 1;
-        elfAllow = true;
+        allowExternalPage();
         window.open(question.sourceUrl, '_blank');
-        (function (ticket) {
-          setTimeout(function () {
-            if (ticket !== elfTicket) return;
-            if (!pageIsHidden()) elfAllow = false;
-          }, HIDE_GRACE_MS);
-        })(elfTicket);
       };
       meta.appendChild(kicker);
       meta.appendChild(count);
       section.appendChild(meta);
       if (topic.textContent) section.appendChild(topic);
       section.appendChild(prompt);
+      if (question.imagePath) {
+        image = picture(question, pictureError, function () {
+          if (!stillHere()) return;
+          strikeStatus.textContent = 'Two guesses available.';
+          Array.prototype.forEach.call(choices.children, function (button) { button.disabled = false; });
+        });
+        section.appendChild(image);
+      }
       section.appendChild(strikeStatus);
       section.appendChild(choices);
       section.appendChild(elf);
@@ -608,6 +760,7 @@
 
   var api = {
     parseTriviaBank: parseTriviaBank,
+    drawRound: drawRound,
     load: loadBank,
     start: start,
     abort: abort

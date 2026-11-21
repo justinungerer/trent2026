@@ -1,8 +1,10 @@
 # WWII Trivia Bank
 
-250 questions · 63 Easy · 58 Medium · 67 Hard · 62 WWII Expert
+250 questions · 75 retained · 175 new. Equipment: 128 (40 retained and 88 new); history: 122. The 175 new questions comprise 88 equipment and 87 other history questions.
 
-Each question has four options, one correct answer, an explanation for every choice, and a clickable source. Show the explanation and source after a player answers. The tier headings and stable IDs can be used to sample questions without repeats. The game should shuffle choices independently if needed.
+Each question has four options, one correct answer, an explanation for every choice, and clickable sources shown after a player answers. Stable IDs can be used to sample questions without repeats. Shuffle choices independently if needed. Picture questions use an `Image` field with a local asset and non-spoiling alt text, plus an `Image credit` and, where applicable, an `Image license` link shown after answering. See [image provenance](./assets/ART-SOURCES.md).
+
+Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-035, WWII-036, WWII-055, WWII-152, WWII-153, WWII-154, WWII-155, WWII-156, WWII-158, WWII-159, WWII-160, WWII-161, WWII-162, WWII-163, WWII-164, WWII-165, WWII-166, WWII-167, WWII-207, WWII-209, WWII-210, WWII-211, WWII-212, WWII-213, WWII-214, WWII-215, WWII-216, WWII-218, WWII-219, WWII-225, WWII-226, WWII-242, WWII-243, WWII-245, WWII-248. All other retained IDs are history. The retained original entries are unchanged.
 
 ## Easy
 
@@ -167,24 +169,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Incorrect:** The United States had only just entered the war in December 1941.
 
 **Source:** [Encyclopaedia Britannica — Yalta Conference](https://www.britannica.com/event/Yalta-Conference)
-
-### WWII-E10 — In which country was the United Nations Charter signed in June 1945?
-
-**Topic:** Diplomacy
-
-- A. Britain
-- B. France
-- C. The Soviet Union
-- D. The United States
-
-**Correct answer:** D
-
-- **A · Incorrect:** The signing conference was not held in Britain.
-- **B · Incorrect:** Paris was not the site of the 1945 signing.
-- **C · Incorrect:** The charter was not signed in the Soviet Union.
-- **D · Correct:** Delegates signed the charter in San Francisco in June 1945.
-
-**Source:** [Encyclopaedia Britannica — United Nations](https://www.britannica.com/topic/United-Nations)
 
 ### WWII-E11 — Which naval battle in June 1942 was a major American victory over Japan?
 
@@ -420,42 +404,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
 
-### WWII-E24 — What do people commonly call the Allied landings in Normandy on June 6, 1944?
-
-**Topic:** Europe timeline
-
-- A. D-Day
-- B. V-E Day
-- C. V-J Day
-- D. The Blitz
-
-**Correct answer:** A
-
-- **A · Correct:** June 6, 1944, the Normandy landing, is known as D-Day.
-- **B · Incorrect:** V-E Day marks the Allied victory in Europe in May 1945.
-- **C · Incorrect:** V-J Day marks victory over Japan.
-- **D · Incorrect:** The Blitz was Germany’s bombing of British cities in 1940–41.
-
-**Source:** [Encyclopaedia Britannica — Normandy Invasion](https://www.britannica.com/event/Normandy-Invasion)
-
-### WWII-E25 — Allied troops landed in Normandy and, in August 1944, in the south of which country?
-
-**Topic:** Operations and geography
-
-- A. Italy
-- B. Belgium
-- C. France
-- D. Germany
-
-**Correct answer:** C
-
-- **A · Incorrect:** The Allies had already landed in Sicily and mainland Italy in 1943.
-- **B · Incorrect:** Allied armies entered Belgium later, after the breakout from Normandy.
-- **C · Correct:** Both the Normandy landings and the August 1944 landings in the south were invasions of France.
-- **D · Incorrect:** Allied armies crossed into Germany later, in 1944 and 1945.
-
-**Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
-
 ### WWII-E26 — From which French port were hundreds of thousands of Allied troops evacuated in 1940?
 
 **Topic:** Europe timeline
@@ -492,42 +440,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
 
-### WWII-E28 — In which month of 1941 did Germany invade the Soviet Union?
-
-**Topic:** Europe timeline
-
-- A. June
-- B. September
-- C. April
-- D. December
-
-**Correct answer:** A
-
-- **A · Correct:** The invasion began on June 22, 1941.
-- **B · Incorrect:** September 1939 was the month Germany invaded Poland.
-- **C · Incorrect:** April 1940 was the month Germany invaded Denmark and Norway.
-- **D · Incorrect:** December 1941 was the month of Pearl Harbor and Germany’s declaration of war on the United States.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-E29 — The Battle of Kursk, in summer 1943, was fought in which country?
-
-**Topic:** Europe timeline
-
-- A. Poland
-- B. Germany
-- C. The Soviet Union
-- D. France
-
-**Correct answer:** C
-
-- **A · Incorrect:** Kursk is not in Poland.
-- **B · Incorrect:** The battle was fought far to the east of Germany.
-- **C · Correct:** Kursk was a city in the Soviet Union, and the 1943 battle was fought there.
-- **D · Incorrect:** France was the scene of the 1944 Allied landings, not Kursk.
-
-**Source:** [Encyclopaedia Britannica — Battle of Kursk](https://www.britannica.com/event/Battle-of-Kursk)
-
 ### WWII-E30 — Which capital did American bombers strike in the Doolittle Raid of April 1942?
 
 **Topic:** War in Asia and the Pacific
@@ -545,96 +457,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Correct:** On April 18, 1942, Doolittle’s bombers struck Tokyo and other Japanese cities.
 
 **Source:** [Encyclopaedia Britannica — James H. Doolittle](https://www.britannica.com/biography/James-H-Doolittle)
-
-### WWII-E31 — In which year did the German army at Stalingrad surrender?
-
-**Topic:** Chronology
-
-- A. 1942
-- B. 1943
-- C. 1944
-- D. 1945
-
-**Correct answer:** B
-
-- **A · Incorrect:** The battle began in 1942, but the surrender came the next year.
-- **B · Correct:** The last German pockets at Stalingrad surrendered in February 1943.
-- **C · Incorrect:** By 1944 the German defeat at Stalingrad was already more than a year old.
-- **D · Incorrect:** Germany itself surrendered in 1945.
-
-**Source:** [Encyclopaedia Britannica — Battle of Stalingrad](https://www.britannica.com/event/Battle-of-Stalingrad)
-
-### WWII-E32 — In which year did Soviet troops liberate Auschwitz?
-
-**Topic:** Chronology
-
-- A. 1945
-- B. 1944
-- C. 1943
-- D. 1942
-
-**Correct answer:** A
-
-- **A · Correct:** Soviet troops liberated Auschwitz on January 27, 1945.
-- **B · Incorrect:** The camp was still in German hands through 1944.
-- **C · Incorrect:** Auschwitz was operating as a killing center in 1943.
-- **D · Incorrect:** The camp was not liberated in 1942.
-
-**Source:** [U.S. Holocaust Memorial Museum — Auschwitz](https://encyclopedia.ushmm.org/content/en/article/auschwitz)
-
-### WWII-E33 — In which month of 1945 did U.S. forces land on Okinawa?
-
-**Topic:** War in Asia and the Pacific
-
-- A. January
-- B. February
-- C. April
-- D. August
-
-**Correct answer:** C
-
-- **A · Incorrect:** January 1945 was the month Soviet forces liberated Auschwitz.
-- **B · Incorrect:** U.S. Marines landed on Iwo Jima in February 1945.
-- **C · Correct:** U.S. forces landed on Okinawa on April 1, 1945.
-- **D · Incorrect:** August 1945 was the month of the atomic bombings.
-
-**Source:** [Encyclopaedia Britannica — Battle of Okinawa](https://www.britannica.com/event/Battle-of-Okinawa)
-
-### WWII-E34 — Which Allied country entered the war against Japan in August 1945?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Britain
-- B. The United States
-- C. China
-- D. The Soviet Union
-
-**Correct answer:** D
-
-- **A · Incorrect:** Britain had been at war with Japan since December 1941.
-- **B · Incorrect:** The United States had been at war with Japan since the Pearl Harbor attack.
-- **C · Incorrect:** China had been at war with Japan since the 1930s.
-- **D · Correct:** The Soviet Union declared war on Japan on August 8, 1945, and invaded Japanese-held Manchuria.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-E35 — Pearl Harbor, attacked on December 7, 1941, is in which islands, then a U.S. territory?
-
-**Topic:** War in Asia and the Pacific
-
-- A. The Philippines
-- B. Hawaii
-- C. Alaska
-- D. Guam
-
-**Correct answer:** B
-
-- **A · Incorrect:** Japan also attacked the Philippines, but Pearl Harbor is not there.
-- **B · Correct:** Pearl Harbor is on Oahu in Hawaii, which was a U.S. territory in 1941.
-- **C · Incorrect:** Alaska was a U.S. territory, but it was not the site of Pearl Harbor.
-- **D · Incorrect:** Guam was a U.S. possession that Japan seized, separate from Pearl Harbor.
-
-**Source:** [Encyclopaedia Britannica — Pearl Harbor attack](https://www.britannica.com/event/Pearl-Harbor-attack)
 
 ### WWII-E36 — Who was Britain’s prime minister during D-Day and the victory over Germany?
 
@@ -762,42 +584,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Encyclopaedia Britannica — Yalta Conference](https://www.britannica.com/event/Yalta-Conference)
 
-### WWII-E43 — Which country won the Battle of Stalingrad?
-
-**Topic:** Europe timeline
-
-- A. Germany
-- B. The Soviet Union
-- C. The United States
-- D. Britain
-
-**Correct answer:** B
-
-- **A · Incorrect:** Germany’s army at Stalingrad was surrounded and forced to surrender.
-- **B · Correct:** The Soviet Union destroyed the German army encircled at Stalingrad.
-- **C · Incorrect:** American forces did not fight at Stalingrad.
-- **D · Incorrect:** Britain’s armies were fighting in other theaters.
-
-**Source:** [Encyclopaedia Britannica — Battle of Stalingrad](https://www.britannica.com/event/Battle-of-Stalingrad)
-
-### WWII-E44 — Which Soviet city was besieged by German and Finnish forces from 1941 to 1944?
-
-**Topic:** Europe timeline
-
-- A. Leningrad
-- B. Stalingrad
-- C. Kiev
-- D. Minsk
-
-**Correct answer:** A
-
-- **A · Correct:** Leningrad was besieged from September 1941 until January 1944.
-- **B · Incorrect:** Stalingrad was the scene of a great battle in 1942–43, not this years-long siege.
-- **C · Incorrect:** Kiev was captured and later retaken, but it was not the famous 1941–44 siege.
-- **D · Incorrect:** Minsk was a major city in the fighting, not the besieged city on the Baltic.
-
-**Source:** [Encyclopaedia Britannica — Siege of Leningrad](https://www.britannica.com/event/Siege-of-Leningrad)
-
 ### WWII-E45 — General Douglas MacArthur returned in 1944 to which country?
 
 **Topic:** War in Asia and the Pacific
@@ -815,78 +601,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Correct:** MacArthur landed in the Philippines, on Leyte, in October 1944.
 
 **Source:** [Encyclopaedia Britannica — Douglas MacArthur](https://www.britannica.com/biography/Douglas-MacArthur)
-
-### WWII-E46 — Which country captured Iwo Jima from Japan in 1945?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Britain
-- B. The Soviet Union
-- C. The United States
-- D. China
-
-**Correct answer:** C
-
-- **A · Incorrect:** Iwo Jima was an American operation in the Pacific.
-- **B · Incorrect:** Soviet forces attacked Japanese forces in Manchuria in August 1945, not Iwo Jima.
-- **C · Correct:** U.S. Marines invaded Iwo Jima in February 1945 and took the island from Japan.
-- **D · Incorrect:** Chinese forces did not conduct the Iwo Jima landing.
-
-**Source:** [Encyclopaedia Britannica — Battle of Iwo Jima](https://www.britannica.com/event/Battle-of-Iwo-Jima)
-
-### WWII-E47 — In which year did U.S. forces fight Japan at Okinawa?
-
-**Topic:** Chronology
-
-- A. 1945
-- B. 1942
-- C. 1943
-- D. 1944
-
-**Correct answer:** A
-
-- **A · Correct:** The Battle of Okinawa was fought from April to June 1945.
-- **B · Incorrect:** The early Pacific battles of 1942 included Midway and Guadalcanal.
-- **C · Incorrect:** Okinawa was still in Japanese hands in 1943.
-- **D · Incorrect:** Major 1944 Pacific battles included the Marianas and Leyte, not Okinawa.
-
-**Source:** [Encyclopaedia Britannica — Battle of Okinawa](https://www.britannica.com/event/Battle-of-Okinawa)
-
-### WWII-E48 — Which country surrendered in 1945 before the Allies invaded its main home islands?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Germany
-- B. Japan
-- C. Italy
-- D. France
-
-**Correct answer:** B
-
-- **A · Incorrect:** Allied armies invaded and occupied Germany before it surrendered.
-- **B · Correct:** Japan surrendered in 1945, and the planned Allied invasion of its main home islands was never carried out.
-- **C · Incorrect:** Allied armies invaded Sicily and mainland Italy in 1943.
-- **D · Incorrect:** Germany invaded and occupied much of France in 1940.
-
-**Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
-
-### WWII-E49 — What was the capital of Japan during World War II?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Kyoto
-- B. Hiroshima
-- C. Nagasaki
-- D. Tokyo
-
-**Correct answer:** D
-
-- **A · Incorrect:** Kyoto was a major city, not the capital.
-- **B · Incorrect:** Hiroshima was the first city destroyed by an atomic bomb.
-- **C · Incorrect:** Nagasaki was the second city destroyed by an atomic bomb.
-- **D · Correct:** Tokyo was Japan’s capital throughout the war.
-
-**Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
 
 ### WWII-E50 — Sicily, which the Allies invaded in July 1943, is part of which country?
 
@@ -924,78 +638,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Encyclopaedia Britannica — Yamamoto Isoroku](https://www.britannica.com/biography/Yamamoto-Isoroku)
 
-### WWII-E52 — Which country landed Marines on Guadalcanal in August 1942?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Japan
-- B. The United States
-- C. Britain
-- D. Australia
-
-**Correct answer:** B
-
-- **A · Incorrect:** Japan already held Guadalcanal and fought to retake the airfield.
-- **B · Correct:** U.S. Marines landed on Guadalcanal on August 7, 1942.
-- **C · Incorrect:** Britain’s main Pacific efforts were elsewhere, including Burma.
-- **D · Incorrect:** Australian forces fought in New Guinea and other campaigns, but the Guadalcanal landing force was American.
-
-**Source:** [Encyclopaedia Britannica — Battle of Guadalcanal](https://www.britannica.com/event/Battle-of-Guadalcanal)
-
-### WWII-E53 — In the Burma campaign, Britain’s main enemy was which country?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Germany
-- B. Italy
-- C. The Soviet Union
-- D. Japan
-
-**Correct answer:** D
-
-- **A · Incorrect:** Germany was Britain’s main enemy in Europe and North Africa.
-- **B · Incorrect:** Italy fought Britain in Africa and the Mediterranean.
-- **C · Incorrect:** The Soviet Union was Britain’s ally against Germany.
-- **D · Correct:** British and Allied troops fought Japan for Burma.
-
-**Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
-
-### WWII-E54 — In which year did Winston Churchill leave office as wartime prime minister?
-
-**Topic:** Command and leadership
-
-- A. 1940
-- B. 1944
-- C. 1945
-- D. 1941
-
-**Correct answer:** C
-
-- **A · Incorrect:** Churchill became prime minister in May 1940.
-- **B · Incorrect:** He was still prime minister through D-Day and the rest of 1944.
-- **C · Correct:** He left office in July 1945, after Germany’s surrender and during the Potsdam Conference.
-- **D · Incorrect:** He remained prime minister long after 1941.
-
-**Source:** [Encyclopaedia Britannica — Winston Churchill](https://www.britannica.com/biography/Winston-Churchill)
-
-### WWII-E55 — The August 1939 German-Soviet pact was followed within days by Germany’s invasion of which country?
-
-**Topic:** Europe timeline
-
-- A. Poland
-- B. France
-- C. The Soviet Union
-- D. Britain
-
-**Correct answer:** A
-
-- **A · Correct:** With the pact in place, Germany invaded Poland on September 1, 1939.
-- **B · Incorrect:** Germany attacked France in 1940.
-- **C · Incorrect:** Germany broke the pact and invaded the Soviet Union in June 1941.
-- **D · Incorrect:** Germany never invaded Britain.
-
-**Source:** [U.S. Holocaust Memorial Museum — German-Soviet Pact](https://encyclopedia.ushmm.org/content/en/article/german-soviet-pact)
-
 ### WWII-E56 — What is the common name for the Allied victory over Germany on May 8, 1945?
 
 **Topic:** Europe timeline
@@ -1013,42 +655,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Correct:** May 8, 1945, when Germany’s surrender became official, is celebrated as V-E Day.
 
 **Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
-
-### WWII-E57 — Which country defeated Japan at the Battle of Midway?
-
-**Topic:** War at sea
-
-- A. Britain
-- B. The United States
-- C. China
-- D. The Soviet Union
-
-**Correct answer:** B
-
-- **A · Incorrect:** Midway was fought by the U.S. Navy against Japan.
-- **B · Correct:** The United States sank four Japanese fleet carriers and won the battle in June 1942.
-- **C · Incorrect:** Chinese forces were not the fleet at Midway.
-- **D · Incorrect:** The Soviet Union was not at war with Japan in 1942.
-
-**Source:** [Encyclopaedia Britannica — Battle of Midway](https://www.britannica.com/event/Battle-of-Midway)
-
-### WWII-E58 — Which country defeated Germany’s air attack in the Battle of Britain?
-
-**Topic:** Europe timeline
-
-- A. Britain
-- B. France
-- C. The United States
-- D. The Soviet Union
-
-**Correct answer:** A
-
-- **A · Correct:** The Royal Air Force defeated the German air offensive against Britain in 1940.
-- **B · Incorrect:** France had already signed an armistice in June 1940.
-- **C · Incorrect:** The United States was not yet in the war during the Battle of Britain.
-- **D · Incorrect:** The Soviet Union was still bound by its pact with Germany in the summer of 1940.
-
-**Source:** [Encyclopaedia Britannica — Battle of Britain](https://www.britannica.com/event/Battle-of-Britain)
 
 ### WWII-E59 — Which country used the B-17 Flying Fortress to bomb Germany?
 
@@ -1068,24 +674,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
 
-### WWII-E60 — The Flying Tigers were American volunteer pilots who fought for which country?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Australia
-- B. The Philippines
-- C. Hawaii
-- D. China
-
-**Correct answer:** D
-
-- **A · Incorrect:** The Flying Tigers were not formed to defend Australia.
-- **B · Incorrect:** They were not the U.S. forces defending the Philippines in 1941–42.
-- **C · Incorrect:** Hawaii was the site of Pearl Harbor, not their campaign.
-- **D · Correct:** The American Volunteer Group, the Flying Tigers, fought the Japanese in China and Burma.
-
-**Source:** [Encyclopaedia Britannica — Flying Tigers](https://www.britannica.com/topic/Flying-Tigers)
-
 ### WWII-E61 — Who was the dictator of Germany during World War II?
 
 **Topic:** Command and leadership
@@ -1104,421 +692,7 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [U.S. Holocaust Memorial Museum — Adolf Hitler](https://encyclopedia.ushmm.org/content/en/article/adolf-hitler)
 
-### WWII-E62 — In which country was the Second Battle of El Alamein fought?
-
-**Topic:** Operations and geography
-
-- A. Egypt
-- B. Libya
-- C. Tunisia
-- D. Morocco
-
-**Correct answer:** A
-
-- **A · Correct:** El Alamein is on the Egyptian coast, and the second battle there in October 1942 was a British victory.
-- **B · Incorrect:** The desert war also moved through Libya, but El Alamein itself is in Egypt.
-- **C · Incorrect:** The Axis forces in North Africa later surrendered in Tunisia in 1943.
-- **D · Incorrect:** Allied troops landed in Morocco in November 1942, after this battle began.
-
-**Source:** [Encyclopaedia Britannica — battles of El-Alamein](https://www.britannica.com/event/battles-of-El-Alamein)
-
-### WWII-E63 — Which country turned back Germany’s 1941 invasion and drove the German army west?
-
-**Topic:** Europe timeline
-
-- A. France
-- B. Italy
-- C. The Soviet Union
-- D. Spain
-
-**Correct answer:** C
-
-- **A · Incorrect:** France was defeated by Germany in 1940.
-- **B · Incorrect:** Italy was Germany’s ally when the invasion began.
-- **C · Correct:** The Soviet Union stopped the German invasion and later advanced into Germany.
-- **D · Incorrect:** Spain did not fight Germany on the Eastern Front.
-
-**Source:** [Encyclopaedia Britannica — World War II](https://www.britannica.com/event/World-War-II)
-
 ## Medium
-
-### WWII-003 — Which neutral country was invaded alongside Norway in April 1940?
-
-**Topic:** Europe timeline
-
-- A. Denmark
-- B. Sweden
-- C. Finland
-- D. Belgium
-
-**Correct answer:** A
-
-- **A · Correct:** Germany invaded both on April 9.
-- **B · Incorrect:** Sweden was not invaded during the operation.
-- **C · Incorrect:** Finland had recently fought the Soviet Union in the Winter War.
-- **D · Incorrect:** Germany invaded Belgium in May.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-004 — Which of the Low Countries capitulated on May 28, 1940?
-
-**Topic:** Europe timeline
-
-- A. Denmark
-- B. Luxembourg
-- C. Belgium
-- D. Netherlands
-
-**Correct answer:** C
-
-- **A · Incorrect:** Denmark had capitulated on April 9 and is not one of the Low Countries.
-- **B · Incorrect:** German forces had occupied Luxembourg on May 10.
-- **C · Correct:** The Belgian army capitulated on May 28.
-- **D · Incorrect:** The Dutch capitulation came earlier in May.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-009 — Which besieged Soviet city was supplied across Lake Ladoga?
-
-**Topic:** Europe timeline
-
-- A. Stalingrad
-- B. Leningrad
-- C. Sevastopol
-- D. Moscow
-
-**Correct answer:** B
-
-- **A · Incorrect:** The Volga was central to Stalingrad’s supply.
-- **B · Correct:** Routes across Ladoga sustained the city during the siege.
-- **C · Incorrect:** Sevastopol was a Black Sea port in Crimea.
-- **D · Incorrect:** Moscow was defended in 1941 but was not supplied by the Ladoga route.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-011 — Which campaign does the U.S. Army list for the November 1942 landings in Casablanca, Oran, and Algiers?
-
-**Topic:** Operations and geography
-
-- A. Egypt–Libya
-- B. Algeria–French Morocco
-- C. Tunisia
-- D. Sicily
-
-**Correct answer:** B
-
-- **A · Incorrect:** It covers operations farther east in North Africa.
-- **B · Correct:** It covers the Operation Torch landings.
-- **C · Incorrect:** It covers the ensuing campaign farther east.
-- **D · Incorrect:** It covers the July 1943 invasion of the island.
-
-**Source:** [U.S. Army Center of Military History — European theater campaigns](https://history.army.mil/Research/Reference-Topics/Army-Campaigns/Brief-Summaries/World-War-II/World-War-II-European-African-Middle-Eastern-Theater/)
-
-### WWII-012 — Which campaign brought Allied land forces onto the European island immediately south of mainland Italy in July 1943?
-
-**Topic:** Operations and geography
-
-- A. Tunisia
-- B. Southern France
-- C. Sicily
-- D. Anzio
-
-**Correct answer:** C
-
-- **A · Incorrect:** It ended in North Africa before the island invasion.
-- **B · Incorrect:** Operation Dragoon took place on the French Mediterranean coast.
-- **C · Correct:** Operation Husky landed forces around Sicily.
-- **D · Incorrect:** The beachhead was on the Italian mainland.
-
-**Source:** [U.S. Army Center of Military History — European theater campaigns](https://history.army.mil/Research/Reference-Topics/Army-Campaigns/Brief-Summaries/World-War-II/World-War-II-European-African-Middle-Eastern-Theater/)
-
-### WWII-013 — Which campaign is associated with the amphibious landing south of Rome in January 1944?
-
-**Topic:** Operations and geography
-
-- A. Anzio
-- B. Po Valley
-- C. Naples–Foggia
-- D. Rome–Arno
-
-**Correct answer:** A
-
-- **A · Correct:** The landings opened a beachhead behind German lines.
-- **B · Incorrect:** It was the final offensive across northern Italy.
-- **C · Incorrect:** It began with mainland operations in September 1943.
-- **D · Incorrect:** It is the broader drive through central Italy.
-
-**Source:** [U.S. Army Center of Military History — European theater campaigns](https://history.army.mil/Research/Reference-Topics/Army-Campaigns/Brief-Summaries/World-War-II/World-War-II-European-African-Middle-Eastern-Theater/)
-
-### WWII-015 — Which campaign name includes the region where the Battle of the Bulge began?
-
-**Topic:** Operations and geography
-
-- A. Northern France
-- B. Central Europe
-- C. Rhineland
-- D. Ardennes–Alsace
-
-**Correct answer:** D
-
-- **A · Incorrect:** This earlier campaign included the pursuit across France.
-- **B · Incorrect:** The Army dates it from March 1945.
-- **C · Incorrect:** It covers the push toward and across western Germany over a broader period.
-- **D · Correct:** The German offensive began in the Ardennes in December 1944.
-
-**Source:** [U.S. Army Center of Military History — European theater campaigns](https://history.army.mil/Research/Reference-Topics/Army-Campaigns/Brief-Summaries/World-War-II/World-War-II-European-African-Middle-Eastern-Theater/)
-
-### WWII-016 — Which official U.S. Army campaign covers the final Allied offensive into the flatlands of northern Italy in spring 1945?
-
-**Topic:** Operations and geography
-
-- A. Po Valley
-- B. North Apennines
-- C. Rome–Arno
-- D. Naples–Foggia
-
-**Correct answer:** A
-
-- **A · Correct:** It began in April 1945.
-- **B · Incorrect:** It covered the preceding fighting in the mountains.
-- **C · Incorrect:** It included the advance beyond Rome in 1944.
-- **D · Incorrect:** It opened with 1943 operations in southern Italy.
-
-**Source:** [U.S. Army Center of Military History — European theater campaigns](https://history.army.mil/Research/Reference-Topics/Army-Campaigns/Brief-Summaries/World-War-II/World-War-II-European-African-Middle-Eastern-Theater/)
-
-### WWII-017 — Which campaign names the island where U.S. Marines landed near a Japanese airfield in August 1942 and renamed it Henderson Field?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Guadalcanal
-- B. Papua
-- C. Aleutian Islands
-- D. Leyte
-
-**Correct answer:** A
-
-- **A · Correct:** The airfield became a central objective of the island campaign.
-- **B · Incorrect:** It included fighting along the Kokoda Track and at Buna.
-- **C · Incorrect:** It covered fighting in the North Pacific.
-- **D · Incorrect:** It marked the U.S. return to the Philippines in 1944.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-018 — Which campaign names the Philippine island where MacArthur waded ashore in October 1944?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Luzon
-- B. Ryukyus
-- C. Guadalcanal
-- D. Leyte
-
-**Correct answer:** D
-
-- **A · Incorrect:** His forces landed there at Lingayen Gulf in January 1945.
-- **B · Incorrect:** They include Okinawa, south of mainland Japan.
-- **C · Incorrect:** It lies in the Solomon Islands.
-- **D · Correct:** MacArthur returned to Philippine soil on Leyte.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-019 — Which campaign includes the landings on the Philippine island containing Manila?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Eastern Mandates
-- B. Southern Philippines
-- C. Luzon
-- D. Leyte
-
-**Correct answer:** C
-
-- **A · Incorrect:** It included operations in the Marshall Islands.
-- **B · Incorrect:** It covered other islands, including Mindanao.
-- **C · Correct:** Manila is on Luzon, where the U.S. Army returned in 1945.
-- **D · Incorrect:** The first major return landing was there in 1944.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-020 — Which U.S. Army campaign includes the land battle of Okinawa?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Luzon
-- B. Ryukyus
-- C. Western Pacific
-- D. Eastern Mandates
-
-**Correct answer:** B
-
-- **A · Incorrect:** It centers on the main Philippine island.
-- **B · Correct:** Okinawa belongs to the Ryukyu chain.
-- **C · Incorrect:** This designation includes earlier operations in the Marianas and other islands.
-- **D · Incorrect:** It covers central Pacific operations such as the Marshalls.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-021 — Which campaign was fought over islands extending west from Alaska?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Northern Solomons
-- B. Bismarck Archipelago
-- C. Aleutian Islands
-- D. Eastern Mandates
-
-**Correct answer:** C
-
-- **A · Incorrect:** The Solomons are in the South Pacific.
-- **B · Incorrect:** It lies northeast of New Guinea.
-- **C · Correct:** The Japanese occupied Attu and Kiska in this chain.
-- **D · Incorrect:** It concerns islands farther south in the central Pacific.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-022 — Which campaign included fighting on the Kokoda Track?
-
-**Topic:** War in Asia and the Pacific
-
-- A. Papua
-- B. Burma, 1942
-- C. Guadalcanal
-- D. Aleutian Islands
-
-**Correct answer:** A
-
-- **A · Correct:** The track crosses the mountains of what is now Papua New Guinea.
-- **B · Incorrect:** It covers the retreat in mainland Southeast Asia.
-- **C · Incorrect:** It involved a separate airfield-centered struggle in the Solomons.
-- **D · Incorrect:** It took place in the North Pacific.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-023 — At which conference did Roosevelt and Churchill publicly announce their demand for unconditional Axis surrender in January 1943?
-
-**Topic:** Diplomacy
-
-- A. Casablanca
-- B. Cairo
-- C. Potsdam
-- D. Tehran
-
-**Correct answer:** A
-
-- **A · Correct:** It was announced in French Morocco.
-- **B · Incorrect:** The November 1943 meeting addressed Japan and postwar Asia.
-- **C · Incorrect:** Its July 1945 declaration addressed Japan late in the war.
-- **D · Incorrect:** The Big Three confirmed cross-Channel invasion plans there.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-024 — At which conference did Roosevelt and Churchill meet Chiang Kai-shek in November 1943?
-
-**Topic:** Diplomacy
-
-- A. Cairo
-- B. Tehran
-- C. Yalta
-- D. Casablanca
-
-**Correct answer:** A
-
-- **A · Correct:** The three leaders discussed the war against Japan there.
-- **B · Incorrect:** Stalin joined Roosevelt and Churchill there soon afterward.
-- **C · Incorrect:** This February 1945 meeting included Stalin.
-- **D · Incorrect:** Roosevelt and Churchill had met there in January.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-025 — Which meeting was the first to bring Roosevelt, Churchill, and Stalin together in person?
-
-**Topic:** Diplomacy
-
-- A. Potsdam
-- B. Tehran
-- C. Yalta
-- D. Casablanca
-
-**Correct answer:** B
-
-- **A · Incorrect:** Roosevelt had died before this meeting.
-- **B · Correct:** The three met in Iran in late 1943.
-- **C · Incorrect:** It was their later meeting in Crimea.
-- **D · Incorrect:** Stalin did not attend.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-027 — What conference did Truman attend with Stalin and initially Churchill after Germany’s surrender?
-
-**Topic:** Diplomacy
-
-- A. Tehran
-- B. Yalta
-- C. Casablanca
-- D. Potsdam
-
-**Correct answer:** D
-
-- **A · Incorrect:** Roosevelt, not Truman, attended.
-- **B · Incorrect:** Roosevelt represented the United States there.
-- **C · Incorrect:** This meeting took place in 1943.
-- **D · Correct:** It opened in July 1945 after Germany’s defeat.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-028 — Which conference established plans for the IMF and World Bank?
-
-**Topic:** Diplomacy
-
-- A. San Francisco
-- B. Bretton Woods
-- C. Dumbarton Oaks
-- D. Potsdam
-
-**Correct answer:** B
-
-- **A · Incorrect:** Delegates negotiated the UN Charter there in 1945.
-- **B · Correct:** The delegates designed postwar monetary institutions in 1944.
-- **C · Incorrect:** Talks there designed the framework for the United Nations.
-- **D · Incorrect:** The conference dealt with defeated Germany and allied policy.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-029 — Which 1944 talks produced draft proposals for a new international security organization that became the United Nations?
-
-**Topic:** Diplomacy
-
-- A. Dumbarton Oaks
-- B. Bretton Woods
-- C. Yalta
-- D. San Francisco
-
-**Correct answer:** A
-
-- **A · Correct:** The talks outlined the future organization.
-- **B · Incorrect:** It dealt with monetary and financial institutions.
-- **C · Incorrect:** Leaders settled important issues including voting, after the draft proposals.
-- **D · Incorrect:** The Charter was negotiated and signed there in 1945.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-031 — Which battle in May 1942 stopped a Japanese seaborne move against Port Moresby?
-
-**Topic:** War at sea
-
-- A. Midway
-- B. Coral Sea
-- C. Eastern Solomons
-- D. Santa Cruz Islands
-
-**Correct answer:** B
-
-- **A · Incorrect:** This June battle was fought near a central Pacific atoll.
-- **B · Correct:** Allied forces checked the Japanese seaborne invasion effort.
-- **C · Incorrect:** It grew out of the campaign for Guadalcanal.
-- **D · Incorrect:** It took place in October during the Guadalcanal campaign.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
 
 ### WWII-033 — What U.S. carrier was lost at Coral Sea?
 
@@ -1592,258 +766,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
 
-### WWII-038 — Which battle is nicknamed the Great Marianas Turkey Shoot?
-
-**Topic:** War at sea
-
-- A. Midway
-- B. Philippine Sea
-- C. Coral Sea
-- D. Leyte Gulf
-
-**Correct answer:** B
-
-- **A · Incorrect:** It turned on carrier strikes near Midway Atoll.
-- **B · Correct:** The nickname refers to U.S. carrier fighters inflicting heavy Japanese aircraft losses.
-- **C · Incorrect:** It was fought well to the south in 1942.
-- **D · Incorrect:** This later battle was fought around the Philippines.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-039 — To which neutral country did most Danish Jews escape during the rescue of October 1943?
-
-**Topic:** Occupation and resistance
-
-- A. Switzerland
-- B. Norway
-- C. Finland
-- D. Sweden
-
-**Correct answer:** D
-
-- **A · Incorrect:** It was neutral but was not the destination of the Danish rescue flotilla.
-- **B · Incorrect:** Norway was also under German occupation.
-- **C · Incorrect:** It was fighting the Soviet Union and was not the rescue destination.
-- **D · Correct:** Rescuers ferried thousands across the water to neutral Sweden.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-040 — What name is given to the armed revolt by Jewish resistance fighters in Warsaw in spring 1943?
-
-**Topic:** Occupation and resistance
-
-- A. Warsaw Uprising
-- B. Prague Uprising
-- C. Slovak National Uprising
-- D. Warsaw Ghetto Uprising
-
-**Correct answer:** D
-
-- **A · Incorrect:** This was the separate Polish Home Army rising in August 1944.
-- **B · Incorrect:** It took place in May 1945.
-- **C · Incorrect:** It began in Slovakia in 1944.
-- **D · Correct:** It began in April 1943 as the Germans moved to liquidate the ghetto.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-043 — Which British Crown Dependency island group in the English Channel came under German occupation in 1940?
-
-**Topic:** Occupation and resistance
-
-- A. Isles of Scilly
-- B. Orkney Islands
-- C. Channel Islands
-- D. Isle of Wight
-
-**Correct answer:** C
-
-- **A · Incorrect:** They remained under British control.
-- **B · Incorrect:** These islands off Scotland were not occupied.
-- **C · Correct:** Germany occupied the British Crown Dependencies, including Jersey and Guernsey.
-- **D · Incorrect:** Germany did not occupy it.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-044 — Which 1940 agreement transferred older American destroyers to Britain in exchange for access to bases?
-
-**Topic:** Wartime diplomacy
-
-- A. Atlantic Charter
-- B. Destroyers-for-Bases agreement
-- C. Lend-Lease Act
-- D. Bretton Woods agreements
-
-**Correct answer:** B
-
-- **A · Incorrect:** It was a statement of shared principles in 1941.
-- **B · Correct:** The exchange provided ships to Britain and base rights to the United States.
-- **C · Incorrect:** This was a broader aid framework enacted in 1941.
-- **D · Incorrect:** They designed postwar financial institutions.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-045 — Which 1941 statement of common principles followed a meeting between Roosevelt and Churchill near Newfoundland?
-
-**Topic:** Wartime diplomacy
-
-- A. Cairo Declaration
-- B. Atlantic Charter
-- C. Declaration by United Nations
-- D. Potsdam Declaration
-
-**Correct answer:** B
-
-- **A · Incorrect:** This addressed postwar Asia in 1943.
-- **B · Correct:** The leaders issued it after meeting off Newfoundland.
-- **C · Incorrect:** That 1942 declaration adopted the Atlantic Charter principles.
-- **D · Incorrect:** This laid out terms for Japan in 1945.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-046 — On which island was the important Japanese base at Rabaul?
-
-**Topic:** Campaign geography
-
-- A. New Guinea
-- B. New Britain
-- C. Bougainville
-- D. New Ireland
-
-**Correct answer:** B
-
-- **A · Incorrect:** It was another major theater for operations against the Rabaul perimeter.
-- **B · Correct:** Rabaul lies near the northeastern end of New Britain.
-- **C · Incorrect:** Allied operations there helped isolate Rabaul from the east.
-- **D · Incorrect:** It is nearby across St. George’s Channel but does not contain Rabaul.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-047 — On which island was the Allied base at Port Moresby?
-
-**Topic:** Campaign geography
-
-- A. New Guinea
-- B. New Britain
-- C. Guadalcanal
-- D. Bougainville
-
-**Correct answer:** A
-
-- **A · Correct:** The port is on New Guinea’s southeastern coast.
-- **B · Incorrect:** It contains Rabaul, a major Japanese base during the war.
-- **C · Incorrect:** It contains Henderson Field.
-- **D · Incorrect:** It was the site of Allied landings at Cape Torokina.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-048 — In which island group is Tarawa?
-
-**Topic:** Campaign geography
-
-- A. Marshall Islands
-- B. Gilbert Islands
-- C. Mariana Islands
-- D. Palau Islands
-
-**Correct answer:** B
-
-- **A · Incorrect:** Kwajalein and Eniwetok are in the Marshalls.
-- **B · Correct:** Tarawa is an atoll in the Gilberts.
-- **C · Incorrect:** This chain includes Saipan and Tinian.
-- **D · Incorrect:** Peleliu and Angaur are part of Palau.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-049 — Which Mariana island was recaptured from Japan by U.S. forces in July–August 1944 after being taken from the United States in 1941?
-
-**Topic:** Campaign geography
-
-- A. Iwo Jima
-- B. Saipan
-- C. Tinian
-- D. Guam
-
-**Correct answer:** D
-
-- **A · Incorrect:** It is in the Volcano Islands and was invaded in 1945.
-- **B · Incorrect:** It was also invaded in 1944 but was not a prewar U.S. possession.
-- **C · Incorrect:** U.S. forces captured it in 1944 but were not retaking a prewar U.S. possession.
-- **D · Correct:** Japan seized Guam in December 1941 and U.S. forces recaptured it in 1944.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-050 — Which country contains the port of Antwerp, opened to Allied shipping after the Scheldt fighting?
-
-**Topic:** Campaign geography
-
-- A. Netherlands
-- B. France
-- C. Germany
-- D. Belgium
-
-**Correct answer:** D
-
-- **A · Incorrect:** The sea approaches ran through Dutch territory, but Antwerp is in Belgium.
-- **B · Incorrect:** The Allies also used French ports, but Antwerp is farther north.
-- **C · Incorrect:** Antwerp was under German occupation before liberation, but it is not a German city.
-- **D · Correct:** Antwerp is a Belgian port on the Scheldt.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-051 — Which river did the Allies cross at Remagen and near Wesel in March 1945?
-
-**Topic:** Campaign geography
-
-- A. Roer
-- B. Meuse
-- C. Elbe
-- D. Rhine
-
-**Correct answer:** D
-
-- **A · Incorrect:** The Allies crossed the Roer earlier in the drive toward the Rhine.
-- **B · Incorrect:** It was crossed elsewhere in the campaign, not at those two sites.
-- **C · Incorrect:** It was reached farther east later in the campaign.
-- **D · Correct:** Both crossings took Allied forces across this major barrier.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-052 — Which French Mediterranean port was a major objective after the Operation Dragoon landings?
-
-**Topic:** Campaign geography
-
-- A. Cherbourg
-- B. Marseille
-- C. Brest
-- D. Antwerp
-
-**Correct answer:** B
-
-- **A · Incorrect:** It was captured during the Normandy campaign on the Channel side of France.
-- **B · Correct:** Allied forces captured Marseille in August 1944 and used it for supply.
-- **C · Incorrect:** It is on the Atlantic coast and was taken in a separate campaign.
-- **D · Incorrect:** It became an important Allied port but is in Belgium.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-053 — Which country was the site of the battles around Monte Cassino?
-
-**Topic:** Campaign geography
-
-- A. France
-- B. Italy
-- C. Greece
-- D. Tunisia
-
-**Correct answer:** B
-
-- **A · Incorrect:** The comparable southern campaign in France began with Dragoon.
-- **B · Correct:** Cassino guarded a route toward Rome.
-- **C · Incorrect:** The country saw fighting in 1941, but Cassino is in Italy.
-- **D · Incorrect:** The final North African campaign ended before the mainland Italian campaign.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
 ### WWII-055 — Which Japanese carrier was carrying Admiral Nagumo’s flag at the Pearl Harbor attack?
 
 **Topic:** War at sea
@@ -1862,1267 +784,7 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Naval History and Heritage Command — Pearl Harbor](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1941/pearl-harbor.html)
 
-### WWII-056 — When did this event occur: Start of the Soviet–Finnish Winter War?
-
-**Topic:** Chronology
-
-- A. November 1939
-- B. September 1939
-- C. April 1940
-- D. May 1940
-
-**Correct answer:** A
-
-- **A · Correct:** It occurred in Finland in November 1939.
-- **B · Incorrect:** This is the date of german invasion of Poland, a different event.
-- **C · Incorrect:** This is the date of german attack on Denmark and Norway, a different event.
-- **D · Incorrect:** This is the date of german attack on France and the Low Countries, a different event.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-057 — When did this event occur: French armistice with Germany?
-
-**Topic:** Chronology
-
-- A. June 1940
-- B. April 1940
-- C. April 1941
-- D. May 1940
-
-**Correct answer:** A
-
-- **A · Correct:** It occurred in France in June 1940.
-- **B · Incorrect:** This is the date of german attack on Denmark and Norway, a different event.
-- **C · Incorrect:** This is the date of german invasion of Yugoslavia and Greece, a different event.
-- **D · Incorrect:** This is the date of german attack on France and the Low Countries, a different event.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-058 — When did this event occur: German invasion of Yugoslavia and Greece?
-
-**Topic:** Chronology
-
-- A. May 1940
-- B. June 1940
-- C. April 1941
-- D. June 1941
-
-**Correct answer:** C
-
-- **A · Incorrect:** This is the date of german attack on France and the Low Countries, a different event.
-- **B · Incorrect:** This is the date of french armistice with Germany, a different event.
-- **C · Correct:** It occurred in the Balkans in April 1941.
-- **D · Incorrect:** This is the date of start of Operation Barbarossa, a different event.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-059 — When did this event occur: Fall of Singapore?
-
-**Topic:** Chronology
-
-- A. February 1942
-- B. June 1941
-- C. December 1941
-- D. April 1942
-
-**Correct answer:** A
-
-- **A · Correct:** It occurred in Singapore in February 1942.
-- **B · Incorrect:** This is the date of start of Operation Barbarossa, a different event.
-- **C · Incorrect:** This is the date of japanese attack on Pearl Harbor, a different event.
-- **D · Incorrect:** This is the date of doolittle Raid, a different event.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-060 — When did this event occur: Second Battle of El Alamein begins?
-
-**Topic:** Chronology
-
-- A. November 1942
-- B. October 1942
-- C. June 1942
-- D. August 1942
-
-**Correct answer:** B
-
-- **A · Incorrect:** This is the date of operation Torch landings, a different event.
-- **B · Correct:** It occurred in Egypt in October 1942.
-- **C · Incorrect:** This is the date of battle of Midway, a different event.
-- **D · Incorrect:** This is the date of initial Allied landings on Guadalcanal, a different event.
-
-**Source:** [National Army Museum — Second Battle of El Alamein](https://www.nam.ac.uk/explore/battle-alamein)
-
-### WWII-061 — When did this event occur: Battle of the Bismarck Sea?
-
-**Topic:** Chronology
-
-- A. February 1943
-- B. November 1942
-- C. April 1943
-- D. March 1943
-
-**Correct answer:** D
-
-- **A · Incorrect:** This is the date of final surrender at Stalingrad, a different event.
-- **B · Incorrect:** This is the date of operation Torch landings, a different event.
-- **C · Incorrect:** This is the date of start of the Warsaw Ghetto Uprising, a different event.
-- **D · Correct:** It occurred in the waters north of Papua in March 1943.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-062 — When did this event occur: Start of the Warsaw Ghetto Uprising?
-
-**Topic:** Chronology
-
-- A. February 1943
-- B. May 1943
-- C. March 1943
-- D. April 1943
-
-**Correct answer:** D
-
-- **A · Incorrect:** This is the date of final surrender at Stalingrad, a different event.
-- **B · Incorrect:** This is the date of end of organized Axis resistance in Tunisia, a different event.
-- **C · Incorrect:** This is the date of battle of the Bismarck Sea, a different event.
-- **D · Correct:** It occurred in occupied Poland in April 1943.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-063 — When did this event occur: Allied landing at Salerno?
-
-**Topic:** Chronology
-
-- A. July 1943
-- B. May 1943
-- C. November 1943
-- D. September 1943
-
-**Correct answer:** D
-
-- **A · Incorrect:** This is the date of operation Husky landings, a different event.
-- **B · Incorrect:** This is the date of end of organized Axis resistance in Tunisia, a different event.
-- **C · Incorrect:** This is the date of first conference of Roosevelt, Churchill and Stalin, a different event.
-- **D · Correct:** It occurred in Italy in September 1943.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-064 — When did this event occur: Allied landing at Anzio?
-
-**Topic:** Chronology
-
-- A. November 1943
-- B. January 1944
-- C. September 1943
-- D. February 1944
-
-**Correct answer:** B
-
-- **A · Incorrect:** This is the date of first conference of Roosevelt, Churchill and Stalin, a different event.
-- **B · Correct:** It occurred in Italy in January 1944.
-- **C · Incorrect:** This is the date of allied landing at Salerno, a different event.
-- **D · Incorrect:** This is the date of u.S. carrier raid on Truk Lagoon, a different event.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-065 — When did this event occur: U.S. carrier raid on Truk Lagoon?
-
-**Topic:** Chronology
-
-- A. June 1944
-- B. February 1944
-- C. January 1944
-- D. November 1943
-
-**Correct answer:** B
-
-- **A · Incorrect:** This is the date of normandy D-Day landings, a different event.
-- **B · Correct:** It occurred in the Caroline Islands in February 1944.
-- **C · Incorrect:** This is the date of allied landing at Anzio, a different event.
-- **D · Incorrect:** This is the date of first conference of Roosevelt, Churchill and Stalin, a different event.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-066 — When did this event occur: Beginning of the Warsaw Uprising led by the Polish Home Army?
-
-**Topic:** Chronology
-
-- A. July 1944
-- B. September 1944
-- C. June 1944
-- D. August 1944
-
-**Correct answer:** D
-
-- **A · Incorrect:** This is the date of bretton Woods Conference, a different event.
-- **B · Incorrect:** This is the date of operation Market Garden begins, a different event.
-- **C · Incorrect:** This is the date of normandy D-Day landings, a different event.
-- **D · Correct:** It occurred in occupied Poland in August 1944.
-
-**Source:** [U.S. Holocaust Memorial Museum — WWII key dates](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
-
-### WWII-067 — When did this event occur: Battle of Leyte Gulf?
-
-**Topic:** Chronology
-
-- A. October 1944
-- B. December 1944
-- C. September 1944
-- D. August 1944
-
-**Correct answer:** A
-
-- **A · Correct:** It occurred in the Philippines in October 1944.
-- **B · Incorrect:** This is the date of german Ardennes offensive begins, a different event.
-- **C · Incorrect:** This is the date of operation Market Garden begins, a different event.
-- **D · Incorrect:** This is the date of beginning of the Warsaw Uprising led by the Polish Home Army, a different event.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-069 — When did this event occur: Allied seizure of the Ludendorff Bridge at Remagen?
-
-**Topic:** Chronology
-
-- A. January 1945
-- B. March 1945
-- C. February 1945
-- D. April 1945
-
-**Correct answer:** B
-
-- **A · Incorrect:** This is the date of soviet liberation of Auschwitz, a different event.
-- **B · Correct:** It occurred in Germany in March 1945.
-- **C · Incorrect:** This is the date of yalta Conference, a different event.
-- **D · Incorrect:** This is the date of main landings on Okinawa, a different event.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-073 — Who was British general who commanded the Eighth Army at the Second Battle of El Alamein?
-
-**Topic:** Command and leadership
-
-- A. Erwin Rommel
-- B. Omar Bradley
-- C. Dwight D. Eisenhower
-- D. Bernard Montgomery
-
-**Correct answer:** D
-
-- **A · Incorrect:** This was German field marshal nicknamed the Desert Fox, a different person.
-- **B · Incorrect:** This was U.S. general who commanded the First Army on D-Day, a different person.
-- **C · Incorrect:** This was U.S. general who commanded the Allied Expeditionary Force for the Normandy invasion, a different person.
-- **D · Correct:** He led the Eighth Army in the decisive battle in Egypt.
-
-**Source:** [National Army Museum — Second Battle of El Alamein](https://www.nam.ac.uk/explore/battle-alamein)
-
-### WWII-075 — Who was U.S. general whose Third Army turned north to help relieve Bastogne?
-
-**Topic:** Command and leadership
-
-- A. Mark Clark
-- B. Erwin Rommel
-- C. George S. Patton
-- D. Omar Bradley
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was U.S. general who commanded the Fifth Army during its June 1944 entry into Rome, a different person.
-- **B · Incorrect:** This was German field marshal nicknamed the Desert Fox, a different person.
-- **C · Correct:** His Third Army attacked toward Bastogne during the Ardennes offensive.
-- **D · Incorrect:** This was U.S. general who commanded the First Army on D-Day, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-076 — Who was U.S. general who waded ashore on Leyte in October 1944?
-
-**Topic:** Command and leadership
-
-- A. Chester W. Nimitz
-- B. Douglas MacArthur
-- C. Thomas C. Kinkaid
-- D. William F. Halsey
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was U.S. admiral who led Pacific Ocean Areas from headquarters at Pearl Harbor, a different person.
-- **B · Correct:** He returned to the Philippines as Southwest Pacific commander.
-- **C · Incorrect:** This was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf, a different person.
-- **D · Incorrect:** This was U.S. admiral commanding Third Fleet during the Battle of Leyte Gulf, a different person.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-077 — Who was U.S. admiral who led Pacific Ocean Areas from headquarters at Pearl Harbor?
-
-**Topic:** Command and leadership
-
-- A. Chester W. Nimitz
-- B. William F. Halsey
-- C. Thomas C. Kinkaid
-- D. Douglas MacArthur
-
-**Correct answer:** A
-
-- **A · Correct:** His Pacific Ocean Areas command was distinct from MacArthur’s Southwest Pacific Area.
-- **B · Incorrect:** This was U.S. admiral commanding Third Fleet during the Battle of Leyte Gulf, a different person.
-- **C · Incorrect:** This was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf, a different person.
-- **D · Incorrect:** This was U.S. general who waded ashore on Leyte in October 1944, a different person.
-
-**Source:** [Naval History and Heritage Command — 1941](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1941.html)
-
-### WWII-079 — Who was Chinese leader who met Roosevelt and Churchill at Cairo in 1943?
-
-**Topic:** Command and leadership
-
-- A. Chiang Kai-shek
-- B. Winston Churchill
-- C. Joseph Stalin
-- D. Clement Attlee
-
-**Correct answer:** A
-
-- **A · Correct:** He participated in discussions of the war against Japan and the postwar settlement.
-- **B · Incorrect:** This was British prime minister who attended the opening of Potsdam but was replaced during it, a different person.
-- **C · Incorrect:** This was Soviet leader who attended Tehran, Yalta and Potsdam, a different person.
-- **D · Incorrect:** This was British leader who replaced Churchill during Potsdam, a different person.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
 ## Hard
-
-### WWII-080 — Which machine helped narrow down possible Enigma settings at Bletchley Park?
-
-**Topic:** Signals intelligence
-
-- A. Colossus
-- B. Bombe
-- C. Typex
-- D. Lorenz SZ40
-
-**Correct answer:** B
-
-- **A · Incorrect:** Colossus aided attacks on Lorenz traffic, not Enigma.
-- **B · Correct:** The electromechanical Bombe searched for settings compatible with a suspected plaintext fragment.
-- **C · Incorrect:** It was a British cipher machine.
-- **D · Incorrect:** This was the German cipher equipment whose traffic Colossus helped analyze.
-
-**Source:** [Bletchley Park — wartime codebreaking and huts](https://www.bletchleypark.org.uk/wp-content/uploads/2025/02/Visitor-map_online-Final-Jan25.pdf)
-
-### WWII-081 — Which encrypted German teleprinter traffic did Colossus help analyze?
-
-**Topic:** Signals intelligence
-
-- A. Japanese JN-25
-- B. Lorenz
-- C. British Typex
-- D. Naval Enigma
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was a Japanese naval code system.
-- **B · Correct:** It was the cipher system behind the traffic the British called Tunny.
-- **C · Incorrect:** It was a British cipher system, not the target of Colossus.
-- **D · Incorrect:** Enigma was attacked with methods including the Bombe.
-
-**Source:** [Bletchley Park — wartime codebreaking and huts](https://www.bletchleypark.org.uk/wp-content/uploads/2025/02/Visitor-map_online-Final-Jan25.pdf)
-
-### WWII-082 — Which Bletchley Park hut was associated with breaking German naval Enigma?
-
-**Topic:** Signals intelligence
-
-- A. Hut 3
-- B. Hut 6
-- C. Hut 8
-- D. Hut 4
-
-**Correct answer:** C
-
-- **A · Incorrect:** It translated and analyzed Army and Air Force intelligence.
-- **B · Incorrect:** It handled German Army and Air Force Enigma.
-- **C · Correct:** It handled the cryptanalysis of German naval Enigma.
-- **D · Incorrect:** It processed and interpreted naval intelligence after decryption.
-
-**Source:** [Bletchley Park — huts and their roles](https://bletchleypark.org.uk/wp-content/uploads/2021/10/teachers-notes-ks2-2019.pdf)
-
-### WWII-083 — Which Bletchley Park hut worked on German Army and Air Force Enigma settings?
-
-**Topic:** Signals intelligence
-
-- A. Hut 3
-- B. Hut 4
-- C. Hut 6
-- D. Hut 8
-
-**Correct answer:** C
-
-- **A · Incorrect:** It exploited decrypted Army and Air Force material rather than finding the settings.
-- **B · Incorrect:** It handled naval intelligence.
-- **C · Correct:** It was the principal cryptanalytic section for those Enigma networks.
-- **D · Incorrect:** It dealt with naval Enigma.
-
-**Source:** [Bletchley Park — huts and their roles](https://bletchleypark.org.uk/wp-content/uploads/2021/10/teachers-notes-ks2-2019.pdf)
-
-### WWII-084 — What was the assumed name of the fictional officer whose papers underpinned a 1943 British deception about Allied invasion plans?
-
-**Topic:** Signals intelligence
-
-- A. Juan Pujol García
-- B. Major William Martin
-- C. General Harold Alexander
-- D. George S. Patton
-
-**Correct answer:** B
-
-- **A · Incorrect:** He was a real double agent known to the British as Garbo.
-- **B · Correct:** This was the identity given to the fictitious Royal Marines officer in Operation Mincemeat.
-- **C · Incorrect:** Alexander was a real Allied commander and was not the invented officer.
-- **D · Incorrect:** He was a real commander who figured in later Allied deception planning.
-
-**Source:** [IWM War Memorials Register — Operation Mincemeat](https://memorials.iwm.org.uk/memorial/99150)
-
-### WWII-089 — Which of the Big Three governments did not originally issue the July 26, 1945 Potsdam Declaration to Japan?
-
-**Topic:** Wartime diplomacy
-
-- A. Soviet Union
-- B. United States
-- C. China
-- D. United Kingdom
-
-**Correct answer:** A
-
-- **A · Correct:** The initial declaration was issued by the United States, Britain, and China; the Soviet Union was not yet at war with Japan.
-- **B · Incorrect:** Truman issued the declaration jointly with Britain and China.
-- **C · Incorrect:** China joined the initial declaration despite not attending the Potsdam conference.
-- **D · Incorrect:** Britain was one of the issuing powers.
-
-**Source:** [U.S. Department of State — wartime diplomacy](https://history.state.gov/milestones/1937-1945)
-
-### WWII-091 — What was the codename for Allied invasion of Sicily?
-
-**Topic:** Operation names
-
-- A. Operation Avalanche
-- B. Operation Torch
-- C. Operation Husky
-- D. Operation Shingle
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to Allied landing at Salerno (September 1943).
-- **B · Incorrect:** It referred to Allied landings in French North Africa (November 1942).
-- **C · Correct:** It concerned the south and east coasts of Sicily and was scheduled for or began in July 1943.
-- **D · Incorrect:** It referred to Allied landings at Anzio and Nettuno (January 1944).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-092 — What was the codename for Allied landing at Salerno?
-
-**Topic:** Operation names
-
-- A. Operation Torch
-- B. Operation Husky
-- C. Operation Avalanche
-- D. Operation Shingle
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to Allied landings in French North Africa (November 1942).
-- **B · Incorrect:** It referred to Allied invasion of Sicily (July 1943).
-- **C · Correct:** It concerned the Gulf of Salerno and was scheduled for or began in September 1943.
-- **D · Incorrect:** It referred to Allied landings at Anzio and Nettuno (January 1944).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-093 — What was the codename for Allied landings at Anzio and Nettuno?
-
-**Topic:** Operation names
-
-- A. Operation Shingle
-- B. Operation Neptune
-- C. Operation Husky
-- D. Operation Avalanche
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the coast south of Rome and was scheduled for or began in January 1944.
-- **B · Incorrect:** It referred to the assault phase of the invasion of Normandy (June 1944).
-- **C · Incorrect:** It referred to Allied invasion of Sicily (July 1943).
-- **D · Incorrect:** It referred to Allied landing at Salerno (September 1943).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-096 — What was the codename for the U.S. breakout west of Saint-Lô?
-
-**Topic:** Operation names
-
-- A. Operation Market Garden
-- B. Operation Cobra
-- C. Operation Dragoon
-- D. Operation Neptune
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the airborne and ground attempt to seize a route across the Netherlands (September 1944).
-- **B · Correct:** It concerned the Normandy bocage west of Saint-Lô and was scheduled for or began in July 1944.
-- **C · Incorrect:** It referred to Allied invasion of southern France (August 1944).
-- **D · Incorrect:** It referred to the assault phase of the invasion of Normandy (June 1944).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-097 — What was the codename for the airborne and ground attempt to seize a route across the Netherlands?
-
-**Topic:** Operation names
-
-- A. Operation Cobra
-- B. Operation Dragoon
-- C. Operation Market Garden
-- D. Operation Plunder
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the U.S. breakout west of Saint-Lô (July 1944).
-- **B · Incorrect:** It referred to Allied invasion of southern France (August 1944).
-- **C · Correct:** It concerned the corridor from Eindhoven to Arnhem and was scheduled for or began in September 1944.
-- **D · Incorrect:** It referred to the British-led crossing of the lower Rhine near Wesel (March 1945).
-
-**Source:** [IWM War Memorials Register — Market Garden](https://memorials.iwm.org.uk/memorial/46459)
-
-### WWII-098 — What was the codename for the British-led crossing of the lower Rhine near Wesel?
-
-**Topic:** Operation names
-
-- A. Operation Cobra
-- B. Operation Varsity
-- C. Operation Plunder
-- D. Operation Market Garden
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the U.S. breakout west of Saint-Lô (July 1944).
-- **B · Incorrect:** It referred to the airborne assault supporting the Rhine crossing near Wesel (March 1945).
-- **C · Correct:** It concerned the Rhine near Wesel and was scheduled for or began in March 1945.
-- **D · Incorrect:** It referred to the airborne and ground attempt to seize a route across the Netherlands (September 1944).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-099 — What was the codename for the airborne assault supporting the Rhine crossing near Wesel?
-
-**Topic:** Operation names
-
-- A. Operation Varsity
-- B. Operation Plunder
-- C. Operation Market Garden
-- D. Operation Cobra
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the east bank of the Rhine near Wesel and was scheduled for or began in March 1945.
-- **B · Incorrect:** It referred to the British-led crossing of the lower Rhine near Wesel (March 1945).
-- **C · Incorrect:** It referred to the airborne and ground attempt to seize a route across the Netherlands (September 1944).
-- **D · Incorrect:** It referred to the U.S. breakout west of Saint-Lô (July 1944).
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-101 — What was the codename for the major Allied raid on Dieppe?
-
-**Topic:** Operation names
-
-- A. Operation Chariot
-- B. Operation Claymore
-- C. Operation Dynamo
-- D. Operation Jubilee
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the raid to disable the large dry dock at Saint-Nazaire (March 1942).
-- **B · Incorrect:** It referred to the raid by British and Norwegian commandos on the Lofoten Islands (March 1941).
-- **C · Incorrect:** It referred to the evacuation of Allied troops from Dunkirk (May 1940).
-- **D · Correct:** It concerned Dieppe on the French coast and was scheduled for or began in August 1942.
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-102 — What was the codename for the raid to disable the large dry dock at Saint-Nazaire?
-
-**Topic:** Operation names
-
-- A. Operation Jubilee
-- B. Operation Chariot
-- C. Operation Dynamo
-- D. Operation Claymore
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the major Allied raid on Dieppe (August 1942).
-- **B · Correct:** It concerned the Loire estuary and was scheduled for or began in March 1942.
-- **C · Incorrect:** It referred to the evacuation of Allied troops from Dunkirk (May 1940).
-- **D · Incorrect:** It referred to the raid by British and Norwegian commandos on the Lofoten Islands (March 1941).
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-103 — What was the codename for the raid by British and Norwegian commandos on the Lofoten Islands?
-
-**Topic:** Operation names
-
-- A. Operation Jubilee
-- B. Operation Chariot
-- C. Operation Archery
-- D. Operation Claymore
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the major Allied raid on Dieppe (August 1942).
-- **B · Incorrect:** It referred to the raid to disable the large dry dock at Saint-Nazaire (March 1942).
-- **C · Incorrect:** It referred to the commando raid on Vågsøy and Måløy (December 1941).
-- **D · Correct:** It concerned the Lofoten Islands and was scheduled for or began in March 1941.
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-104 — What was the codename for the commando raid on Vågsøy and Måløy?
-
-**Topic:** Operation names
-
-- A. Operation Archery
-- B. Operation Chariot
-- C. Operation Gunnerside
-- D. Operation Claymore
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned western Norway at Vågsøy and was scheduled for or began in December 1941.
-- **B · Incorrect:** It referred to the raid to disable the large dry dock at Saint-Nazaire (March 1942).
-- **C · Incorrect:** It referred to the sabotage of heavy-water production equipment at Vemork (February 1943).
-- **D · Incorrect:** It referred to the raid by British and Norwegian commandos on the Lofoten Islands (March 1941).
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-105 — What was the codename for the sabotage of heavy-water production equipment at Vemork?
-
-**Topic:** Operation names
-
-- A. Operation Archery
-- B. Operation Gunnerside
-- C. Operation Claymore
-- D. Operation Source
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the commando raid on Vågsøy and Måløy (December 1941).
-- **B · Correct:** It concerned Vemork in occupied Norway and was scheduled for or began in February 1943.
-- **C · Incorrect:** It referred to the raid by British and Norwegian commandos on the Lofoten Islands (March 1941).
-- **D · Incorrect:** It referred to the midget submarine attack that damaged Tirpitz in Kaafjord (September 1943).
-
-**Source:** [Norwegian Industrial Workers Museum — Vemork](https://www.nia.no/en/vemork/)
-
-### WWII-106 — What was the codename for the midget submarine attack that damaged Tirpitz in Kaafjord?
-
-**Topic:** Operation names
-
-- A. Operation Catechism
-- B. Operation Archery
-- C. Operation Gunnerside
-- D. Operation Source
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the RAF bombing attack that capsized Tirpitz near Tromsø (November 1944).
-- **B · Incorrect:** It referred to the commando raid on Vågsøy and Måløy (December 1941).
-- **C · Incorrect:** It referred to the sabotage of heavy-water production equipment at Vemork (February 1943).
-- **D · Correct:** It concerned Kaafjord in northern Norway and was scheduled for or began in September 1943.
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-107 — What was the codename for the RAF bombing attack that capsized Tirpitz near Tromsø?
-
-**Topic:** Operation names
-
-- A. Operation Source
-- B. Operation Cerberus
-- C. Operation Catechism
-- D. Operation Gunnerside
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the midget submarine attack that damaged Tirpitz in Kaafjord (September 1943).
-- **B · Incorrect:** It referred to the German naval Channel Dash (February 1942).
-- **C · Correct:** It concerned the waters off Tromsø and was scheduled for or began in November 1944.
-- **D · Incorrect:** It referred to the sabotage of heavy-water production equipment at Vemork (February 1943).
-
-**Source:** [RAF Museum — Target the Tirpitz](https://www.rafmuseum.org.uk/blog/target-the-tirpitz/)
-
-### WWII-108 — What was the codename for the German naval Channel Dash?
-
-**Topic:** Operation names
-
-- A. Operation Source
-- B. Operation Gunnerside
-- C. Operation Catechism
-- D. Operation Cerberus
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the midget submarine attack that damaged Tirpitz in Kaafjord (September 1943).
-- **B · Incorrect:** It referred to the sabotage of heavy-water production equipment at Vemork (February 1943).
-- **C · Incorrect:** It referred to the RAF bombing attack that capsized Tirpitz near Tromsø (November 1944).
-- **D · Correct:** It concerned the English Channel from Brest and was scheduled for or began in February 1942.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-111 — What was the codename for the German offensive aimed at Moscow in autumn 1941?
-
-**Topic:** Operation names
-
-- A. Operation Weserübung
-- B. Operation Typhoon
-- C. Operation Barbarossa
-- D. Operation Citadel
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to Germany’s invasion of Denmark and Norway (April 1940).
-- **B · Correct:** It concerned the western approaches to Moscow and was scheduled for or began in September 1941.
-- **C · Incorrect:** It referred to Germany’s invasion of the Soviet Union (June 1941).
-- **D · Incorrect:** It referred to the German attack on the Kursk salient (July 1943).
-
-**Source:** [National WWII Museum — Eastern Front](https://www.nationalww2museum.org/war/topics/eastern-front)
-
-### WWII-113 — What was the codename for the Soviet summer offensive that broke German Army Group Centre in Belarus?
-
-**Topic:** Operation names
-
-- A. Operation Typhoon
-- B. Operation Uranus
-- C. Operation Citadel
-- D. Operation Bagration
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the German offensive aimed at Moscow in autumn 1941 (September 1941).
-- **B · Incorrect:** It referred to the Soviet counteroffensive that encircled Axis forces at Stalingrad (November 1942).
-- **C · Incorrect:** It referred to the German attack on the Kursk salient (July 1943).
-- **D · Correct:** It concerned Belarus and was scheduled for or began in June 1944.
-
-**Source:** [National WWII Museum — Eastern Front](https://www.nationalww2museum.org/war/topics/eastern-front)
-
-### WWII-114 — What was the codename for the British offensive against Italian forces in Egypt and Libya in 1940–41?
-
-**Topic:** Operation names
-
-- A. Operation Lightfoot
-- B. Operation Crusader
-- C. Operation Battleaxe
-- D. Operation Compass
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the opening phase of the Second Battle of El Alamein (October 1942).
-- **B · Incorrect:** It referred to the November 1941 British offensive that relieved Tobruk (November 1941).
-- **C · Incorrect:** It referred to the June 1941 British attempt to relieve Tobruk (June 1941).
-- **D · Correct:** It concerned the Western Desert from Egypt into Libya and was scheduled for or began in December 1940.
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-115 — What was the codename for the June 1941 British attempt to relieve Tobruk?
-
-**Topic:** Operation names
-
-- A. Operation Battleaxe
-- B. Operation Lightfoot
-- C. Operation Crusader
-- D. Operation Compass
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the Egyptian–Libyan frontier and was scheduled for or began in June 1941.
-- **B · Incorrect:** It referred to the opening phase of the Second Battle of El Alamein (October 1942).
-- **C · Incorrect:** It referred to the November 1941 British offensive that relieved Tobruk (November 1941).
-- **D · Incorrect:** It referred to the British offensive against Italian forces in Egypt and Libya in 1940–41 (December 1940).
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-116 — What was the codename for the November 1941 British offensive that relieved Tobruk?
-
-**Topic:** Operation names
-
-- A. Operation Battleaxe
-- B. Operation Crusader
-- C. Operation Lightfoot
-- D. Operation Compass
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the June 1941 British attempt to relieve Tobruk (June 1941).
-- **B · Correct:** It concerned eastern Libya and the Egyptian frontier and was scheduled for or began in November 1941.
-- **C · Incorrect:** It referred to the opening phase of the Second Battle of El Alamein (October 1942).
-- **D · Incorrect:** It referred to the British offensive against Italian forces in Egypt and Libya in 1940–41 (December 1940).
-
-**Source:** [Imperial War Museums — Second World War](https://www.iwm.org.uk/history/second-world-war)
-
-### WWII-117 — What was the codename for the opening phase of the Second Battle of El Alamein?
-
-**Topic:** Operation names
-
-- A. Operation Lightfoot
-- B. Operation Crusader
-- C. Operation Battleaxe
-- D. Operation Supercharge
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the El Alamein line in Egypt and was scheduled for or began in October 1942.
-- **B · Incorrect:** It referred to the November 1941 British offensive that relieved Tobruk (November 1941).
-- **C · Incorrect:** It referred to the June 1941 British attempt to relieve Tobruk (June 1941).
-- **D · Incorrect:** It referred to the renewed thrust in early November at the Second Battle of El Alamein (November 1942).
-
-**Source:** [National Army Museum — Second Battle of El Alamein](https://www.nam.ac.uk/explore/battle-alamein)
-
-### WWII-118 — What was the codename for the renewed thrust in early November at the Second Battle of El Alamein?
-
-**Topic:** Operation names
-
-- A. Operation Supercharge
-- B. Operation Crusader
-- C. Operation Lightfoot
-- D. Operation Battleaxe
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the El Alamein line in Egypt and was scheduled for or began in November 1942.
-- **B · Incorrect:** It referred to the November 1941 British offensive that relieved Tobruk (November 1941).
-- **C · Incorrect:** It referred to the opening phase of the Second Battle of El Alamein (October 1942).
-- **D · Incorrect:** It referred to the June 1941 British attempt to relieve Tobruk (June 1941).
-
-**Source:** [National Army Museum — Second Battle of El Alamein](https://www.nam.ac.uk/explore/battle-alamein)
-
-### WWII-119 — What was the codename for the Allied landings on Guadalcanal and nearby islands?
-
-**Topic:** Operation names
-
-- A. Operation Catchpole
-- B. Operation Galvanic
-- C. Operation Flintlock
-- D. Operation Watchtower
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the U.S. assault on Eniwetok Atoll (February 1944).
-- **B · Incorrect:** It referred to the U.S. assault on Tarawa and Makin (November 1943).
-- **C · Incorrect:** It referred to the U.S. assault on Kwajalein Atoll (January 1944).
-- **D · Correct:** It concerned Guadalcanal and Tulagi and was scheduled for or began in August 1942.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-120 — What was the codename for the U.S. assault on Tarawa and Makin?
-
-**Topic:** Operation names
-
-- A. Operation Catchpole
-- B. Operation Flintlock
-- C. Operation Watchtower
-- D. Operation Galvanic
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the U.S. assault on Eniwetok Atoll (February 1944).
-- **B · Incorrect:** It referred to the U.S. assault on Kwajalein Atoll (January 1944).
-- **C · Incorrect:** It referred to the Allied landings on Guadalcanal and nearby islands (August 1942).
-- **D · Correct:** It concerned the Gilbert Islands and was scheduled for or began in November 1943.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-121 — What was the codename for the U.S. assault on Kwajalein Atoll?
-
-**Topic:** Operation names
-
-- A. Operation Galvanic
-- B. Operation Flintlock
-- C. Operation Watchtower
-- D. Operation Catchpole
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the U.S. assault on Tarawa and Makin (November 1943).
-- **B · Correct:** It concerned the Marshall Islands at Kwajalein and was scheduled for or began in January 1944.
-- **C · Incorrect:** It referred to the Allied landings on Guadalcanal and nearby islands (August 1942).
-- **D · Incorrect:** It referred to the U.S. assault on Eniwetok Atoll (February 1944).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-123 — When did this event occur: Initial Allied landings on Guadalcanal?
-
-**Topic:** Chronology
-
-- A. October 1942
-- B. May 1942
-- C. August 1942
-- D. June 1942
-
-**Correct answer:** C
-
-- **A · Incorrect:** This is the date of second Battle of El Alamein begins, a different event.
-- **B · Incorrect:** This is the date of battle of the Coral Sea, a different event.
-- **C · Correct:** It occurred in the Solomon Islands in August 1942.
-- **D · Incorrect:** This is the date of battle of Midway, a different event.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-125 — When did this event occur: End of organized Axis resistance in Tunisia?
-
-**Topic:** Chronology
-
-- A. April 1943
-- B. March 1943
-- C. May 1943
-- D. July 1943
-
-**Correct answer:** C
-
-- **A · Incorrect:** This is the date of start of the Warsaw Ghetto Uprising, a different event.
-- **B · Incorrect:** This is the date of battle of the Bismarck Sea, a different event.
-- **C · Correct:** It occurred in Tunisia in May 1943.
-- **D · Incorrect:** This is the date of operation Husky landings, a different event.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-129 — Who was U.S. general who commanded the First Army on D-Day?
-
-**Topic:** Command and leadership
-
-- A. Bernard Montgomery
-- B. Omar Bradley
-- C. George S. Patton
-- D. Erwin Rommel
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was British general who commanded the Eighth Army at the Second Battle of El Alamein, a different person.
-- **B · Correct:** He later commanded the 12th Army Group.
-- **C · Incorrect:** This was U.S. general whose Third Army turned north to help relieve Bastogne, a different person.
-- **D · Incorrect:** This was German field marshal nicknamed the Desert Fox, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-130 — Who was U.S. general who commanded the Fifth Army during its June 1944 entry into Rome?
-
-**Topic:** Command and leadership
-
-- A. George S. Patton
-- B. Harold Alexander
-- C. Mark Clark
-- D. Omar Bradley
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was U.S. general whose Third Army turned north to help relieve Bastogne, a different person.
-- **B · Incorrect:** This was British general who commanded the 15th Army Group during the invasion of Sicily, a different person.
-- **C · Correct:** He commanded Fifth Army during the advance to the Italian capital.
-- **D · Incorrect:** This was U.S. general who commanded the First Army on D-Day, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-131 — Who was U.S. general who took over VI Corps from John Lucas at Anzio?
-
-**Topic:** Command and leadership
-
-- A. Mark Clark
-- B. John P. Lucas
-- C. Harold Alexander
-- D. Lucian Truscott
-
-**Correct answer:** D
-
-- **A · Incorrect:** This was U.S. general who commanded the Fifth Army during its June 1944 entry into Rome, a different person.
-- **B · Incorrect:** This was U.S. general in command of VI Corps at the initial Anzio landings, a different person.
-- **C · Incorrect:** This was British general who commanded the 15th Army Group during the invasion of Sicily, a different person.
-- **D · Correct:** He replaced Lucas as commander of the beachhead corps in February 1944.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-132 — Who was U.S. general whose Sixth Army Group controlled U.S. Seventh Army and French First Army?
-
-**Topic:** Command and leadership
-
-- A. Jacob Devers
-- B. John P. Lucas
-- C. Lucian Truscott
-- D. Courtney Hodges
-
-**Correct answer:** A
-
-- **A · Correct:** His army group advanced from southern France into Germany.
-- **B · Incorrect:** This was U.S. general in command of VI Corps at the initial Anzio landings, a different person.
-- **C · Incorrect:** This was U.S. general who took over VI Corps from John Lucas at Anzio, a different person.
-- **D · Incorrect:** This was U.S. general who succeeded Omar Bradley as First Army commander in August 1944, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-133 — Who was U.S. general who commanded Ninth Army in its crossing of the Rhine in March 1945?
-
-**Topic:** Command and leadership
-
-- A. John P. Lucas
-- B. Jacob Devers
-- C. Courtney Hodges
-- D. William Simpson
-
-**Correct answer:** D
-
-- **A · Incorrect:** This was U.S. general in command of VI Corps at the initial Anzio landings, a different person.
-- **B · Incorrect:** This was U.S. general whose Sixth Army Group controlled U.S. Seventh Army and French First Army, a different person.
-- **C · Incorrect:** This was U.S. general who succeeded Omar Bradley as First Army commander in August 1944, a different person.
-- **D · Correct:** He led Ninth Army while it operated under Montgomery’s army group.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-134 — Who was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf?
-
-**Topic:** Command and leadership
-
-- A. Raymond Spruance
-- B. Thomas C. Kinkaid
-- C. William F. Halsey
-- D. Chester W. Nimitz
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was U.S. admiral who commanded Fifth Fleet at the Battle of the Philippine Sea, a different person.
-- **B · Correct:** His Seventh Fleet supported the landing forces around Leyte.
-- **C · Incorrect:** This was U.S. admiral commanding Third Fleet during the Battle of Leyte Gulf, a different person.
-- **D · Incorrect:** This was U.S. admiral who led Pacific Ocean Areas from headquarters at Pearl Harbor, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-135 — Who was U.S. admiral who commanded Task Force 58 during the Battle of the Philippine Sea?
-
-**Topic:** Command and leadership
-
-- A. Marc Mitscher
-- B. Thomas C. Kinkaid
-- C. Raymond Spruance
-- D. Frank Jack Fletcher
-
-**Correct answer:** A
-
-- **A · Correct:** He commanded the fast carrier task force under Spruance.
-- **B · Incorrect:** This was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf, a different person.
-- **C · Incorrect:** This was U.S. admiral who commanded Fifth Fleet at the Battle of the Philippine Sea, a different person.
-- **D · Incorrect:** This was U.S. admiral who commanded the Allied carrier force at Coral Sea, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-137 — Who was Japanese admiral commanding Centre Force during the Battle off Samar?
-
-**Topic:** Command and leadership
-
-- A. Shōji Nishimura
-- B. Jisaburō Ozawa
-- C. Isoroku Yamamoto
-- D. Takeo Kurita
-
-**Correct answer:** D
-
-- **A · Incorrect:** This was Japanese vice admiral whose force was destroyed at Surigao Strait, a different person.
-- **B · Incorrect:** This was Japanese admiral leading the carrier decoy force at Cape Engaño, a different person.
-- **C · Incorrect:** This was Japanese Combined Fleet commander killed during Operation Vengeance, a different person.
-- **D · Correct:** He led the major surface force that emerged through San Bernardino Strait.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-138 — Who was Japanese vice admiral whose force was destroyed at Surigao Strait?
-
-**Topic:** Command and leadership
-
-- A. Takeo Kurita
-- B. Jisaburō Ozawa
-- C. Shōji Nishimura
-- D. Richard K. Turner
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was Japanese admiral commanding Centre Force during the Battle off Samar, a different person.
-- **B · Incorrect:** This was Japanese admiral leading the carrier decoy force at Cape Engaño, a different person.
-- **C · Correct:** He led the forward Japanese southern force into the strait.
-- **D · Incorrect:** This was U.S. admiral who commanded the amphibious force for the August 1942 Guadalcanal landings, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-139 — Who was U.S. Marine general who commanded the 1st Marine Division in the initial Guadalcanal campaign?
-
-**Topic:** Command and leadership
-
-- A. Alexander Vandegrift
-- B. Jisaburō Ozawa
-- C. Richard K. Turner
-- D. Shōji Nishimura
-
-**Correct answer:** A
-
-- **A · Correct:** His division landed on Guadalcanal and nearby islands in August 1942.
-- **B · Incorrect:** This was Japanese admiral leading the carrier decoy force at Cape Engaño, a different person.
-- **C · Incorrect:** This was U.S. admiral who commanded the amphibious force for the August 1942 Guadalcanal landings, a different person.
-- **D · Incorrect:** This was Japanese vice admiral whose force was destroyed at Surigao Strait, a different person.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-140 — Who was U.S. general recalled from his China–Burma–India duties in 1944?
-
-**Topic:** Command and leadership
-
-- A. Joseph Stilwell
-- B. Simon Bolivar Buckner Jr.
-- C. Louis Mountbatten
-- D. William Slim
-
-**Correct answer:** A
-
-- **A · Correct:** He had served as Chiang Kai-shek’s chief of staff and held U.S. theater responsibilities.
-- **B · Incorrect:** This was U.S. general killed while commanding Tenth Army on Okinawa, a different person.
-- **C · Incorrect:** This was British officer who became Supreme Allied Commander, Southeast Asia Command, in 1943, a different person.
-- **D · Incorrect:** This was British general who commanded Fourteenth Army in the reconquest of Burma, a different person.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-141 — Who was British officer who became Supreme Allied Commander, Southeast Asia Command, in 1943?
-
-**Topic:** Command and leadership
-
-- A. Louis Mountbatten
-- B. Joseph Stilwell
-- C. Simon Bolivar Buckner Jr.
-- D. William Slim
-
-**Correct answer:** A
-
-- **A · Correct:** He led the joint Allied command overseeing operations in Burma and surrounding areas.
-- **B · Incorrect:** This was U.S. general recalled from his China–Burma–India duties in 1944, a different person.
-- **C · Incorrect:** This was U.S. general killed while commanding Tenth Army on Okinawa, a different person.
-- **D · Incorrect:** This was British general who commanded Fourteenth Army in the reconquest of Burma, a different person.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-145 — Which was the February 1942 Allied naval defeat during Japan’s invasion of the Dutch East Indies?
-
-**Topic:** Naval engagements
-
-- A. Battle of Savo Island
-- B. Battle of the Java Sea
-- C. Battle of the Eastern Solomons
-- D. Battle of Sunda Strait
-
-**Correct answer:** B
-
-- **A · Incorrect:** Ships under Gunichi Mikawa inflicted the losses shortly after the landings.
-- **B · Correct:** It was fought in the Java Sea on February 27, 1942.
-- **C · Incorrect:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-- **D · Incorrect:** Both cruisers were lost as they tried to pass through Sunda Strait.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-146 — Which was the night action in which USS Houston and HMAS Perth were sunk together?
-
-**Topic:** Naval engagements
-
-- A. Battle of Sunda Strait
-- B. Battle of Savo Island
-- C. Battle of the Eastern Solomons
-- D. Battle of the Java Sea
-
-**Correct answer:** A
-
-- **A · Correct:** Both cruisers were lost as they tried to pass through Sunda Strait.
-- **B · Incorrect:** Ships under Gunichi Mikawa inflicted the losses shortly after the landings.
-- **C · Incorrect:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-- **D · Incorrect:** It was fought in the Java Sea on February 27, 1942.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-147 — Which was the August 1942 Japanese night attack that sank four Allied heavy cruisers around Guadalcanal?
-
-**Topic:** Naval engagements
-
-- A. Battle of Savo Island
-- B. Battle of the Java Sea
-- C. Battle of the Eastern Solomons
-- D. Battle of Sunda Strait
-
-**Correct answer:** A
-
-- **A · Correct:** Ships under Gunichi Mikawa inflicted the losses shortly after the landings.
-- **B · Incorrect:** It was fought in the Java Sea on February 27, 1942.
-- **C · Incorrect:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-- **D · Incorrect:** Both cruisers were lost as they tried to pass through Sunda Strait.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-148 — Which was the August 1942 carrier battle in which Japan lost Ryūjō?
-
-**Topic:** Naval engagements
-
-- A. Battle of the Eastern Solomons
-- B. Battle of Savo Island
-- C. Battle of Sunda Strait
-- D. Battle of Cape Esperance
-
-**Correct answer:** A
-
-- **A · Correct:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-- **B · Incorrect:** Ships under Gunichi Mikawa inflicted the losses shortly after the landings.
-- **C · Incorrect:** Both cruisers were lost as they tried to pass through Sunda Strait.
-- **D · Incorrect:** Scott intercepted a Japanese bombardment force near Guadalcanal.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-149 — Which was the October 1942 night action in which Norman Scott’s force sank the cruiser Furutaka?
-
-**Topic:** Naval engagements
-
-- A. Battle of Savo Island
-- B. Battle of the Santa Cruz Islands
-- C. Battle of Cape Esperance
-- D. Battle of the Eastern Solomons
-
-**Correct answer:** C
-
-- **A · Incorrect:** Ships under Gunichi Mikawa inflicted the losses shortly after the landings.
-- **B · Incorrect:** The loss of Hornet was distinct from the earlier loss of Wasp to a submarine.
-- **C · Correct:** Scott intercepted a Japanese bombardment force near Guadalcanal.
-- **D · Incorrect:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-150 — Which was the October 1942 carrier battle in which Hornet was fatally damaged?
-
-**Topic:** Naval engagements
-
-- A. Battle of the Eastern Solomons
-- B. Naval Battle of Guadalcanal
-- C. Battle of the Santa Cruz Islands
-- D. Battle of Cape Esperance
-
-**Correct answer:** C
-
-- **A · Incorrect:** The Japanese light carrier was sunk in the fighting over Guadalcanal reinforcements.
-- **B · Incorrect:** The two battleships were lost in separate actions during the same larger battle.
-- **C · Correct:** The loss of Hornet was distinct from the earlier loss of Wasp to a submarine.
-- **D · Incorrect:** Scott intercepted a Japanese bombardment force near Guadalcanal.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-151 — Which was the November 1942 series of actions in which Japan lost Hiei and Kirishima?
-
-**Topic:** Naval engagements
-
-- A. Battle of Cape Esperance
-- B. Battle of Tassafaronga
-- C. Battle of the Santa Cruz Islands
-- D. Naval Battle of Guadalcanal
-
-**Correct answer:** D
-
-- **A · Incorrect:** Scott intercepted a Japanese bombardment force near Guadalcanal.
-- **B · Incorrect:** The engagement took place off northwestern Guadalcanal.
-- **C · Incorrect:** The loss of Hornet was distinct from the earlier loss of Wasp to a submarine.
-- **D · Correct:** The two battleships were lost in separate actions during the same larger battle.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
 
 ### WWII-152 — Which was the British fighter whose Mk IID variant carried two 40 mm cannon for ground attack?
 
@@ -3396,438 +1058,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 ## WWII Expert
 
-### WWII-169 — What was the codename for the Soviet offensive that overwhelmed the Italian Eighth Army on the Don?
-
-**Topic:** Operation names
-
-- A. Operation Uranus
-- B. Operation Winter Storm
-- C. Operation Bagration
-- D. Operation Little Saturn
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the Soviet counteroffensive that encircled Axis forces at Stalingrad (November 1942).
-- **B · Incorrect:** It referred to the German attempt to relieve the encircled army at Stalingrad (December 1942).
-- **C · Incorrect:** It referred to the Soviet summer offensive that broke German Army Group Centre in Belarus (June 1944).
-- **D · Correct:** It concerned the Middle Don and was scheduled for or began in December 1942.
-
-**Source:** [National WWII Museum — Eastern Front](https://www.nationalww2museum.org/war/topics/eastern-front)
-
-### WWII-170 — What was the codename for the German attempt to relieve the encircled army at Stalingrad?
-
-**Topic:** Operation names
-
-- A. Operation Little Saturn
-- B. Operation Uranus
-- C. Operation Winter Storm
-- D. Operation Iskra
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the Soviet offensive that overwhelmed the Italian Eighth Army on the Don (December 1942).
-- **B · Incorrect:** It referred to the Soviet counteroffensive that encircled Axis forces at Stalingrad (November 1942).
-- **C · Correct:** It concerned the approaches to Stalingrad from Kotelnikovo and was scheduled for or began in December 1942.
-- **D · Incorrect:** It referred to the Soviet offensive that opened a land corridor into Leningrad (January 1943).
-
-**Source:** [National WWII Museum — Eastern Front](https://www.nationalww2museum.org/war/topics/eastern-front)
-
-### WWII-172 — What was the codename for the U.S. assault on Eniwetok Atoll?
-
-**Topic:** Operation names
-
-- A. Operation Catchpole
-- B. Operation Galvanic
-- C. Operation Flintlock
-- D. Operation Forager
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned the Marshall Islands at Eniwetok and was scheduled for or began in February 1944.
-- **B · Incorrect:** It referred to the U.S. assault on Tarawa and Makin (November 1943).
-- **C · Incorrect:** It referred to the U.S. assault on Kwajalein Atoll (January 1944).
-- **D · Incorrect:** It referred to the U.S. offensive to take the southern Mariana Islands (June 1944).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-173 — What was the codename for the U.S. offensive to take the southern Mariana Islands?
-
-**Topic:** Operation names
-
-- A. Operation Flintlock
-- B. Operation Catchpole
-- C. Operation Stalemate II
-- D. Operation Forager
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the U.S. assault on Kwajalein Atoll (January 1944).
-- **B · Incorrect:** It referred to the U.S. assault on Eniwetok Atoll (February 1944).
-- **C · Incorrect:** It referred to the Allied landings in the Palau Islands, including Peleliu (September 1944).
-- **D · Correct:** It concerned Saipan, Tinian, and Guam and was scheduled for or began in June 1944.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-174 — What was the codename for the Allied landings in the Palau Islands, including Peleliu?
-
-**Topic:** Operation names
-
-- A. Operation Catchpole
-- B. Operation Stalemate II
-- C. Operation King Two
-- D. Operation Forager
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the U.S. assault on Eniwetok Atoll (February 1944).
-- **B · Correct:** It concerned Peleliu and Angaur and was scheduled for or began in September 1944.
-- **C · Incorrect:** It referred to the Allied invasion of Leyte (October 1944).
-- **D · Incorrect:** It referred to the U.S. offensive to take the southern Mariana Islands (June 1944).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-176 — What was the codename for the Allied landings at Lingayen Gulf?
-
-**Topic:** Operation names
-
-- A. Operation King Two
-- B. Operation Detachment
-- C. Operation Stalemate II
-- D. Operation Mike I
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the Allied invasion of Leyte (October 1944).
-- **B · Incorrect:** It referred to the U.S. invasion of Iwo Jima (February 1945).
-- **C · Incorrect:** It referred to the Allied landings in the Palau Islands, including Peleliu (September 1944).
-- **D · Correct:** It concerned Lingayen Gulf on Luzon and was scheduled for or began in January 1945.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-179 — What was the codename for the February 1944 U.S. carrier raid on Truk?
-
-**Topic:** Operation names
-
-- A. Operation Hailstone
-- B. Operation Mike I
-- C. Operation Iceberg
-- D. Operation Detachment
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned Truk Lagoon in the Caroline Islands and was scheduled for or began in February 1944.
-- **B · Incorrect:** It referred to the Allied landings at Lingayen Gulf (January 1945).
-- **C · Incorrect:** It referred to the Allied operation to seize Okinawa (March 1945).
-- **D · Incorrect:** It referred to the U.S. invasion of Iwo Jima (February 1945).
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-180 — What was the codename for the series of Allied operations to isolate Rabaul?
-
-**Topic:** Operation names
-
-- A. Operation Cherryblossom
-- B. Operation Toenails
-- C. Operation Cartwheel
-- D. Operation Dexterity
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the Allied landing at Cape Torokina on Bougainville (November 1943).
-- **B · Incorrect:** It referred to the Allied landings opening the New Georgia campaign (June 1943).
-- **C · Correct:** It concerned New Guinea and the Solomon–Bismarck area and was scheduled for or began in June 1943.
-- **D · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-181 — What was the codename for the Allied landings opening the New Georgia campaign?
-
-**Topic:** Operation names
-
-- A. Operation Dexterity
-- B. Operation Cherryblossom
-- C. Operation Toenails
-- D. Operation Cartwheel
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-- **B · Incorrect:** It referred to the Allied landing at Cape Torokina on Bougainville (November 1943).
-- **C · Correct:** It concerned the New Georgia group in the Solomon Islands and was scheduled for or began in June 1943.
-- **D · Incorrect:** It referred to the series of Allied operations to isolate Rabaul (June 1943).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-182 — What was the codename for the Allied landing at Cape Torokina on Bougainville?
-
-**Topic:** Operation names
-
-- A. Operation Cartwheel
-- B. Operation Toenails
-- C. Operation Dexterity
-- D. Operation Cherryblossom
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the series of Allied operations to isolate Rabaul (June 1943).
-- **B · Incorrect:** It referred to the Allied landings opening the New Georgia campaign (June 1943).
-- **C · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-- **D · Correct:** It concerned Empress Augusta Bay and was scheduled for or began in November 1943.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-183 — What was the codename for the Allied landings at Arawe and Cape Gloucester?
-
-**Topic:** Operation names
-
-- A. Operation Cherryblossom
-- B. Operation Toenails
-- C. Operation Dexterity
-- D. Operation Brewer
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the Allied landing at Cape Torokina on Bougainville (November 1943).
-- **B · Incorrect:** It referred to the Allied landings opening the New Georgia campaign (June 1943).
-- **C · Correct:** It concerned western New Britain and was scheduled for or began in December 1943.
-- **D · Incorrect:** It referred to the Allied operation to take the Admiralty Islands (February 1944).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-184 — What was the codename for the Allied operation to take the Admiralty Islands?
-
-**Topic:** Operation names
-
-- A. Operation Reckless
-- B. Operation Dexterity
-- C. Operation Cherryblossom
-- D. Operation Brewer
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the Allied landings at Hollandia (April 1944).
-- **B · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-- **C · Incorrect:** It referred to the Allied landing at Cape Torokina on Bougainville (November 1943).
-- **D · Correct:** It concerned Los Negros and Manus and was scheduled for or began in February 1944.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-185 — What was the codename for the Allied landings at Hollandia?
-
-**Topic:** Operation names
-
-- A. Operation Reckless
-- B. Operation Persecution
-- C. Operation Brewer
-- D. Operation Dexterity
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned Hollandia on the north coast of New Guinea and was scheduled for or began in April 1944.
-- **B · Incorrect:** It referred to the Allied landing at Aitape (April 1944).
-- **C · Incorrect:** It referred to the Allied operation to take the Admiralty Islands (February 1944).
-- **D · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-186 — What was the codename for the Allied landing at Aitape?
-
-**Topic:** Operation names
-
-- A. Operation Reckless
-- B. Operation Dexterity
-- C. Operation Persecution
-- D. Operation Brewer
-
-**Correct answer:** C
-
-- **A · Incorrect:** It referred to the Allied landings at Hollandia (April 1944).
-- **B · Incorrect:** It referred to the Allied landings at Arawe and Cape Gloucester (December 1943).
-- **C · Correct:** It concerned Aitape on the north coast of New Guinea and was scheduled for or began in April 1944.
-- **D · Incorrect:** It referred to the Allied operation to take the Admiralty Islands (February 1944).
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
-### WWII-187 — What was the codename for the Australian landing on Tarakan?
-
-**Topic:** Operation names
-
-- A. Operation Olympic
-- B. Operation Oboe One
-- C. Operation Oboe Two
-- D. Operation Oboe Six
-
-**Correct answer:** B
-
-- **A · Incorrect:** It referred to the planned Allied invasion of southern Kyushu (November 1945).
-- **B · Correct:** It concerned Tarakan off Borneo and was scheduled for or began in May 1945.
-- **C · Incorrect:** It referred to the Australian landing at Balikpapan (July 1945).
-- **D · Incorrect:** It referred to the Australian landings in Brunei Bay (June 1945).
-
-**Source:** [Australian War Memorial — Borneo operations](https://www.awm.gov.au/articles/journal/j37/borneo)
-
-### WWII-188 — What was the codename for the Australian landings in Brunei Bay?
-
-**Topic:** Operation names
-
-- A. Operation Oboe Six
-- B. Operation Olympic
-- C. Operation Oboe One
-- D. Operation Oboe Two
-
-**Correct answer:** A
-
-- **A · Correct:** It concerned Brunei Bay and Labuan off Borneo and was scheduled for or began in June 1945.
-- **B · Incorrect:** It referred to the planned Allied invasion of southern Kyushu (November 1945).
-- **C · Incorrect:** It referred to the Australian landing on Tarakan (May 1945).
-- **D · Incorrect:** It referred to the Australian landing at Balikpapan (July 1945).
-
-**Source:** [Australian War Memorial — Borneo operations](https://www.awm.gov.au/articles/journal/j37/borneo)
-
-### WWII-189 — What was the codename for the Australian landing at Balikpapan?
-
-**Topic:** Operation names
-
-- A. Operation Oboe Six
-- B. Operation Oboe One
-- C. Operation Olympic
-- D. Operation Oboe Two
-
-**Correct answer:** D
-
-- **A · Incorrect:** It referred to the Australian landings in Brunei Bay (June 1945).
-- **B · Incorrect:** It referred to the Australian landing on Tarakan (May 1945).
-- **C · Incorrect:** It referred to the planned Allied invasion of southern Kyushu (November 1945).
-- **D · Correct:** It concerned Balikpapan on Borneo and was scheduled for or began in July 1945.
-
-**Source:** [Australian War Memorial — Borneo operations](https://www.awm.gov.au/articles/journal/j37/borneo)
-
-### WWII-193 — Who was U.S. general in command of VI Corps at the initial Anzio landings?
-
-**Topic:** Command and leadership
-
-- A. Lucian Truscott
-- B. Jacob Devers
-- C. John P. Lucas
-- D. Harold Alexander
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was U.S. general who took over VI Corps from John Lucas at Anzio, a different person.
-- **B · Incorrect:** This was U.S. general whose Sixth Army Group controlled U.S. Seventh Army and French First Army, a different person.
-- **C · Correct:** He commanded the landing force before Truscott replaced him.
-- **D · Incorrect:** This was British general who commanded the 15th Army Group during the invasion of Sicily, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-194 — Who was U.S. general who succeeded Omar Bradley as First Army commander in August 1944?
-
-**Topic:** Command and leadership
-
-- A. Jacob Devers
-- B. John P. Lucas
-- C. Courtney Hodges
-- D. William Simpson
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was U.S. general whose Sixth Army Group controlled U.S. Seventh Army and French First Army, a different person.
-- **B · Incorrect:** This was U.S. general in command of VI Corps at the initial Anzio landings, a different person.
-- **C · Correct:** He took command when Bradley moved up to lead an army group.
-- **D · Incorrect:** This was U.S. general who commanded Ninth Army in its crossing of the Rhine in March 1945, a different person.
-
-**Source:** [U.S. Army Center of Military History — European theater campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/European-African-Middle-Eastern-Theater/)
-
-### WWII-195 — Who was U.S. admiral commanding Third Fleet during the Battle of Leyte Gulf?
-
-**Topic:** Command and leadership
-
-- A. William F. Halsey
-- B. Douglas MacArthur
-- C. Chester W. Nimitz
-- D. Thomas C. Kinkaid
-
-**Correct answer:** A
-
-- **A · Correct:** He commanded Third Fleet carriers during the operation.
-- **B · Incorrect:** This was U.S. general who waded ashore on Leyte in October 1944, a different person.
-- **C · Incorrect:** This was U.S. admiral who led Pacific Ocean Areas from headquarters at Pearl Harbor, a different person.
-- **D · Incorrect:** This was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-196 — Who was U.S. admiral who commanded Fifth Fleet at the Battle of the Philippine Sea?
-
-**Topic:** Command and leadership
-
-- A. Marc Mitscher
-- B. Raymond Spruance
-- C. William F. Halsey
-- D. Thomas C. Kinkaid
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was U.S. admiral who commanded Task Force 58 during the Battle of the Philippine Sea, a different person.
-- **B · Correct:** He held overall Fifth Fleet command during the June 1944 battle.
-- **C · Incorrect:** This was U.S. admiral commanding Third Fleet during the Battle of Leyte Gulf, a different person.
-- **D · Incorrect:** This was U.S. admiral commanding Seventh Fleet during the Battle of Leyte Gulf, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-197 — Who was U.S. admiral who commanded the Allied carrier force at Coral Sea?
-
-**Topic:** Command and leadership
-
-- A. Marc Mitscher
-- B. Chūichi Nagumo
-- C. Frank Jack Fletcher
-- D. Raymond Spruance
-
-**Correct answer:** C
-
-- **A · Incorrect:** This was U.S. admiral who commanded Task Force 58 during the Battle of the Philippine Sea, a different person.
-- **B · Incorrect:** This was Japanese admiral who led the carrier strike force against Pearl Harbor, a different person.
-- **C · Correct:** He flew his flag in Yorktown.
-- **D · Incorrect:** This was U.S. admiral who commanded Fifth Fleet at the Battle of the Philippine Sea, a different person.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-199 — Who was Japanese admiral leading the carrier decoy force at Cape Engaño?
-
-**Topic:** Command and leadership
-
-- A. Shōji Nishimura
-- B. Jisaburō Ozawa
-- C. Takeo Kurita
-- D. Isoroku Yamamoto
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was Japanese vice admiral whose force was destroyed at Surigao Strait, a different person.
-- **B · Correct:** His Northern Force drew Halsey’s attention away from Leyte Gulf.
-- **C · Incorrect:** This was Japanese admiral commanding Centre Force during the Battle off Samar, a different person.
-- **D · Incorrect:** This was Japanese Combined Fleet commander killed during Operation Vengeance, a different person.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-201 — Who was U.S. general killed while commanding Tenth Army on Okinawa?
-
-**Topic:** Command and leadership
-
-- A. William Slim
-- B. Simon Bolivar Buckner Jr.
-- C. Joseph Stilwell
-- D. Louis Mountbatten
-
-**Correct answer:** B
-
-- **A · Incorrect:** This was British general who commanded Fourteenth Army in the reconquest of Burma, a different person.
-- **B · Correct:** He was killed in June 1945 near the end of the land battle.
-- **C · Incorrect:** This was U.S. general recalled from his China–Burma–India duties in 1944, a different person.
-- **D · Incorrect:** This was British officer who became Supreme Allied Commander, Southeast Asia Command, in 1943, a different person.
-
-**Source:** [U.S. Army Center of Military History — Asia and Pacific campaign histories](https://history.army.mil/Research/Research-by-Conflict-and-Time-Period/World-War-II/Asiatic-Pacific-Theater/)
-
 ### WWII-207 — Which was the Japanese carrier commissioned in 1928 as a conversion of a Tosa-class battleship hull?
 
 **Topic:** Warships
@@ -3845,24 +1075,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Correct:** Japanese fleet carrier, lost at Midway.
 
 **Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-208 — Which was the Japanese fleet carrier at Midway whose sister-like successor was Hiryū, but whose island stood to starboard?
-
-**Topic:** Warships
-
-- A. Akagi
-- B. Kaga
-- C. Sōryū
-- D. Hiryū
-
-**Correct answer:** C
-
-- **A · Incorrect:** Japanese fleet carrier, lost at Midway; Nagumo flew his flag aboard it.
-- **B · Incorrect:** Japanese fleet carrier, lost at Midway.
-- **C · Correct:** Japanese fleet carrier with a starboard island, lost at Midway.
-- **D · Incorrect:** Japanese fleet carrier, lost at Midway after launching the counterstrikes.
-
-**Source:** [Naval History and Heritage Command — Midway, interrogation of Japanese officials](https://www.history.navy.mil/content/history/nhhc/research/library/online-reading-room/title-list-alphabetically/b/battle-of-midway-interrogation-of-japanese-officials.html)
 
 ### WWII-209 — Which was the Japanese carrier whose dive bombers and torpedo aircraft struck Yorktown at Midway?
 
@@ -4008,24 +1220,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
 
-### WWII-217 — Which was the U.S. carrier that launched the strike that sank Ryūjō?
-
-**Topic:** Warships
-
-- A. Hiyō
-- B. USS Saratoga
-- C. USS Enterprise
-- D. USS Wasp (CV-7)
-
-**Correct answer:** B
-
-- **A · Incorrect:** Japanese carrier converted from an ocean liner, sunk in June 1944.
-- **B · Correct:** U.S. carrier, served at the Eastern Solomons.
-- **C · Incorrect:** U.S. carrier, served at Midway and survived the war.
-- **D · Incorrect:** U.S. carrier, lost near the Solomons.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
 ### WWII-218 — Which was the U.S. carrier sunk by Japanese submarine I-19 in September 1942?
 
 **Topic:** Warships
@@ -4062,96 +1256,6 @@ Each question has four options, one correct answer, an explanation for every cho
 
 **Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
 
-### WWII-220 — Which was the U.S. light carrier lost during the Battle of the Sibuyan Sea?
-
-**Topic:** Warships
-
-- A. USS Gambier Bay
-- B. USS Hornet (CV-8)
-- C. USS Princeton (CVL-23)
-- D. USS Wasp (CV-7)
-
-**Correct answer:** C
-
-- **A · Incorrect:** U.S. escort carrier, lost at Samar.
-- **B · Incorrect:** U.S. carrier, launched the Doolittle Raid and fought at Midway.
-- **C · Correct:** U.S. light carrier, fatally damaged by a Japanese bomb in October 1944.
-- **D · Incorrect:** U.S. carrier, lost near the Solomons.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-221 — Which was the American escort carrier sunk by Japanese surface gunfire off Samar?
-
-**Topic:** Warships
-
-- A. USS Gambier Bay
-- B. USS Princeton (CVL-23)
-- C. USS Hornet (CV-8)
-- D. USS St. Lo
-
-**Correct answer:** A
-
-- **A · Correct:** U.S. escort carrier, lost at Samar.
-- **B · Incorrect:** U.S. light carrier, fatally damaged by a Japanese bomb in October 1944.
-- **C · Incorrect:** U.S. carrier, launched the Doolittle Raid and fought at Midway.
-- **D · Incorrect:** U.S. escort carrier, lost to an aircraft after the surface fight.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-222 — Which was the American escort carrier sunk by a kamikaze after the surface action off Samar?
-
-**Topic:** Warships
-
-- A. USS Gambier Bay
-- B. USS Princeton (CVL-23)
-- C. USS St. Lo
-- D. USS Johnston
-
-**Correct answer:** C
-
-- **A · Incorrect:** U.S. escort carrier, lost at Samar.
-- **B · Incorrect:** U.S. light carrier, fatally damaged by a Japanese bomb in October 1944.
-- **C · Correct:** U.S. escort carrier, lost to an aircraft after the surface fight.
-- **D · Incorrect:** Fletcher-class destroyer, lost at Samar.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-223 — Which was the U.S. destroyer commanded by Ernest E. Evans at the Battle off Samar?
-
-**Topic:** Warships
-
-- A. USS Samuel B. Roberts
-- B. USS St. Lo
-- C. USS Johnston
-- D. USS Gambier Bay
-
-**Correct answer:** C
-
-- **A · Incorrect:** John C. Butler-class destroyer escort, lost at Samar.
-- **B · Incorrect:** U.S. escort carrier, lost to an aircraft after the surface fight.
-- **C · Correct:** Fletcher-class destroyer, lost at Samar.
-- **D · Incorrect:** U.S. escort carrier, lost at Samar.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-224 — Which was the U.S. destroyer escort sunk while fighting a much heavier Japanese force off Samar?
-
-**Topic:** Warships
-
-- A. USS Johnston
-- B. USS Samuel B. Roberts
-- C. Musashi
-- D. USS St. Lo
-
-**Correct answer:** B
-
-- **A · Incorrect:** Fletcher-class destroyer, lost at Samar.
-- **B · Correct:** John C. Butler-class destroyer escort, lost at Samar.
-- **C · Incorrect:** Yamato-class battleship, sunk during Leyte Gulf.
-- **D · Incorrect:** U.S. escort carrier, lost to an aircraft after the surface fight.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
 ### WWII-225 — Which was the Japanese battleship sunk by U.S. carrier aircraft in the Sibuyan Sea?
 
 **Topic:** Warships
@@ -4187,258 +1291,6 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Incorrect:** Japanese Kongō-class battleship, lost in November 1942.
 
 **Source:** [Naval History and Heritage Command — 1945](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1945.html)
-
-### WWII-227 — Which was the Japanese battleship fatally hit by USS Washington off Guadalcanal?
-
-**Topic:** Warships
-
-- A. Yamato
-- B. Musashi
-- C. Hiei
-- D. Kirishima
-
-**Correct answer:** D
-
-- **A · Incorrect:** Yamato-class battleship, lost en route toward Okinawa.
-- **B · Incorrect:** Yamato-class battleship, sunk during Leyte Gulf.
-- **C · Incorrect:** Japanese Kongō-class battleship, lost after the November 13 action.
-- **D · Correct:** Japanese Kongō-class battleship, lost in November 1942.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-228 — Which was the Japanese battleship disabled during the first night of the Naval Battle of Guadalcanal and lost the next day?
-
-**Topic:** Warships
-
-- A. Hiei
-- B. Kirishima
-- C. Yamato
-- D. USS Washington
-
-**Correct answer:** A
-
-- **A · Correct:** Japanese Kongō-class battleship, lost after the November 13 action.
-- **B · Incorrect:** Japanese Kongō-class battleship, lost in November 1942.
-- **C · Incorrect:** Yamato-class battleship, lost en route toward Okinawa.
-- **D · Incorrect:** North Carolina-class battleship, fought in the second night action off Guadalcanal.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-229 — Which was the U.S. battleship that crippled Kirishima with radar-directed gunfire?
-
-**Topic:** Warships
-
-- A. Hiei
-- B. Kirishima
-- C. USS South Dakota
-- D. USS Washington
-
-**Correct answer:** D
-
-- **A · Incorrect:** Japanese Kongō-class battleship, lost after the November 13 action.
-- **B · Incorrect:** Japanese Kongō-class battleship, lost in November 1942.
-- **C · Incorrect:** U.S. battleship, damaged in November 1942 but survived.
-- **D · Correct:** North Carolina-class battleship, fought in the second night action off Guadalcanal.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-230 — Which was the U.S. battleship that suffered electrical failures and was hit repeatedly during the second night action off Guadalcanal?
-
-**Topic:** Warships
-
-- A. Hiei
-- B. Kirishima
-- C. USS Washington
-- D. USS South Dakota
-
-**Correct answer:** D
-
-- **A · Incorrect:** Japanese Kongō-class battleship, lost after the November 13 action.
-- **B · Incorrect:** Japanese Kongō-class battleship, lost in November 1942.
-- **C · Incorrect:** North Carolina-class battleship, fought in the second night action off Guadalcanal.
-- **D · Correct:** U.S. battleship, damaged in November 1942 but survived.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-231 — Which was the November 1942 battle in which Japanese destroyer torpedoes sank Northampton and damaged three other U.S. cruisers?
-
-**Topic:** Naval engagements
-
-- A. Battle of Kula Gulf
-- B. Battle of the Santa Cruz Islands
-- C. Battle of Tassafaronga
-- D. Naval Battle of Guadalcanal
-
-**Correct answer:** C
-
-- **A · Incorrect:** The light cruiser was lost to Japanese torpedoes.
-- **B · Incorrect:** The loss of Hornet was distinct from the earlier loss of Wasp to a submarine.
-- **C · Correct:** The engagement took place off northwestern Guadalcanal.
-- **D · Incorrect:** The two battleships were lost in separate actions during the same larger battle.
-
-**Source:** [Naval History and Heritage Command — 1942](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1942.html)
-
-### WWII-232 — Which was the July 5–6, 1943 action off New Georgia in which USS Helena was sunk?
-
-**Topic:** Naval engagements
-
-- A. Naval Battle of Guadalcanal
-- B. Battle of Tassafaronga
-- C. Battle of Kula Gulf
-- D. Battle of Kolombangara
-
-**Correct answer:** C
-
-- **A · Incorrect:** The two battleships were lost in separate actions during the same larger battle.
-- **B · Incorrect:** The engagement took place off northwestern Guadalcanal.
-- **C · Correct:** The light cruiser was lost to Japanese torpedoes.
-- **D · Incorrect:** The action was fought off Kolombangara on July 12–13.
-
-**Source:** [Naval History and Heritage Command — 1943](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1943.html)
-
-### WWII-233 — Which was the July 1943 battle in which the Japanese cruiser Jintsū was sunk?
-
-**Topic:** Naval engagements
-
-- A. Battle of Tassafaronga
-- B. Battle of Vella Gulf
-- C. Battle of Kolombangara
-- D. Battle of Kula Gulf
-
-**Correct answer:** C
-
-- **A · Incorrect:** The engagement took place off northwestern Guadalcanal.
-- **B · Incorrect:** The U.S. destroyers attacked a Japanese reinforcement group.
-- **C · Correct:** The action was fought off Kolombangara on July 12–13.
-- **D · Incorrect:** The light cruiser was lost to Japanese torpedoes.
-
-**Source:** [Naval History and Heritage Command — 1943](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1943.html)
-
-### WWII-234 — Which was the August 1943 night action in which U.S. destroyers sank three Japanese destroyers without losing a ship?
-
-**Topic:** Naval engagements
-
-- A. Battle of Kula Gulf
-- B. Battle of Vella Gulf
-- C. Battle of Empress Augusta Bay
-- D. Battle of Kolombangara
-
-**Correct answer:** B
-
-- **A · Incorrect:** The light cruiser was lost to Japanese torpedoes.
-- **B · Correct:** The U.S. destroyers attacked a Japanese reinforcement group.
-- **C · Incorrect:** The battle followed the U.S. landing at Cape Torokina.
-- **D · Incorrect:** The action was fought off Kolombangara on July 12–13.
-
-**Source:** [Naval History and Heritage Command — 1943](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1943.html)
-
-### WWII-235 — Which was the November 1943 surface action off Bougainville in which the Japanese cruiser Sendai was sunk?
-
-**Topic:** Naval engagements
-
-- A. Battle of Empress Augusta Bay
-- B. Battle of Vella Gulf
-- C. Battle of Cape St. George
-- D. Battle of Kolombangara
-
-**Correct answer:** A
-
-- **A · Correct:** The battle followed the U.S. landing at Cape Torokina.
-- **B · Incorrect:** The U.S. destroyers attacked a Japanese reinforcement group.
-- **C · Incorrect:** It was fought near the end of the principal Solomons surface campaign.
-- **D · Incorrect:** The action was fought off Kolombangara on July 12–13.
-
-**Source:** [Naval History and Heritage Command — 1943](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1943.html)
-
-### WWII-236 — Which was the November 1943 action in which Arleigh Burke’s destroyers sank three Japanese destroyers near New Ireland?
-
-**Topic:** Naval engagements
-
-- A. Battle of the Sibuyan Sea
-- B. Battle of Vella Gulf
-- C. Battle of Empress Augusta Bay
-- D. Battle of Cape St. George
-
-**Correct answer:** D
-
-- **A · Incorrect:** U.S. carrier aircraft attacked Kurita’s force in the Sibuyan Sea.
-- **B · Incorrect:** The U.S. destroyers attacked a Japanese reinforcement group.
-- **C · Incorrect:** The battle followed the U.S. landing at Cape Torokina.
-- **D · Correct:** It was fought near the end of the principal Solomons surface campaign.
-
-**Source:** [Naval History and Heritage Command — 1943](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1943.html)
-
-### WWII-237 — Which was the component of Leyte Gulf in which Musashi was sunk?
-
-**Topic:** Naval engagements
-
-- A. Battle of Cape St. George
-- B. Battle of the Sibuyan Sea
-- C. Battle of Empress Augusta Bay
-- D. Battle of Surigao Strait
-
-**Correct answer:** B
-
-- **A · Incorrect:** It was fought near the end of the principal Solomons surface campaign.
-- **B · Correct:** U.S. carrier aircraft attacked Kurita’s force in the Sibuyan Sea.
-- **C · Incorrect:** The battle followed the U.S. landing at Cape Torokina.
-- **D · Incorrect:** Oldendorf’s forces intercepted the southern Japanese approach.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-238 — Which was the Leyte Gulf engagement in which Jesse Oldendorf’s battleships crossed the Japanese line of advance?
-
-**Topic:** Naval engagements
-
-- A. Battle of Surigao Strait
-- B. Battle of the Sibuyan Sea
-- C. Battle off Samar
-- D. Battle of Cape St. George
-
-**Correct answer:** A
-
-- **A · Correct:** Oldendorf’s forces intercepted the southern Japanese approach.
-- **B · Incorrect:** U.S. carrier aircraft attacked Kurita’s force in the Sibuyan Sea.
-- **C · Incorrect:** Escort carriers, destroyers, and destroyer escorts faced heavy Japanese surface ships.
-- **D · Incorrect:** It was fought near the end of the principal Solomons surface campaign.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-239 — Which was the encounter between Kurita’s Centre Force and the U.S. escort carrier group Taffy 3?
-
-**Topic:** Naval engagements
-
-- A. Battle off Cape Engaño
-- B. Battle off Samar
-- C. Battle of the Sibuyan Sea
-- D. Battle of Surigao Strait
-
-**Correct answer:** B
-
-- **A · Incorrect:** U.S. carrier aircraft sank four Japanese carriers off northern Luzon.
-- **B · Correct:** Escort carriers, destroyers, and destroyer escorts faced heavy Japanese surface ships.
-- **C · Incorrect:** U.S. carrier aircraft attacked Kurita’s force in the Sibuyan Sea.
-- **D · Incorrect:** Oldendorf’s forces intercepted the southern Japanese approach.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
-
-### WWII-240 — Which was the Leyte Gulf action in which Ozawa’s decoy carriers were attacked?
-
-**Topic:** Naval engagements
-
-- A. Battle of Surigao Strait
-- B. Battle of the Sibuyan Sea
-- C. Battle off Samar
-- D. Battle off Cape Engaño
-
-**Correct answer:** D
-
-- **A · Incorrect:** Oldendorf’s forces intercepted the southern Japanese approach.
-- **B · Incorrect:** U.S. carrier aircraft attacked Kurita’s force in the Sibuyan Sea.
-- **C · Incorrect:** Escort carriers, destroyers, and destroyer escorts faced heavy Japanese surface ships.
-- **D · Correct:** U.S. carrier aircraft sank four Japanese carriers off northern Luzon.
-
-**Source:** [Naval History and Heritage Command — 1944](https://www.history.navy.mil/browse-by-topic/wars-conflicts-and-operations/world-war-ii/1944.html)
 
 ### WWII-242 — Which was the twin-engine wooden British aircraft nicknamed the Wooden Wonder?
 
@@ -4511,3 +1363,3367 @@ Each question has four options, one correct answer, an explanation for every cho
 - **D · Incorrect:** A later German Tiger with sloped hull armor and the long 8.8 cm gun.
 
 **Source:** [The Tank Museum — vehicle collection](https://tankmuseum.org/tank-nuts/tank-collection)
+
+## New Questions
+
+### WWII-N001 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A camouflaged single-engine fighter with elliptical wings flying over fields](./assets/quiz-images/aircraft-01.webp)
+
+**Image credit:** [RAF photograph; UK Crown public domain](https://commons.wikimedia.org/wiki/File:Spitfire_VB_222_Sqn_RAF_in_flight_1942.jpg)
+
+- A. Lockheed P-38 Lightning
+- B. North American P-51 Mustang
+- C. Messerschmitt Bf 109
+- D. Supermarine Spitfire
+
+**Correct answer:** D
+
+- **A · Incorrect:** Lockheed P-38 Lightning is an American twin-engine fighter with twin tail booms; the photographed aircraft is the Supermarine Spitfire.
+- **B · Incorrect:** North American P-51 Mustang is an American single-engine fighter used for long-range escort; the photographed aircraft is the Supermarine Spitfire.
+- **C · Incorrect:** Messerschmitt Bf 109 is a German single-engine fighter; the photographed aircraft is the Supermarine Spitfire.
+- **D · Correct:** The photograph shows a Spitfire Mk VB, identifiable by its elliptical wing.
+
+**Source:** [Imperial War Museums — photograph identification](https://www.iwm.org.uk/collections/item/object/205126548)
+
+### WWII-N002 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A twin-engine aircraft with twin tail booms in flight](./assets/quiz-images/aircraft-02.webp)
+
+**Image credit:** [U.S. Army Air Forces photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:Lockheed_P-38L-5_Lightning_in_flight.jpg)
+
+- A. Supermarine Spitfire
+- B. Republic P-47 Thunderbolt
+- C. Lockheed P-38 Lightning
+- D. North American P-51 Mustang
+
+**Correct answer:** C
+
+- **A · Incorrect:** Supermarine Spitfire is a British fighter with an elliptical wing; the photographed aircraft is the Lockheed P-38 Lightning.
+- **B · Incorrect:** Republic P-47 Thunderbolt is an American fighter with a large radial engine; the photographed aircraft is the Lockheed P-38 Lightning.
+- **C · Correct:** The photograph shows a P-38 Lightning, with two engines and twin tail booms.
+- **D · Incorrect:** North American P-51 Mustang is an American single-engine fighter used for long-range escort; the photographed aircraft is the Lockheed P-38 Lightning.
+
+**Source:** [Smithsonian National Air and Space Museum — P-38](https://airandspace.si.edu/collection-objects/lockheed-p-38j-10-lo-lightning/nasm_A19600295000)
+
+### WWII-N003 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A four-engine aircraft in formation above clouds](./assets/quiz-images/aircraft-03.webp)
+
+**Image credit:** [U.S. Army Air Forces photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:Boeing_B-17F_42-29513_in_flight%2C_1943.jpg)
+
+- A. North American B-25 Mitchell
+- B. Boeing B-17 Flying Fortress
+- C. Boeing B-29 Superfortress
+- D. Avro Lancaster
+
+**Correct answer:** B
+
+- **A · Incorrect:** North American B-25 Mitchell is an American twin-engine medium bomber; the photographed aircraft is the Boeing B-17 Flying Fortress.
+- **B · Correct:** The photograph shows a B-17F Flying Fortress.
+- **C · Incorrect:** Boeing B-29 Superfortress is an American four-engine heavy bomber with a pressurized fuselage; the photographed aircraft is the Boeing B-17 Flying Fortress.
+- **D · Incorrect:** Avro Lancaster is a British four-engine heavy bomber with twin tail fins; the photographed aircraft is the Boeing B-17 Flying Fortress.
+
+**Source:** [Smithsonian National Air and Space Museum — B-17](https://airandspace.si.edu/collection-archive/swoose-odyssey-b-17-collection/sova-nasm-1994-0024)
+
+### WWII-N004 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A single-engine fighter with a checked tail seen from above](./assets/quiz-images/aircraft-04.webp)
+
+**Image credit:** [U.S. Army Air Forces photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:P-51D_Mustang_nicknamed_%22Dusty%22_of_the_325th_Fighter_Group%2C_15th_Air_Force_in_flight.jpg)
+
+- A. North American P-51 Mustang
+- B. Supermarine Spitfire
+- C. Republic P-47 Thunderbolt
+- D. Mitsubishi A6M Zero
+
+**Correct answer:** A
+
+- **A · Correct:** The photograph shows a P-51D Mustang nicknamed Dusty.
+- **B · Incorrect:** Supermarine Spitfire is a British fighter with an elliptical wing; the photographed aircraft is the North American P-51 Mustang.
+- **C · Incorrect:** Republic P-47 Thunderbolt is an American fighter with a large radial engine; the photographed aircraft is the North American P-51 Mustang.
+- **D · Incorrect:** Mitsubishi A6M Zero is a Japanese naval fighter; the photographed aircraft is the North American P-51 Mustang.
+
+**Source:** [Smithsonian National Air and Space Museum — WWII in the air](https://airandspace.si.edu/air-and-space-quarterly/fall-2022/world-war-ii-air)
+
+### WWII-N005 — Which WWII aircraft model is shown in the foreground?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A camouflaged propeller aircraft with bent wings and fixed, streamlined landing gear displayed in a museum](./assets/quiz-images/aircraft-05.webp)
+
+**Image credit:** [0x6adb015 photograph; public-domain dedication](https://commons.wikimedia.org/wiki/File:Ju87ChicagoMuseumOfScienceAndIndustry2010.jpg)
+
+- A. Messerschmitt Bf 109
+- B. Supermarine Spitfire
+- C. Vought F4U Corsair
+- D. Junkers Ju 87 Stuka
+
+**Correct answer:** D
+
+- **A · Incorrect:** Messerschmitt Bf 109 is a German single-engine fighter; the photographed aircraft is the Junkers Ju 87 Stuka.
+- **B · Incorrect:** Supermarine Spitfire is a British fighter with an elliptical wing; the photographed aircraft is the Junkers Ju 87 Stuka.
+- **C · Incorrect:** Vought F4U Corsair is an American naval fighter with an inverted gull wing; the photographed aircraft is the Junkers Ju 87 Stuka.
+- **D · Correct:** The foreground aircraft is a museum-displayed Ju 87 Stuka dive bomber.
+
+**Source:** [Royal Air Force Museum — Ju 87](https://www.rafmuseum.org.uk/our-collection/supporting-research/archive-exhibitions/ju-87d/)
+
+### WWII-N006 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![Two single-engine fighters with round noses, rounded wings and British roundels flying over trees](./assets/quiz-images/aircraft-06.webp)
+
+**Image credit:** [Sergeant Breeze, RAF photograph; UK Crown public domain](https://commons.wikimedia.org/wiki/File:A6M_Zeros_over_Malaya.jpg)
+
+- A. Vought F4U Corsair
+- B. Republic P-47 Thunderbolt
+- C. Mitsubishi A6M Zero
+- D. Grumman F4F Wildcat
+
+**Correct answer:** C
+
+- **A · Incorrect:** Vought F4U Corsair is an American naval fighter with an inverted gull wing; the photographed aircraft is the Mitsubishi A6M Zero.
+- **B · Incorrect:** Republic P-47 Thunderbolt is an American fighter with a large radial engine; the photographed aircraft is the Mitsubishi A6M Zero.
+- **C · Correct:** The aircraft are Mitsubishi A6M Zeros photographed during Allied evaluation; their British roundels do not indicate wartime Japanese markings.
+- **D · Incorrect:** Grumman F4F Wildcat is an American naval fighter; the photographed aircraft is the Mitsubishi A6M Zero.
+
+**Source:** [Smithsonian National Air and Space Museum — A6M Zero](https://airandspace.si.edu/stories/editorial/mitsubishi-a6m-zero-fighter)
+
+### WWII-N007 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A four-engine aircraft with twin tail fins in flight](./assets/quiz-images/aircraft-07.webp)
+
+**Image credit:** [Flying Officer B. J. Daventry, RAF photograph; UK Crown public domain](https://commons.wikimedia.org/wiki/File:Avro_Lancaster_Mk_I_of_No._83_Squadron%2C_based_at_Scampton_in_Lincolnshire%2C_June_1942._CH6071.jpg)
+
+- A. North American B-25 Mitchell
+- B. Avro Lancaster
+- C. Boeing B-17 Flying Fortress
+- D. Boeing B-29 Superfortress
+
+**Correct answer:** B
+
+- **A · Incorrect:** North American B-25 Mitchell is an American twin-engine medium bomber; the photographed aircraft is the Avro Lancaster.
+- **B · Correct:** The aircraft is an Avro Lancaster Mk I, a British four-engine bomber.
+- **C · Incorrect:** Boeing B-17 Flying Fortress is an American four-engine heavy bomber; the photographed aircraft is the Avro Lancaster.
+- **D · Incorrect:** Boeing B-29 Superfortress is an American four-engine heavy bomber with a pressurized fuselage; the photographed aircraft is the Avro Lancaster.
+
+**Source:** [Imperial War Museums — photograph identification](https://www.iwm.org.uk/collections/item/object/205126933)
+
+### WWII-N008 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A silver four-engine aircraft with a rounded glazed nose and a single tail fin flying above clouds](./assets/quiz-images/aircraft-08.webp)
+
+**Image credit:** [U.S. Air Force photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:B-29_in_flight.jpg)
+
+- A. Boeing B-29 Superfortress
+- B. Boeing B-17 Flying Fortress
+- C. Avro Lancaster
+- D. Consolidated B-24 Liberator
+
+**Correct answer:** A
+
+- **A · Correct:** The photograph shows a B-29 Superfortress; the image source does not establish a consistent variant.
+- **B · Incorrect:** Boeing B-17 Flying Fortress is an American four-engine heavy bomber; the photographed aircraft is the Boeing B-29 Superfortress.
+- **C · Incorrect:** Avro Lancaster is a British four-engine heavy bomber with twin tail fins; the photographed aircraft is the Boeing B-29 Superfortress.
+- **D · Incorrect:** Consolidated B-24 Liberator is an American four-engine bomber with twin tail fins; the photographed aircraft is the Boeing B-29 Superfortress.
+
+**Source:** [Smithsonian National Air and Space Museum — B-29](https://airandspace.si.edu/exhibitions/world-war-ii-aviation-uh)
+
+### WWII-N009 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A dark single-engine fighter with bent, inverted-gull wings flying against a blue sky](./assets/quiz-images/aircraft-09.webp)
+
+**Image credit:** [U.S. Navy photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:F4U-1_Corsair_in_flight_c1942.jpg)
+
+- A. Grumman F4F Wildcat
+- B. Mitsubishi A6M Zero
+- C. North American P-51 Mustang
+- D. Vought F4U Corsair
+
+**Correct answer:** D
+
+- **A · Incorrect:** Grumman F4F Wildcat is an American naval fighter; the photographed aircraft is the Vought F4U Corsair.
+- **B · Incorrect:** Mitsubishi A6M Zero is a Japanese naval fighter; the photographed aircraft is the Vought F4U Corsair.
+- **C · Incorrect:** North American P-51 Mustang is an American single-engine fighter used for long-range escort; the photographed aircraft is the Vought F4U Corsair.
+- **D · Correct:** The image shows an F4U Corsair, recognizable by its inverted gull wing.
+
+**Source:** [Smithsonian National Air and Space Museum — Corsair](https://airandspace.si.edu/collection-objects/vought-f4u-1d-corsair/nasm_A19610124000)
+
+### WWII-N010 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A formation of five single-engine aircraft above clouds](./assets/quiz-images/aircraft-10.webp)
+
+**Image credit:** [Lieutenant L. C. Priest, Royal Navy photograph; UK Crown public domain](https://commons.wikimedia.org/wiki/File:Hawker_Sea_Hurricanes.jpg)
+
+- A. Mitsubishi A6M Zero
+- B. Grumman F4F Wildcat
+- C. Hawker Sea Hurricane
+- D. Supermarine Spitfire
+
+**Correct answer:** C
+
+- **A · Incorrect:** Mitsubishi A6M Zero is a Japanese naval fighter; the photographed aircraft is the Hawker Sea Hurricane.
+- **B · Incorrect:** Grumman F4F Wildcat is an American naval fighter; the photographed aircraft is the Hawker Sea Hurricane.
+- **C · Correct:** The formation consists of Hawker Sea Hurricanes, naval variants of the Hurricane.
+- **D · Incorrect:** Supermarine Spitfire is a British fighter with an elliptical wing; the photographed aircraft is the Hawker Sea Hurricane.
+
+**Source:** [Imperial War Museums — Sea Hurricane](https://www.iwm.org.uk/collections/item/object/205186991)
+
+### WWII-N011 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A single-engine aircraft with a broad radial-engine nose in flight](./assets/quiz-images/aircraft-11.webp)
+
+**Image credit:** [U.S. Air Force photograph; public domain in the United States](https://commons.wikimedia.org/wiki/File:Republic_P-47N_Thunderbolt_in_flight_%28cropped%29.jpg)
+
+- A. Mitsubishi A6M Zero
+- B. Republic P-47 Thunderbolt
+- C. North American P-51 Mustang
+- D. Supermarine Spitfire
+
+**Correct answer:** B
+
+- **A · Incorrect:** Mitsubishi A6M Zero is a Japanese naval fighter; the photographed aircraft is the Republic P-47 Thunderbolt.
+- **B · Correct:** The photograph shows a P-47 Thunderbolt, a U.S. fighter with a large radial engine.
+- **C · Incorrect:** North American P-51 Mustang is an American single-engine fighter used for long-range escort; the photographed aircraft is the Republic P-47 Thunderbolt.
+- **D · Incorrect:** Supermarine Spitfire is a British fighter with an elliptical wing; the photographed aircraft is the Republic P-47 Thunderbolt.
+
+**Source:** [National Museum of the U.S. Air Force — P-47](https://www.nationalmuseum.af.mil/Visit/Museum-Exhibits/Fact-Sheets/Display/Article/858869/AFmuseum/republic-p-47/)
+
+### WWII-N012 — Which British service flew Spitfires and Hurricanes against Germany in the Battle of Britain?
+
+**Topic:** Equipment — Aircraft
+
+- A. Royal Air Force
+- B. Royal Navy
+- C. British Army
+- D. Merchant Navy
+
+**Correct answer:** A
+
+- **A · Correct:** The RAF flew both fighters against the Luftwaffe.
+- **B · Incorrect:** The Royal Navy fought at sea; the RAF flew these fighters in the battle.
+- **C · Incorrect:** The army fought on land; the RAF flew the Spitfires and Hurricanes.
+- **D · Incorrect:** Merchant ships carried supplies; the RAF flew these aircraft.
+
+**Source:** [Imperial War Museums — Battle of Britain aircraft](https://www.iwm.org.uk/history/second-world-war/battle-of-britain/iconic-aircraft)
+
+### WWII-N013 — What shape is especially associated with the classic Spitfire wing?
+
+**Topic:** Equipment — Aircraft
+
+- A. Square
+- B. Circular
+- C. Triangular
+- D. Elliptical
+
+**Correct answer:** D
+
+- **A · Incorrect:** The classic Spitfire wing was elliptical, not square.
+- **B · Incorrect:** The wing was elliptical, rather than a complete circle.
+- **C · Incorrect:** The classic Spitfire wing was elliptical, not triangular.
+- **D · Correct:** The Spitfire’s distinctive wing was elliptical, reducing drag.
+
+**Source:** [Smithsonian National Air and Space Museum — Spitfire](https://airandspace.si.edu/collection-objects/supermarine-spitfire-hf-mk-viic/nasm_A19600331000)
+
+### WWII-N014 — What was the Junkers Ju 87 dive bomber commonly called?
+
+**Topic:** Equipment — Aircraft
+
+- A. Hurricane
+- B. Flying Pencil
+- C. Stuka
+- D. Spitfire
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Hurricane was a British fighter, not the German Ju 87.
+- **B · Incorrect:** Flying Pencil was the nickname of the Dornier Do 17 bomber.
+- **C · Correct:** The Ju 87 was called the Stuka, from the German term for dive bomber.
+- **D · Incorrect:** The Spitfire was a British fighter, not the German Ju 87.
+
+**Source:** [Imperial War Museums — Battle of Britain aircraft](https://www.iwm.org.uk/history/second-world-war/battle-of-britain/iconic-aircraft)
+
+### WWII-N015 — What did C-47 transport aircraft carry into Normandy on D-Day?
+
+**Topic:** Equipment — Aircraft
+
+- A. Railway trains
+- B. Paratroopers
+- C. Battleships
+- D. Submarines
+
+**Correct answer:** B
+
+- **A · Incorrect:** C-47s carried paratroopers, not railway trains.
+- **B · Correct:** C-47 transports carried airborne soldiers for parachute landings.
+- **C · Incorrect:** Battleships sailed by sea; C-47s carried airborne soldiers.
+- **D · Incorrect:** Submarines traveled by sea, not inside C-47s.
+
+**Source:** [Smithsonian National Air and Space Museum — C-47 and D-Day](https://airandspace.si.edu/stories/editorial/d-day-and-douglas-c-47)
+
+### WWII-N016 — What was the nickname of the Boeing B-17 bomber?
+
+**Topic:** Equipment — Aircraft
+
+- A. Flying Fortress
+- B. Superfortress
+- C. Mustang
+- D. Lightning
+
+**Correct answer:** A
+
+- **A · Correct:** The Boeing B-17 bomber was called the Flying Fortress.
+- **B · Incorrect:** Superfortress was the nickname of the B-29 bomber, not the Boeing B-17 bomber.
+- **C · Incorrect:** Mustang was the nickname of the P-51 fighter, not the Boeing B-17 bomber.
+- **D · Incorrect:** Lightning was the nickname of the P-38 fighter, not the Boeing B-17 bomber.
+
+**Source:** [National WWII Museum — B-17](https://www.nationalww2museum.org/war/articles/boeing-b-17-flying-fortress)
+
+### WWII-N017 — What was the nickname of the North American P-51 fighter?
+
+**Topic:** Equipment — Aircraft
+
+- A. Superfortress
+- B. Mustang
+- C. Lightning
+- D. Flying Fortress
+
+**Correct answer:** B
+
+- **A · Incorrect:** Superfortress was the nickname of the B-29 bomber, not the North American P-51 fighter.
+- **B · Correct:** The North American P-51 fighter was called the Mustang.
+- **C · Incorrect:** Lightning was the nickname of the P-38 fighter, not the North American P-51 fighter.
+- **D · Incorrect:** Flying Fortress was the nickname of the B-17 bomber, not the North American P-51 fighter.
+
+**Source:** [Smithsonian National Air and Space Museum — P-51](https://airandspace.si.edu/collection-objects/north-american-p-51d-mustang/nasm_A19600300000)
+
+### WWII-N018 — What was the nickname of the Lockheed P-38 fighter?
+
+**Topic:** Equipment — Aircraft
+
+- A. Mustang
+- B. Lightning
+- C. Flying Fortress
+- D. Superfortress
+
+**Correct answer:** B
+
+- **A · Incorrect:** Mustang was the nickname of the P-51 fighter, not the Lockheed P-38 fighter.
+- **B · Correct:** The Lockheed P-38 fighter was called the Lightning.
+- **C · Incorrect:** Flying Fortress was the nickname of the B-17 bomber, not the Lockheed P-38 fighter.
+- **D · Incorrect:** Superfortress was the nickname of the B-29 bomber, not the Lockheed P-38 fighter.
+
+**Source:** [Smithsonian National Air and Space Museum — P-38](https://airandspace.si.edu/collection-objects/lockheed-p-38j-10-lo-lightning/nasm_A19600295000)
+
+### WWII-N019 — What was the nickname of the Boeing B-29 bomber?
+
+**Topic:** Equipment — Aircraft
+
+- A. Lightning
+- B. Flying Fortress
+- C. Superfortress
+- D. Mustang
+
+**Correct answer:** C
+
+- **A · Incorrect:** Lightning was the nickname of the P-38 fighter, not the Boeing B-29 bomber.
+- **B · Incorrect:** Flying Fortress was the nickname of the B-17 bomber, not the Boeing B-29 bomber.
+- **C · Correct:** The Boeing B-29 bomber was called the Superfortress.
+- **D · Incorrect:** Mustang was the nickname of the P-51 fighter, not the Boeing B-29 bomber.
+
+**Source:** [Smithsonian National Air and Space Museum — B-29](https://airandspace.si.edu/exhibitions/world-war-ii-aviation-uh)
+
+### WWII-N020 — What kind of aircraft was the American B-17 Flying Fortress?
+
+**Topic:** Equipment — Aircraft
+
+- A. A bomber
+- B. A fighter
+- C. A troop glider
+- D. A flying boat
+
+**Correct answer:** A
+
+- **A · Correct:** The four-engine B-17 was a long-range bomber.
+- **B · Incorrect:** The B-17 was a bomber; fighters had a different primary role.
+- **C · Incorrect:** The B-17 had four engines and was a bomber, not a glider.
+- **D · Incorrect:** The B-17 was a land-based bomber, not a flying boat.
+
+**Source:** [Smithsonian National Air and Space Museum — B-17](https://airandspace.si.edu/air-and-space-quarterly/winter-2023/set-checked)
+
+### WWII-N021 — Which Japanese naval fighter was known as the Zero?
+
+**Topic:** Equipment — Aircraft
+
+- A. Supermarine Spitfire
+- B. Hawker Hurricane
+- C. North American P-51
+- D. Mitsubishi A6M
+
+**Correct answer:** D
+
+- **A · Incorrect:** The Spitfire was a British fighter, not the Japanese A6M.
+- **B · Incorrect:** The Hurricane was a British fighter, not the Japanese A6M.
+- **C · Incorrect:** The P-51 was an American fighter, not the Japanese A6M.
+- **D · Correct:** The A6M was the Mitsubishi Zero fighter used by Japan’s navy.
+
+**Source:** [Smithsonian National Air and Space Museum — Zero fighter](https://airandspace.si.edu/stories/editorial/mitsubishi-a6m-zero-fighter); [Imperial War Museums — British fighters](https://www.iwm.org.uk/history/second-world-war/battle-of-britain/iconic-aircraft); [Smithsonian — P-51](https://airandspace.si.edu/air-and-space-quarterly/fall-2022/world-war-ii-air)
+
+### WWII-N022 — What was an important job of the American P-51 Mustang in Europe?
+
+**Topic:** Equipment — Aircraft
+
+- A. Operating as a submarine
+- B. Building airfields
+- C. Escorting bombers
+- D. Carrying tanks ashore
+
+**Correct answer:** C
+
+- **A · Incorrect:** The P-51 was an aircraft, not a submarine.
+- **B · Incorrect:** The P-51 was flown as a fighter; it did not build airfields.
+- **C · Correct:** The P-51 became a long-range escort fighter for U.S. forces in Europe.
+- **D · Incorrect:** Landing craft brought tanks ashore; the P-51 was a fighter.
+
+**Source:** [Smithsonian National Air and Space Museum — P-51](https://airandspace.si.edu/air-and-space-quarterly/fall-2022/world-war-ii-air)
+
+### WWII-N023 — What was the name of the atomic bomb dropped on Hiroshima?
+
+**Topic:** Equipment — Weapons
+
+- A. Buzz Bomb
+- B. Little Boy
+- C. Fat Man
+- D. Flying Dustbin
+
+**Correct answer:** B
+
+- **A · Incorrect:** Buzz Bomb: the popular nickname of the V-1 flying bomb; it is not the answer described.
+- **B · Correct:** The uranium bomb dropped on Hiroshima was called Little Boy.
+- **C · Incorrect:** Fat Man: the atomic bomb dropped on Nagasaki; it is not the answer described.
+- **D · Incorrect:** Flying Dustbin: the nickname of a British demolition projectile; it is not the answer described.
+
+**Source:** [Smithsonian National Air and Space Museum — Flight of the Enola Gay](https://airandspace.si.edu/stories/editorial/flight-enola-gay)
+
+### WWII-N024 — What type of aircraft was the B-25 Mitchell?
+
+**Topic:** Equipment — Aircraft
+
+- A. A medium bomber
+- B. A single-engine fighter
+- C. A flying boat
+- D. A military glider
+
+**Correct answer:** A
+
+- **A · Correct:** The B-25 Mitchell was a twin-engine medium bomber.
+- **B · Incorrect:** A single-engine fighter was designed to fight other aircraft; the B-25 was a twin-engine bomber.
+- **C · Incorrect:** A flying boat is designed to operate on water; the B-25 was a land-based bomber.
+- **D · Incorrect:** A military glider has no engine of its own; the B-25 had two engines.
+
+**Source:** [Smithsonian National Air and Space Museum — B-25 Mitchell](https://airandspace.si.edu/collection-objects/north-american-b-25j-20-nc-tb-25n-mitchell-quotcarol-jeanquot/nasm_A19860003000)
+
+### WWII-N025 — Which WWII tank model is in the foreground?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![An olive-green tracked vehicle with white stars and a rounded turret on outdoor display](./assets/quiz-images/tank-01.webp)
+
+**Image credit:** [Pitkäkaula; CC BY-SA 3.0, cropped and converted](https://commons.wikimedia.org/wiki/File:M4_Sherman_Parola_tank_museum.jpg)
+
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. M4 Sherman
+- B. Tiger I
+- C. Churchill
+- D. Type 95 Ha-Go
+
+**Correct answer:** A
+
+- **A · Correct:** The M4 Sherman was an American medium tank widely used by the Allies.
+- **B · Incorrect:** The Tiger I was a much heavier German tank with a boxier hull.
+- **C · Incorrect:** The British Churchill was an infantry tank with tracks running around the sides of its long hull.
+- **D · Incorrect:** The Japanese Ha-Go was a smaller light tank with a narrow turret.
+
+**Source:** [The Tank Museum — M4 Sherman](https://tankmuseum.org/tank-nuts/tank-collection/m4-sherman)
+
+### WWII-N026 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A large sand-colored tracked vehicle viewed head-on inside a museum](./assets/quiz-images/tank-02.webp)
+
+**Image credit:** [Michael Garlick; CC BY-SA 4.0, resized and converted](https://commons.wikimedia.org/wiki/File:Bovington_Tank_Museum_German_Tiger_tank.JPG)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. M3 Stuart
+- B. Tiger I
+- C. T-34
+- D. Matilda II
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Stuart was an American light tank, much smaller than this vehicle.
+- **B · Correct:** The German Tiger I was a heavy tank with an 88 mm gun and a broad, box-shaped hull.
+- **C · Incorrect:** The Soviet T-34 was a medium tank known for its sloped armor.
+- **D · Incorrect:** The Matilda II was a British infantry tank with armored side skirts over its suspension.
+
+**Source:** [The Tank Museum — Tiger I](https://tankmuseum.org/tank-nuts/tank-collection/tiger-i)
+
+### WWII-N027 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A damaged tracked vehicle with a long gun and sloping armor standing in an open field](./assets/quiz-images/tank-03.webp)
+
+**Image credit:** [U.S. Army Signal Corps; U.S. federal government public domain, resized and converted](https://commons.wikimedia.org/wiki/File:Abandoned_German_Panzer_V_Panther_tank_in_France,_14_October_1944_%28111-SC-329852%29.jpg)
+
+- A. M3 Lee
+- B. Churchill
+- C. Panther
+- D. Type 95 Ha-Go
+
+**Correct answer:** C
+
+- **A · Incorrect:** The American M3 Lee carried its main gun in a mount on the hull.
+- **B · Incorrect:** The Churchill was a British infantry tank with tracks extending around its hull.
+- **C · Correct:** The German Panther was a medium tank with a long 75 mm gun and sloping frontal armor.
+- **D · Incorrect:** The Ha-Go was a much smaller Japanese light tank.
+
+**Source:** [The Tank Museum — Panther](https://tankmuseum.org/tank-nuts/tank-collection/panther)
+
+### WWII-N028 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A green tracked vehicle with five large road wheels displayed on a stone plinth](./assets/quiz-images/tank-04.webp)
+
+**Image credit:** [Pedro Plassen Lopes; CC BY 2.0, resized and converted](https://commons.wikimedia.org/wiki/File:T-34_Model_1943_tank_at_the_Soviet_Cenotaph_in_Berlin-Tiergarten.jpg)
+
+**Image license:** [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+
+- A. Matilda II
+- B. Panzer IV
+- C. M3 Lee
+- D. T-34
+
+**Correct answer:** D
+
+- **A · Incorrect:** The British Matilda II had small road wheels mostly hidden behind side armor.
+- **B · Incorrect:** The German Panzer IV was a medium tank with a differently shaped hull and suspension.
+- **C · Incorrect:** The American M3 Lee had a prominent hull-mounted main gun.
+- **D · Correct:** The Soviet T-34 was a medium tank with sloping armor and large road wheels.
+
+**Source:** [The Tank Museum — T-34/76](https://tankmuseum.org/tank-nuts/tank-collection/t-34-76)
+
+### WWII-N029 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A tracked vehicle with tall track housings moving through dense shrubs](./assets/quiz-images/tank-05.webp)
+
+**Image credit:** [Captain Tanner, War Office; UK Crown public domain, resized and converted](https://commons.wikimedia.org/wiki/File:Churchill_tank_Italy_July_1944_IWM_TR_2025.jpg)
+
+- A. T-34
+- B. Churchill
+- C. M3 Stuart
+- D. Tiger I
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Soviet T-34 was a medium tank with large exposed road wheels.
+- **B · Correct:** The British Churchill was an infantry tank with tracks that ran around the long hull.
+- **C · Incorrect:** The American Stuart was a much smaller light tank.
+- **D · Incorrect:** The German Tiger I was a heavy tank with a broad, boxy hull and 88 mm gun.
+
+**Source:** [The Tank Museum — Churchill](https://tankmuseum.org/tank-nuts/tank-collection/churchill-iv)
+
+### WWII-N030 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A tracked vehicle with side skirts carries several men and a flag along a desert road](./assets/quiz-images/tank-06.webp)
+
+**Image credit:** [No. 1 Army Film and Photographic Unit; UK Crown public domain, converted](https://commons.wikimedia.org/wiki/File:MatildaII.jpg)
+
+- A. Panther
+- B. M4 Sherman
+- C. Matilda II
+- D. IS-2
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Panther was a German medium tank with a long gun and sloped frontal armor.
+- **B · Incorrect:** The Sherman was an American medium tank, without the Matilda's deep side skirts.
+- **C · Correct:** The Matilda II was a heavily armored British infantry tank; this one was photographed near Tobruk.
+- **D · Incorrect:** The IS-2 was a Soviet heavy tank armed with a much larger 122 mm gun.
+
+**Source:** [Imperial War Museums — photograph E 1772](https://www.iwm.org.uk/collections/item/object/205203470)
+
+### WWII-N031 — Which WWII tank family is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A compact olive-green tracked vehicle with white stars displayed outdoors](./assets/quiz-images/tank-07.webp)
+
+**Image credit:** [Jim Evans; CC BY-SA 4.0, resized and converted](https://commons.wikimedia.org/wiki/File:M3_Stuart_Tank_--_South_Houston,_Texas.jpg)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. Stuart
+- B. Churchill
+- C. Panther
+- D. IS-2
+
+**Correct answer:** A
+
+- **A · Correct:** The Stuart was an American light-tank family that included the M3 and M5.
+- **B · Incorrect:** The Churchill was a larger British infantry tank with a long, track-framed hull.
+- **C · Incorrect:** The Panther was a German medium tank with sloping armor and a long 75 mm gun.
+- **D · Incorrect:** The IS-2 was a Soviet heavy tank with a large turret and 122 mm gun.
+
+**Source:** [The Tank Museum — M3A1 Stuart and M5A1](https://tankmuseum.org/tank-nuts/tank-collection/m3a1-stuart)
+
+### WWII-N032 — Which WWII tank model is in the foreground?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A camouflaged tracked vehicle with a long gun and the number 419 on its turret](./assets/quiz-images/tank-08.webp)
+
+**Image credit:** [Paul Hermans; CC BY-SA 4.0, resized and converted](https://commons.wikimedia.org/wiki/File:Panzer_IV_-_Tank_Museum_Bovington.JPG)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. M3 Lee
+- B. Matilda II
+- C. T-34
+- D. Panzer IV
+
+**Correct answer:** D
+
+- **A · Incorrect:** The M3 Lee was an American medium tank with its main gun mounted in the hull.
+- **B · Incorrect:** The Matilda II was a British infantry tank with deep side skirts.
+- **C · Incorrect:** The T-34 was a Soviet medium tank with large road wheels and sloping armor.
+- **D · Correct:** The Panzer IV was a German medium tank; this museum example has an upgraded long 75 mm gun.
+
+**Source:** [The Tank Museum — Panzer IV](https://tankmuseum.org/tank-nuts/tank-collection/panzer-iv)
+
+### WWII-N033 — Which WWII tank model is in the foreground?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A riveted tracked vehicle with one gun mounted in its hull and another in a turret](./assets/quiz-images/tank-09.webp)
+
+**Image credit:** [Галин Владимир Петрович; author-released public domain, resized and converted](https://commons.wikimedia.org/wiki/File:M3_Lee_in_the_Kubinka.jpg)
+
+- A. Tiger I
+- B. M3 Lee
+- C. Type 95 Ha-Go
+- D. T-34
+
+**Correct answer:** B
+
+- **A · Incorrect:** The German Tiger I was a heavy tank with its main gun in the turret.
+- **B · Correct:** The American M3 Lee was a medium tank with a hull-mounted main gun and a smaller turret gun.
+- **C · Incorrect:** The Japanese Ha-Go was a small light tank with a single main turret gun.
+- **D · Incorrect:** The Soviet T-34 was a medium tank whose main gun was mounted in the turret.
+
+**Source:** [The Tank Museum — M3 Lee in the Burma campaign](https://tankmuseum.org/article/vj-day-lest-we-forget)
+
+### WWII-N034 — Which WWII tank model is in the foreground?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A large tracked vehicle with a long gun and a star painted on its turret in a museum](./assets/quiz-images/tank-10.webp)
+
+**Image credit:** [颐园新居; CC BY-SA 3.0, resized and converted](https://commons.wikimedia.org/wiki/File:IS-2_in_the_CPLA_Tank_Museum_20131004.JPG)
+
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. M3 Stuart
+- B. Matilda II
+- C. IS-2
+- D. Panzer IV
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Stuart was an American light tank with a much smaller gun.
+- **B · Incorrect:** The Matilda II was a British infantry tank with its suspension hidden by side skirts.
+- **C · Correct:** The IS-2 was a Soviet heavy tank armed with a 122 mm gun.
+- **D · Incorrect:** The Panzer IV was a German medium tank with a smaller 75 mm gun.
+
+**Source:** [Tank Encyclopedia — Iosif Stalin II](https://tank-afv.com/ww2/ussr/IS-II.php)
+
+### WWII-N035 — Which WWII tank model is in the foreground?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A small camouflaged tracked vehicle with a riveted hull and a narrow turret in a museum](./assets/quiz-images/tank-11.webp)
+
+**Image credit:** [Rodw; CC BY-SA 4.0, cropped and converted](https://commons.wikimedia.org/wiki/File:Type_95_Ha-Go_Tank_at_the_Tank_Museum.JPG)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. Type 95 Ha-Go
+- B. Churchill
+- C. Tiger I
+- D. M3 Lee
+
+**Correct answer:** A
+
+- **A · Correct:** The Type 95 Ha-Go was a Japanese light tank with a 37 mm gun.
+- **B · Incorrect:** The Churchill was a much larger British infantry tank.
+- **C · Incorrect:** The Tiger I was a German heavy tank with an 88 mm gun.
+- **D · Incorrect:** The American M3 Lee was a medium tank with a hull-mounted main gun.
+
+**Source:** [The Tank Museum — Type 95 Ha-Go](https://tankmuseum.org/tank-nuts/tank-collection/ha-go)
+
+### WWII-N036 — What was the calibre of the German Tiger I tank’s main gun?
+
+**Topic:** Equipment — Tanks
+
+- A. 88 mm
+- B. 75 mm
+- C. 76.2 mm
+- D. 105 mm
+
+**Correct answer:** A
+
+- **A · Correct:** The Tiger I carried an 88 mm main gun.
+- **B · Incorrect:** Some Sherman tanks had 75 mm guns; the Tiger I’s main gun was 88 mm.
+- **C · Incorrect:** The early Soviet T-34 had a 76.2 mm gun; the Tiger I’s was 88 mm.
+- **D · Incorrect:** The Tiger I’s main gun was 88 mm, not 105 mm.
+
+**Source:** [The Tank Museum — Tiger I](https://tankmuseum.org/tank-nuts/tank-collection/tiger-i/); [M4 Sherman](https://tankmuseum.org/tank-nuts/tank-collection/m4-sherman/); [T-34/76](https://tankmuseum.org/tank-nuts/tank-collection/t-34-76/)
+
+### WWII-N037 — Why did the Allies use inflatable dummy tanks before D-Day?
+
+**Topic:** Equipment — Tanks
+
+- A. To carry real tank crews into battle
+- B. To clear sea mines underwater
+- C. To deliver food by parachute
+- D. To deceive German observers
+
+**Correct answer:** D
+
+- **A · Incorrect:** They were decoys, not working tanks carrying crews into combat.
+- **B · Incorrect:** They were deception devices on land, not mine-clearing submarines.
+- **C · Incorrect:** Their purpose was to look like real tanks and mislead observers.
+- **D · Correct:** Inflatable tanks helped disguise Allied preparations and mislead German reconnaissance.
+
+**Source:** [Imperial War Museums — D-Day deception](https://www.iwm.org.uk/history/second-world-war/d-day/parachuting-dummies-and-inflatable-tanks)
+
+### WWII-N038 — Which small four-wheel-drive vehicle could be used to deliver supplies during WWII?
+
+**Topic:** Equipment — Vehicles
+
+- A. The T-34
+- B. The M4 Sherman
+- C. The Willys Jeep
+- D. The Tiger I
+
+**Correct answer:** C
+
+- **A · Incorrect:** The T-34 was a tracked Soviet tank, not the small wheeled Jeep.
+- **B · Incorrect:** The Sherman was a tracked tank; the Jeep was the small 4x4.
+- **C · Correct:** The Jeep was a versatile 4x4; this Red Cross example delivered supplies.
+- **D · Incorrect:** The Tiger was a heavy German tank, not a small four-wheel-drive Jeep.
+
+**Source:** [Imperial War Museums — Willys MB Jeep](https://www.iwm.org.uk/collections/item/object/70000118); [WWII tanks](https://www.iwm.org.uk/history/second-world-war/north-africa-campaign/the-vital-role-of-tanks-in-the-second-world-war)
+
+### WWII-N039 — What was one purpose of the rear door on the American M3 half-track?
+
+**Topic:** Equipment — Vehicles
+
+- A. Loading the main tank gun
+- B. Letting soldiers enter and leave
+- C. Steering the front wheels
+- D. Cooling the engine
+
+**Correct answer:** B
+
+- **A · Incorrect:** The M3 was a personnel carrier; the rear door gave troops access.
+- **B · Correct:** The rear door made it easier for troops to get in and out.
+- **C · Incorrect:** The rear door provided entry and exit, rather than steering.
+- **D · Incorrect:** The rear door gave the passengers access to the vehicle.
+
+**Source:** [The National WWII Museum — M3 half-track](https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/vehicles-war/white-m3-half-track)
+
+### WWII-N040 — Why did the M3 half-track have lightly armoured sides?
+
+**Topic:** Equipment — Vehicles
+
+- A. To protect occupants from shell fragments
+- B. To make it float like a landing craft
+- C. To increase the power of its engine
+- D. To increase its cargo space
+
+**Correct answer:** A
+
+- **A · Correct:** The armour helped protect its passengers from fragments.
+- **B · Incorrect:** The armoured sides provided protection; the M3 was a ground vehicle.
+- **C · Incorrect:** The sides protected occupants; they were not the engine.
+- **D · Incorrect:** The light armour was intended to protect occupants against fragments.
+
+**Source:** [The National WWII Museum — M3 half-track](https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/vehicles-war/white-m3-half-track)
+
+### WWII-N041 — Which broad type of WWII mine is pictured?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A long, narrow metal object with a raised fitting and end handles](./assets/quiz-images/mine-01.webp)
+
+**Image credit:** [U.S. Government; public domain in the United States](https://commons.wikimedia.org/wiki/File:German_-_Riegelmine_43.jpg)
+
+- A. A naval mine
+- B. An anti-personnel land mine
+- C. An anti-tank land mine
+- D. A depth charge
+
+**Correct answer:** C
+
+- **A · Incorrect:** The pictured object is a German land mine, not a mine associated with naval warfare.
+- **B · Incorrect:** The pictured Riegelmine 43 is identified in the wartime reference as an anti-tank mine, not an anti-personnel mine.
+- **C · Correct:** The long metal mine is a German Riegelmine 43, an anti-tank land mine.
+- **D · Incorrect:** A depth charge is an anti-submarine weapon, unlike this land-based mine.
+
+**Source:** [U.S. War Department — Handbook on German Military Forces, TM-E 30-451 (1943)](https://archive.org/details/TM-E30-451)
+
+### WWII-N042 — What broad category fits the two large circular metal objects at the front of this display?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![Two broad circular metal objects displayed side by side](./assets/quiz-images/mine-02.webp)
+
+**Image credit:** [MKFI; released to the public domain worldwide](https://commons.wikimedia.org/wiki/File:Tellermines_RUK-museo.JPG)
+
+- A. Naval mines
+- B. Anti-personnel land mines
+- C. Depth charges
+- D. Anti-tank land mines
+
+**Correct answer:** D
+
+- **A · Incorrect:** The two displayed items are land weapons, not naval mines.
+- **B · Incorrect:** The museum display identifies these circular examples as vehicle-class anti-tank mines.
+- **C · Incorrect:** Depth charges are a separate category of anti-submarine weapon; these are land mines.
+- **D · Correct:** Both circular objects are identified as anti-tank mines: the left is Finnish and the right is German.
+
+**Source:** [Smithsonian National Museum of American History — German “Tellermine” Anti-Tank Mine](https://americanhistory.si.edu/collections/nmah_407167)
+
+### WWII-N043 — What kind of WWII weapon is the small round object near the center of this archival photograph?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A low, round object lying amid uneven ground and brush](./assets/quiz-images/mine-03.webp)
+
+**Image credit:** [Archives Branch, U.S. Marine Corps History Division; CC BY 2.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:Japanese_land_mine,_11_November_1943.jpg)
+**Image license:** [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
+
+- A. A land mine
+- B. A naval mine
+- C. An aircraft bomb
+- D. A depth charge
+
+**Correct answer:** A
+
+- **A · Correct:** The Marine Corps History Division identifies the pictured Japanese object as a land mine in its 1943 photograph record.
+- **B · Incorrect:** The archive identifies an object on land, not a naval mine.
+- **C · Incorrect:** The pictured object is identified as a mine, not an aircraft-delivered bomb.
+- **D · Incorrect:** A depth charge is an anti-submarine weapon; the archive identifies this as a land mine.
+
+**Source:** [U.S. Marine Corps History Division Archives — Japanese land mine photograph (11 November 1943)](https://www.flickr.com/photos/60868061@N04/47994580143/)
+
+### WWII-N044 — What broad category of mine is represented by the green square metal object?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A green square metal case with raised diagonal lines, photographed on display](./assets/quiz-images/mine-04.webp)
+
+**Image credit:** [Cmapm; CC BY 3.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:Soviet_TM-35_mine_at_the_Museum_on_Sapun_Mountain_in_Sevastopol.jpg)
+**Image license:** [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
+
+- A. A naval mine
+- B. An anti-personnel land mine
+- C. An anti-tank land mine
+- D. A depth charge
+
+**Correct answer:** C
+
+- **A · Incorrect:** The museum photograph identifies a Soviet land mine, not a sea mine.
+- **B · Incorrect:** The pictured TM-35 is identified as an anti-tank type, not an anti-personnel type.
+- **C · Correct:** The Soviet TM-35 shown here is an anti-tank land mine.
+- **D · Incorrect:** A depth charge is a different kind of anti-submarine weapon, not the pictured land mine.
+
+**Source:** [U.S. War Department — Handbook on U.S.S.R. Military Forces, Chapter VI: Fortifications (1946)](https://archive.org/details/tm-30-430-handbook-on-u.-s.-s.-r.-military-forces-1946)
+
+### WWII-N045 — Which broad category describes the tan, pottery-like artifact on display?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A tan, vessel-shaped object displayed on a museum mount](./assets/quiz-images/mine-05.webp)
+
+**Image credit:** [BrokenSphere; CC BY-SA 3.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:WW_II_Japanese_terracotta_land_mine.JPG)
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. A naval mine
+- B. A depth charge
+- C. An aircraft bomb
+- D. A land mine
+
+**Correct answer:** D
+
+- **A · Incorrect:** The museum object is identified as a Japanese land mine, not a naval mine.
+- **B · Incorrect:** A depth charge is a separate anti-submarine weapon, not the pictured land mine.
+- **C · Incorrect:** The historical source identifies a land mine, not an aircraft bomb.
+- **D · Correct:** The pottery-like Japanese artifact is a WWII land mine.
+
+**Source:** [U.S. War Department — Intelligence Bulletin, Vol. III, No. 4 (December 1944), “New Pottery Land Mine Introduced on Leyte Island”](https://archive.org/details/1944-12IntelligenceBulletinVol03No04-nsia)
+
+### WWII-N046 — What broad kind of mine is the large orange object shown here?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A large orange-red spherical object beside a roadway](./assets/quiz-images/mine-06.webp)
+
+**Image credit:** [Oxyman; CC BY-SA 3.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:British_Mk_14_Sea_Mine_2.jpg)
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. A naval mine
+- B. A depth charge
+- C. A torpedo
+- D. An anti-tank land mine
+
+**Correct answer:** A
+
+- **A · Correct:** The pictured British Mk 14 is a sea mine, a naval weapon used in WWII.
+- **B · Incorrect:** A depth charge is a different anti-submarine weapon; this object is identified as a sea mine.
+- **C · Incorrect:** A torpedo is a self-propelled underwater weapon, not the pictured mine.
+- **D · Incorrect:** An anti-tank land mine is a land weapon; the photo identifies a British sea mine.
+
+**Source:** [National Museum of the Royal New Zealand Navy — Defensive Minefields Hauraki Gulf WWII](https://navymuseum.co.nz/explore/by-themes/technology-and-weapons/defensive-minefields-hauraki-gulf-wwii/)
+
+### WWII-N047 — What broad category of mine is displayed in this harbor-side photograph?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A dark, rounded object with protruding fittings on a harborfront](./assets/quiz-images/mine-07.webp)
+
+**Image credit:** [Manxruler; CC BY-SA 3.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:British_Mark_17_naval_mine_on_display_in_Harstad.jpg)
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. An anti-tank land mine
+- B. A naval mine
+- C. An anti-aircraft shell
+- D. A depth charge
+
+**Correct answer:** B
+
+- **A · Incorrect:** The object is displayed as a British naval mine, not a land mine.
+- **B · Correct:** The photograph identifies a British Mark 17 naval mine on display at Harstad.
+- **C · Incorrect:** The photographed object is a mine, not an anti-aircraft shell.
+- **D · Incorrect:** A depth charge is a separate anti-submarine weapon; this artifact is a naval mine.
+
+**Source:** [Imperial War Museums — Sea Mine Mk XVII (MUN 4582)](https://www.iwm.org.uk/collections/item/object/30021858)
+
+### WWII-N048 — What broad category best identifies the large rounded object at the soldier's feet in this 1945 archival photograph?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A uniformed person beside a large dark spherical object on a wide beach](./assets/quiz-images/mine-08.webp)
+
+**Image credit:** [Photographer not identified; U.S. War Department record, public domain in the United States](https://commons.wikimedia.org/wiki/File:Japanese_buoyant_mine_which_drifted_from_Japanese_waters_to_Fort_Stevens_beach_between_Peter_Iredale_and_the_South..._-_NARA_-_299675.jpg)
+
+- A. A land mine
+- B. A naval mine
+- C. An aircraft bomb
+- D. A depth charge
+
+**Correct answer:** B
+
+- **A · Incorrect:** The archive describes a Japanese buoyant mine recovered on a beach, so it is a naval rather than a land mine.
+- **B · Correct:** The National Archives identifies the pictured object as a Japanese buoyant mine in an April 1945 record.
+- **C · Incorrect:** The archival record identifies a mine, not an aircraft bomb.
+- **D · Incorrect:** A depth charge is a different anti-submarine weapon; this archival object is a buoyant naval mine.
+
+**Source:** [U.S. National Archives — Japanese buoyant mine at Fort Stevens (record 299675)](https://catalog.archives.gov/id/299675)
+
+### WWII-N049 — What broad category best identifies the large gray artifact on the wheeled stand?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A gray spherical object with raised fittings mounted on a wheeled stand](./assets/quiz-images/mine-09.webp)
+
+**Image credit:** [Boris Maric; CC BY-SA 4.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:German_naval_mine_from_WW_II.jpg)
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. A naval mine
+- B. A depth charge
+- C. An anti-tank land mine
+- D. A torpedo
+
+**Correct answer:** A
+
+- **A · Correct:** The Belgrade museum photograph identifies the object as a German WWII naval mine.
+- **B · Incorrect:** A depth charge is an anti-submarine weapon; this artifact is identified as a mine.
+- **C · Incorrect:** An anti-tank mine is a land weapon; the photographed object is a naval mine.
+- **D · Incorrect:** A torpedo is not the museum artifact pictured here.
+
+**Source:** [Imperial War Museums — Second World War: German Naval Mines (HU 35869)](https://www.iwm.org.uk/collections/item/object/205087955)
+
+### WWII-N050 — What is the red, rounded object shown beside the shore?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A rounded red object with several raised metal fittings near a shoreline](./assets/quiz-images/mine-10.webp)
+
+**Image credit:** [Simon Johnston; CC BY-SA 2.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:WWII_Sea_Mine_-_geograph.org.uk_-_112941.jpg)
+**Image license:** [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+
+- A. A depth charge
+- B. A naval mine
+- C. A torpedo
+- D. A land mine
+
+**Correct answer:** B
+
+- **A · Incorrect:** The source identifies the object as a WWII sea mine, not a depth charge.
+- **B · Correct:** This is a WWII sea mine, a naval mine photographed on display.
+- **C · Incorrect:** The pictured object is identified as a mine, not a torpedo.
+- **D · Incorrect:** The source identifies a sea mine rather than a land mine.
+
+**Source:** [U.S. Naval History and Heritage Command — Naval Mine Warfare](https://www.history.navy.mil/content/history/nhhc/browse-by-topic/exploration-and-innovation/naval-mine-warfare.html)
+
+### WWII-N051 — Which broad category describes the pink, barrel-shaped object by the quay?
+
+**Topic:** Equipment — Mines
+
+**Image:** ![A pink, barrel-shaped object standing beside a stone quay](./assets/quiz-images/mine-11.webp)
+
+**Image credit:** [PAUL FARMER; CC BY-SA 2.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:Old_WWII_Naval_Mine_at_Port_Crannaich_-_geograph.org.uk_-_1568683.jpg)
+**Image license:** [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+
+- A. A land mine
+- B. A depth charge
+- C. A naval mine
+- D. An aircraft bomb
+
+**Correct answer:** C
+
+- **A · Incorrect:** The photograph identifies an old WWII naval mine, not a land mine.
+- **B · Incorrect:** A depth charge is a different anti-submarine weapon; the pictured object is a mine.
+- **C · Correct:** The quay-side artifact is identified as a WWII naval mine.
+- **D · Incorrect:** The photographed artifact is a naval mine, not an aircraft bomb.
+
+**Source:** [U.S. Naval History and Heritage Command — Naval Mine Warfare](https://www.history.navy.mil/content/history/nhhc/browse-by-topic/exploration-and-innovation/naval-mine-warfare.html)
+
+### WWII-N052 — Which vehicle's rear ramp made it easier for troops to leave during a landing?
+
+**Topic:** Equipment — Tanks and vehicles
+
+- A. LVT4
+- B. half-track
+- C. jeep
+- D. Crab
+
+**Correct answer:** A
+
+- **A · Correct:** The LVT4's rear ramp allowed troops to exit quickly.
+- **B · Incorrect:** half-track: a vehicle with front wheels and rear tracks; it is not the answer described.
+- **C · Incorrect:** jeep: a small military utility vehicle; it is not the answer described.
+- **D · Incorrect:** Crab: a Sherman fitted with a mine-clearing flail; it is not the answer described.
+
+**Source:** [National WWII Museum — LVT4 landing vehicle](https://www.nationalww2museum.org/visit/museum-campus-guide/us-freedom-pavilion/vehicles-war/lvt4-landing-vehicle)
+
+### WWII-N053 — What did the Kangaroo help transport alongside tanks?
+
+**Topic:** Equipment — Tanks and vehicles
+
+- A. cavalry horses
+- B. aircrew
+- C. submarine crews
+- D. infantry
+
+**Correct answer:** D
+
+- **A · Incorrect:** cavalry horses: animals ridden by mounted soldiers; it is not the answer described.
+- **B · Incorrect:** aircrew: people who operate aircraft; it is not the answer described.
+- **C · Incorrect:** submarine crews: people who operate submarines; it is not the answer described.
+- **D · Correct:** Kangaroos carried infantry with increased mobility and protection.
+
+**Source:** [Imperial War Museums — Tanks of D-Day](https://www.iwm.org.uk/history/second-world-war/d-day/funny-tanks-of-d-day)
+
+### WWII-N054 — What does the “4x4” description of a Willys WWII jeep refer to?
+
+**Topic:** Equipment — Vehicles
+
+- A. Four gears and four passengers
+- B. Four cylinders and four doors
+- C. Four-wheel drive
+- D. Four doors and four seats
+
+**Correct answer:** C
+
+- **A · Incorrect:** The 4x4 designation describes the vehicle’s four-wheel drive.
+- **B · Incorrect:** The 4x4 designation refers to its drive, not its cylinders and doors.
+- **C · Correct:** The Willys MB Jeep was a 4x4, a vehicle with drive to all four wheels.
+- **D · Incorrect:** The 4x4 designation refers to the Jeep’s drive, not its doors and seats.
+
+**Source:** [Imperial War Museums — Willys MB Jeep](https://www.iwm.org.uk/collections/item/object/70000118)
+
+### WWII-N055 — Which Allied tank was modified into the more heavily armed Firefly?
+
+**Topic:** Equipment — Tanks
+
+- A. The Matilda
+- B. The Sherman
+- C. The Tiger
+- D. The T-34
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Firefly was a Sherman variant, not a Matilda.
+- **B · Correct:** The Firefly was a Sherman fitted with a more powerful British 17-pounder gun.
+- **C · Incorrect:** The Firefly was based on the American-designed Sherman, not the German Tiger.
+- **D · Incorrect:** The Firefly was a Sherman variant, not a Soviet T-34.
+
+**Source:** [The Tank Museum — M4 Sherman](https://tankmuseum.org/tank-nuts/tank-collection/m4-sherman/)
+
+### WWII-N056 — Which of these WWII vehicles was the heaviest?
+
+**Topic:** Equipment — Tanks
+
+- A. Tiger I tank
+- B. M4A2 Sherman DD tank
+- C. T-34/76 tank
+- D. M3 half-track
+
+**Correct answer:** A
+
+- **A · Correct:** The Tiger I weighed about 57 tonnes, heavier than the other vehicles listed.
+- **B · Incorrect:** The Sherman DD weighed about 30 tonnes, much less than the Tiger I.
+- **C · Incorrect:** The T-34/76 weighed about 26.5 tonnes, less than the Tiger I.
+- **D · Incorrect:** The M3 half-track weighed about 17,650 pounds gross, far less than the Tiger I.
+
+**Source:** [The Tank Museum — Tiger I](https://tankmuseum.org/tank-nuts/tank-collection/tiger-i/), [Sherman DD](https://tankmuseum.org/tank-nuts/tank-collection/m4-sherman/) and [T-34/76](https://tankmuseum.org/tank-nuts/tank-collection/t-34-76/); [The National WWII Museum — M3 half-track](https://www.nationalww2museum.org/visit/museum-campus/us-freedom-pavilion/vehicles-war/white-m3-half-track)
+
+### WWII-N057 — What type of vessel was a German U-boat?
+
+**Topic:** Equipment — Warships
+
+- A. aircraft carrier
+- B. battleship
+- C. cargo ship
+- D. submarine
+
+**Correct answer:** D
+
+- **A · Incorrect:** aircraft carrier: a warship with a flight deck; it is not the answer described.
+- **B · Incorrect:** battleship: a heavily armed surface warship; it is not the answer described.
+- **C · Incorrect:** cargo ship: a vessel designed to carry freight; it is not the answer described.
+- **D · Correct:** U-boats were German submarines that attacked Allied shipping.
+
+**Source:** [Imperial War Museums — Battle of the Atlantic](https://www.iwm.org.uk/history/second-world-war/battle-of-the-atlantic)
+
+### WWII-N058 — What did Allied ships use to locate submerged U-boats in the Atlantic?
+
+**Topic:** Equipment — Warships
+
+- A. A compass
+- B. A lighthouse
+- C. Sonar, also called ASDIC
+- D. A ship’s anchor
+
+**Correct answer:** C
+
+- **A · Incorrect:** A compass helps with direction; ASDIC was used to locate submerged U-boats.
+- **B · Incorrect:** Lighthouses mark coastlines; ships used ASDIC to detect submerged U-boats.
+- **C · Correct:** ASDIC used sound waves to locate submerged submarines.
+- **D · Incorrect:** An anchor holds a ship in place; ASDIC was used to detect submarines.
+
+**Source:** [Imperial War Museums — Battle of the Atlantic](https://www.iwm.org.uk/history/second-world-war/battle-of-the-atlantic)
+
+### WWII-N059 — Which U.S. carrier earned 20 battle stars during World War II?
+
+**Topic:** Equipment — Warships
+
+- A. HMS Belfast
+- B. USS Enterprise
+- C. USS Missouri
+- D. USS Arizona
+
+**Correct answer:** B
+
+- **A · Incorrect:** HMS Belfast: a British cruiser; it is not the answer described.
+- **B · Correct:** USS Enterprise earned 20 World War II battle stars.
+- **C · Incorrect:** USS Missouri: an American battleship; it is not the answer described.
+- **D · Incorrect:** USS Arizona: an American battleship sunk at Pearl Harbor; it is not the answer described.
+
+**Source:** [San Diego Air & Space Museum — USS Enterprise CV-6](https://sandiegoairandspace.org/collection/item/uss-enterprise-1941-1943-special-collection)
+
+### WWII-N060 — Which country's navy operated USS Enterprise during World War II?
+
+**Topic:** Equipment — Warships
+
+- A. United States
+- B. Japan
+- C. Germany
+- D. Italy
+
+**Correct answer:** A
+
+- **A · Correct:** Enterprise served in the U.S. Navy and fought across the Pacific.
+- **B · Incorrect:** Japan: an Axis power with its own wartime navy; it is not the answer described.
+- **C · Incorrect:** Germany: the Axis power that operated U-boats; it is not the answer described.
+- **D · Incorrect:** Italy: an Axis power in the Mediterranean; it is not the answer described.
+
+**Source:** [San Diego Air & Space Museum — USS Enterprise CV-6](https://sandiegoairandspace.org/collection/item/uss-enterprise-1941-1943-special-collection)
+
+### WWII-N061 — What type of ship was a Liberty ship?
+
+**Topic:** Equipment — Warships
+
+- A. a German fighter
+- B. a Japanese tank
+- C. a British submarine
+- D. a U.S. cargo vessel
+
+**Correct answer:** D
+
+- **A · Incorrect:** a German fighter: a military aircraft of Germany; it is not the answer described.
+- **B · Incorrect:** a Japanese tank: an armoured vehicle of Japan; it is not the answer described.
+- **C · Incorrect:** a British submarine: a Royal Navy vessel capable of submerging; it is not the answer described.
+- **D · Correct:** American Liberty ships were emergency cargo vessels built to carry supplies.
+
+**Source:** [National WWII Museum — Liberty ships](https://www.nationalww2museum.org/war/articles/women-of-the-j-a-jones-brunswick-shipyard)
+
+### WWII-N062 — What was a principal wartime job of Liberty ships?
+
+**Topic:** Equipment — Warships
+
+- A. fighting on land
+- B. delivering radio speeches
+- C. carrying supplies
+- D. bombing targets from the air
+
+**Correct answer:** C
+
+- **A · Incorrect:** fighting on land: a role performed by ground forces; it is not the answer described.
+- **B · Incorrect:** delivering radio speeches: a communications activity rather than cargo transport; it is not the answer described.
+- **C · Correct:** Liberty ships carried food, equipment, and other supplies for the Allies.
+- **D · Incorrect:** bombing targets from the air: a role performed by aircraft; it is not the answer described.
+
+**Source:** [National WWII Museum — Liberty ships](https://www.nationalww2museum.org/war/articles/women-of-the-j-a-jones-brunswick-shipyard)
+
+### WWII-N063 — Which British warship supported the Gold and Juno beach landings with gunfire?
+
+**Topic:** Equipment — Warships
+
+- A. HMS Vimy
+- B. HMS Belfast
+- C. USS Arizona
+- D. Yamato
+
+**Correct answer:** B
+
+- **A · Incorrect:** HMS Vimy: a British destroyer that escorted convoys; it is not the answer described.
+- **B · Correct:** HMS Belfast supported British and Canadian assaults on Gold and Juno.
+- **C · Incorrect:** USS Arizona: an American battleship sunk at Pearl Harbor; it is not the answer described.
+- **D · Incorrect:** Yamato: a Japanese battleship; it is not the answer described.
+
+**Source:** [Imperial War Museums — HMS Belfast and D-Day](https://www.iwm.org.uk/history/iwm/hms-belfast/d-day)
+
+### WWII-N064 — What was the German Bismarck, sunk in the Atlantic in 1941?
+
+**Topic:** Equipment — Warships
+
+- A. A battleship
+- B. A submarine
+- C. An aircraft carrier
+- D. A merchant convoy
+
+**Correct answer:** A
+
+- **A · Correct:** Bismarck was a German battleship sunk in May 1941.
+- **B · Incorrect:** German U-boats were submarines; Bismarck was a surface battleship.
+- **C · Incorrect:** Bismarck was a battleship, not an aircraft carrier.
+- **D · Incorrect:** A convoy is a group of ships; Bismarck was one battleship.
+
+**Source:** [Imperial War Museums — Atlantic key facts](https://www.iwm.org.uk/history/second-world-war/battle-of-the-atlantic/what-you-need-to-know)
+
+### WWII-N065 — Which explosive weapon did escort ships use against submerged U-boats?
+
+**Topic:** Equipment — Weapons
+
+- A. a flotation screen
+- B. a parachute
+- C. a ration book
+- D. a depth charge
+
+**Correct answer:** D
+
+- **A · Incorrect:** a flotation screen: a canvas screen that helped an amphibious tank float; it is not the answer described.
+- **B · Incorrect:** a parachute: equipment used for descent from aircraft; it is not the answer described.
+- **C · Incorrect:** a ration book: a document for controlling civilian supplies; it is not the answer described.
+- **D · Correct:** Depth charges were used by escorts such as HMS Vimy against U-boats.
+
+**Source:** [Imperial War Museums — HMS Vimy](https://www.iwm.org.uk/collections/item/object/205148151)
+
+### WWII-N066 — Which underwater weapons did German U-boats carry to attack ships?
+
+**Topic:** Equipment — Weapons
+
+- A. life rafts
+- B. anchors
+- C. torpedoes
+- D. propellers
+
+**Correct answer:** C
+
+- **A · Incorrect:** life rafts: emergency flotation equipment; it is not the answer described.
+- **B · Incorrect:** anchors: devices used to hold ships in place; it is not the answer described.
+- **C · Correct:** German U-boats carried torpedoes for attacking ships.
+- **D · Incorrect:** propellers: devices that propel a vessel; it is not the answer described.
+
+**Source:** [Imperial War Museums — Battle of the Atlantic](https://www.iwm.org.uk/history/second-world-war/battle-of-the-atlantic)
+
+### WWII-N067 — What kind of warship was USS Missouri during World War II?
+
+**Topic:** Equipment — Warships
+
+- A. cargo ship
+- B. battleship
+- C. aircraft carrier
+- D. submarine
+
+**Correct answer:** B
+
+- **A · Incorrect:** cargo ship: a vessel designed to carry freight; it is not the answer described.
+- **B · Correct:** USS Missouri was an American battleship.
+- **C · Incorrect:** aircraft carrier: a warship with a flight deck; it is not the answer described.
+- **D · Incorrect:** submarine: a vessel able to travel underwater; it is not the answer described.
+
+**Source:** [The National WWII Museum — Japanese surrender aboard USS Missouri](https://www.nationalww2museum.org/war/articles/japanese-surrender-tokyo-bay-september-2-1945)
+
+### WWII-N068 — What kind of warship was USS Enterprise CV-6?
+
+**Topic:** Equipment — Warships
+
+- A. aircraft carrier
+- B. battleship
+- C. submarine
+- D. cargo ship
+
+**Correct answer:** A
+
+- **A · Correct:** Enterprise was a U.S. aircraft carrier that operated aircraft from its deck.
+- **B · Incorrect:** battleship: a heavily armed surface warship; it is not the answer described.
+- **C · Incorrect:** submarine: a vessel able to travel underwater; it is not the answer described.
+- **D · Incorrect:** cargo ship: a vessel designed to carry freight; it is not the answer described.
+
+**Source:** [San Diego Air & Space Museum — USS Enterprise CV-6](https://sandiegoairandspace.org/collection/item/uss-enterprise-1941-1943-special-collection)
+
+### WWII-N069 — Where did aircraft take off from a WWII aircraft carrier?
+
+**Topic:** Equipment — Warships
+
+- A. The hangar deck
+- B. The engine room
+- C. The bridge
+- D. The flight deck
+
+**Correct answer:** D
+
+- **A · Incorrect:** Aircraft were moved from the hangar to the flight deck for takeoff.
+- **B · Incorrect:** The engine room powered the ship; aircraft used the flight deck.
+- **C · Incorrect:** The bridge was for navigating the ship; aircraft took off from the flight deck.
+- **D · Correct:** Aircraft took off from the carrier’s flight deck.
+
+**Source:** [Cradle of Aviation Museum — flight deck operations](https://www.cradleofaviation.org/history/history/world-war-two/air-power-at-sea/carrier-operations-flight-deck.html)
+
+### WWII-N070 — Which country's battleship Yamato was sunk by U.S. aircraft in April 1945?
+
+**Topic:** Equipment — Warships
+
+- A. Germany
+- B. Italy
+- C. Japan
+- D. United States
+
+**Correct answer:** C
+
+- **A · Incorrect:** Germany: the Axis power that operated U-boats; it is not the answer described.
+- **B · Incorrect:** Italy: an Axis power in the Mediterranean; it is not the answer described.
+- **C · Correct:** Yamato was a Japanese battleship sunk while heading toward Okinawa.
+- **D · Incorrect:** United States: the Allied country that built USS Enterprise; it is not the answer described.
+
+**Source:** [The National WWII Museum — Battle of Okinawa and Yamato](https://www.nationalww2museum.org/war/articles/operation-iceberg-battle-okinawa)
+
+### WWII-N071 — In which attack was the battleship USS Arizona sunk?
+
+**Topic:** Equipment — Warships
+
+- A. The attack on Pearl Harbor
+- B. The Doolittle Raid
+- C. The D-Day landings
+- D. The Battle of Midway
+
+**Correct answer:** A
+
+- **A · Correct:** Japanese bombs devastated Arizona during the attack on Pearl Harbor on December 7, 1941.
+- **B · Incorrect:** Arizona sank at Pearl Harbor, not in the Doolittle Raid.
+- **C · Incorrect:** Arizona sank in the Pearl Harbor attack, not during the Normandy landings.
+- **D · Incorrect:** Arizona had already been sunk at Pearl Harbor before the Battle of Midway.
+
+**Source:** [National Park Service — USS Arizona Memorial](https://www.nps.gov/places/uss-arizona-memorial.htm)
+
+### WWII-N072 — What type of ship was USS Arizona when attacked at Pearl Harbor?
+
+**Topic:** Equipment — Warships
+
+- A. battleship
+- B. aircraft carrier
+- C. submarine
+- D. cargo ship
+
+**Correct answer:** A
+
+- **A · Correct:** Arizona was a U.S. battleship sunk in the Japanese attack.
+- **B · Incorrect:** aircraft carrier: a warship with a flight deck; it is not the answer described.
+- **C · Incorrect:** submarine: a vessel able to travel underwater; it is not the answer described.
+- **D · Incorrect:** cargo ship: a vessel designed to carry freight; it is not the answer described.
+
+**Source:** [National Park Service — USS Arizona Memorial](https://www.nps.gov/places/uss-arizona-memorial.htm)
+
+### WWII-N073 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A long wooden-stocked rifle displayed against a dark background](./assets/quiz-images/gun-01.webp)
+
+**Image credit:** [Smithsonian Institution; public domain in the United States](https://commons.wikimedia.org/wiki/File:Springfield_Armory_M1_Garand_Rifle-NMAH-AHB2015q026946.jpg)
+
+- A. M1 Garand rifle
+- B. Bren light machine gun
+- C. Sten submachine gun
+- D. 75 mm pack howitzer
+
+**Correct answer:** A
+
+- **A · Correct:** The Smithsonian identifies this rifle as an M1 Garand, made in 1940.
+- **B · Incorrect:** The Bren is a light machine gun, not this wooden-stocked rifle.
+- **C · Incorrect:** The Sten is a compact submachine gun with a distinctive side magazine.
+- **D · Incorrect:** The 75 mm pack howitzer is a wheeled artillery piece.
+
+**Source:** [Imperial War Museums — M1 Garand](https://www.iwm.org.uk/collections/item/object/30029352)
+
+### WWII-N074 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A wooden-stocked museum firearm with a vertical foregrip and sling](./assets/quiz-images/gun-02.webp)
+
+**Image credit:** [Swedish Army Museum; CC BY 4.0; resized and converted](https://commons.wikimedia.org/wiki/File:Thompson_SMG_M1928,_AM.006516,_01.jpg)
+
+**Image license:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+- A. Karabiner 98k rifle
+- B. Thompson submachine gun
+- C. 75 mm pack howitzer
+- D. Bren light machine gun
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Karabiner 98k is a German rifle, not this submachine gun.
+- **B · Correct:** The Swedish Army Museum identifies its specimen as a Thompson M1928; Thompsons were also known as Tommy guns.
+- **C · Incorrect:** The howitzer is a wheeled artillery piece, not a handheld firearm.
+- **D · Incorrect:** The Bren is a light machine gun, usually pictured with a prominent top-mounted magazine.
+
+**Source:** [Imperial War Museums — Thompson Model 1928A1](https://www.iwm.org.uk/collections/item/object/30033521)
+
+### WWII-N075 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A compact metal firearm with a projecting magazine in a museum case](./assets/quiz-images/gun-03.webp)
+
+**Image credit:** [BrokenSphere; CC BY-SA 3.0; resized and converted](https://commons.wikimedia.org/wiki/File:Sten_Mk_II_HKMCD.JPG)
+
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. M1 Garand rifle
+- B. MG 42 machine gun
+- C. Sten submachine gun
+- D. 75 mm pack howitzer
+
+**Correct answer:** C
+
+- **A · Incorrect:** The M1 Garand is a long wooden-stocked American rifle.
+- **B · Incorrect:** The MG 42 is a larger German machine gun, often displayed on a bipod.
+- **C · Correct:** This museum exhibit is a Sten Mk II; the Sten was designed in Britain during the war.
+- **D · Incorrect:** A pack howitzer is a much larger wheeled artillery piece.
+
+**Source:** [Imperial War Museums — Sten Mk 2](https://www.iwm.org.uk/collections/item/object/30029395)
+
+### WWII-N076 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A dark metal firearm displayed on supports in a museum case](./assets/quiz-images/gun-04.webp)
+
+**Image credit:** [Catlemur; CC BY-SA 4.0; resized and converted](https://commons.wikimedia.org/wiki/File:MP40_Nikaia_Resistance_Museum.jpg)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. Lee-Enfield No. 4 rifle
+- B. Bren light machine gun
+- C. M1 Garand rifle
+- D. MP 40 submachine gun
+
+**Correct answer:** D
+
+- **A · Incorrect:** The Lee-Enfield No. 4 is a wooden-stocked British rifle.
+- **B · Incorrect:** The Bren is a light machine gun with a different overall shape.
+- **C · Incorrect:** The M1 Garand is a long wooden-stocked American rifle.
+- **D · Correct:** The museum photograph identifies the object as an MP 40, a German submachine gun produced during the war.
+
+**Source:** [Imperial War Museums — MP40](https://www.iwm.org.uk/collections/item/object/30029268)
+
+### WWII-N077 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A museum firearm on a two-legged support with a curved magazine above it](./assets/quiz-images/gun-05.webp)
+
+**Image credit:** [BrokenSphere; CC BY-SA 3.0; resized and converted](https://commons.wikimedia.org/wiki/File:Bren_gun_HKMCD.JPG)
+
+**Image license:** [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+- A. Sten submachine gun
+- B. Bren light machine gun
+- C. Mosin-Nagant rifle
+- D. 75 mm pack howitzer
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Sten is a compact submachine gun, not this supported light machine gun.
+- **B · Correct:** The displayed Bren is a British light machine gun; its top-mounted curved magazine is visually distinctive.
+- **C · Incorrect:** The Mosin-Nagant is a wooden-stocked rifle rather than this machine gun.
+- **D · Incorrect:** The pack howitzer is a wheeled artillery piece.
+
+**Source:** [Imperial War Museums — Bren Mk 2](https://www.iwm.org.uk/collections/item/object/30033628)
+
+### WWII-N078 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![Two side views of the same wooden-stocked rifle on a light background](./assets/quiz-images/gun-06.webp)
+
+**Image credit:** [Swedish Army Museum; public domain](https://commons.wikimedia.org/wiki/File:Lee-Enfield_No_4_Mk_I_%281943%29_-_AM.032027.jpg)
+
+- A. PPSh-41 submachine gun
+- B. MG 42 machine gun
+- C. Lee-Enfield No. 4 rifle
+- D. 75 mm pack howitzer
+
+**Correct answer:** C
+
+- **A · Incorrect:** The PPSh-41 is a Soviet submachine gun, often shown with a round drum magazine.
+- **B · Incorrect:** The MG 42 is a German machine gun, not the pictured rifle.
+- **C · Correct:** The Swedish Army Museum identifies this rifle as a Lee-Enfield No. 4 Mk I made in 1943.
+- **D · Incorrect:** The pack howitzer is a wheeled artillery piece, not a rifle.
+
+**Source:** [Imperial War Museums — Rifle, No 4 Mk 1](https://www.iwm.org.uk/collections/item/object/30032154)
+
+### WWII-N079 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![Two side views of a wood-stocked rifle on a pale background](./assets/quiz-images/gun-07.webp)
+
+**Image credit:** [Swedish Army Museum; CC BY 4.0; resized and converted](https://commons.wikimedia.org/wiki/File:Karabiner_98_kurz.jpg)
+
+**Image license:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+- A. Karabiner 98k rifle
+- B. Thompson submachine gun
+- C. Bren light machine gun
+- D. 75 mm pack howitzer
+
+**Correct answer:** A
+
+- **A · Correct:** The pictured Karabiner 98k was the standard German rifle during WWII.
+- **B · Incorrect:** The Thompson is an American submachine gun, not this long German rifle.
+- **C · Incorrect:** The Bren is a British light machine gun, not this rifle.
+- **D · Incorrect:** The pack howitzer is a wheeled artillery piece.
+
+**Source:** [Imperial War Museums — Karabiner 98k](https://www.iwm.org.uk/collections/item/object/30035947)
+
+### WWII-N080 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![Two side views of a long wooden-stocked rifle](./assets/quiz-images/gun-08.webp)
+
+**Image credit:** [Swedish Army Museum; public domain](https://commons.wikimedia.org/wiki/File:Mosin-Nagant_M1891_-_Ryssland_-_AM.032971.jpg)
+
+- A. MP 40 submachine gun
+- B. 75 mm pack howitzer
+- C. Bren light machine gun
+- D. Mosin-Nagant rifle
+
+**Correct answer:** D
+
+- **A · Incorrect:** The MP 40 is a German submachine gun with a metal stock.
+- **B · Incorrect:** The pack howitzer is a wheeled artillery piece.
+- **C · Incorrect:** The Bren is a British light machine gun, not this long rifle.
+- **D · Correct:** This museum specimen is a Mosin-Nagant Model 1891; the later M1891/30 version was the Red Army standard in WWII.
+
+**Source:** [Imperial War Museums — Mosin-Nagant M1891/30](https://www.iwm.org.uk/collections/item/object/30029602)
+
+### WWII-N081 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A wooden-stocked firearm with a round drum on display in a museum](./assets/quiz-images/gun-09.webp)
+
+**Image credit:** [501ghost; CC0; resized and converted](https://commons.wikimedia.org/wiki/File:PPsh-41_at_the_National_Museum_of_Scotland.jpg)
+
+- A. Karabiner 98k rifle
+- B. PPSh-41 submachine gun
+- C. 75 mm pack howitzer
+- D. M1 Garand rifle
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Karabiner 98k is a German rifle without the pictured drum.
+- **B · Correct:** This PPSh-41 is a Soviet submachine gun; the pictured specimen has a distinctive round drum magazine.
+- **C · Incorrect:** The pack howitzer is a wheeled artillery piece.
+- **D · Incorrect:** The M1 Garand is an American rifle, not the pictured Soviet submachine gun.
+
+**Source:** [Imperial War Museums — PPSh 41](https://www.iwm.org.uk/collections/item/object/30029315)
+
+### WWII-N082 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A long dark firearm displayed on a two-legged support](./assets/quiz-images/gun-10.webp)
+
+**Image credit:** [Bukvoed; CC BY 3.0; resized and converted](https://commons.wikimedia.org/wiki/File:MG42-machine-gun-batey-haosef-1.jpg)
+
+**Image license:** [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
+
+- A. Lee-Enfield No. 4 rifle
+- B. Thompson submachine gun
+- C. MG 42 machine gun
+- D. 75 mm pack howitzer
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Lee-Enfield No. 4 is a British wooden-stocked rifle.
+- **B · Incorrect:** The Thompson is a smaller American submachine gun.
+- **C · Correct:** The museum display is identified as an MG 42, a German machine gun introduced during WWII.
+- **D · Incorrect:** The pack howitzer is a wheeled artillery piece.
+
+**Source:** [Imperial War Museums — MG42](https://www.iwm.org.uk/collections/item/object/30033064)
+
+### WWII-N083 — Which WWII-era weapon is pictured?
+
+**Topic:** Equipment — Weapons
+
+**Image:** ![A wheeled artillery piece displayed outdoors on a concrete pad](./assets/quiz-images/gun-11.webp)
+
+**Image credit:** [Mark Pellegrini; CC BY-SA 2.5; resized and converted](https://commons.wikimedia.org/wiki/File:US_75_mm_howitzer_1.jpg)
+
+**Image license:** [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/)
+
+- A. MP 40 submachine gun
+- B. Mosin-Nagant rifle
+- C. M1 Garand rifle
+- D. 75 mm pack howitzer
+
+**Correct answer:** D
+
+- **A · Incorrect:** The MP 40 is a handheld German submachine gun.
+- **B · Incorrect:** The Mosin-Nagant is a handheld rifle.
+- **C · Incorrect:** The M1 Garand is an American rifle, not an artillery piece.
+- **D · Correct:** The photograph shows a US 75 mm pack howitzer, a light artillery type used during WWII.
+
+**Source:** [U.S. Army — Artillery Museum rescues historic howitzer](https://www.army.mil/article/111769/no_1_gun_artillery_museum_rescues_historic_howitzer)
+
+### WWII-N084 — Which submachine gun was nicknamed the Tommy gun?
+
+**Topic:** Equipment — Weapons
+
+- A. Thompson
+- B. Sten
+- C. Bren
+- D. Lee-Enfield
+
+**Correct answer:** A
+
+- **A · Correct:** The Thompson submachine gun was known as the Tommy gun.
+- **B · Incorrect:** The Sten was another submachine gun, not the Thompson Tommy gun.
+- **C · Incorrect:** The Bren was a light machine gun, not the Tommy gun.
+- **D · Incorrect:** The Lee-Enfield was a rifle, not the Tommy gun.
+
+**Source:** [Imperial War Museums — Thompson submachine guns](https://www.iwm.org.uk/collections/item/object/205195518)
+
+### WWII-N085 — What kind of bomb was Little Boy, dropped on Hiroshima?
+
+**Topic:** Equipment — Weapons
+
+- A. A depth charge
+- B. A conventional incendiary bomb
+- C. An atomic bomb
+- D. A naval torpedo
+
+**Correct answer:** C
+
+- **A · Incorrect:** Depth charges were used against submarines; Little Boy was an atomic bomb.
+- **B · Incorrect:** Conventional incendiaries start fires without a nuclear explosion; Little Boy was an atomic bomb.
+- **C · Correct:** Little Boy was the atomic bomb dropped on Hiroshima by Enola Gay on August 6, 1945.
+- **D · Incorrect:** A torpedo is an underwater weapon; Little Boy was an atomic bomb dropped from an aircraft.
+
+**Source:** [Smithsonian National Air and Space Museum — Flight of the Enola Gay](https://airandspace.si.edu/stories/editorial/flight-enola-gay)
+
+### WWII-N086 — What type of aircraft was Enola Gay, which dropped the atomic bomb on Hiroshima?
+
+**Topic:** Equipment — Aircraft
+
+- A. P-51 Mustang
+- B. C-47 Skytrain
+- C. B-29 Superfortress
+- D. B-17 Flying Fortress
+
+**Correct answer:** C
+
+- **A · Incorrect:** Enola Gay was a B-29 bomber, not a P-51 fighter.
+- **B · Incorrect:** Enola Gay was a B-29 bomber, not a C-47 transport.
+- **C · Correct:** Enola Gay was a modified Boeing B-29 Superfortress.
+- **D · Incorrect:** Enola Gay was a B-29, not the earlier B-17.
+
+**Source:** [Smithsonian National Air and Space Museum — Enola Gay](https://airandspace.si.edu/stories/editorial/flight-enola-gay)
+
+### WWII-N087 — What did the Tiger I tank fire from its main gun?
+
+**Topic:** Equipment — Weapons
+
+- A. Parachutes
+- B. Shells
+- C. Torpedoes
+- D. Aircraft
+
+**Correct answer:** B
+
+- **A · Incorrect:** The Tiger’s main gun fired shells, not parachutes.
+- **B · Correct:** The Tank Museum records a Tiger firing an 88 mm shell.
+- **C · Incorrect:** Torpedoes are naval weapons; the Tiger fired shells from its gun.
+- **D · Incorrect:** The Tiger was a tank, not an aircraft carrier; its gun fired shells.
+
+**Source:** [The Tank Museum — capture of Tiger 131](https://tankmuseum.org/article/capture_of_tiger_131)
+
+### WWII-N088 — What markings helped identify many Allied aircraft during the D-Day invasion?
+
+**Topic:** Equipment — Aircraft
+
+- A. Black-and-white stripes
+- B. A painted red cross alone
+- C. A solid yellow tail alone
+- D. A large letter Z alone
+
+**Correct answer:** A
+
+- **A · Correct:** Invasion stripes on wings and fuselages helped identify Allied aircraft.
+- **B · Incorrect:** The distinctive invasion markings were black-and-white stripes.
+- **C · Incorrect:** The identifying invasion markings were black-and-white stripes.
+- **D · Incorrect:** The D-Day identification markings were black-and-white stripes.
+
+**Source:** [Smithsonian National Air and Space Museum — C-47 and D-Day](https://airandspace.si.edu/stories/editorial/d-day-and-douglas-c-47)
+
+### WWII-N089 — In what part of France did the D-Day landings take place?
+
+**Topic:** History — D-Day
+
+- A. Sicily
+- B. Bavaria
+- C. Norway
+- D. Normandy
+
+**Correct answer:** D
+
+- **A · Incorrect:** Sicily: an Italian island invaded by the Allies in 1943; it is not the answer described.
+- **B · Incorrect:** Bavaria: a region of southern Germany; it is not the answer described.
+- **C · Incorrect:** Norway: a Scandinavian country occupied by Germany; it is not the answer described.
+- **D · Correct:** The Allied landings took place along the coast of Normandy.
+
+**Source:** [Imperial War Museums — D-Day beaches](https://www.iwm.org.uk/history/second-world-war/d-day/what-you-need-to-know-about-the-d-day-beaches)
+
+### WWII-N090 — How many named assault beaches were used on D-Day?
+
+**Topic:** History — D-Day
+
+- A. seven
+- B. ten
+- C. five
+- D. three
+
+**Correct answer:** C
+
+- **A · Incorrect:** seven: a larger number than the five assault beaches; it is not the answer described.
+- **B · Incorrect:** ten: twice the number of assault beaches; it is not the answer described.
+- **C · Correct:** The beaches were Utah, Omaha, Gold, Juno, and Sword.
+- **D · Incorrect:** three: a smaller number than the five assault beaches; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day beaches](https://www.iwm.org.uk/history/second-world-war/d-day/what-you-need-to-know-about-the-d-day-beaches)
+
+### WWII-N091 — Which D-Day beach was assigned to the Canadian 3rd Division?
+
+**Topic:** History — D-Day
+
+- A. Gold
+- B. Juno
+- C. Omaha
+- D. Utah
+
+**Correct answer:** B
+
+- **A · Incorrect:** Gold: a British landing beach; it is not the answer described.
+- **B · Correct:** Canadian troops landed at Juno Beach.
+- **C · Incorrect:** Omaha: an American landing beach; it is not the answer described.
+- **D · Incorrect:** Utah: an American landing beach; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day beaches](https://www.iwm.org.uk/history/second-world-war/d-day/what-you-need-to-know-about-the-d-day-beaches)
+
+### WWII-N092 — Which D-Day beach had the highest casualties of the five assault areas?
+
+**Topic:** History — D-Day
+
+- A. Omaha
+- B. Juno
+- C. Utah
+- D. Gold
+
+**Correct answer:** A
+
+- **A · Correct:** Omaha was heavily defended and suffered the highest casualties of the assault beaches.
+- **B · Incorrect:** Juno: the beach assigned to the Canadian 3rd Division; it is not the answer described.
+- **C · Incorrect:** Utah: an American landing beach; it is not the answer described.
+- **D · Incorrect:** Gold: a British landing beach; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day beaches](https://www.iwm.org.uk/history/second-world-war/d-day/what-you-need-to-know-about-the-d-day-beaches)
+
+### WWII-N093 — Which British city was heavily bombed during the Blitz?
+
+**Topic:** History — Home front
+
+- A. Rome
+- B. Tokyo
+- C. Berlin
+- D. London
+
+**Correct answer:** D
+
+- **A · Incorrect:** Rome is in Italy, not Britain.
+- **B · Incorrect:** Tokyo is in Japan, not Britain.
+- **C · Incorrect:** Berlin is in Germany, not Britain.
+- **D · Correct:** London was bombed repeatedly during the German air raids known as the Blitz.
+
+**Source:** [Imperial War Museums — London in the Second World War](https://www.iwm.org.uk/history/second-world-war/blitz/london-in-the-second-world-war)
+
+### WWII-N094 — What work did Britain’s Women’s Land Army do during WWII?
+
+**Topic:** History — Home Front
+
+- A. Serving on naval warships
+- B. Working as hospital nurses
+- C. Farm work and food production
+- D. Flying fighter aircraft
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Land Army worked on Britain’s farms, rather than serving as a naval crew.
+- **B · Incorrect:** The Land Army’s wartime role was agricultural work.
+- **C · Correct:** Land Girls worked on farms and helped increase Britain’s food supply.
+- **D · Incorrect:** The Women’s Land Army worked in British agriculture, not as fighter pilots.
+
+**Source:** [Imperial War Museums — Women’s Land Army](https://www.iwm.org.uk/history/second-world-war/home-front/what-was-the-womens-land-army)
+
+### WWII-N095 — What did Americans grow in wartime victory gardens?
+
+**Topic:** History — Home Front
+
+- A. Petrol
+- B. Fruit and vegetables
+- C. Rubber tyres
+- D. Steel helmets
+
+**Correct answer:** B
+
+- **A · Incorrect:** Victory gardens produced food, not fuel.
+- **B · Correct:** Victory gardens supplied home-grown produce and helped address food shortages.
+- **C · Incorrect:** Victory gardens grew food; tyres were manufactured products.
+- **D · Incorrect:** Gardens grew food, not manufactured helmets.
+
+**Source:** [The National WWII Museum — victory gardens](https://www.nationalww2museum.org/war/articles/victory-gardens-world-war-ii)
+
+### WWII-N096 — What was the codename for the Allied invasion of Normandy?
+
+**Topic:** History — D-Day
+
+- A. Operation Overlord
+- B. Operation Torch
+- C. Operation Barbarossa
+- D. Operation Neptune
+
+**Correct answer:** A
+
+- **A · Correct:** Operation Overlord was the Allied invasion of Normandy.
+- **B · Incorrect:** Operation Torch: the Allied landings in North Africa; it is not the answer described.
+- **C · Incorrect:** Operation Barbarossa: the German invasion of the Soviet Union; it is not the answer described.
+- **D · Incorrect:** Operation Neptune: the naval component of the Normandy invasion; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day explained](https://www.iwm.org.uk/history/second-world-war/d-day/d-day-explained)
+
+### WWII-N097 — In which country were the WWII battles of El Alamein fought?
+
+**Topic:** History — North Africa
+
+- A. Japan
+- B. France
+- C. Norway
+- D. Egypt
+
+**Correct answer:** D
+
+- **A · Incorrect:** Japan is in East Asia; El Alamein is in Egypt.
+- **B · Incorrect:** France is in Europe; El Alamein is in Egypt.
+- **C · Incorrect:** Norway is in Europe; El Alamein is in Egypt.
+- **D · Correct:** The battles of El Alamein were fought in Egypt in 1942.
+
+**Source:** [Encyclopaedia Britannica — Battles of El-Alamein](https://www.britannica.com/event/Battles-of-El-Alamein)
+
+### WWII-N098 — How did radar help Britain’s air defences in the Battle of Britain?
+
+**Topic:** History — Battle of Britain
+
+- A. It transported troops across the Channel
+- B. It decoded every German message
+- C. It warned of incoming aircraft
+- D. It produced food for rationing
+
+**Correct answer:** C
+
+- **A · Incorrect:** Radar detected aircraft; it was not a transport vessel.
+- **B · Incorrect:** Radar tracked approaching aircraft; codebreaking was a separate activity.
+- **C · Correct:** Radar detected approaching raids, giving fighter defences time to respond.
+- **D · Incorrect:** Food supplies were a home-front concern; radar warned of air raids.
+
+**Source:** [Imperial War Museums — radar and the Battle of Britain](https://www.iwm.org.uk/history/second-world-war/battle-of-britain/how-radar-gave-britain-the-edge)
+
+### WWII-N099 — Who dropped behind the Normandy beaches before the seaborne landings?
+
+**Topic:** History — D-Day
+
+- A. shipyard welders
+- B. paratroopers
+- C. submariners
+- D. firefighters
+
+**Correct answer:** B
+
+- **A · Incorrect:** shipyard welders: workers who join metal in shipyards; it is not the answer described.
+- **B · Correct:** Allied airborne troops dropped behind the beaches to help secure the landings.
+- **C · Incorrect:** submariners: people who serve aboard submarines; it is not the answer described.
+- **D · Incorrect:** firefighters: people trained to fight fires; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day explained](https://www.iwm.org.uk/history/second-world-war/d-day/d-day-explained)
+
+### WWII-N100 — Which Normandy cliff-top position was assaulted by U.S. Rangers on D-Day?
+
+**Topic:** History — D-Day
+
+- A. Pointe du Hoc
+- B. Juno Beach
+- C. Pearl Harbor
+- D. Stalingrad
+
+**Correct answer:** A
+
+- **A · Correct:** U.S. Rangers attacked German gun positions at Pointe du Hoc.
+- **B · Incorrect:** Juno Beach: the beach assigned to the Canadian 3rd Division; it is not the answer described.
+- **C · Incorrect:** Pearl Harbor: a U.S. naval base in Hawaii; it is not the answer described.
+- **D · Incorrect:** Stalingrad: a Soviet city that saw a major battle; it is not the answer described.
+
+**Source:** [Imperial War Museums — D-Day beaches](https://www.iwm.org.uk/history/second-world-war/d-day/what-you-need-to-know-about-the-d-day-beaches)
+
+### WWII-N101 — What were limited allocations of scarce food and goods called?
+
+**Topic:** History — Home front
+
+- A. passports
+- B. ballots
+- C. maps
+- D. rations
+
+**Correct answer:** D
+
+- **A · Incorrect:** passports: documents used for international travel; it is not the answer described.
+- **B · Incorrect:** ballots: papers used for voting; it is not the answer described.
+- **C · Incorrect:** maps: documents used for navigation; it is not the answer described.
+- **D · Correct:** Rationing controlled access to scarce goods during wartime.
+
+**Source:** [Imperial War Museums — rationing](https://www.iwm.org.uk/history/second-world-war/home-front/rationing)
+
+### WWII-N102 — What did Britain begin rationing in January 1940?
+
+**Topic:** History — Home front
+
+- A. library cards
+- B. postage stamps
+- C. food
+- D. railway timetables
+
+**Correct answer:** C
+
+- **A · Incorrect:** library cards: documents used to borrow books; it is not the answer described.
+- **B · Incorrect:** postage stamps: labels used to pay for mail; it is not the answer described.
+- **C · Correct:** Food rationing began in Britain in January 1940.
+- **D · Incorrect:** railway timetables: schedules showing train services; it is not the answer described.
+
+**Source:** [Imperial War Museums — Britain during the Second World War](https://www.iwm.org.uk/history/second-world-war/home-front)
+
+### WWII-N103 — What additional consumer good did Britain begin rationing in 1941?
+
+**Topic:** History — Home front
+
+- A. wedding invitations
+- B. clothes
+- C. school exams
+- D. traffic lights
+
+**Correct answer:** B
+
+- **A · Incorrect:** wedding invitations: messages inviting guests; it is not the answer described.
+- **B · Correct:** Clothes rationing began in Britain in 1941.
+- **C · Incorrect:** school exams: assessments taken by pupils; it is not the answer described.
+- **D · Incorrect:** traffic lights: signals used to control road traffic; it is not the answer described.
+
+**Source:** [Imperial War Museums — Britain during the Second World War](https://www.iwm.org.uk/history/second-world-war/home-front)
+
+### WWII-N104 — Where were many British children evacuated to escape bombing?
+
+**Topic:** History — Home front
+
+- A. countryside
+- B. front lines
+- C. submarines
+- D. shipyards
+
+**Correct answer:** A
+
+- **A · Correct:** Many evacuees were sent from cities to rural areas considered safer.
+- **B · Incorrect:** front lines: areas where opposing forces fight; it is not the answer described.
+- **C · Incorrect:** submarines: naval vessels able to travel underwater; it is not the answer described.
+- **D · Incorrect:** shipyards: places where vessels are built; it is not the answer described.
+
+**Source:** [Imperial War Museums — wartime evacuation](https://www.iwm.org.uk/history/second-world-war/home-front/the-nation-at-a-standstill)
+
+### WWII-N105 — What was the British campaign encouraging people to grow vegetables called?
+
+**Topic:** History — Home Front
+
+- A. Make Do and Mend
+- B. Careless Talk Costs Lives
+- C. Keep Calm and Carry On
+- D. Dig for Victory
+
+**Correct answer:** D
+
+- **A · Incorrect:** This slogan concerned repairing and reusing clothing; vegetable growing was Dig for Victory.
+- **B · Incorrect:** This warned against sharing sensitive information; the gardening campaign was Dig for Victory.
+- **C · Incorrect:** This was a morale message; the gardening campaign was Dig for Victory.
+- **D · Correct:** Britain encouraged people to grow vegetables under the Dig for Victory campaign.
+
+**Source:** [Imperial War Museums — rationing](https://www.iwm.org.uk/history/second-world-war/home-front/rationing); [Make Do and Mend](https://www.iwm.org.uk/history/second-world-war/home-front/rationing/top-tips-for-winning-at-make-do-and-mend); [Careless Talk](https://www.iwm.org.uk/collections/item/object/9736); [Keep Calm](https://www.iwm.org.uk/history/second-world-war/home-front/truth-behind-keep-calm-and-carry-on)
+
+### WWII-N106 — What was the wartime rule requiring British households to hide lights after dark called?
+
+**Topic:** History — Home front
+
+- A. evacuation
+- B. conscription
+- C. blackout
+- D. rationing
+
+**Correct answer:** C
+
+- **A · Incorrect:** evacuation: moving people away from danger; it is not the answer described.
+- **B · Incorrect:** conscription: compulsory recruitment for service; it is not the answer described.
+- **C · Correct:** The blackout restricted visible lights at night.
+- **D · Incorrect:** rationing: controls on access to scarce goods; it is not the answer described.
+
+**Source:** [Imperial War Museums — wartime shutdown](https://www.iwm.org.uk/history/second-world-war/home-front/the-nation-at-a-standstill)
+
+### WWII-N107 — Why did British blackout rules require lights to be hidden?
+
+**Topic:** History — Home front
+
+- A. To help enemy bombers locate towns
+- B. To make towns harder for enemy bombers to locate
+- C. To signal the end of an air raid
+- D. To guide ships into harbours
+
+**Correct answer:** B
+
+- **A · Incorrect:** The aim was to conceal towns from enemy bombers, not help them.
+- **B · Correct:** Hiding lights made towns harder for enemy aircraft to locate at night.
+- **C · Incorrect:** Hiding lights was a continuing precaution, not the all-clear signal after a raid.
+- **D · Incorrect:** The blackout was intended to conceal targets from the air, not guide ships.
+
+**Source:** [Imperial War Museums — the Blitz in photographs](https://www.iwm.org.uk/history/second-world-war/blitz/the-blitz-in-photographs)
+
+### WWII-N108 — What name is commonly given to the German bombing campaign against British cities?
+
+**Topic:** History — Home front
+
+- A. the Blitz
+- B. the Battle of Midway
+- C. the Winter War
+- D. the Doolittle Raid
+
+**Correct answer:** A
+
+- **A · Correct:** The Blitz brought sustained bombing to London and other British cities.
+- **B · Incorrect:** the Battle of Midway: a naval-air battle in the Pacific; it is not the answer described.
+- **C · Incorrect:** the Winter War: a war between Finland and the Soviet Union; it is not the answer described.
+- **D · Incorrect:** the Doolittle Raid: an American air raid on Japan; it is not the answer described.
+
+**Source:** [Imperial War Museums — Britain during the Second World War](https://www.iwm.org.uk/history/second-world-war/home-front)
+
+### WWII-N109 — Which figure became a U.S. symbol of women working in wartime industry?
+
+**Topic:** History — Home front
+
+- A. Anne Frank
+- B. Winston Churchill
+- C. Douglas MacArthur
+- D. Rosie the Riveter
+
+**Correct answer:** D
+
+- **A · Incorrect:** Anne Frank: a Jewish diarist who hid from the Nazis; it is not the answer described.
+- **B · Incorrect:** Winston Churchill: Britain’s prime minister later in the war; it is not the answer described.
+- **C · Incorrect:** Douglas MacArthur: an American general; it is not the answer described.
+- **D · Correct:** Rosie the Riveter became an icon of American women industrial workers.
+
+**Source:** [National WWII Museum — the home front](https://www.nationalww2museum.org/war/articles/home-front)
+
+### WWII-N110 — Where did millions of American women work to support wartime production?
+
+**Topic:** History — Home front
+
+- A. only the navy
+- B. only overseas embassies
+- C. factories
+- D. only the front lines
+
+**Correct answer:** C
+
+- **A · Incorrect:** only the navy: one branch of the armed forces; it is not the answer described.
+- **B · Incorrect:** only overseas embassies: diplomatic offices abroad; it is not the answer described.
+- **C · Correct:** Millions of American women entered industrial work during the war.
+- **D · Incorrect:** only the front lines: areas of direct military fighting; it is not the answer described.
+
+**Source:** [National WWII Museum — the home front](https://www.nationalww2museum.org/war/articles/home-front)
+
+### WWII-N111 — What did American households carefully manage with ration books?
+
+**Topic:** History — Home front
+
+- A. only railway maps
+- B. food and supplies
+- C. only military decorations
+- D. only film tickets
+
+**Correct answer:** B
+
+- **A · Incorrect:** only railway maps: documents showing rail routes; it is not the answer described.
+- **B · Correct:** Ration books helped households manage scarce goods during the war.
+- **C · Incorrect:** only military decorations: awards for service; it is not the answer described.
+- **D · Incorrect:** only film tickets: admission to entertainment; it is not the answer described.
+
+**Source:** [National WWII Museum — the home front](https://www.nationalww2museum.org/war/articles/home-front)
+
+### WWII-N112 — Which community was subjected to mass incarceration in the United States under wartime exclusion policies?
+
+**Topic:** History — Home front
+
+- A. Japanese Americans
+- B. German prisoners of war
+- C. British diplomats
+- D. Canadian soldiers
+
+**Correct answer:** A
+
+- **A · Correct:** Japanese Americans were forcibly removed and incarcerated under wartime policies.
+- **B · Incorrect:** German prisoners of war: captured German service members; it is not the answer described.
+- **C · Incorrect:** British diplomats: officials representing Britain; it is not the answer described.
+- **D · Incorrect:** Canadian soldiers: military personnel from Canada; it is not the answer described.
+
+**Source:** [U.S. National Archives — Executive Order 9066](https://www.archives.gov/milestone-documents/executive-order-9066)
+
+### WWII-N113 — Which U.S. president signed Executive Order 9066 in 1942?
+
+**Topic:** History — Home front
+
+- A. Harry S. Truman
+- B. Dwight Eisenhower
+- C. Winston Churchill
+- D. Franklin D. Roosevelt
+
+**Correct answer:** D
+
+- **A · Incorrect:** Harry S. Truman: the U.S. president who took office in 1945; it is not the answer described.
+- **B · Incorrect:** Dwight Eisenhower: an Allied general in Europe; it is not the answer described.
+- **C · Incorrect:** Winston Churchill: Britain’s prime minister later in the war; it is not the answer described.
+- **D · Correct:** Roosevelt issued Executive Order 9066 in February 1942.
+
+**Source:** [U.S. National Archives — Executive Order 9066](https://www.archives.gov/milestone-documents/executive-order-9066)
+
+### WWII-N114 — What did Executive Order 9066 authorize commanders to designate for civilian exclusion?
+
+**Topic:** History — Home front
+
+- A. national parks
+- B. foreign embassies
+- C. military areas
+- D. Olympic stadiums
+
+**Correct answer:** C
+
+- **A · Incorrect:** national parks: areas protected for conservation; it is not the answer described.
+- **B · Incorrect:** foreign embassies: diplomatic offices of other countries; it is not the answer described.
+- **C · Correct:** The order authorized military commanders to exclude civilians from designated military areas.
+- **D · Incorrect:** Olympic stadiums: venues for sport; it is not the answer described.
+
+**Source:** [U.S. National Archives — Executive Order 9066](https://www.archives.gov/milestone-documents/executive-order-9066)
+
+### WWII-N115 — Which U.S. service was created for women in the Army during World War II?
+
+**Topic:** History — Home front
+
+- A. the Japanese Imperial Navy
+- B. the Women’s Army Corps
+- C. the Royal Air Force
+- D. the German Luftwaffe
+
+**Correct answer:** B
+
+- **A · Incorrect:** the Japanese Imperial Navy: Japan’s wartime naval service; it is not the answer described.
+- **B · Correct:** The Women’s Army Corps was a U.S. military service for women.
+- **C · Incorrect:** the Royal Air Force: Britain’s air force; it is not the answer described.
+- **D · Incorrect:** the German Luftwaffe: Germany’s wartime air force; it is not the answer described.
+
+**Source:** [National WWII Museum — women in World War II](https://www.nationalww2museum.org/students-teachers/student-resources/research-starters/women-wwii)
+
+### WWII-N116 — What was a central purpose of British food rationing?
+
+**Topic:** History — Home front
+
+- A. fairer shares during shortages
+- B. ending all farming
+- C. replacing all shops
+- D. closing all kitchens
+
+**Correct answer:** A
+
+- **A · Correct:** The scheme aimed to distribute scarce food fairly.
+- **B · Incorrect:** ending all farming: not the aim of British rationing; it is not the answer described.
+- **C · Incorrect:** replacing all shops: not the aim of British rationing; it is not the answer described.
+- **D · Incorrect:** closing all kitchens: not the aim of British rationing; it is not the answer described.
+
+**Source:** [Imperial War Museums — rationing](https://www.iwm.org.uk/history/second-world-war/home-front/rationing)
+
+### WWII-N117 — Which broadcaster carried Neville Chamberlain's announcement that Britain was at war in 1939?
+
+**Topic:** History — Home front
+
+- A. NASA
+- B. the United Nations
+- C. the Red Cross
+- D. the BBC
+
+**Correct answer:** D
+
+- **A · Incorrect:** NASA: the U.S. space agency founded after the war; it is not the answer described.
+- **B · Incorrect:** the United Nations: an international organization founded in 1945; it is not the answer described.
+- **C · Incorrect:** the Red Cross: a humanitarian organization; it is not the answer described.
+- **D · Correct:** The announcement that Britain was at war was broadcast by the BBC.
+
+**Source:** [Imperial War Museums — Britain during the Second World War](https://www.iwm.org.uk/history/second-world-war/home-front)
+
+### WWII-N118 — Who announced Britain was at war with Germany on September 3, 1939?
+
+**Topic:** History — Home front
+
+- A. Harry S. Truman
+- B. Joseph Stalin
+- C. Neville Chamberlain
+- D. Winston Churchill
+
+**Correct answer:** C
+
+- **A · Incorrect:** Harry S. Truman: the U.S. president who took office in 1945; it is not the answer described.
+- **B · Incorrect:** Joseph Stalin: the Soviet leader; it is not the answer described.
+- **C · Correct:** Prime Minister Neville Chamberlain made the announcement on September 3.
+- **D · Incorrect:** Winston Churchill: Britain’s prime minister later in the war; it is not the answer described.
+
+**Source:** [Imperial War Museums — Britain during the Second World War](https://www.iwm.org.uk/history/second-world-war/home-front)
+
+### WWII-N119 — What name is given to the Nazi genocide of European Jews?
+
+**Topic:** History — Holocaust and resistance
+
+- A. D-Day
+- B. the Holocaust
+- C. the Blitz
+- D. the Battle of Midway
+
+**Correct answer:** B
+
+- **A · Incorrect:** D-Day: the Allied landings in Normandy; it is not the answer described.
+- **B · Correct:** The Holocaust was the Nazi regime’s systematic persecution and murder of European Jews.
+- **C · Incorrect:** the Blitz: German bombing of British cities; it is not the answer described.
+- **D · Incorrect:** the Battle of Midway: a Pacific naval-air battle; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II and the Holocaust](https://www.ushmm.org/learn/holocaust/world-war-ii-and-the-holocaust-1939-1945)
+
+### WWII-N120 — Approximately how many Jews were murdered in the Holocaust?
+
+**Topic:** History — Holocaust and resistance
+
+- A. Six million
+- B. Two million
+- C. Four million
+- D. Eight million
+
+**Correct answer:** A
+
+- **A · Correct:** Approximately six million Jewish people were murdered in the Holocaust.
+- **B · Incorrect:** Two million is far below the estimated Jewish death toll.
+- **C · Incorrect:** Four million is below the estimated Jewish death toll.
+- **D · Incorrect:** Eight million is above the estimated Jewish death toll.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II and the Holocaust](https://www.ushmm.org/learn/holocaust/world-war-ii-and-the-holocaust-1939-1945)
+
+### WWII-N121 — Which people were targeted by Nazi Germany for systematic annihilation?
+
+**Topic:** History — Holocaust and resistance
+
+- A. only military pilots
+- B. only prisoners of war
+- C. only factory owners
+- D. Jewish people
+
+**Correct answer:** D
+
+- **A · Incorrect:** only military pilots: members of air forces, not the group targeted for genocide; it is not the answer described.
+- **B · Incorrect:** only prisoners of war: captured military personnel, not the sole victims of Nazi persecution; it is not the answer described.
+- **C · Incorrect:** only factory owners: an occupational group, not the population targeted for genocide; it is not the answer described.
+- **D · Correct:** Nazi Germany sought to murder Europe’s Jews; it also persecuted and murdered other groups.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II and the Holocaust](https://www.ushmm.org/learn/holocaust/world-war-ii-and-the-holocaust-1939-1945)
+
+### WWII-N122 — What were the confined urban areas where Nazis separated many Jews from the rest of the population called?
+
+**Topic:** History — Holocaust and resistance
+
+- A. parliaments
+- B. shipyards
+- C. ghettos
+- D. libraries
+
+**Correct answer:** C
+
+- **A · Incorrect:** parliaments: institutions that make laws; it is not the answer described.
+- **B · Incorrect:** shipyards: places where ships are built; it is not the answer described.
+- **C · Correct:** German authorities forced Jews into ghettos in occupied eastern Europe.
+- **D · Incorrect:** libraries: places where books are kept; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II and the Holocaust](https://www.ushmm.org/learn/holocaust/world-war-ii-and-the-holocaust-1939-1945)
+
+### WWII-N123 — Which Nazi camp complex in occupied Poland included a killing center?
+
+**Topic:** History — Holocaust and resistance
+
+- A. Normandy
+- B. Auschwitz-Birkenau
+- C. Pearl Harbor
+- D. Bletchley Park
+
+**Correct answer:** B
+
+- **A · Incorrect:** Normandy: a region of France; it is not the answer described.
+- **B · Correct:** Auschwitz-Birkenau was the largest Nazi camp complex and included a killing center.
+- **C · Incorrect:** Pearl Harbor: a U.S. naval base in Hawaii; it is not the answer described.
+- **D · Incorrect:** Bletchley Park: a British wartime codebreaking center; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II and the Holocaust](https://www.ushmm.org/learn/holocaust/world-war-ii-and-the-holocaust-1939-1945)
+
+### WWII-N124 — What did Anne Frank keep while hiding from Nazi persecution?
+
+**Topic:** History — Holocaust and resistance
+
+- A. a diary
+- B. a submarine manual
+- C. a restaurant menu
+- D. a naval treaty
+
+**Correct answer:** A
+
+- **A · Correct:** Anne recorded her experiences, fears, and hopes in a diary.
+- **B · Incorrect:** a submarine manual: a document about operating a submarine; it is not the answer described.
+- **C · Incorrect:** a restaurant menu: a list of food for sale; it is not the answer described.
+- **D · Incorrect:** a naval treaty: an agreement involving naval powers; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Anne Frank](https://encyclopedia.ushmm.org/content/en/article/anne-frank-biography)
+
+### WWII-N125 — What did Anne Frank call her hiding place?
+
+**Topic:** History — Holocaust and resistance
+
+- A. the White House
+- B. the Reichstag
+- C. the Kremlin
+- D. the Secret Annex
+
+**Correct answer:** D
+
+- **A · Incorrect:** the White House: the U.S. president’s residence; it is not the answer described.
+- **B · Incorrect:** the Reichstag: the German parliament building; it is not the answer described.
+- **C · Incorrect:** the Kremlin: a historic government complex in Moscow; it is not the answer described.
+- **D · Correct:** Anne called the concealed apartment behind her father’s former office the Secret Annex.
+
+**Source:** [U.S. Holocaust Memorial Museum — Anne Frank](https://encyclopedia.ushmm.org/content/en/article/anne-frank-biography)
+
+### WWII-N126 — Who helped preserve Anne Frank’s writings after the family was arrested?
+
+**Topic:** History — Holocaust and resistance
+
+- A. Alan Turing
+- B. Adolf Hitler
+- C. Miep Gies
+- D. Otto Frank
+
+**Correct answer:** C
+
+- **A · Incorrect:** Alan Turing: a British mathematician who worked on Enigma; it is not the answer described.
+- **B · Incorrect:** Adolf Hitler: the dictator of Nazi Germany; it is not the answer described.
+- **C · Correct:** Miep Gies preserved Anne’s papers and later gave them to Otto Frank.
+- **D · Incorrect:** Otto Frank: Anne Frank’s father; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Anne Frank’s diary](https://encyclopedia.ushmm.org/content/en/article/anne-frank-diary)
+
+### WWII-N127 — Who was Anne Frank’s father and helped publish her diary?
+
+**Topic:** History — Holocaust and resistance
+
+- A. Winston Churchill
+- B. Otto Frank
+- C. Miep Gies
+- D. Alan Turing
+
+**Correct answer:** B
+
+- **A · Incorrect:** Winston Churchill: Britain’s wartime prime minister; it is not the answer described.
+- **B · Correct:** Otto Frank organized Anne’s papers and worked to publish her diary.
+- **C · Incorrect:** Miep Gies: a Dutch helper who preserved Anne’s diary; it is not the answer described.
+- **D · Incorrect:** Alan Turing: a British mathematician who worked on Enigma; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Anne Frank’s diary](https://encyclopedia.ushmm.org/content/en/article/anne-frank-diary)
+
+### WWII-N128 — What concealed the entrance to Anne Frank's hiding place?
+
+**Topic:** History — Holocaust
+
+- A. A revolving bookcase
+- B. A railway carriage
+- C. A garden shed
+- D. A ship's cabin
+
+**Correct answer:** A
+
+- **A · Correct:** A revolving bookcase concealed the entrance to the Secret Annex.
+- **B · Incorrect:** The entrance was concealed by a bookcase, not a railway carriage.
+- **C · Incorrect:** The entrance was concealed by a bookcase, not a garden shed.
+- **D · Incorrect:** The entrance was concealed by a bookcase, not a ship's cabin.
+
+**Source:** [Anne Frank House — the bookcase](https://www.annefrank.org/en/museum/collection/anne-frank-collection/42/bookcase/)
+
+### WWII-N129 — In which city did Jewish fighters rise against Nazi forces in a ghetto in 1943?
+
+**Topic:** History — Holocaust and resistance
+
+- A. Berlin
+- B. Rome
+- C. Tokyo
+- D. Warsaw
+
+**Correct answer:** D
+
+- **A · Incorrect:** Berlin: the German capital; it is not the answer described.
+- **B · Incorrect:** Rome: the Italian capital; it is not the answer described.
+- **C · Incorrect:** Tokyo: the Japanese capital; it is not the answer described.
+- **D · Correct:** Jewish insurgents resisted German deportations in the Warsaw ghetto.
+
+**Source:** [U.S. Holocaust Memorial Museum — Warsaw Ghetto Uprising](https://encyclopedia.ushmm.org/content/en/article/warsaw-ghetto-uprising)
+
+### WWII-N130 — Which people were forced to wear a yellow Star of David in Nazi Germany from 1941?
+
+**Topic:** History — Holocaust
+
+- A. All British civilians
+- B. All Allied prisoners of war
+- C. Jews aged six and over
+- D. All German soldiers
+
+**Correct answer:** C
+
+- **A · Incorrect:** The decree targeted Jews in the Reich and some annexed territories, not all British civilians.
+- **B · Incorrect:** The decree targeted Jews, not all Allied prisoners of war.
+- **C · Correct:** Nazi authorities ordered Jews aged six and over in the Reich to wear the badge to identify and stigmatize them.
+- **D · Incorrect:** The order targeted Jews; it was not a badge worn by all German soldiers.
+
+**Source:** [United States Holocaust Memorial Museum — Jewish badge](https://encyclopedia.ushmm.org/content/en/article/jewish-badge-during-the-nazi-era)
+
+### WWII-N131 — Who resisted deportations during the Warsaw Ghetto Uprising?
+
+**Topic:** History — Holocaust and resistance
+
+- A. British air-raid wardens
+- B. Jewish resistance fighters
+- C. German occupation police
+- D. U.S. Marines
+
+**Correct answer:** B
+
+- **A · Incorrect:** British air-raid wardens: civilian-defense personnel in Britain; it is not the answer described.
+- **B · Correct:** Jewish fighters resisted German troops and police in the ghetto.
+- **C · Incorrect:** German occupation police: the Nazi forces that attempted deportations; it is not the answer described.
+- **D · Incorrect:** U.S. Marines: American military personnel who fought in the Pacific; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Warsaw Ghetto Uprising](https://encyclopedia.ushmm.org/content/en/article/warsaw-ghetto-uprising)
+
+### WWII-N132 — What kind of vessels helped carry many Danish Jewish refugees to safety in 1943?
+
+**Topic:** History — Holocaust and resistance
+
+- A. fishing boats
+- B. aircraft carriers
+- C. tank columns
+- D. railway locomotives
+
+**Correct answer:** A
+
+- **A · Correct:** Danish fishermen ferried refugees across the water to Sweden.
+- **B · Incorrect:** aircraft carriers: large warships that operate aircraft; it is not the answer described.
+- **C · Incorrect:** tank columns: formations of armoured vehicles; it is not the answer described.
+- **D · Incorrect:** railway locomotives: vehicles used to pull trains; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Rescue in Denmark](https://encyclopedia.ushmm.org/content/en/article/rescue-in-denmark)
+
+### WWII-N133 — Where was the British center for breaking German wartime codes?
+
+**Topic:** History — Intelligence and service
+
+- A. Pearl Harbor
+- B. the Secret Annex
+- C. Omaha Beach
+- D. Bletchley Park
+
+**Correct answer:** D
+
+- **A · Incorrect:** Pearl Harbor: a U.S. naval base in Hawaii; it is not the answer described.
+- **B · Incorrect:** the Secret Annex: the Frank family’s hiding place; it is not the answer described.
+- **C · Incorrect:** Omaha Beach: an American D-Day landing beach; it is not the answer described.
+- **D · Correct:** Bletchley Park was the site of secret British codebreaking work.
+
+**Source:** [Imperial War Museums — Alan Turing and Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code)
+
+### WWII-N134 — Which mathematician worked on Enigma at Bletchley Park?
+
+**Topic:** History — Intelligence and service
+
+- A. Douglas MacArthur
+- B. Miep Gies
+- C. Alan Turing
+- D. Anne Frank
+
+**Correct answer:** C
+
+- **A · Incorrect:** Douglas MacArthur: an American general; it is not the answer described.
+- **B · Incorrect:** Miep Gies: a Dutch helper who preserved Anne’s diary; it is not the answer described.
+- **C · Correct:** Alan Turing worked on deciphering Enigma messages at Bletchley Park.
+- **D · Incorrect:** Anne Frank: a Jewish diarist who hid from the Nazis; it is not the answer described.
+
+**Source:** [Imperial War Museums — Alan Turing and Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code)
+
+### WWII-N135 — What was the German enciphering machine studied by Turing’s team called?
+
+**Topic:** History — Intelligence and service
+
+- A. Mulberry
+- B. Enigma
+- C. Overlord
+- D. Rosie
+
+**Correct answer:** B
+
+- **A · Incorrect:** Mulberry: the name of artificial harbours used after D-Day; it is not the answer described.
+- **B · Correct:** The German armed forces used Enigma machines to encipher messages.
+- **C · Incorrect:** Overlord: the Allied invasion of Normandy; it is not the answer described.
+- **D · Incorrect:** Rosie: a name associated with American women war workers; it is not the answer described.
+
+**Source:** [Imperial War Museums — Alan Turing and Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code)
+
+### WWII-N136 — Mathematicians from which country shared earlier Enigma breakthroughs with Britain?
+
+**Topic:** History — Intelligence and service
+
+- A. Poland
+- B. Brazil
+- C. Australia
+- D. Canada
+
+**Correct answer:** A
+
+- **A · Correct:** Polish mathematicians had worked out how to read Enigma and shared their knowledge.
+- **B · Incorrect:** Brazil: a South American Allied country; it is not the answer described.
+- **C · Incorrect:** Australia: an Allied country in the Pacific; it is not the answer described.
+- **D · Incorrect:** Canada: an Allied country in North America; it is not the answer described.
+
+**Source:** [Imperial War Museums — Alan Turing and Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code)
+
+### WWII-N137 — What kind of traffic did Turing’s Hut 8 team analyze?
+
+**Topic:** History — Intelligence and service
+
+- A. restaurant recipes
+- B. weather jokes
+- C. cinema reviews
+- D. German naval messages
+
+**Correct answer:** D
+
+- **A · Incorrect:** restaurant recipes: instructions for preparing food; it is not the answer described.
+- **B · Incorrect:** weather jokes: humorous remarks about weather; it is not the answer described.
+- **C · Incorrect:** cinema reviews: commentary on films; it is not the answer described.
+- **D · Correct:** Hut 8 worked on German naval Enigma signals.
+
+**Source:** [Imperial War Museums — Alan Turing and Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code)
+
+### WWII-N138 — Which Indigenous language was used to develop a U.S. Marine Corps wartime code?
+
+**Topic:** History — Intelligence and service
+
+- A. Esperanto
+- B. Morse code
+- C. Navajo
+- D. Latin
+
+**Correct answer:** C
+
+- **A · Incorrect:** Esperanto: a constructed international language; it is not the answer described.
+- **B · Incorrect:** Morse code: a system of dots and dashes; it is not the answer described.
+- **C · Correct:** Navajo speakers developed and used a military code based on their language.
+- **D · Incorrect:** Latin: an ancient language; it is not the answer described.
+
+**Source:** [National WWII Museum — American Indian Code Talkers](https://www.nationalww2museum.org/war/articles/american-indian-code-talkers)
+
+### WWII-N139 — What did code talkers send using their military codes?
+
+**Topic:** History — Intelligence and service
+
+- A. movie subtitles
+- B. secret military messages
+- C. newspaper advertisements
+- D. baseball scores
+
+**Correct answer:** B
+
+- **A · Incorrect:** movie subtitles: text displayed with films; it is not the answer described.
+- **B · Correct:** Code talkers transmitted secret battlefield communications.
+- **C · Incorrect:** newspaper advertisements: public announcements in print; it is not the answer described.
+- **D · Incorrect:** baseball scores: results of sporting games; it is not the answer described.
+
+**Source:** [National WWII Museum — American Indian Code Talkers](https://www.nationalww2museum.org/war/articles/american-indian-code-talkers)
+
+### WWII-N140 — Which U.S. military branch trained the first group of Navajo code talkers in 1942?
+
+**Topic:** History — Intelligence and service
+
+- A. the U.S. Marine Corps
+- B. the German navy
+- C. the Italian air force
+- D. the Japanese army
+
+**Correct answer:** A
+
+- **A · Correct:** The first class of 29 Navajo Marine recruits completed training in 1942.
+- **B · Incorrect:** the German navy: a branch of Nazi Germany’s armed forces; it is not the answer described.
+- **C · Incorrect:** the Italian air force: Italy’s air service; it is not the answer described.
+- **D · Incorrect:** the Japanese army: Japan’s land forces; it is not the answer described.
+
+**Source:** [National WWII Museum — American Indian Code Talkers](https://www.nationalww2museum.org/war/articles/american-indian-code-talkers)
+
+### WWII-N141 — In which theater did Navajo code talkers notably serve?
+
+**Topic:** History — Intelligence and service
+
+- A. Antarctica
+- B. the Moon
+- C. the Sahara alone
+- D. the Pacific
+
+**Correct answer:** D
+
+- **A · Incorrect:** Antarctica: the southern polar continent; it is not the answer described.
+- **B · Incorrect:** the Moon: Earth’s natural satellite; it is not the answer described.
+- **C · Incorrect:** the Sahara alone: a desert region, not their principal theater; it is not the answer described.
+- **D · Correct:** Navajo code talkers transmitted messages in the Pacific theater.
+
+**Source:** [National WWII Museum — American Indian Code Talkers](https://www.nationalww2museum.org/war/articles/american-indian-code-talkers)
+
+### WWII-N142 — What name is given to the African American U.S. aviators trained at Tuskegee?
+
+**Topic:** History — Intelligence and service
+
+- A. Code Talkers
+- B. Land Girls
+- C. Tuskegee Airmen
+- D. Flying Tigers
+
+**Correct answer:** C
+
+- **A · Incorrect:** Code Talkers: service members who used Indigenous-language codes; it is not the answer described.
+- **B · Incorrect:** Land Girls: women who worked in British agriculture; it is not the answer described.
+- **C · Correct:** The Tuskegee Airmen served in segregated American aviation units.
+- **D · Incorrect:** Flying Tigers: American volunteers who fought for China; it is not the answer described.
+
+**Source:** [National WWII Museum — Tuskegee Airmen](https://www.nationalww2museum.org/war/articles/louisianacorporal-albert-porche-99th-fighter-squadron)
+
+### WWII-N143 — In which U.S. state was the Tuskegee Airmen training center?
+
+**Topic:** History — Intelligence and service
+
+- A. Maine
+- B. Alabama
+- C. Alaska
+- D. Hawaii
+
+**Correct answer:** B
+
+- **A · Incorrect:** Maine: a U.S. state in New England; it is not the answer described.
+- **B · Correct:** Tuskegee was selected as the center for African American pilot training in Alabama.
+- **C · Incorrect:** Alaska: a U.S. state in the far northwest; it is not the answer described.
+- **D · Incorrect:** Hawaii: an island group in the Pacific; it is not the answer described.
+
+**Source:** [National WWII Museum — Tuskegee Airmen](https://www.nationalww2museum.org/war/articles/louisianacorporal-albert-porche-99th-fighter-squadron)
+
+### WWII-N144 — What colour gave the Tuskegee fighter group its Red Tails nickname?
+
+**Topic:** History — Intelligence and service
+
+- A. red
+- B. purple
+- C. green
+- D. yellow
+
+**Correct answer:** A
+
+- **A · Correct:** The nickname came from the red-painted tails of the group’s aircraft.
+- **B · Incorrect:** purple: a colour not represented by the nickname Red Tails; it is not the answer described.
+- **C · Incorrect:** green: a colour not represented by the nickname Red Tails; it is not the answer described.
+- **D · Incorrect:** yellow: a colour not represented by the nickname Red Tails; it is not the answer described.
+
+**Source:** [The National WWII Museum — Tuskegee Airmen teaching resource](https://www.nationalww2museum.org/sites/default/files/2017-07/tuskegee-airmen.pdf)
+
+### WWII-N145 — What initials identified the Women Airforce Service Pilots?
+
+**Topic:** History — Intelligence and service
+
+- A. WAC
+- B. RAF
+- C. BBC
+- D. WASP
+
+**Correct answer:** D
+
+- **A · Incorrect:** WAC: the Women’s Army Corps; it is not the answer described.
+- **B · Incorrect:** RAF: the Royal Air Force; it is not the answer described.
+- **C · Incorrect:** BBC: the British broadcaster; it is not the answer described.
+- **D · Correct:** WASP stands for Women Airforce Service Pilots.
+
+**Source:** [National WWII Museum — Women Airforce Service Pilots](https://www.nationalww2museum.org/war/articles/wasp-women-airforce-service-pilots)
+
+### WWII-N146 — What was one noncombat job performed by the WASP?
+
+**Topic:** History — Intelligence and service
+
+- A. conduct the Nuremberg trials
+- B. negotiate the German surrender
+- C. ferry aircraft
+- D. command Japanese fleets
+
+**Correct answer:** C
+
+- **A · Incorrect:** conduct the Nuremberg trials: a postwar judicial role; it is not the answer described.
+- **B · Incorrect:** negotiate the German surrender: a diplomatic and military role; it is not the answer described.
+- **C · Correct:** WASP pilots ferried military aircraft within the United States.
+- **D · Incorrect:** command Japanese fleets: a naval command role; it is not the answer described.
+
+**Source:** [National WWII Museum — Women Airforce Service Pilots](https://www.nationalww2museum.org/war/articles/wasp-women-airforce-service-pilots)
+
+### WWII-N147 — Where did many Londoners shelter during German air raids?
+
+**Topic:** History — Home Front
+
+- A. On open beaches
+- B. Underground railway stations
+- C. On exposed rooftops
+- D. In the middle of runways
+
+**Correct answer:** B
+
+- **A · Incorrect:** Underground stations provided shelter; open beaches did not.
+- **B · Correct:** Some Underground stations became air-raid shelters during the Blitz.
+- **C · Incorrect:** People sought shelter from raids; exposed rooftops offered no such protection.
+- **D · Incorrect:** Londoners sheltered in places such as Underground stations, not exposed airfields.
+
+**Source:** [Imperial War Museums — London during WWII](https://www.iwm.org.uk/history/second-world-war/blitz/london-in-the-second-world-war)
+
+### WWII-N148 — Who did much of the vital ground support work for Tuskegee fighter units?
+
+**Topic:** History — Intelligence and service
+
+- A. Tuskegee Airmen
+- B. Flying Tigers
+- C. Code Talkers
+- D. Land Girls
+
+**Correct answer:** A
+
+- **A · Correct:** The Tuskegee Airmen included support personnel as well as pilots.
+- **B · Incorrect:** Flying Tigers: American volunteers who fought for China; it is not the answer described.
+- **C · Incorrect:** Code Talkers: service members who used Indigenous-language codes; it is not the answer described.
+- **D · Incorrect:** Land Girls: women who worked in British agriculture; it is not the answer described.
+
+**Source:** [National WWII Museum — Tuskegee Airmen](https://www.nationalww2museum.org/war/articles/louisianacorporal-albert-porche-99th-fighter-squadron)
+
+### WWII-N149 — Where was the U.S. naval base attacked at Pearl Harbor?
+
+**Topic:** History — Pacific
+
+- A. Alaska
+- B. California
+- C. Iceland
+- D. Hawaii
+
+**Correct answer:** D
+
+- **A · Incorrect:** Alaska: a U.S. territory in the far northwest; it is not the answer described.
+- **B · Incorrect:** California: a state on the U.S. West Coast; it is not the answer described.
+- **C · Incorrect:** Iceland: an island country in the North Atlantic; it is not the answer described.
+- **D · Correct:** Pearl Harbor was on Oahu in the U.S. territory of Hawaii.
+
+**Source:** [National WWII Museum — Pearl Harbor](https://www.nationalww2museum.org/war/topics/pearl-harbor-december-7-1941)
+
+### WWII-N150 — Which American naval force was the primary target of the Pearl Harbor attack?
+
+**Topic:** History — Pacific
+
+- A. German navy
+- B. Italian merchant fleet
+- C. U.S. Pacific Fleet
+- D. Royal Navy’s Mediterranean Fleet
+
+**Correct answer:** C
+
+- **A · Incorrect:** German navy: Germany’s naval force; it is not the answer described.
+- **B · Incorrect:** Italian merchant fleet: Italian commercial ships; it is not the answer described.
+- **C · Correct:** Japanese aircraft attacked the U.S. Pacific Fleet and installations on Oahu.
+- **D · Incorrect:** Royal Navy’s Mediterranean Fleet: a British naval force; it is not the answer described.
+
+**Source:** [National WWII Museum — Pearl Harbor](https://www.nationalww2museum.org/war/topics/pearl-harbor-december-7-1941)
+
+### WWII-N151 — How many Japanese aircraft carriers were lost at the Battle of Midway?
+
+**Topic:** History — Pacific
+
+- A. eight
+- B. four
+- C. one
+- D. two
+
+**Correct answer:** B
+
+- **A · Incorrect:** eight: more than the four Japanese carriers lost; it is not the answer described.
+- **B · Correct:** Japan lost four aircraft carriers at Midway.
+- **C · Incorrect:** one: the number of U.S. carriers lost at Midway; it is not the answer described.
+- **D · Incorrect:** two: fewer than the four Japanese carriers lost; it is not the answer described.
+
+**Source:** [National WWII Museum — Battle of Midway](https://www.nationalww2museum.org/war/articles/battle-midway)
+
+### WWII-N152 — Which Pacific atoll was the target of Japan’s June 1942 operation?
+
+**Topic:** History — Pacific
+
+- A. Midway
+- B. Dunkirk
+- C. El Alamein
+- D. Stalingrad
+
+**Correct answer:** A
+
+- **A · Correct:** Japan planned to capture the American base at Midway.
+- **B · Incorrect:** Dunkirk: a French port evacuated in 1940; it is not the answer described.
+- **C · Incorrect:** El Alamein: a battle area in Egypt; it is not the answer described.
+- **D · Incorrect:** Stalingrad: a Soviet city that saw a major battle; it is not the answer described.
+
+**Source:** [National WWII Museum — Battle of Midway](https://www.nationalww2museum.org/war/articles/battle-midway)
+
+### WWII-N153 — Who helped the U.S. Navy identify Japan’s planned target before Midway?
+
+**Topic:** History — Pacific
+
+- A. film actors
+- B. sculptors
+- C. shipyard cooks
+- D. cryptanalysts
+
+**Correct answer:** D
+
+- **A · Incorrect:** film actors: performers in motion pictures; it is not the answer described.
+- **B · Incorrect:** sculptors: artists who create three-dimensional works; it is not the answer described.
+- **C · Incorrect:** shipyard cooks: workers who prepare food; it is not the answer described.
+- **D · Correct:** American Navy codebreakers helped identify Midway as the target.
+
+**Source:** [National WWII Museum — Battle of Midway](https://www.nationalww2museum.org/war/articles/battle-midway)
+
+### WWII-N154 — What was the secret wartime project that developed the first atomic bombs called?
+
+**Topic:** History — Science and War
+
+- A. Enigma
+- B. Operation Dynamo
+- C. The Manhattan Project
+- D. Operation Overlord
+
+**Correct answer:** C
+
+- **A · Incorrect:** Enigma was a German enciphering machine, not the Allied atomic-bomb project.
+- **B · Incorrect:** Dynamo was the Dunkirk evacuation, not the atomic-bomb project.
+- **C · Correct:** The U.S.-led Manhattan Project developed the first atomic weapons during WWII.
+- **D · Incorrect:** Overlord was the Allied invasion of Normandy, not the atomic-bomb project.
+
+**Source:** [National Park Service — Manhattan Project](https://www.nps.gov/mapr/learn/manhattan-project.htm); [Imperial War Museums — D-Day](https://www.iwm.org.uk/history/second-world-war/d-day/d-day-explained); [Enigma](https://www.iwm.org.uk/history/second-world-war/intelligence/how-alan-turing-cracked-the-enigma-code); [Dunkirk](https://www.iwm.org.uk/history/second-world-war/dunkirk/what-you-need-to-know-about-the-dunkirk-evacuations)
+
+### WWII-N155 — Which island was the site of a major Allied offensive beginning in August 1942?
+
+**Topic:** History — Pacific
+
+- A. Crete
+- B. Guadalcanal
+- C. Iceland
+- D. Sicily
+
+**Correct answer:** B
+
+- **A · Incorrect:** Crete: a Greek island fought over in 1941; it is not the answer described.
+- **B · Correct:** U.S. forces landed on Guadalcanal in August 1942.
+- **C · Incorrect:** Iceland: an island country in the North Atlantic; it is not the answer described.
+- **D · Incorrect:** Sicily: an Italian island invaded by the Allies in 1943; it is not the answer described.
+
+**Source:** [The National WWII Museum — Guadalcanal](https://www.nationalww2museum.org/war/articles/solomon-islands-campaign-guadalcanal)
+
+### WWII-N156 — Which country’s mainland did the Allies invade in September 1943 after landing on Sicily?
+
+**Topic:** History — Italian Campaign
+
+- A. Italy
+- B. France
+- C. Germany
+- D. Norway
+
+**Correct answer:** A
+
+- **A · Correct:** After invading Sicily in July 1943, Allied forces landed on mainland Italy in September.
+- **B · Incorrect:** The 1943 landings followed the invasion of Sicily and targeted mainland Italy.
+- **C · Incorrect:** The mainland targeted after Sicily was Italy, not Germany.
+- **D · Incorrect:** The September 1943 landings were in mainland Italy, not Norway.
+
+**Source:** [Imperial War Museums — Italian campaign](https://www.iwm.org.uk/history/second-world-war/italian-campaign)
+
+### WWII-N157 — Which community made up the segregated U.S. 442nd Regimental Combat Team that fought in Europe?
+
+**Topic:** History — Service and Sacrifice
+
+- A. German prisoners of war
+- B. British sailors
+- C. Italian prisoners of war
+- D. Japanese Americans
+
+**Correct answer:** D
+
+- **A · Incorrect:** The unit was made up of Japanese American soldiers serving the United States.
+- **B · Incorrect:** The 442nd was a U.S. Army unit, not a British naval crew.
+- **C · Incorrect:** The 442nd was a Japanese American U.S. Army unit, not a unit of Italian prisoners.
+- **D · Correct:** The 442nd was a segregated Japanese American Army unit that fought in Italy and France.
+
+**Source:** [National Park Service — Nisei military service](https://www.nps.gov/articles/000/nisei-military-service.htm); [The National WWII Museum — 442nd Regimental Combat Team](https://www.nationalww2museum.org/war/articles/442nd-regimental-combat-team)
+
+### WWII-N158 — What height on Iwo Jima was the site of the famous U.S. flag-raising photograph?
+
+**Topic:** History — Pacific
+
+- A. Mount Everest
+- B. Mount Etna
+- C. Mount Suribachi
+- D. Mount Fuji
+
+**Correct answer:** C
+
+- **A · Incorrect:** Mount Everest: a mountain in the Himalayas; it is not the answer described.
+- **B · Incorrect:** Mount Etna: a volcano on Sicily; it is not the answer described.
+- **C · Correct:** The second flag raising on Mount Suribachi was captured in the famous photograph.
+- **D · Incorrect:** Mount Fuji: a mountain on Japan’s main island of Honshu; it is not the answer described.
+
+**Source:** [National WWII Museum — Iwo Jima](https://www.nationalww2museum.org/war/articles/iwo-jima-and-okinawa-death-japans-doorstep)
+
+### WWII-N159 — What did the Allied Pacific strategy known as “island hopping” involve?
+
+**Topic:** History — Pacific
+
+- A. Moving only by railway across Asia
+- B. Bypassing some fortified islands and capturing others
+- C. Attacking every Japanese-held island in order
+- D. Fighting only in Europe
+
+**Correct answer:** B
+
+- **A · Incorrect:** The strategy involved capturing selected Pacific islands, not railway travel across Asia.
+- **B · Correct:** Allied forces skipped some heavily defended islands and captured positions useful for the next advance.
+- **C · Incorrect:** Island hopping deliberately bypassed some fortified positions.
+- **D · Incorrect:** Island hopping was part of the Pacific campaign against Japan.
+
+**Source:** [The National WWII Museum — Pacific strategy](https://www.nationalww2museum.org/war/articles/pacific-strategy-1941-1944)
+
+### WWII-N160 — Which WWII campaign was fought to protect vital Allied sea supplies from German U-boats?
+
+**Topic:** History — Atlantic
+
+- A. The Battle of the Atlantic
+- B. The Battle of Britain
+- C. The Battle of Stalingrad
+- D. The Battle of the Bulge
+
+**Correct answer:** A
+
+- **A · Correct:** Allied convoys and escorts defended sea routes against German submarines.
+- **B · Incorrect:** This was primarily an air battle over Britain, not the Atlantic convoy campaign.
+- **C · Incorrect:** This was a major land battle on the Eastern Front.
+- **D · Incorrect:** This was a land battle in the Ardennes, not the Atlantic convoy campaign.
+
+**Source:** [Imperial War Museums — Battle of the Atlantic](https://www.iwm.org.uk/history/second-world-war/battle-of-the-atlantic/what-you-need-to-know)
+
+### WWII-N161 — Which Japanese city was struck by an atomic bomb on August 9, 1945?
+
+**Topic:** History — Pacific
+
+- A. Hiroshima
+- B. Tokyo
+- C. Kyoto
+- D. Nagasaki
+
+**Correct answer:** D
+
+- **A · Incorrect:** Hiroshima: a Japanese city hit by an atomic bomb on August 6, 1945; it is not the answer described.
+- **B · Incorrect:** Tokyo: Japan’s capital; it is not the answer described.
+- **C · Incorrect:** Kyoto: a historic Japanese city; it is not the answer described.
+- **D · Correct:** A second atomic bomb was dropped on Nagasaki on August 9.
+
+**Source:** [National WWII Museum — the end of WWII](https://www.nationalww2museum.org/war/topics/end-world-war-ii-1945)
+
+### WWII-N162 — Which Allied power declared war on Japan in August 1945 and invaded Manchuria?
+
+**Topic:** History — Pacific
+
+- A. Switzerland
+- B. Portugal
+- C. the Soviet Union
+- D. Spain
+
+**Correct answer:** C
+
+- **A · Incorrect:** Switzerland: a neutral European country; it is not the answer described.
+- **B · Incorrect:** Portugal: a neutral European country; it is not the answer described.
+- **C · Correct:** The Soviet Union declared war on Japan and invaded Manchuria in August 1945.
+- **D · Incorrect:** Spain: a country that did not join the Allies’ war against Japan; it is not the answer described.
+
+**Source:** [National WWII Museum — the end of WWII](https://www.nationalww2museum.org/war/topics/end-world-war-ii-1945)
+
+### WWII-N163 — What slowed an airborne soldier’s descent when jumping from an aircraft on D-Day?
+
+**Topic:** History — D-Day
+
+- A. A railway brake
+- B. A parachute
+- C. A ship’s anchor
+- D. A tank turret
+
+**Correct answer:** B
+
+- **A · Incorrect:** A railway brake slows a train, not a soldier descending from an aircraft.
+- **B · Correct:** Allied paratroopers landed in Normandy by parachute.
+- **C · Incorrect:** An anchor holds a ship; it is not used to slow a parachute jump.
+- **D · Incorrect:** A turret carries a tank’s gun; it is not used for a parachute landing.
+
+**Source:** [Imperial War Museums — D-Day in the air](https://www.iwm.org.uk/history/second-world-war/d-day/how-d-day-was-fought-from-the-air)
+
+### WWII-N164 — What was the codename for the 1940 evacuation from Dunkirk?
+
+**Topic:** History — Dunkirk
+
+- A. Operation Dynamo
+- B. Operation Overlord
+- C. Operation Barbarossa
+- D. Operation Torch
+
+**Correct answer:** A
+
+- **A · Correct:** Operation Dynamo rescued Allied troops from Dunkirk.
+- **B · Incorrect:** Operation Overlord: the Allied invasion of Normandy; it is not the answer described.
+- **C · Incorrect:** Operation Barbarossa: the German invasion of the Soviet Union; it is not the answer described.
+- **D · Incorrect:** Operation Torch: the Allied landings in North Africa; it is not the answer described.
+
+**Source:** [Imperial War Museums — Dunkirk evacuation](https://www.iwm.org.uk/history/second-world-war/dunkirk/what-you-need-to-know-about-the-dunkirk-evacuations)
+
+### WWII-N165 — What body of water did evacuated troops cross from Dunkirk to Britain?
+
+**Topic:** History — Dunkirk
+
+- A. the Pacific Ocean
+- B. the Mediterranean Sea
+- C. the Arctic Ocean
+- D. the English Channel
+
+**Correct answer:** D
+
+- **A · Incorrect:** the Pacific Ocean: the ocean between Asia and the Americas; it is not the answer described.
+- **B · Incorrect:** the Mediterranean Sea: the sea south of Europe; it is not the answer described.
+- **C · Incorrect:** the Arctic Ocean: the ocean around the North Pole; it is not the answer described.
+- **D · Correct:** Ships carried the evacuated troops across the English Channel.
+
+**Source:** [Imperial War Museums — Dunkirk evacuation](https://www.iwm.org.uk/history/second-world-war/dunkirk/what-you-need-to-know-about-the-dunkirk-evacuations)
+
+### WWII-N166 — What kinds of vessels joined the Dunkirk evacuation alongside naval ships?
+
+**Topic:** History — Dunkirk
+
+- A. only aircraft
+- B. only trains
+- C. small civilian boats
+- D. only submarines
+
+**Correct answer:** C
+
+- **A · Incorrect:** only aircraft: flying machines, not the sole means of evacuation; it is not the answer described.
+- **B · Incorrect:** only trains: railway vehicles, not the sole means of evacuation; it is not the answer described.
+- **C · Correct:** Small civilian vessels, remembered as the little ships, helped the evacuation.
+- **D · Incorrect:** only submarines: underwater vessels, not the sole means of evacuation; it is not the answer described.
+
+**Source:** [Imperial War Museums — Dunkirk evacuation](https://www.iwm.org.uk/history/second-world-war/dunkirk/what-you-need-to-know-about-the-dunkirk-evacuations)
+
+### WWII-N167 — Roughly how many Allied soldiers were rescued during Operation Dynamo?
+
+**Topic:** History — Dunkirk
+
+- A. over three million
+- B. over 338,000
+- C. about 3,000
+- D. about 30,000
+
+**Correct answer:** B
+
+- **A · Incorrect:** over three million: far above the Dunkirk total; it is not the answer described.
+- **B · Correct:** More than 338,000 Allied soldiers were rescued from Dunkirk.
+- **C · Incorrect:** about 3,000: far below the Dunkirk total; it is not the answer described.
+- **D · Incorrect:** about 30,000: far below the Dunkirk total; it is not the answer described.
+
+**Source:** [Imperial War Museums — Dunkirk evacuation](https://www.iwm.org.uk/history/second-world-war/dunkirk/what-you-need-to-know-about-the-dunkirk-evacuations)
+
+### WWII-N168 — In which German city did the major international trial of Nazi leaders begin in 1945?
+
+**Topic:** History — Europe and aftermath
+
+- A. Nuremberg
+- B. Madrid
+- C. Lisbon
+- D. Stockholm
+
+**Correct answer:** A
+
+- **A · Correct:** The International Military Tribunal opened in Nuremberg in November 1945.
+- **B · Incorrect:** Madrid: the capital of Spain; it is not the answer described.
+- **C · Incorrect:** Lisbon: the capital of Portugal; it is not the answer described.
+- **D · Incorrect:** Stockholm: the capital of Sweden; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Nuremberg tribunal](https://encyclopedia.ushmm.org/content/en/article/international-military-tribunal-at-nuremberg)
+
+### WWII-N169 — What kind of court tried leading German officials at Nuremberg?
+
+**Topic:** History — Europe and aftermath
+
+- A. a football league
+- B. a commercial bank
+- C. a music festival
+- D. an international military tribunal
+
+**Correct answer:** D
+
+- **A · Incorrect:** a football league: an organization for sporting competition; it is not the answer described.
+- **B · Incorrect:** a commercial bank: a financial institution; it is not the answer described.
+- **C · Incorrect:** a music festival: an organized cultural event; it is not the answer described.
+- **D · Correct:** The four major Allies established an International Military Tribunal at Nuremberg.
+
+**Source:** [U.S. Holocaust Memorial Museum — Nuremberg tribunal](https://encyclopedia.ushmm.org/content/en/article/international-military-tribunal-at-nuremberg)
+
+### WWII-N170 — Who were the defendants in the major Nuremberg trial?
+
+**Topic:** History — Europe and aftermath
+
+- A. only neutral diplomats
+- B. only civilian evacuees
+- C. Nazi leaders
+- D. only Allied generals
+
+**Correct answer:** C
+
+- **A · Incorrect:** only neutral diplomats: diplomats from neutral states; it is not the answer described.
+- **B · Incorrect:** only civilian evacuees: people moved away from danger; it is not the answer described.
+- **C · Correct:** The defendants came from Germany’s Nazi political, military, economic, and diplomatic leadership.
+- **D · Incorrect:** only Allied generals: military officers serving the Allies; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — Nuremberg tribunal](https://encyclopedia.ushmm.org/content/en/article/international-military-tribunal-at-nuremberg)
+
+### WWII-N171 — Which international organization was founded in 1945 to support cooperation and peace?
+
+**Topic:** History — Europe and aftermath
+
+- A. the European Union
+- B. the United Nations
+- C. the League of Nations
+- D. NATO
+
+**Correct answer:** B
+
+- **A · Incorrect:** the European Union: a later European political union; it is not the answer described.
+- **B · Correct:** The United Nations was established with a charter in 1945.
+- **C · Incorrect:** the League of Nations: an earlier international organization; it is not the answer described.
+- **D · Incorrect:** NATO: a military alliance founded in 1949; it is not the answer described.
+
+**Source:** [United Nations — Charter](https://www.un.org/en/about-us/un-charter/full-text)
+
+### WWII-N172 — What is a central purpose of the United Nations Charter?
+
+**Topic:** History — Europe and aftermath
+
+- A. international peace and security
+- B. organizing a world football league
+- C. running all national governments
+- D. ending all international trade
+
+**Correct answer:** A
+
+- **A · Correct:** The Charter begins by calling for the maintenance of international peace and security.
+- **B · Incorrect:** organizing a world football league: a sporting activity; it is not the answer described.
+- **C · Incorrect:** running all national governments: not the stated purpose of the United Nations; it is not the answer described.
+- **D · Incorrect:** ending all international trade: not the stated purpose of the United Nations; it is not the answer described.
+
+**Source:** [United Nations — Charter](https://www.un.org/en/about-us/un-charter/full-text)
+
+### WWII-N173 — In what city was the United Nations Charter signed in 1945?
+
+**Topic:** History — Europe and aftermath
+
+- A. Berlin
+- B. Tokyo
+- C. Moscow
+- D. San Francisco
+
+**Correct answer:** D
+
+- **A · Incorrect:** Berlin: the capital of Germany; it is not the answer described.
+- **B · Incorrect:** Tokyo: Japan’s capital; it is not the answer described.
+- **C · Incorrect:** Moscow: the capital of the Soviet Union; it is not the answer described.
+- **D · Correct:** The UN Charter was signed at the San Francisco conference.
+
+**Source:** [United Nations — Charter](https://www.un.org/en/about-us/un-charter/full-text)
+
+### WWII-N174 — Which French capital was liberated by Free French and Allied forces in August 1944?
+
+**Topic:** History — Europe and aftermath
+
+- A. Berlin
+- B. Warsaw
+- C. Paris
+- D. Rome
+
+**Correct answer:** C
+
+- **A · Incorrect:** Berlin: the capital of Germany; it is not the answer described.
+- **B · Incorrect:** Warsaw: the Polish capital; it is not the answer described.
+- **C · Correct:** Free French forces supported by Allied troops entered Paris in August 1944.
+- **D · Incorrect:** Rome: the Italian capital liberated in June 1944; it is not the answer described.
+
+**Source:** [U.S. Holocaust Memorial Museum — World War II timeline](https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates)
+
+### WWII-N175 — Which city was the capital of the Soviet Union during WWII?
+
+**Topic:** History — Eastern Front
+
+- A. Rome
+- B. Moscow
+- C. Berlin
+- D. Tokyo
+
+**Correct answer:** B
+
+- **A · Incorrect:** Rome was the capital of Italy.
+- **B · Correct:** Moscow was the Soviet capital and was defended against German forces in 1941.
+- **C · Incorrect:** Berlin was the capital of Germany.
+- **D · Incorrect:** Tokyo was the capital of Japan.
+
+**Source:** [World History Encyclopedia — Battle of Moscow](https://www.worldhistory.org/article/2686/battle-of-moscow-in-1941-2/)

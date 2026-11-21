@@ -375,6 +375,25 @@ body {
   text-transform: none;
 }
 
+.quiz-picture {
+  display: block;
+  width: 100%;
+  max-height: min(45vh, 360px);
+  margin: 16px 0;
+  object-fit: contain;
+  background: #0c171e;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.quiz-picture-credit,
+.quiz-source {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
 .choice-text {
   flex: 1;
   min-width: 0;
