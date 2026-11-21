@@ -25,7 +25,7 @@ body {
   align-items: center;
   width: 100%;
   background: linear-gradient(180deg, #071421bf, transparent 28%, transparent 48%, #071421ee 78%),
-    #101d2a url('./assets/start-trent.webp') center 41% / cover no-repeat;
+    #101d2a url('./assets/start-trent.webp?v=trent-blonde-1') center 41% / cover no-repeat;
 }
 
 .start-home h1 {

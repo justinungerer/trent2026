@@ -6,7 +6,7 @@
    in trivia.js. Chapter 6 then launches Ribbonfall with the score mapped in quiz.js. */
 
 var PIN_KEY = 'trent-campaign-pin';
-var FILM_VERSION = 'trent-portrait-mac';
+var FILM_VERSION = 'trent-blonde-intro-1';
 var campaignRoot = document.getElementById('app');
 var cinema = document.getElementById('cinema');
 var ending = document.getElementById('ending');
