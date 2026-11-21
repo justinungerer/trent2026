@@ -9,7 +9,7 @@ const alternate=cell||dispatch;
 const routeEnd=cell?6340:dispatch?8030:14100;
 const worldEnd=alternate?routeEnd+250:14300;
 const exitX=cell?185:dispatch?worldEnd/2:routeEnd;
-const kitX=2160;
+const secretPackageX=2160;
 const exitKeyX=routeEnd-195;
 const dispatchBellX=1880;
 const lowShotY=420,highShotY=334;
@@ -34,7 +34,8 @@ const stageScenery=new Image();
 stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex-aligned.webp':'./art/freight-depot.webp';
 const rifleRate=1.25;
 const firingRate=rifleRate*(dispatch?2:1);
-const alertedFire=3.5/1.3/firingRate,calmFire=5/1.3/firingRate;
+const rifleWindupScale=.75,rifleIntervalScale=2;
+const alertedFire=3.5/1.3/firingRate*rifleIntervalScale,calmFire=5/1.3/firingRate*rifleIntervalScale;
 const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500,4780,5850,7090]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
 const wrapDuration=.7;
@@ -101,7 +102,7 @@ function reset(){
  const baseline=cell?3:dispatch?4:16;
  guards=Array.from({length:Math.ceil(baseline*1.5)},(_,index)=>{
   const x=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
-  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)/(index%2?1:firingRate)};
+  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)*(index%2?1:rifleWindupScale/firingRate)};
  });
  shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
@@ -158,7 +159,7 @@ function dispatchTarget(){
 function missionTarget(){
  if(dispatch)return dispatchTarget();
  if(cell){
-  if(!packageFound)return {x:kitX,title:'Find the ribbon kit hidden in the workshop',hint:'WORKSHOP'};
+  if(!packageFound)return {x:secretPackageX,title:'The secret package is hidden in the workshop',hideMarker:true};
   return exitKeyFound?exitTarget('Return to the exit at the start','EXIT')
    :{x:exitKeyX,title:'Find the exit key at the far end',hint:'EXIT KEY'};
  }
@@ -176,11 +177,12 @@ function updateHud(){
  const count=relays.filter(r=>r.done).length,target=missionTarget();
  $('objective').textContent=target.title;
  $('progress').textContent=dispatch?`Sorting bays ${locks.filter(lock=>lock.done).length} / ${dispatchBays.length} · Papers ${documents.reduce((total,doc)=>total+doc.pages.filter(page=>page.found).length,0)} / 6`
-  :cell?(exitKeyFound?'Exit unlocked':packageFound?'Ribbon kit recovered':'Workshop ahead')
+  :cell?(exitKeyFound?'Exit unlocked':packageFound?'Secret package recovered':'Find the secret package')
   :alarmNotice>0?'ALARM · REINFORCEMENT INBOUND':count<3?`${['Freight yard','Switchyard','Signal yard'][count]} · ${count} / 3 relays`:transmit<depotAerials.length?'Find the radio aerial' :transmit<4?'Return to the radio':locks.some(l=>!l.done)?`${locks.filter(l=>l.done).length} / ${locks.length} locks`:exitKeyFound?'Exit is open':'Find the exit key';
  $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(3-player.hp);
  $('ammo').textContent=ammo+' SHOTS';
- $('hint').innerHTML=`${target.x<player.x?'‹':'›'} ${target.hint} <span>${target.x<player.x?'‹':'›'}</span>`;
+ $('hint').hidden=Boolean(target.hideMarker);
+ if(!target.hideMarker)$('hint').innerHTML=`${target.x<player.x?'‹':'›'} ${target.hint} <span>${target.x<player.x?'‹':'›'}</span>`;
 }
 function tryEscape(title,copy){
  if(!exitKeyFound&&Math.abs(player.x-exitKeyX)<32){
@@ -248,10 +250,10 @@ function update(dt){
  if(dispatch){
   if(updateDispatch())return;
  }else if(cell){
-  if(!packageFound&&Math.abs(player.x-kitX)<36&&player.y>48){
-   packageFound=true;transmit=4;burst(kitX,350,'#f9d487',18);
+  if(!packageFound&&Math.abs(player.x-secretPackageX)<36&&player.y>48){
+   packageFound=true;transmit=4;burst(secretPackageX,350,'#f9d487',18);
   }
-  if(packageFound&&tryEscape('WORKSHOP ESCAPED','Buddy made it back to the exit with his ribbon kit.'))return;
+  if(packageFound&&tryEscape('WORKSHOP ESCAPED','Buddy made it back to the exit with the secret package.'))return;
  }else if(count<3){const doc=documents[count],r=relays[count];
   if(count===0){for(const p of doc.pages)if(!p.found&&Math.abs(player.x-p.x)<35){p.found=true;interact(p.x,360,'#f9d487',16)}if(!doc.found&&doc.pages.every(p=>p.found)){doc.found=true;raiseAlarm(0,1190)}}
   else if(!doc.found&&Math.abs(player.x-doc.x)<35){doc.found=true;interact(doc.x,360,'#f9d487',25);raiseAlarm(count,count===1?3800:6700)}
@@ -310,7 +312,7 @@ function update(dt){
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=alternate||sector===3||!relays[sector].done;
   if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&distance<(alerted?350:220)){
-   guard.windup=(alerted?.8:1.2)/rifleRate;
+   guard.windup=(alerted?.8:1.2)*rifleWindupScale/rifleRate;
    // Fit two high shots between low shots without changing the low-shot interval.
    guard.cooldown=(alerted?alertedFire:calmFire)*2/3;
   }
@@ -378,7 +380,7 @@ function hurtBuddy(){
  burst(player.x,400-player.y,'#f7c37a',12);
  if(player.hp<=0){player.dying=.001;clearInput();}
 }
-function raiseAlarm(sector,x){if(relays[sector].done)return;guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:1.2});alarmNotice=3}
+function raiseAlarm(sector,x){if(relays[sector].done)return;guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:sector%2?1.2:1.2*rifleWindupScale});alarmNotice=3}
 function updateDefeatedGuards(dt){
  const offscreen=x=>x<camera-90||x>camera+W+90;
  wraps=wraps.filter(wrap=>{
@@ -386,7 +388,7 @@ function updateDefeatedGuards(dt){
   const guard=wrap.guard;
   if((!dispatch&&wrap.age<wrapDuration)||!offscreen(wrap.x)||!offscreen(guard.home))return true;
   Object.assign(guard,{x:guard.home,hp:guard.kind==='charger'?1:2,stun:0,attack:0,
-   windup:0,moving:false,chasing:false,cooldown:calmFire});
+   windup:0,moving:false,chasing:false,cooldown:calmFire/rifleIntervalScale*(guard.kind==='charger'?1:rifleWindupScale)});
   return false;
  });
 }
@@ -595,7 +597,7 @@ function render(){
  if(marker.hint==='EXIT KEY'){
   pickupGlow(exitKeyX,373,53);
   painted('depot-key',exitKeyX,373,34,56);
- }if(marker.x!==terminal.x&&marker.x!==14100){const markerX=marker.action==='shoot'?locks.find(l=>!l.done).x:marker.x;const markerTop=marker.hint==='ALARM RELAY'?bellY-58:305;glow(markerX,markerTop,50,'#ffe29166');g.fillStyle='#ff3030';g.beginPath();g.moveTo(markerX,markerTop+29);g.lineTo(markerX-20,markerTop-7);g.lineTo(markerX+20,markerTop-7);g.closePath();g.fill()}
+ }if(!marker.hideMarker&&marker.x!==terminal.x&&marker.x!==14100){const markerX=marker.action==='shoot'?locks.find(l=>!l.done).x:marker.x;const markerTop=marker.hint==='ALARM RELAY'?bellY-58:305;glow(markerX,markerTop,50,'#ffe29166');g.fillStyle='#ff3030';g.beginPath();g.moveTo(markerX,markerTop+29);g.lineTo(markerX-20,markerTop-7);g.lineTo(markerX+20,markerTop-7);g.closePath();g.fill()}
  for(const [supplyIndex,x] of supplies.entries()){if(collectedSupplies.has(supplyIndex))continue;pickupGlow(x,418,38,'#c7e9ae');if(!painted('ammo-box',x,418,62,46)){g.fillStyle='#6d5a32';g.fillRect(x-24,404,48,30);g.strokeStyle='#d7b15a';g.lineWidth=2;g.strokeRect(x-24,404,48,30);g.strokeStyle='#c4453a';g.beginPath();g.moveTo(x-14,412);g.quadraticCurveTo(x,424,x+14,412);g.stroke()}}
  for(const drop of ammoDrops){
   const fall=Math.min(1,drop.age/ammoDropTime);
@@ -608,10 +610,8 @@ function render(){
  for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,relays[i].done?140:195);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
  glow(terminal.x,348,70,'#87eadb55');if(!painted('field-radio',terminal.x,356,78,52)){g.fillStyle='#4e6840';g.fillRect(terminal.x-28,338,56,36);g.fillStyle='#1d2420';g.fillRect(terminal.x-18,346,18,16);g.fillStyle='#e6d3a4';g.beginPath();g.arc(terminal.x+12,354,8,0,7);g.fill()}
  if(!alternate&&relays.every(r=>r.done)&&transmit<depotAerials.length){for(let i=0;i<depotAerials.length;i++){const x=depotAerials[i],active=transmit===i;if(active)glow(x,330,48,'#ffe29188');if(!painted('radio-aerial',x,318,36,86)){g.strokeStyle=active?'#ffe291':'#8aa9a5';g.lineWidth=4;g.beginPath();g.moveTo(x,360);g.lineTo(x,286);g.moveTo(x-12,304);g.lineTo(x+12,304);g.moveTo(x-9,292);g.lineTo(x+9,292);g.stroke()}}}
- if(cell)drawLocationSign(kitX,254,'WORKSHOP');
- if(cell&&!packageFound){
-  pickupGlow(kitX,305,52);
-  if(!paintedFrame('alternate-objectives',0,2,2,kitX,305,58,55))painted('gift-parcel',kitX,305,46,48);
+ if(cell&&!packageFound&&!paintedFrame('alternate-objectives',0,2,2,secretPackageX,305,58,55)){
+  painted('gift-parcel',secretPackageX,305,46,48);
  }
  if(alternate){
   if(exitKeyFound)pickupGlow(exitX,393,74);
@@ -674,7 +674,7 @@ window.addEventListener('resize',resize);
 resize();
 reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
 if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
- ?'Buddy’s ribbon kit is hidden in the workshop. Jump to grab it from the supply bench. Find the key at the far end, then bring it back to the door marked EXIT near the start. Use the stick to move. Tap Jump or Fire.'
+ ?'The secret package is hidden in the workshop. Jump to collect it. Find the key at the far end, then bring it back to the door marked EXIT near the start. Use the stick to move. Tap Jump or Fire.'
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';

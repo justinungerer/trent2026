@@ -168,7 +168,7 @@ test('shots and guard hits drive real animation state timers',()=>{
  const result=JSON.parse(run(`start();guards=[{x:160,home:160,hp:2,dir:-1,stun:0,attack:0,cooldown:2}];
  keys.add(' ');update(.02);const firing=player.fire>0;
  update(.05);const guardHurt=guards[0].stun>0;
- player.x=100;guards[0].x=240;player.shield=0;guards[0].stun=0;guards[0].cooldown=0;keys.clear();update(.02);for(let n=0;n<32;n++)update(.02);
+ player.x=100;guards[0].x=240;player.shield=0;guards[0].stun=0;guards[0].cooldown=0;keys.clear();update(.02);for(let n=0;n<25;n++)update(.02);
  JSON.stringify({firing,guardHurt,guardAttack:guards[0].attack>0,guardProjectile:guardShots.length>0})`));
  assert.deepEqual(result,{firing:true,guardHurt:true,guardAttack:true,guardProjectile:true});
 });
@@ -330,12 +330,12 @@ test('alarm bells need a jump and boxes block the ground',()=>{
  assert.equal(result.jumped,true);
  assert.equal(result.blocked,true);
  assert.equal(result.cleared,true);
- assert.ok(Math.abs(result.cooldown-3.5/1.3/1.25*2/3)<1e-9);
- assert.ok(Math.abs(result.alertedFire-3.5/1.3/1.25)<1e-12);
- assert.ok(Math.abs(result.calmFire-5/1.3/1.25)<1e-12);
+ assert.ok(Math.abs(result.cooldown-3.5/1.3/1.25*4/3)<1e-9);
+ assert.ok(Math.abs(result.alertedFire-3.5/1.3/1.25*2)<1e-12);
+ assert.ok(Math.abs(result.calmFire-5/1.3/1.25*2)<1e-12);
 });
 
-test('guards keep the low-high-high pattern at the faster firing rate in every level',()=>{
+test('rifle guards shoot sooner and then at half their previous rate in every level',()=>{
  for(const stage of ['out-of-the-cell','','the-last-dispatch']){
   const {run}=game('?stage='+stage);
   const shots=JSON.parse(run(`start();player.x=400;player.shield=60;
@@ -343,12 +343,13 @@ test('guards keep the low-high-high pattern at the faster firing rate in every l
    const fired=[];
    const shoot=fireGuardShot;
    fireGuardShot=guard=>{shoot(guard);fired.push({time:elapsed,height:guardShots.at(-1).y});};
-   for(let tick=0;tick<800&&fired.length<4;tick++)update(.01);
+   for(let tick=0;tick<1200&&fired.length<4;tick++)update(.01);
    JSON.stringify(fired)`));
   assert.deepEqual(shots.map(shot=>shot.height),[420,334,334,420],stage);
+  assert.ok(Math.abs(shots[0].time-.49)<.02, JSON.stringify({stage,firstShot:shots[0].time}));
   const lowGap=shots[3].time-shots[0].time;
   const previousLowGap=stage==='the-last-dispatch'?3.5/1.3:2*3.5/1.3;
-  assert.ok(Math.abs(lowGap-previousLowGap/1.25)<.03,JSON.stringify({stage,lowGap,previousLowGap}));
+  assert.ok(Math.abs(lowGap-previousLowGap/1.25*2)<.04,JSON.stringify({stage,lowGap,previousLowGap}));
  }
 });
 
