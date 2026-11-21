@@ -37,9 +37,9 @@
   var stage = new URLSearchParams(location.search).get('stage');
   var listening = stage === 'the-listening-post';
   var gatehouse = stage === 'gatehouse-code';
-  var maze = listening ? { width: 25, height: 19, seed: 1944, shortcuts: 6 } :
-    gatehouse ? { width: 39, height: 29, seed: 2512, shortcuts: 30 } :
-      { width: 33, height: 25, seed: 99, shortcuts: 16 };
+  var maze = listening ? { width: 21, height: 17, seed: 2028, shortcuts: 4, baseGuards: 18 } :
+    gatehouse ? { width: 33, height: 25, seed: 99, shortcuts: 16, baseGuards: 30 } :
+      { width: 25, height: 19, seed: 1944, shortcuts: 6, baseGuards: 26 };
   var MAP_W = maze.width;
   var MAP_H = maze.height;
   var codeNeeded = listening ? 1 : gatehouse ? 2 : 0;
@@ -403,7 +403,7 @@
       placed.push(cell);
       pickups.push({ x: cell.x, y: cell.y, kind: 'ammo', n: 4, bob: 0.4 });
     });
-    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, listening ? 26 : gatehouse ? 39 : 30, 1.4, placed);
+    enemies = spreadTake(cells, function (c) { return c.d >= 9; }, maze.baseGuards, 1.4, placed);
     enemies.sort(function (a, b) { return a.d - b.d; });
     for (i = 0; i < enemies.length; i++) placed.push(enemies[i]);
     boxes = spreadTake(cells, function (c) { return c.d >= 12; }, 12, 2.8, placed);
