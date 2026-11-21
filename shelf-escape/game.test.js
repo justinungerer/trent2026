@@ -70,14 +70,16 @@ test('Level 3 reuses the same alarm bell and returns the far-end key to the cent
    if(Math.abs(target.x-player.x)>3)keys.add(dir===1?'d':'a');
    const hurdle=hurdles.find(o=>Math.sign(o.x-player.x)===dir&&Math.abs(o.x-player.x)<86&&player.y<o.clear);
    const bell=target.hint==='ALARM RELAY'&&Math.abs(player.x-target.x)<36;
-   const enemy=guards.find(g=>g.hp>0&&Math.abs(g.x-player.x)<190);
+   const enemy=guards.filter(g=>g.hp>0&&Math.abs(g.x-player.x)<300)
+    .sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0];
+   const chargerClose=enemy?.kind==='charger'&&Math.abs(enemy.x-player.x)<100;
    const incoming=shot=>Math.sign(shot.vx)===Math.sign(player.x-shot.x);
    const highShot=guardShots.some(shot=>shot.y===highShotY&&incoming(shot)&&Math.abs(shot.x-player.x)<90);
    const lowShot=guardShots.some(shot=>shot.y===lowShotY&&incoming(shot)&&Math.abs(shot.x-player.x)<145);
    if(highShot&&player.y===0&&!bell){
     keys.clear();
     keys.add('s');
-   }else if(hurdle||bell||((enemy?.kind==='charger'||lowShot)&&player.y<12&&Math.abs(target.x-player.x)>12)){
+   }else if(hurdle||bell||(((chargerClose&&elapsed<nextShot)||lowShot)&&player.y<12&&Math.abs(target.x-player.x)>12)){
     keys.add('w');
    }
    const targetX=enemy?.x??(target.action==='shoot'&&Math.abs(target.x-player.x)<10?locks.find(lock=>!lock.done).x:null);

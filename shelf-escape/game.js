@@ -14,6 +14,8 @@ const exitKeyX=routeEnd-195;
 const dispatchBellX=1880;
 const lowShotY=420,highShotY=334;
 const playerSpeed=285;
+const hitInvincibility=3,hitPoseTime=.35;
+const chargerSpeed=112,chargerSight=480;
 const dispatchBays=[
  {pages:[600,1430],diverterX:1650,ledgerX:1040,latchX:2250},
  {pages:[2800,3290],diverterX:3720,ledgerX:2990,latchX:4550},
@@ -45,7 +47,8 @@ const supplies=Array.from({length:Math.floor((routeEnd-450)/250)+1},(_,index)=>{
  let x=300+index*250;
  while(crates.some(box=>Math.abs(box-x)<72)||hurdles.some(box=>Math.abs(box.x-x)<72))x+=84;
  return x;
-}).filter(x=>x<routeEnd-60);
+}).filter(x=>x<routeEnd-60)
+ .filter((_,index,original)=>index%3===0&&index/3<Math.round(original.length/3));
 const parcels=[{x:1880,y:292,need:52,found:false},{x:4680,y:276,need:64,found:false},{x:7420,y:300,need:48,found:false},{x:11920,y:284,need:58,found:false}];
 let state='intro',player,guards,shots,guardShots,particles,wraps,ammoDrops,relays,documents,gates,locks,terminal,elapsed,camera,ammo,shotsUsed,nextShot,transmit,finished,session,collectedSupplies,alarmNotice,fireQueued=false,spaceWasDown=false,jumpQueued=false,pendingFire=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -285,21 +288,20 @@ function update(dt){
   if(guard.hp<=0)continue;guard.stun=Math.max(0,guard.stun-dt);guard.attack=Math.max(0,(guard.attack||0)-dt);
   guard.cooldown=Math.max(0,(guard.cooldown||0)-dt);
   if(guard.kind==='charger'){
-   const reach=Math.abs(player.x-guard.x);
-   guard.moving=false;
-   if(!guard.stun&&!guard.attack){
-    if(!player.hidden&&reach<480){
-     guard.dir=Math.sign(player.x-guard.x)||guard.dir;
-     guard.moving=reach>30;
-     if(reach<50&&guard.cooldown<=0){
-      guard.attack=.48;guard.cooldown=1.4;
-      if(player.y<10&&player.shield<=0)hurtBuddy();
-     }
-    }else{
-     if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;
-     guard.moving=(elapsed+guard.home/100)%4>.65;
+   const distance=player.x-guard.x,reach=Math.abs(distance);
+   if(!player.hidden&&reach<chargerSight)guard.chasing=true;
+   if(guard.chasing){
+    guard.dir=Math.sign(distance)||guard.dir;
+    guard.moving=reach>0;
+    guard.x+=clamp(distance,-chargerSpeed*dt,chargerSpeed*dt);
+    if(reach<50&&guard.cooldown<=0){
+     guard.attack=.48;guard.cooldown=1.4;
+     if(player.y<10)hurtBuddy();
     }
-    if(guard.moving)guard.x=clamp(guard.x+guard.dir*112*dt,35,worldEnd-30);
+   }else{
+    if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;
+    guard.moving=!guard.stun&&(elapsed+guard.home/100)%4>.65;
+    if(guard.moving)guard.x=clamp(guard.x+guard.dir*chargerSpeed*dt,35,worldEnd-30);
    }
    continue;
   }
@@ -372,7 +374,7 @@ function updateGuardShots(dt){
 }
 function hurtBuddy(){
  if(player.shield>0||player.dying)return;
- player.hp--;player.shield=1.8;
+ player.hp--;player.shield=hitInvincibility;
  burst(player.x,400-player.y,'#f7c37a',12);
  if(player.hp<=0){player.dying=.001;clearInput();}
 }
@@ -384,7 +386,7 @@ function updateDefeatedGuards(dt){
   const guard=wrap.guard;
   if((!dispatch&&wrap.age<wrapDuration)||!offscreen(wrap.x)||!offscreen(guard.home))return true;
   Object.assign(guard,{x:guard.home,hp:guard.kind==='charger'?1:2,stun:0,attack:0,
-   windup:0,moving:false,cooldown:calmFire});
+   windup:0,moving:false,chasing:false,cooldown:calmFire});
   return false;
  });
 }
@@ -423,10 +425,17 @@ function drawPaintedGuard(guard,motion,facing,fold=0){
  return true;
 }
 function sprite(name,x,y,frame,flip=false,scale=1){const img=art[name];if(!img.complete||!img.naturalWidth)return;const count=img.naturalWidth/192,width=name.startsWith('elf-')?123:192;g.save();g.translate(x,y);if(flip)g.scale(-1,1);g.drawImage(img,(Math.floor(frame)%count)*192,0,width,160,-96*scale,-155*scale,width*scale,160*scale);g.restore()}
+function buddyOpacity(){
+ if(player.dying||player.shield<=0)return 1;
+ if(reduceMotion.matches)return .72;
+ return Math.floor((hitInvincibility-player.shield)*8)%2===0?.35:1;
+}
 function drawBuddy(motion){
+ const timeSinceHit=hitInvincibility-player.shield;
+ const hurt=timeSinceHit<hitPoseTime;
  let frame=0;
  if(player.dying)frame=player.dying<.3?6:7;
- else if(player.shield>1.45)frame=5;
+ else if(hurt)frame=5;
  else if(player.fire)frame=4;
  else if(player.y>0)frame=3;
  else if(player.moving&&!reduceMotion.matches)frame=[1,0,2,0][Math.floor(motion*12)%4];
@@ -440,8 +449,8 @@ function drawBuddy(motion){
   ||paintedFrame('buddy-painted-atlas',crouching?7:frame,4,2,0,-72,149,149);
  g.restore();
  if(painted)return;
- const pose=player.dying?'die':player.shield>1.45?'hurt':player.fire?'fire':player.moving?'walk':'idle';
- const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?(1.8-player.shield)*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);
+ const pose=player.dying?'die':hurt?'hurt':player.fire?'fire':player.moving?'walk':'idle';
+ const poseFrame=player.dying?Math.min(4,player.dying*6):pose==='hurt'?timeSinceHit*14:pose==='fire'?(.35-player.fire)*14:motion*(pose==='walk'?9:5);
  sprite('elf-'+pose,player.x,445-player.y,poseFrame,player.face<0,.85);
  launcher();
 }
@@ -637,7 +646,8 @@ function render(){
   const scale=clamp((progress-.45)/.55,0,1);
   if(scale>0)painted('wrapped-guard',wrap.x,444-20*scale,48*scale,40*scale);
  }
- g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();drawBuddy(motion);
+ g.fillStyle='#071a1a88';g.beginPath();g.ellipse(player.x,447,Math.max(14,33-player.y*.1),8,0,0,7);g.fill();
+ g.save();g.globalAlpha=buddyOpacity();drawBuddy(motion);g.restore();
  for(const x of crates){if(!painted('wood-crate',x,424,74,50)){g.fillStyle='#8c5c3b';g.strokeStyle='#533c34';g.lineWidth=4;g.fillRect(x-35,406,70,42);g.strokeRect(x-35,406,70,42);g.beginPath();g.moveTo(x-30,410);g.lineTo(x+30,444);g.moveTo(x+30,410);g.lineTo(x-30,444);g.stroke()}}
  if(endWall-camera<W+50){
   painted('depot-wall',endWall-78,285,186,323);
@@ -668,6 +678,6 @@ if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Shots travel straight in the direction Buddy faces. When you see DUCK, hold Down on the stick to avoid the high shot. Assault guards charge into melee. Contact costs one life. Defeated guards drop two shots.';
+$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Shots travel straight in the direction Buddy faces. When you see DUCK, hold Down on the stick to avoid the high shot. Once assault guards spot Buddy, they keep coming. Taking a hit costs one life. Buddy flashes and is invincible for three seconds. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
