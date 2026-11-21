@@ -381,6 +381,27 @@ test('rifles reacquire after an interrupted shot and chargers keep moving at pat
  }
 });
 
+test('rifles spawn clear of cover and chargers resume after reaching melee range',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const result=JSON.parse(run(`start();
+   const riflesClear=guards.filter(g=>g.kind==='rifleman').every(g=>lowCover.every(box=>Math.abs(g.x-box.x)>box.half));
+   const rifle={x:800,home:800,hp:2,kind:'rifleman',dir:-1,cooldown:0};
+   guards=[rifle];player.x=450;update(.01);
+   player.x=300;for(let n=0;n<40;n++)update(.01);
+   const committedShot=rifle.hasFired;
+   const charger={x:630,home:630,hp:1,kind:'charger',dir:-1,cooldown:0};
+   guards=[charger];player.x=500;
+   for(let n=0;n<90;n++)update(.01);
+   const reach=charger.x-player.x;
+   const stopped=charger.chasing&&!charger.moving;
+   player.x=420;update(.1);
+   const resumes=charger.moving&&charger.x===518;
+   JSON.stringify({riflesClear,committedShot,reach,stopped,resumes})`));
+  assert.deepEqual(result,{riflesClear:true,committedShot:true,reach:32,stopped:true,resumes:true},stage);
+ }
+});
+
 test('defeated guards return only when their defeat and patrol positions leave the view',()=>{
  for(const stage of ['', 'out-of-the-cell', 'the-last-dispatch']){
   const {run}=game('?stage='+stage);

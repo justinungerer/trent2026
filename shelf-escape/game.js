@@ -15,7 +15,7 @@ const dispatchBellX=1880;
 const lowShotY=420,highShotY=334;
 const playerSpeed=285;
 const hitInvincibility=3,hitPoseTime=.35;
-const chargerSpeed=140,chargerSight=480;
+const chargerSpeed=140,chargerSight=480,chargerReach=32;
 const dispatchBays=[
  {pages:[600,1430],diverterX:1650,ledgerX:1040,latchX:2250},
  {pages:[2800,3290],diverterX:3720,ledgerX:2990,latchX:4550},
@@ -44,6 +44,7 @@ const keys=new Set(),sticks={move:{id:null,x:0,y:0}};
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const snow=Array.from({length:80},(_,i)=>({x:(i*197.37)%W,y:(i*113.91)%H,size:0.6+i%3*.45,speed:14+i%4*11,depth:i%2?.28:.65}));
 const endWall=worldEnd-36, crates=alternate?[405,890,1510,2150,2670,3050,3850,4450,5050,5750,6150].filter(x=>x<routeEnd):[420,1000,1600,2300,3000,3500,4200,5000,5750,6300,7000,7800,8500,9200,9800,10400,11200,12200,13200,13800];
+const lowCover=[...crates.map(x=>({x,half:35})),...hurdles];
 const supplies=Array.from({length:Math.floor((routeEnd-450)/250)+1},(_,index)=>{
  let x=300+index*250;
  while(crates.some(box=>Math.abs(box-x)<72)||hurdles.some(box=>Math.abs(box.x-x)<72))x+=84;
@@ -96,12 +97,22 @@ $('fire').addEventListener('click',e=>{if(e.detail===0)queueFire();});
 function queueJump(){if(state==='playing'&&player.y<=0)jumpQueued=true;}
 $('jump').addEventListener('pointerdown',queueJump);
 $('jump').addEventListener('click',e=>{if(e.detail===0)queueJump();});
+function clearRiflePosition(x){
+ const clear=position=>!lowCover.some(box=>Math.abs(position-box.x)<box.half+24);
+ if(clear(x))return x;
+ for(let offset=8;offset<=128;offset+=8){
+  if(x-offset>=35&&clear(x-offset))return x-offset;
+  if(x+offset<=worldEnd-30&&clear(x+offset))return x+offset;
+ }
+ return x;
+}
 function reset(){
  exitKeyFound=false;
  player={x:100,y:0,vy:0,hp:3,shield:0,face:1,fire:0,dying:0,moving:false,duckPose:0};
  const baseline=cell?3:dispatch?4:16;
  guards=Array.from({length:Math.ceil(baseline*1.5)},(_,index)=>{
-  const x=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
+  const laneX=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
+  const x=index%2?laneX:clearRiflePosition(laneX);
   return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)*(index%2?1:rifleFirstAimScale/firingRate)};
  });
  shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
@@ -294,8 +305,9 @@ function update(dt){
    if(!player.hidden&&reach<chargerSight)guard.chasing=true;
    if(guard.chasing){
     guard.dir=Math.sign(distance)||guard.dir;
-    guard.moving=reach>0;
-    guard.x+=clamp(distance,-chargerSpeed*dt,chargerSpeed*dt);
+    const travel=Math.max(0,reach-chargerReach);
+    guard.moving=travel>.01;
+    guard.x+=guard.dir*Math.min(travel,chargerSpeed*dt);
     if(reach<50&&guard.cooldown<=0){
      guard.attack=.48;guard.cooldown=1.4;
      if(player.y<10)hurtBuddy();
@@ -316,7 +328,7 @@ function update(dt){
   const aimTime=(alerted?.8:1.2)*rifleWindupScale/rifleRate;
   if(guard.windup>0){
    guard.windup=Math.max(0,guard.windup-dt);
-   if(guard.windup===0&&!player.hidden&&inRange){
+   if(guard.windup===0&&!player.hidden){
     fireGuardShot(guard);
     // Reload only after firing. The next windup accounts for the rest of the shot interval.
     guard.cooldown=Math.max(0,(alerted?alertedFire:calmFire)*2/3-aimTime);
@@ -345,6 +357,8 @@ function fireGuardShot(guard){
  guard.hasFired=true;
  guard.attack=.48;
  const facing=guardFacing(guard),y=guard.shotInCycle?highShotY:lowShotY;
+ guard.shotFacing=facing;
+ guard.shotHeight=y;
  guard.shotInCycle=((guard.shotInCycle||0)+1)%3;
  guardShots.push({x:guard.x,y,vx:facing*340});
  burst(guard.x,y,'#ffd895',4);
@@ -366,8 +380,7 @@ function updateGuardShots(dt){
    nearest=distance;
   };
   if(bullet.y===lowShotY){
-   for(const x of crates)checkCover(x-35,x+35);
-   for(const box of hurdles)checkCover(box.x-box.half,box.x+box.half);
+   for(const box of lowCover)checkCover(box.x-box.half,box.x+box.half);
   }
   for(const [index,x] of gates.entries()){
    if(!relays[index].done)checkCover(x-7,x+7);
@@ -388,7 +401,7 @@ function hurtBuddy(){
  burst(player.x,400-player.y,'#f7c37a',12);
  if(player.hp<=0){player.dying=.001;clearInput();}
 }
-function raiseAlarm(sector,x){if(relays[sector].done)return;guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:sector%2?1.2:1.2*rifleFirstAimScale});alarmNotice=3}
+function raiseAlarm(sector,x){if(relays[sector].done)return;if(!(sector%2))x=clearRiflePosition(x);guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:sector%2?1.2:1.2*rifleFirstAimScale});alarmNotice=3}
 function updateDefeatedGuards(dt){
  const offscreen=x=>x<camera-90||x>camera+W+90;
  wraps=wraps.filter(wrap=>{
@@ -423,9 +436,11 @@ function drawPaintedGuard(guard,motion,facing,fold=0){
  if(!image.complete||!image.naturalWidth)return false;
  const sw=image.naturalWidth/2,sh=image.naturalHeight/2;
  const running=guard.moving&&!fold;
- const frame=guard.kind==='charger'?(running&&Math.floor(motion*10)%2?3:1):(running&&Math.floor(motion*8)%2?0:2);
+ const charging=guard.kind==='charger';
+ const frame=charging?(running&&Math.floor(motion*10)%2?3:1):(guard.windup||guard.attack?2:0);
+ const stride=charging&&running&&motion?Math.sin(motion*20)*3:0;
  g.save();
- g.translate(guard.x,445);
+ g.translate(guard.x,445+stride);
  g.rotate(facing*fold*.95);
  const scale=1-fold*.48;
  g.scale(facing>0?-scale:scale,scale);
@@ -645,6 +660,11 @@ function render(){
    const anim=guard.stun?'hurt':guard.attack?'attack':guard.moving?'walk':'idle';
    const frame=guard.stun?(.35-guard.stun)*25:guard.attack?(.48-guard.attack)*20:motion*(guard.moving?9:5);
    sprite('guard-'+anim,guard.x,445,frame,facing<0,.82);
+  }
+  if(guard.attack>.39&&guard.shotHeight){
+   const flashX=guard.x+guard.shotFacing*22;
+   glow(flashX,guard.shotHeight,21,'#ffd887dd');
+   g.fillStyle='#fff1bf';g.beginPath();g.ellipse(flashX,guard.shotHeight,7,3,0,0,7);g.fill();
   }
   if(guard.windup>0){g.fillStyle='#ffe18b';g.font='bold 20px system-ui';g.fillText(guard.shotInCycle?'DUCK':'!',guard.x-4,318)}
  }
