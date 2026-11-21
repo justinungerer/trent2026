@@ -330,7 +330,7 @@ test('alarm bells need a jump and boxes block the ground',()=>{
  assert.equal(result.jumped,true);
  assert.equal(result.blocked,true);
  assert.equal(result.cleared,true);
- assert.ok(Math.abs(result.cooldown-3.5/1.3/1.25*4/3)<1e-9);
+ assert.equal(result.cooldown,0);
  assert.ok(Math.abs(result.alertedFire-3.5/1.3/1.25*2)<1e-12);
  assert.ok(Math.abs(result.calmFire-5/1.3/1.25*2)<1e-12);
 });
@@ -350,6 +350,34 @@ test('rifle guards shoot sooner and then at half their previous rate in every le
   const lowGap=shots[3].time-shots[0].time;
   const previousLowGap=stage==='the-last-dispatch'?3.5/1.3:2*3.5/1.3;
   assert.ok(Math.abs(lowGap-previousLowGap/1.25*2)<.04,JSON.stringify({stage,lowGap,previousLowGap}));
+ }
+});
+
+test('rifles reacquire after an interrupted shot and chargers keep moving at patrol limits',()=>{
+ for(const stage of ['out-of-the-cell','','the-last-dispatch']){
+  const {run}=game('?stage='+stage);
+  const result=JSON.parse(run(`start();player.x=405;
+   const rifle={x:800,home:800,hp:2,kind:'rifleman',dir:-1,cooldown:0};
+   guards=[rifle];update(.01);
+   const aimed=rifle.windup>0;
+   sticks.move.y=1;for(let n=0;n<51;n++)update(.01);
+   const canceled=guardShots.length===0&&rifle.cooldown===0;
+   sticks.move.y=0;update(.01);
+   const reacquired=rifle.windup>0;
+   for(let n=0;n<50;n++)update(.01);
+   const fired=guardShots.length===1&&rifle.cooldown>0;
+   player.x=130;
+   const charger={x:1110,home:1000,hp:1,kind:'charger',dir:1,cooldown:0};
+   guards=[charger];const path=[];
+   for(let n=0;n<6;n++){update(.01);path.push(charger.x);}
+   const patrol=path[0]===1090&&path.slice(1).every((x,i)=>x<path[i]);
+   player.x=1350;
+   const before=charger.x;update(.1);
+   const chase=charger.chasing&&charger.x-before===14;
+   player.x=300;update(.1);
+   const follows=charger.chasing&&charger.x===before;
+   JSON.stringify({aimed,canceled,reacquired,fired,patrol,chase,follows})`));
+  assert.deepEqual(result,{aimed:true,canceled:true,reacquired:true,fired:true,patrol:true,chase:true,follows:true},stage);
  }
 });
 

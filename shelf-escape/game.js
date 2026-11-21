@@ -15,7 +15,7 @@ const dispatchBellX=1880;
 const lowShotY=420,highShotY=334;
 const playerSpeed=285;
 const hitInvincibility=3,hitPoseTime=.35;
-const chargerSpeed=112,chargerSight=480;
+const chargerSpeed=140,chargerSight=480;
 const dispatchBays=[
  {pages:[600,1430],diverterX:1650,ledgerX:1040,latchX:2250},
  {pages:[2800,3290],diverterX:3720,ledgerX:2990,latchX:4550},
@@ -301,21 +301,28 @@ function update(dt){
      if(player.y<10)hurtBuddy();
     }
    }else{
-    if(Math.abs(guard.x-guard.home)>90)guard.dir*=-1;
-    guard.moving=!guard.stun&&(elapsed+guard.home/100)%4>.65;
-    if(guard.moving)guard.x=clamp(guard.x+guard.dir*chargerSpeed*dt,35,worldEnd-30);
+    const patrolStart=Math.max(35,guard.home-90),patrolEnd=Math.min(worldEnd-30,guard.home+90);
+    if(guard.x<=patrolStart)guard.dir=1;
+    else if(guard.x>=patrolEnd)guard.dir=-1;
+    guard.moving=!guard.stun;
+    if(guard.moving)guard.x=clamp(guard.x+guard.dir*chargerSpeed*dt,patrolStart,patrolEnd);
    }
    continue;
   }
-  if(guard.windup>0){guard.windup=Math.max(0,guard.windup-dt);if(guard.windup===0&&!player.hidden)fireGuardShot(guard)}
   guard.moving=false;
   const distance=Math.abs(player.x-guard.x),sector=guard.home<2600?0:guard.home<5400?1:guard.home<8100?2:3;
   const alerted=alternate||sector===3||!relays[sector].done;
-  if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&distance<(alerted?350:220)){
-   guard.windup=(alerted?.8:1.2)*rifleWindupScale/rifleRate;
-   // Fit two high shots between low shots without changing the low-shot interval.
-   guard.cooldown=(alerted?alertedFire:calmFire)*2/3;
+  const inRange=distance<(alerted?440:275);
+  const aimTime=(alerted?.8:1.2)*rifleWindupScale/rifleRate;
+  if(guard.windup>0){
+   guard.windup=Math.max(0,guard.windup-dt);
+   if(guard.windup===0&&!player.hidden&&inRange){
+    fireGuardShot(guard);
+    // Reload only after firing. The next windup accounts for the rest of the shot interval.
+    guard.cooldown=Math.max(0,(alerted?alertedFire:calmFire)*2/3-aimTime);
+   }
   }
+  if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&inRange)guard.windup=aimTime;
  }
  if(player.y<65&&player.shield<=0&&guards.some(guard=>guard.hp>0&&Math.abs(guard.x-player.x)<22)){
   hurtBuddy();
