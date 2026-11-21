@@ -609,6 +609,12 @@ function showChapterMenu(lastChapter, complete, canTest, quizAssist) {
       gameButton.setAttribute('aria-label', 'Minigame only · ' + chapter.title);
     }
     row.append(introButton, gameButton);
+    var quizButton;
+    if (unlocked && chapter.number) {
+      quizButton = button('Quiz only', function () { launchQuizPractice(chapter, back); }, 'secondary');
+      quizButton.setAttribute('aria-label', 'Quiz only · ' + chapter.title);
+      row.appendChild(quizButton);
+    }
     if (chapter.id === 'chimney') {
       var finalFightButton = button('Final fight only', unlocked ? function () { launchFinalFight(chapter, back); } : null, 'secondary chapter-final-fight');
       if (unlocked) finalFightButton.setAttribute('aria-label', 'Final fight only · ' + chapter.title);
@@ -633,6 +639,7 @@ function showChapterMenu(lastChapter, complete, canTest, quizAssist) {
       row.insertBefore(levelPicker, gameButton);
       var update = function () {
         levelPicker.hidden = !testMode;
+        if (quizButton) quizButton.hidden = !testMode;
         var action = testMode ? 'Play level' : 'Minigame only';
         gameButton.textContent = action;
         gameButton.setAttribute('aria-label', action + ' · ' + chapter.title);
@@ -1209,6 +1216,33 @@ function openMissionLevel(run, stage) {
   if (bonus) url.searchParams.set('bonus', String(bonus));
   if (chapter.path === './wrapping-line/') url.searchParams.set('lives', String(7 + bonus));
   openMissionFrame(url.href, chapter.title + (run.finalFight ? ' · Final fight' : ''));
+}
+
+function launchQuizPractice(chapter, back) {
+  if (window.TrentMusic) window.TrentMusic.startChapter(chapter.id);
+  function retry() { launchQuizPractice(chapter, back); }
+  window.TrentTrivia.start(chapter, {
+    testMode: true,
+    skipStory: true,
+    onHome: back,
+    homeLabel: 'Chapter menu',
+    onFinish: function (score, total) {
+      var section = document.createElement('section');
+      section.className = 'campaign-start';
+      section.innerHTML = '<p class="eyebrow"></p><h1 tabindex="-1">Practice complete</h1>' +
+        '<p class="lead"></p><div class="choices">' +
+        '<button type="button" class="primary">Try another round</button>' +
+        '<button type="button" class="secondary">Chapter menu</button></div>';
+      section.querySelector('.eyebrow').textContent = chapter.kicker + ' · Quiz practice';
+      section.querySelector('.lead').textContent = score + ' of ' + total + ' correct.';
+      section.querySelector('.primary').onclick = retry;
+      section.querySelector('.secondary').onclick = back;
+      campaignRoot.replaceChildren(section);
+      campaignRoot.hidden = false;
+      window.scrollTo(0, 0);
+      section.querySelector('h1').focus({ preventScroll: true });
+    }
+  });
 }
 
 function afterIntro(chapter, options) {

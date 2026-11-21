@@ -311,7 +311,7 @@
     if (appRoot) appRoot.hidden = false;
   }
 
-  function renderStatus(message, onRetry, onHome) {
+  function renderStatus(message, onRetry, onHome, homeLabel) {
     var section = document.createElement('section');
     var title = document.createElement('h1');
     var copy = document.createElement('p');
@@ -330,7 +330,7 @@
     retry.onclick = onRetry;
     home.type = 'button';
     home.className = 'secondary';
-    home.textContent = 'Start screen';
+    home.textContent = homeLabel || 'Start screen';
     home.onclick = onHome;
     section.appendChild(title);
     section.appendChild(copy);
@@ -340,7 +340,7 @@
     focus(title);
   }
 
-  function renderFail(onHome, result) {
+  function renderFail(onHome, result, homeLabel) {
     var openModal = document.querySelector('.quiz-modal');
     var card = result || FAIL_CARDS[Math.floor(Math.random() * FAIL_CARDS.length)];
     if (openModal) openModal.remove();
@@ -360,7 +360,7 @@
     copy.textContent = card.copy;
     home.type = 'button';
     home.className = 'primary';
-    home.textContent = 'Start screen';
+    home.textContent = homeLabel || 'Start screen';
     home.onclick = onHome;
     section.appendChild(kicker);
     section.appendChild(title);
@@ -378,7 +378,7 @@
     goHome = appRoot && appRoot.trentTriviaHome;
     renderFail(function () {
       if (typeof goHome === 'function') goHome();
-    });
+    }, null, appRoot && appRoot.trentTriviaHomeLabel);
   }
 
   function presentQuestion(question) {
@@ -450,13 +450,24 @@
         appRoot.innerHTML = '';
         appRoot.hidden = true;
       }
-      if (score >= 5) {
+      if (typeof hooks.onFinish === 'function') hooks.onFinish(score, round.length);
+      else if (score >= 5) {
         if (typeof hooks.onClear === 'function') hooks.onClear(score);
       }
       else renderFail(appRoot.trentTriviaHome, {
         kicker: 'Game over', title: 'Briefing failed',
         copy: 'You got ' + score + ' of ' + round.length + ' right. You need at least five correct answers to enter the minigame.'
       });
+    }
+
+    function addPracticeExit(section) {
+      if (!hooks.onFinish || !hooks.onHome) return;
+      var exit = document.createElement('button');
+      exit.type = 'button';
+      exit.className = 'secondary';
+      exit.textContent = hooks.homeLabel;
+      exit.onclick = hooks.onHome;
+      section.appendChild(exit);
     }
 
     function paintElf(button, question) {
@@ -493,7 +504,7 @@
         start(chapter, hooks);
       }, function () {
         if (typeof hooks.onHome === 'function') hooks.onHome();
-      });
+      }, hooks.homeLabel);
     }
 
     function showReview(question, correct) {
@@ -561,6 +572,7 @@
         section.appendChild(source);
       });
       section.appendChild(next);
+      addPracticeExit(section);
       appRoot.replaceChildren(section);
       window.scrollTo(0, 0);
       focus(title);
@@ -637,6 +649,7 @@
       section.appendChild(strikeStatus);
       section.appendChild(choices);
       section.appendChild(elf);
+      addPracticeExit(section);
       appRoot.appendChild(section);
       window.scrollTo(0, 0);
       focus(prompt);
@@ -735,6 +748,7 @@
       : (typeof hooks.story === 'string' ? hooks.story : '');
     appRoot = document.getElementById('app');
     appRoot.trentTriviaHome = hooks.onHome || function () {};
+    appRoot.trentTriviaHomeLabel = hooks.homeLabel;
     abort();
     token = session;
     showShell();
@@ -745,7 +759,7 @@
         if (token !== session) return;
         startRound(chapter, questions, hooks);
       }
-      if (story) renderStory(chapter, story, openRound);
+      if (story && !hooks.skipStory) renderStory(chapter, story, openRound);
       else openRound();
     }).catch(function () {
       if (token !== session) return;
@@ -754,7 +768,7 @@
         start(chapter, hooks);
       }, function () {
         if (typeof hooks.onHome === 'function') hooks.onHome();
-      });
+      }, hooks.homeLabel);
     });
   }
 
