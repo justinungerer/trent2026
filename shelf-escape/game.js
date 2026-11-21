@@ -8,7 +8,7 @@ const dispatch=params.get('stage')==='the-last-dispatch';
 const alternate=cell||dispatch;
 const routeEnd=cell?6340:dispatch?8030:14100;
 const worldEnd=alternate?routeEnd+250:14300;
-const exitX=dispatch?worldEnd/2:routeEnd;
+const exitX=cell?185:dispatch?worldEnd/2:routeEnd;
 const kitX=2160;
 const exitKeyX=routeEnd-195;
 const dispatchBellX=1880;
@@ -154,8 +154,11 @@ function dispatchTarget(){
 }
 function missionTarget(){
  if(dispatch)return dispatchTarget();
- if(cell)return packageFound?exitTarget('Reach the depot floor','DEPOT FLOOR')
-  :{x:kitX,title:'Recover Buddy’s ribbon kit',hint:'RIBBON KIT'};
+ if(cell){
+  if(!packageFound)return {x:kitX,title:'Find the ribbon kit hidden in the workshop',hint:'WORKSHOP'};
+  return exitKeyFound?exitTarget('Return to the exit at the start','EXIT')
+   :{x:exitKeyX,title:'Find the exit key at the far end',hint:'EXIT KEY'};
+ }
  const count=relays.filter(r=>r.done).length,doc=documents[count];
  if(count===0&&!doc.found){const page=doc.pages.find(p=>!p.found);return {x:page.x,title:'Collect the transport orders',hint:`ORDER PAGES ${doc.pages.filter(p=>p.found).length}/${doc.pages.length}`}}
  if(count===1&&doc.found&&doc.route<doc.routes.length)return {x:doc.routes[doc.route],title:'Set the rail switches',hint:`SWITCH ${doc.route+1}/${doc.routes.length}`};
@@ -170,7 +173,7 @@ function updateHud(){
  const count=relays.filter(r=>r.done).length,target=missionTarget();
  $('objective').textContent=target.title;
  $('progress').textContent=dispatch?`Sorting bays ${locks.filter(lock=>lock.done).length} / ${dispatchBays.length} · Papers ${documents.reduce((total,doc)=>total+doc.pages.filter(page=>page.found).length,0)} / 6`
-  :cell?(packageFound?'Package recovered':'Find the package')
+  :cell?(exitKeyFound?'Exit unlocked':packageFound?'Ribbon kit recovered':'Workshop ahead')
   :alarmNotice>0?'ALARM · REINFORCEMENT INBOUND':count<3?`${['Freight yard','Switchyard','Signal yard'][count]} · ${count} / 3 relays`:transmit<depotAerials.length?'Find the radio aerial' :transmit<4?'Return to the radio':locks.some(l=>!l.done)?`${locks.filter(l=>l.done).length} / ${locks.length} locks`:exitKeyFound?'Exit is open':'Find the exit key';
  $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(3-player.hp);
  $('ammo').textContent=ammo+' SHOTS';
@@ -181,7 +184,7 @@ function tryEscape(title,copy){
   exitKeyFound=true;
   interact(exitKeyX,376,'#f9d487',18);
  }
- const reachedExit=dispatch?Math.abs(player.x-exitX)<32:player.x>=exitX-4;
+ const reachedExit=alternate?Math.abs(player.x-exitX)<32:player.x>=exitX-4;
  if(!exitKeyFound||!reachedExit)return false;
  overlay('won',title,copy,session?'Continue the story':'Play again');
  return true;
@@ -245,7 +248,7 @@ function update(dt){
   if(!packageFound&&Math.abs(player.x-kitX)<36&&player.y>48){
    packageFound=true;transmit=4;burst(kitX,350,'#f9d487',18);
   }
-  if(packageFound&&tryEscape('DEPOT FLOOR REACHED','Buddy has his kit again.'))return;
+  if(packageFound&&tryEscape('WORKSHOP ESCAPED','Buddy made it back to the exit with his ribbon kit.'))return;
  }else if(count<3){const doc=documents[count],r=relays[count];
   if(count===0){for(const p of doc.pages)if(!p.found&&Math.abs(player.x-p.x)<35){p.found=true;interact(p.x,360,'#f9d487',16)}if(!doc.found&&doc.pages.every(p=>p.found)){doc.found=true;raiseAlarm(0,1190)}}
   else if(!doc.found&&Math.abs(player.x-doc.x)<35){doc.found=true;interact(doc.x,360,'#f9d487',25);raiseAlarm(count,count===1?3800:6700)}
@@ -512,6 +515,21 @@ function drawDispatchObjectives(){
   }
  }
 }
+function drawLocationSign(x,y,text){
+ g.save();
+ g.font='bold 20px system-ui';
+ g.textAlign='center';
+ g.textBaseline='middle';
+ const width=g.measureText(text).width+24;
+ g.fillStyle='#17201d';
+ g.fillRect(x-width/2,y-15,width,30);
+ g.strokeStyle='#e1c189';
+ g.lineWidth=2;
+ g.strokeRect(x-width/2,y-15,width,30);
+ g.fillStyle='#fff4d8';
+ g.fillText(text,x,y);
+ g.restore();
+}
 function render(){
  scenery();
  const sceneryReady=stageScenery.complete&&stageScenery.naturalWidth;
@@ -581,6 +599,7 @@ function render(){
  for(let i=0;i<gates.length;i++){const x=gates[i];g.fillStyle=relays[i].done?'#5c8b74':'#9a4a4b';g.fillRect(x-7,250,14,relays[i].done?140:195);g.fillStyle=relays[i].done?'#97e4a4':'#f6b36a';g.beginPath();g.arc(x,249,10,0,7);g.fill();if(!relays[i].done){g.strokeStyle='#e9aa81';g.lineWidth=5;g.beginPath();g.moveTo(x-60,370);g.lineTo(x+60,370);g.stroke()}}
  glow(terminal.x,348,70,'#87eadb55');if(!painted('field-radio',terminal.x,356,78,52)){g.fillStyle='#4e6840';g.fillRect(terminal.x-28,338,56,36);g.fillStyle='#1d2420';g.fillRect(terminal.x-18,346,18,16);g.fillStyle='#e6d3a4';g.beginPath();g.arc(terminal.x+12,354,8,0,7);g.fill()}
  if(!alternate&&relays.every(r=>r.done)&&transmit<depotAerials.length){for(let i=0;i<depotAerials.length;i++){const x=depotAerials[i],active=transmit===i;if(active)glow(x,330,48,'#ffe29188');if(!painted('radio-aerial',x,318,36,86)){g.strokeStyle=active?'#ffe291':'#8aa9a5';g.lineWidth=4;g.beginPath();g.moveTo(x,360);g.lineTo(x,286);g.moveTo(x-12,304);g.lineTo(x+12,304);g.moveTo(x-9,292);g.lineTo(x+9,292);g.stroke()}}}
+ if(cell)drawLocationSign(kitX,254,'WORKSHOP');
  if(cell&&!packageFound){
   pickupGlow(kitX,305,52);
   if(!paintedFrame('alternate-objectives',0,2,2,kitX,305,58,55))painted('gift-parcel',kitX,305,46,48);
@@ -588,6 +607,7 @@ function render(){
  if(alternate){
   if(exitKeyFound)pickupGlow(exitX,393,74);
   if(!paintedFrame('alternate-objectives',cell?2:3,2,2,exitX,cell?376:398,cell?142:82,cell?138:94))painted(dispatch?'mail-hatch':'wood-crate',exitX,356,70,84);
+  if(cell)drawLocationSign(exitX,254,'EXIT');
  }
  for(const {x,done} of locks){
   if(!done&&!painted('padlock',x,392,30,40)){
@@ -644,7 +664,7 @@ window.addEventListener('resize',resize);
 resize();
 reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
 if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
- ?'Jump to recover Buddy’s kit from the supply bench, then find the exit key and reach the depot floor. Use the stick to move. Tap Jump or Fire.'
+ ?'Buddy’s ribbon kit is hidden in the workshop. Jump to grab it from the supply bench. Find the key at the far end, then bring it back to the door marked EXIT near the start. Use the stick to move. Tap Jump or Fire.'
  :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move. Tap Jump or Fire.','Begin escape');
 let last=0;
 if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
