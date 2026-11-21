@@ -44,7 +44,8 @@ body {
 
 .start-home #campaign-start {
   width: 100%;
-  margin: 0 0 12px;
+  max-width: min(27rem, 100%);
+  margin: 12px 0 0;
 }
 
 .start-home #pin-status:empty {
@@ -52,7 +53,7 @@ body {
 }
 
 .start-home #start-rules {
-  margin-top: 12px;
+  margin: 0 0 12px;
 }
 
 .logo-screen {
@@ -90,7 +91,7 @@ body {
   margin: 0;
   text-align: center;
   text-shadow: 0 2px 9px #02060b;
-  animation: title-credit-rise 28s linear infinite;
+  animation: title-credit-rise 84s linear infinite;
 }
 
 @keyframes title-credit-rise {

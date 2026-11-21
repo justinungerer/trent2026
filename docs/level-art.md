@@ -6,6 +6,20 @@ The new assets were made with the built-in image generator for Trent Saves Chris
 
 The shared prompt called for realistic photographic adventure stills with restrained period colors, practical lighting, and subtle film grain. Each plate is in `assets/level-film-art/` with a matching MP4 in `assets/level-video/`. The scene prompts are listed below.
 
+The original game in each chapter also has a 24-second pre-level film with new artwork generated for its story:
+
+- `normandy-crossing` — Trent carries a dispatch toward the Normandy seawall.
+- `field-report` — Trent tunes a field radio in a snowy tent.
+- `defend-the-workshop` — Trent pilots the sleigh above the workshop as aircraft approach.
+- `ride-to-the-yard` — Trent rides a handcar toward the snowy freight yard.
+- `yard-dispatches` — Trent and Mac search beside the freight wagons.
+- `tower-routes` — Trent studies the route board and levers in the switch tower.
+- `depot-orders` — Buddy searches for orders among the depot crates.
+- `corridor-route` — Trent follows a dim corridor toward a green door.
+- `escape-the-camp` — Santa crosses the snowy yard toward the open gate.
+- `packing-line` — Trent, Buddy, and Santa prepare presents in the workshop.
+- `road-to-the-sleigh` — Trent crosses the snowy rooftops toward the sleigh.
+
 - `ramp-and-rally` — Allied landing craft door dropping into the cold Normandy surf at dawn, a young American soldier passes a closed brown dispatch case to another, June 1944.
 - `through-the-seawall` — Broken Normandy seawall and dusty concrete breach, scattered field-message pages on sand beside sandbag cover, American GI moving toward a dark shelter at daylight.
 - `the-scout-screen` — 1940s hostile aircraft silhouette formations above a narrow winter valley, distant mountain searchlight plays through snowfall, viewpoint from the canopy of another aircraft.

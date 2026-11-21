@@ -57,6 +57,8 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await radioFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
     await page.evaluate(() => finishMission());
     assert.equal(await page.evaluate(() => active.levelIndex), 1);
+    assert.equal(await page.locator('#intro-title').textContent(), 'The Night Broadcast');
+    await page.evaluate(() => introDone());
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForFunction(() => document.getElementById('game').contentWindow.location.search.includes('sequence=2'), null, { polling: 50 });
     await radioFrame.locator('#start').click();
@@ -181,7 +183,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       TrentLevels[chapter.id].map((level, index) => {
         const url = new URL(chapter.path, location.href);
         url.searchParams.set('sequence', index + 1);
-        if (level) url.searchParams.set('stage', level.id);
+        if (level && !level.original) url.searchParams.set('stage', level.id);
         return { game: url.pathname.split('/')[1], url: url.href };
       })
     ));
@@ -277,11 +279,12 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     for (const [index, stage, title] of [
       [1, 'the-scout-screen', 'The Scout Screen'],
       [2, 'workshop-approach', 'Workshop Approach'],
-      [3, null, null]
+      [3, null, 'Frosted Skies']
     ]) {
-      if (stage) {
+      if (title) {
         await page.getByRole('heading', { name: title, exact: true }).waitFor();
-        assert.ok((await page.locator('#intro-video').getAttribute('src')).includes('/level-video/' + stage + '.mp4'));
+        const filmId = stage || 'defend-the-workshop';
+        assert.ok((await page.locator('#intro-video').getAttribute('src')).includes('/level-video/' + filmId + '.mp4'));
         await page.evaluate(() => introDone());
       }
       await page.waitForFunction(index => {
@@ -327,7 +330,15 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         const bank = await TrentTrivia.load();
         for (let i = 0; i < 10; i++) {
           const prompt = document.querySelector('.quiz-question').textContent;
-          const question = bank.find(entry => entry.prompt === prompt);
+          const image = document.querySelector('.quiz-picture');
+          if (image) {
+            await image.decode();
+            for (let tries = 0; document.querySelector('.choice').disabled && tries < 100; tries++) {
+              await new Promise(resolve => setTimeout(resolve, 20));
+            }
+          }
+          const question = bank.find(entry => entry.prompt === prompt &&
+            (entry.imagePath || '') === (image ? image.getAttribute('src') : ''));
           const choices = [...document.querySelectorAll('.choice')];
           const correct = choices.find(button => button.querySelector('.choice-text').textContent ===
             question.choices.find(answer => answer.correct).text);

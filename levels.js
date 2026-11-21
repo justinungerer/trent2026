@@ -1,6 +1,6 @@
 'use strict';
 
-// Each chapter contains its two new levels and a null slot for the existing game.
+// Original games use their default stage; the other levels name a specific stage.
 window.TrentLevels = {
   "prologue": [
     {
@@ -12,7 +12,16 @@ window.TrentLevels = {
         "The shingle ridge would be dry, if he could reach it."
       ]
     },
-    null,
+    {
+      "id": "normandy-crossing",
+      "title": "Landing at Normandy",
+      "original": true,
+      "lines": [
+        "Trent held the dispatch close as he climbed the shingle ridge.",
+        "Smoke drifted across the beach, hiding the obstacles ahead.",
+        "Beyond the surf, the seawall offered a way forward."
+      ]
+    },
     {
       "id": "through-the-seawall",
       "title": "Through the Seawall",
@@ -33,7 +42,16 @@ window.TrentLevels = {
         "Two familiar signals flickered faintly beneath the static."
       ]
     },
-    null,
+    {
+      "id": "field-report",
+      "title": "The Night Broadcast",
+      "original": true,
+      "lines": [
+        "The aerial was ready, but the field report was still buried in static.",
+        "Trent turned the dial as voices drifted in and out of range.",
+        "Somewhere on the band was the message that could guide the rescue."
+      ]
+    },
     {
       "id": "confirm-the-dispatch",
       "title": "Confirm the Dispatch",
@@ -63,7 +81,16 @@ window.TrentLevels = {
         "From below, the lane of lit windows looked terribly exposed."
       ]
     },
-    null
+    {
+      "id": "defend-the-workshop",
+      "title": "Frosted Skies",
+      "original": true,
+      "lines": [
+        "Trent had reached the workshop, but the raid was not over.",
+        "More aircraft appeared above the valley, heading for the lights below.",
+        "He banked the sleigh toward them, determined to protect the workshop."
+      ]
+    }
   ],
   "rail": [
     {
@@ -75,7 +102,16 @@ window.TrentLevels = {
         "Trent could only read the markers from the tracks beside them."
       ]
     },
-    null,
+    {
+      "id": "ride-to-the-yard",
+      "title": "White Rail",
+      "original": true,
+      "lines": [
+        "The pennants marked the way, but the yard was still far ahead.",
+        "Trent climbed aboard the handcar and pushed into the snowy cutting.",
+        "He watched for broken rails and signals as he raced toward Rudolph."
+      ]
+    },
     {
       "id": "the-loading-spur",
       "title": "The Loading Spur",
@@ -97,7 +133,16 @@ window.TrentLevels = {
         "Trent slipped into the inspection yard under a bank of cloud."
       ]
     },
-    null,
+    {
+      "id": "yard-dispatches",
+      "title": "Special Delivery",
+      "original": true,
+      "lines": [
+        "Beyond the inspection gate, wagons cast long shadows across the yard.",
+        "Trent and Mac searched for dispatches that might lead them to Buddy.",
+        "Patrols crossed the loading lanes, and the mail hatch lay on the far side."
+      ]
+    },
     {
       "id": "the-stable-escape",
       "title": "The Stable Escape",
@@ -118,7 +163,16 @@ window.TrentLevels = {
         "Two routes had to be cleared before the yard could move again."
       ]
     },
-    null,
+    {
+      "id": "tower-routes",
+      "title": "The Switch Tower",
+      "original": true,
+      "lines": [
+        "With the points clear, Trent climbed into the switch tower.",
+        "The destination board glowed above a row of levers.",
+        "He checked each route carefully, keeping the trains moving toward the depot."
+      ]
+    },
     {
       "id": "send-the-rescue-train",
       "title": "Send the Rescue Train",
@@ -139,7 +193,16 @@ window.TrentLevels = {
         "The depot floor lay beyond the next two rooms."
       ]
     },
-    null,
+    {
+      "id": "depot-orders",
+      "title": "The shelf operative",
+      "original": true,
+      "lines": [
+        "Buddy retrieved his ribbon gun and slipped deeper into the depot.",
+        "The guards had scattered his orders among the freight and signal yards.",
+        "He would need those papers and a working radio to get word to the Allies."
+      ]
+    },
     {
       "id": "the-last-dispatch",
       "title": "The Last Dispatch",
@@ -160,7 +223,16 @@ window.TrentLevels = {
         "By the time Trent reached the junction, the footfalls had moved away."
       ]
     },
-    null,
+    {
+      "id": "corridor-route",
+      "title": "The Corridor",
+      "original": true,
+      "lines": [
+        "The message from the listening post pointed farther into the outpost.",
+        "Trent followed the corridor as footsteps echoed around the bends.",
+        "A green door waited somewhere ahead, beyond the guards."
+      ]
+    },
     {
       "id": "gatehouse-code",
       "title": "Rudolph’s Cell",
@@ -191,7 +263,16 @@ window.TrentLevels = {
         "Santa needed the way clear before he could cross the snow."
       ]
     },
-    null
+    {
+      "id": "escape-the-camp",
+      "title": "The Holding Camp",
+      "original": true,
+      "lines": [
+        "The gatehouse lamps faded behind Santa as he entered the yard.",
+        "Guards hurried through the snow to cut off his escape.",
+        "Beyond the fence, his friends were waiting to take him home."
+      ]
+    }
   ],
   "wrap": [
     {
@@ -203,7 +284,16 @@ window.TrentLevels = {
         "Trent set aside enough to start all three stacks of presents."
       ]
     },
-    null,
+    {
+      "id": "packing-line",
+      "title": "The Wrapping Line",
+      "original": true,
+      "lines": [
+        "The sorted crates fed the workshop's packing line once more.",
+        "Parcels rolled past as the rescued team prepared for the journey.",
+        "Trent set to work, helping get the presents ready for the sleigh."
+      ]
+    },
     {
       "id": "load-the-sleigh",
       "title": "Load the Sleigh",
@@ -233,6 +323,15 @@ window.TrentLevels = {
         "The high walk and the eaves met again near the junction roof."
       ]
     },
-    null
+    {
+      "id": "road-to-the-sleigh",
+      "title": "The Chimney Road",
+      "original": true,
+      "lines": [
+        "The lantern was recovered and the roof flags marked the way onward.",
+        "Trent climbed toward the waiting sleigh, with snowy gaps between the roofs.",
+        "Across the village, its light promised a way home for the whole team."
+      ]
+    }
   ]
 };

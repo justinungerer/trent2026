@@ -405,7 +405,7 @@ def read_level_films():
                 continue
             key = level["id"]
             original = ROOT / "assets" / "level-film-art" / f"{key}.webp"
-            establishing = plate(chapter, "1" if index == 0 else "4")
+            establishing = original if level.get("original") else plate(chapter, "1" if index == 0 else "4")
             if not establishing.is_file():
                 establishing = original
             films[key] = {

@@ -25,7 +25,12 @@ var cleanupIntroVideo = null;
 var openingTimer = 0;
 var openingVideo = null;
 
-var CREDITS = ['Designer', 'Producer', 'Developer', 'Tester', 'Marketing', 'Music'];
+var CREDITS = [
+  'Creator', 'Director', 'Writer', 'Game Designer', 'Level Designer',
+  'Producer', 'Developer', 'Gameplay Programmer', 'UI Designer',
+  'Art Direction', 'Character Design', 'Animation', 'Cinematics',
+  'Music', 'Sound Design', 'Research', 'Tester', 'Marketing'
+];
 
 var OPENING_FILM = {
   "id": "opening",
@@ -662,7 +667,8 @@ function showRules() {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('aria-labelledby', 'campaign-rules-title');
   modal.innerHTML = '<div class="quiz-modal-card"><h2 id="campaign-rules-title" tabindex="-1">How to play</h2>' +
-    '<p>Ten chapters follow the prologue. Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
+    '<p>After the prologue, explore ten chapters, each with its own unique minigame. Each minigame has three levels of increasing difficulty.</p>' +
+    '<p>Each chapter opens with a film, then asks ten WWII trivia questions.</p>' +
     '<p>You get two guesses per question. Afterward, you can review why each answer is right or wrong.</p>' +
     '<p>Get at least five answers right to enter the chapter’s minigame. A lower score ends the run. Scores of eight, nine, and ten earn increasingly useful bonuses. Each level starts with your full earned loadout.</p>' +
     '<p>Pass the quiz to earn a quiz password. Use it to restart that chapter with the correct answers highlighted in green.</p>' +
@@ -707,6 +713,7 @@ function showStart() {
   start.type = 'submit';
   start.className = 'primary';
   start.id = 'campaign-start';
+  start.setAttribute('form', 'pin-form');
   start.textContent = 'Start';
   form = document.createElement('form');
   form.id = 'pin-form';
@@ -736,7 +743,7 @@ function showStart() {
     input.removeAttribute('aria-invalid');
     status.textContent = '';
   };
-  form.appendChild(start);
+  form.appendChild(help);
   form.appendChild(label);
   form.appendChild(input);
   form.appendChild(status);
@@ -769,7 +776,7 @@ function showStart() {
   };
   section.appendChild(title);
   section.appendChild(form);
-  section.appendChild(help);
+  section.appendChild(start);
   campaignRoot.appendChild(section);
   title.focus({ preventScroll: true });
 }
@@ -1180,7 +1187,7 @@ function launchMissionLevel(run) {
   if (level) {
     playIntro({
       id: run.chapter.id,
-      musicLevel: level.id,
+      musicLevel: level.original ? 'main' : level.id,
       kicker: run.chapter.kicker + ' · Level ' + (run.levelIndex + 1),
       title: level.title,
       lines: level.lines,
@@ -1191,7 +1198,7 @@ function launchMissionLevel(run) {
       allowSkip: run.seen.has(level.id)
     }, function () {
       run.seen.add(level.id);
-      openMissionLevel(run, level.id);
+      openMissionLevel(run, level.original ? undefined : level.id);
     });
     return;
   }

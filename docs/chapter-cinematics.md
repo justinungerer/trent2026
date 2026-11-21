@@ -2,7 +2,7 @@
 
 The game serves a 34-second opening and eleven portrait chapter films that run 28 to 43 seconds. Story captions are built into the MP4s. Captions with at least 16 words stay on screen across two shots. The campaign plays each chapter’s music separately. The 22-second widescreen closing film has its own story captions.
 
-The start screen displays the approved portrait of Trent at 18. The 15-second portrait cast film introduces Trent, Mac, and Buddy. Justin Ungerer's production credits then scroll over the Chimney Road game backdrop, followed by the opening story film. Players can replay the opening story and chapter films from the chapter menu.
+The start screen displays the approved portrait of Trent at 18. The 15-second portrait cast film introduces Trent, Mac, and Buddy. Justin Ungerer's production credits then scroll over the Chimney Road game backdrop in an 84-second repeating cycle; Begin can be tapped at any time to start the opening story film. With reduced motion, the credits are available in a scrollable list. Players can replay the opening story and chapter films from the chapter menu.
 
 ## Render and edit
 
@@ -18,6 +18,6 @@ Add film IDs to the command to export specific cuts. Add `--levels` to render th
 
 ## Campaign progression
 
-Start begins a new game when the password field is empty and opens the chapter menu with a valid password. How to play opens the rules. The prologue leads to ten scored chapters with ten WWII questions apiece. Five correct answers are required to play the minigame. Scores of eight through ten grant a fresh bonus loadout on each level.
+Start begins a new game when the password field is empty and opens the chapter menu with a valid password. How to play opens the rules. The prologue leads to ten scored chapters with ten WWII questions apiece. Each chapter has its own minigame with three progressively more difficult levels. Five correct answers are required to play the minigame. Scores of eight through ten grant a fresh bonus loadout on each level.
 
 Each completion card gives the next chapter’s password and waits for the player to continue. A password opens that chapter and all prior chapters and intros. The completion password also opens the ending. The game remembers the furthest password on the device.
