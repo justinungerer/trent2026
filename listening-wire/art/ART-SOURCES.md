@@ -74,3 +74,9 @@ Prompt:
 A single collectible WWII folded paper maze map for a realistic hand painted game. A worn cream paper sheet partly unfolded, clearly visible dark corridor lines, a small red compass marking, olive canvas band. No words no labels no letters. Three quarter top view isolated item fully inside frame with generous transparent margin. Highly detailed painted art, genuinely transparent background, no cast shadow or backdrop.
 
 Cleanup prompt: Remove the entire brown glowing haze and all background from this folded paper map collectible, leaving only the actual paper map and canvas strap as a crisp isolated cutout on fully transparent alpha zero background. Preserve the painted map and strap exactly. No shadow no glow no vignette. Keep generous transparent margins.
+
+## Body armor pickup
+
+`painted-body-armor.webp` is a transparent painted pickup that appears in place of a health kit while Trent is at full health. Generated with OpenAI ImageGen.
+
+> A single collectible olive canvas WWII-era flak vest with stitched rectangular armored panels, battered brass buckles and broad shoulder straps. Three-quarter front view, isolated game pickup, crisp recognizable compact silhouette for a first-person painted maze game. Realistic textured hand-painted gouache in muted olive, charcoal and tan, fully transparent alpha outside the vest. No person, no background, no lettering, no insignia, no glow or shadow. Centered, fully inside the frame with modest transparent margins.

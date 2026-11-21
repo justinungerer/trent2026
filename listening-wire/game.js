@@ -8,6 +8,7 @@
   var canvas = document.getElementById('yard');
   var ctx = canvas.getContext('2d');
   var healthEl = document.getElementById('health');
+  var armorEl = document.getElementById('armor');
   var bulletsEl = document.getElementById('bullets');
   var hintEl = document.getElementById('hint');
   var toastEl = document.getElementById('toast');
@@ -20,14 +21,11 @@
   var portraitEl = document.getElementById('portrait');
   var statusEl = document.getElementById('status');
 
-  var MAP_W = 33;
-  var MAP_H = 25;
   var BUF_W = 420;
   var BUF_H = 236;
   var FOV_PLANE = 0.72;
   var WALK_SPEED = 2.55;
   var ENEMY_SPEED_SCALE = 0.375;
-  var hasMap = false;
   var discovered = new Set();
   var mapSheet = document.getElementById('map-sheet');
   var mapCanvas = document.getElementById('maze-map');
@@ -35,13 +33,19 @@
   var floorTiles = [];
   var PATROL_STEPS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
   var MAX_HEALTH = 5 + (window.TrentMissionBonus || 0);
+  var MAX_ARMOR = 3;
   var stage = new URLSearchParams(location.search).get('stage');
   var listening = stage === 'the-listening-post';
   var gatehouse = stage === 'gatehouse-code';
+  var maze = listening ? { width: 25, height: 19, seed: 1944, shortcuts: 6 } :
+    gatehouse ? { width: 39, height: 29, seed: 2512, shortcuts: 30 } :
+      { width: 33, height: 25, seed: 99, shortcuts: 16 };
+  var MAP_W = maze.width;
+  var MAP_H = maze.height;
   var codeNeeded = listening ? 1 : gatehouse ? 2 : 0;
   var codeFound = 0;
-  var mapImg = new Image();
-  mapImg.src = 'art/painted-map.webp';
+  var armorImg = new Image();
+  armorImg.src = 'art/painted-body-armor.webp';
   var codeImg = new Image();
   var medkitImg = new Image();
   var rifleImg = new Image();
@@ -128,6 +132,7 @@
   var shots = [];
   var bursts = [];
   var health = MAX_HEALTH;
+  var armor = 0;
   var ammo = readStartAmmo();
   var state = 'title';
   var played = 0;
@@ -238,7 +243,7 @@
     }
     tries = 0;
     made = 0;
-    while (made < 16 && tries < 500) {
+    while (made < maze.shortcuts && tries < 500) {
       tries += 1;
       x = 1 + ((rng() * (MAP_W - 2)) | 0);
       y = 1 + ((rng() * (MAP_H - 2)) | 0);
@@ -349,7 +354,7 @@
   }
 
   function makeLevel() {
-    var map = buildMaze(listening ? 1944 : gatehouse ? 2512 : 99);
+    var map = buildMaze(maze.seed);
     var dist = buildDistances(map);
     var best = -1;
     var ex = 1;
@@ -393,11 +398,6 @@
         pickups.push({ x: cell.x, y: cell.y, kind: 'code', n: 1, bob: 0 });
       });
     }
-    var mapCells = spreadTake(cells, function (c) { return c.d >= 6 && c.d < best * 0.8; }, 2, 8, placed);
-    mapCells.forEach(function (cell) {
-      placed.push(cell);
-      pickups.push({ x: cell.x, y: cell.y, kind: 'map', n: 1, bob: 0 });
-    });
     var startingAmmo = spreadTake(cells, function (c) { return c.d >= 4 && c.d <= 8; }, 2, 2, placed);
     startingAmmo.forEach(function (cell) {
       placed.push(cell);
@@ -440,6 +440,14 @@
 
   function discoverTile() {
     var x = Math.floor(player.x), y = Math.floor(player.y);
+    if (discovered.size === 0) {
+      if (x === 1 && y === 1) return;
+      revealTile(1, 1);
+    }
+    revealTile(x, y);
+  }
+
+  function revealTile(x, y) {
     discovered.add(x + ',' + y);
     PATROL_STEPS.forEach(function (step) {
       var nx = x + step[0], ny = y + step[1];
@@ -481,7 +489,6 @@
 
   function openMap() {
     if (state !== 'play') return;
-    if (!hasMap) { showToast('Find a hidden map first.'); say('Find a hidden map first.'); return; }
     releasePad();
     state = 'map';
     paintMap();
@@ -737,16 +744,15 @@
 
   function beginRun() {
     codeFound = 0;
-    hasMap = false;
     discovered.clear();
     mapSheet.hidden = true;
     resetPlayer();
-    discoverTile();
     enemies = freshEnemies();
     pickups = freshPickups();
     shots = [];
     bursts = [];
     health = MAX_HEALTH;
+    armor = 0;
     ammo = readStartAmmo();
     played = 0;
     cool = 0;
@@ -836,6 +842,7 @@
 
   function renderHud() {
     healthEl.textContent = String(health);
+    armorEl.textContent = armor + ' / ' + MAX_ARMOR;
     bulletsEl.textContent = String(ammo);
   }
 
@@ -904,15 +911,16 @@
 
   function hurt() {
     if (state !== 'play' || hurtT > 0) return;
-    health -= 1;
-    if (health < 0) health = 0;
+    var absorbed = armor > 0;
+    if (absorbed) armor -= 1;
+    else health = Math.max(0, health - 1);
     hurtT = 0.7;
     if (!reduceMotion()) shake = 8;
     if (health <= 0) {
       lose();
       return;
     }
-    showToast('Hit. Health ' + health + '.');
+    showToast(absorbed ? 'Armor absorbed the hit. Armor ' + armor + ' / ' + MAX_ARMOR + '.' : 'Hit. Health ' + health + '.');
   }
 
   function launchShot(e, kind) {
@@ -1090,13 +1098,6 @@
     for (i = pickups.length - 1; i >= 0; i--) {
       p = pickups[i];
       if (Math.hypot(p.x - player.x, p.y - player.y) > 0.46) continue;
-      if (p.kind === 'map') {
-        pickups.splice(i, 1);
-        hasMap = true;
-        showToast('Map found. Explored passages are recorded.');
-        openMap();
-        return;
-      }
       if (p.kind === 'code') {
         pickups.splice(i, 1);
         codeFound++;
@@ -1104,10 +1105,15 @@
         continue;
       }
       if (p.kind === 'health') {
-        if (health >= MAX_HEALTH) continue;
-        health += 1;
+        if (health < MAX_HEALTH) {
+          health += 1;
+          showToast('Health ' + health + '.');
+        } else {
+          if (armor >= MAX_ARMOR) continue;
+          armor += 1;
+          showToast('Body armor ' + armor + ' / ' + MAX_ARMOR + '.');
+        }
         pickups.splice(i, 1);
-        showToast('Health ' + health + '.');
         continue;
       }
       ammo += p.n;
@@ -1472,8 +1478,8 @@
     for (i = 0; i < pickups.length; i++) {
       p = pickups[i];
       list.push({
-        img: p.kind === 'map' ? mapImg : p.kind === 'code' && codeImg.naturalWidth ? codeImg :
-          p.kind === 'health' ? (medkitImg.naturalWidth ? medkitImg : kitImg) :
+        img: p.kind === 'code' && codeImg.naturalWidth ? codeImg :
+          p.kind === 'health' ? (health === MAX_HEALTH && armorImg.naturalWidth ? armorImg : medkitImg.naturalWidth ? medkitImg : kitImg) :
             (bulletImg.naturalWidth ? bulletImg : bulletFallback),
         x: p.x,
         y: p.y + (bob ? Math.sin(played * 2 + p.bob) * 0.04 : 0),

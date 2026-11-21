@@ -2,7 +2,7 @@
 
 A first-person maze in the enemy wire room. Trent walks painted corridors, turns, and shoots cartoon soldiers who shoot back. Health kits and bullet crates sit on the floor. The green door at the far end is the listening post.
 
-The corridor pictures are original generated paintings in `art/`: wall, floor, ceiling, the green door, and one soldier. Runners and spotters are that same soldier, tinted in canvas. The gun, hit flash, kits, crates, and tracers are canvas drawings. The older yard paintings (`scene.webp`, `lamp.webp`, `trent.webp`) stay in this folder for the campaign’s chapter card. There are no third-party assets, no downloaded images, and no build step.
+The corridor pictures are original generated paintings in `art/`: wall, floor, ceiling, the green door, and one soldier. Runners and spotters are that same soldier, tinted in canvas. Health kits, body armor, and ammo pickups use painted art. The gun, hit flash, and tracers are drawn on the canvas. The older yard paintings (`scene.webp`, `lamp.webp`, `trent.webp`) stay in this folder for the campaign’s chapter card. There are no third-party assets, no downloaded images, and no build step.
 
 ## Open it
 
@@ -20,7 +20,7 @@ Landscape is the intended orientation. A portrait visit shows a short "turn side
 
 ## Map
 
-The maze is 33 by 25 cells, with dead ends and a few loops. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
+The Listening Post is 25 × 19, the middle Corridor is 33 × 25, and Gatehouse Code is 39 × 29. Each successive maze has more alternate routes. The map is available from the start and initially covered in fog. It reveals passages and bordering walls as Trent enters new tiles. Trent starts at the northwest opening. The green door is the farthest floor cell from that opening. Cartoon soldiers, health kits, and bullet crates are spread along the corridors.
 
 ## Controls
 
@@ -35,7 +35,7 @@ If the device asks for reduced motion, the view does not shake and the gun does 
 
 ## Fight
 
-Trent starts with 3 health. A soldier’s shot, close enough to count, costs one health. At 0 health the run ends on a card and does not dispatch the win event. Kits on the floor restore one health, up to 3, and stay put when health is already full.
+Trent starts with five health plus any quiz bonus and zero armor. A kit restores one health, or grants one armor at full health. Armor absorbs a hit before health and caps at three. A kit stays available when both are full. At zero health the run ends.
 
 Starting bullets come from the `lives` query, the same quiz score the parent passes into wrapping-line. A missing or unreadable value starts the run at 10. The number is capped at 10. Bullet crates in the maze add more, and a killed soldier drops 1 bullet where they stood. The soldier flashes and vanishes. No body stays on screen.
 
