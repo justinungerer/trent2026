@@ -346,7 +346,7 @@ test('rifle guards shoot sooner and then at half their previous rate in every le
    for(let tick=0;tick<1200&&fired.length<4;tick++)update(.01);
    JSON.stringify(fired)`));
   assert.deepEqual(shots.map(shot=>shot.height),[420,334,334,420],stage);
-  assert.ok(Math.abs(shots[0].time-.49)<.02, JSON.stringify({stage,firstShot:shots[0].time}));
+  assert.ok(Math.abs(shots[0].time-.37)<.02, JSON.stringify({stage,firstShot:shots[0].time}));
   const lowGap=shots[3].time-shots[0].time;
   const previousLowGap=stage==='the-last-dispatch'?3.5/1.3:2*3.5/1.3;
   assert.ok(Math.abs(lowGap-previousLowGap/1.25*2)<.04,JSON.stringify({stage,lowGap,previousLowGap}));

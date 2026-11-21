@@ -34,7 +34,7 @@ const stageScenery=new Image();
 stageScenery.src=cell?'./art/intake-rooms.webp':dispatch?'./art/sorting-annex-aligned.webp':'./art/freight-depot.webp';
 const rifleRate=1.25;
 const firingRate=rifleRate*(dispatch?2:1);
-const rifleWindupScale=.75,rifleIntervalScale=2;
+const rifleFirstAimScale=.5625,rifleWindupScale=.75,rifleIntervalScale=2;
 const alertedFire=3.5/1.3/firingRate*rifleIntervalScale,calmFire=5/1.3/firingRate*rifleIntervalScale;
 const hurdles=(cell?[1350,3280,4880]:dispatch?[890,1940,2860,3500,4780,5850,7090]:[1180,3920,5880,8360]).map(x=>({x,half:24,clear:52}));
 const bellY=188;
@@ -102,7 +102,7 @@ function reset(){
  const baseline=cell?3:dispatch?4:16;
  guards=Array.from({length:Math.ceil(baseline*1.5)},(_,index)=>{
   const x=450+index*(routeEnd-1050)/(Math.ceil(baseline*1.5)-1);
-  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)*(index%2?1:rifleWindupScale/firingRate)};
+  return {x,home:x,hp:index%2?1:2,kind:index%2?'charger':'rifleman',dir:index%2?1:-1,stun:0,attack:0,cooldown:(1.8+index%3*.4)*(index%2?1:rifleFirstAimScale/firingRate)};
  });
  shots=[];guardShots=[];particles=[];wraps=[];ammoDrops=[];
  documents=[{x:1600,name:'transport orders',found:false,pages:[{x:1350,found:false},{x:2250,found:false}]},{x:4300,name:'switchyard key',found:false,routes:[3150,4850],route:0},{x:7000,name:'radio cipher',found:false,power:[7700,6600],step:0}];
@@ -322,7 +322,7 @@ function update(dt){
     guard.cooldown=Math.max(0,(alerted?alertedFire:calmFire)*2/3-aimTime);
    }
   }
-  if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&inRange)guard.windup=aimTime;
+  if(!guard.stun&&!guard.windup&&guard.cooldown<=0&&!player.hidden&&inRange)guard.windup=guard.hasFired?aimTime:aimTime*rifleFirstAimScale/rifleWindupScale;
  }
  if(player.y<65&&player.shield<=0&&guards.some(guard=>guard.hp>0&&Math.abs(guard.x-player.x)<22)){
   hurtBuddy();
@@ -342,6 +342,7 @@ function update(dt){
  updateHud();
 }
 function fireGuardShot(guard){
+ guard.hasFired=true;
  guard.attack=.48;
  const facing=guardFacing(guard),y=guard.shotInCycle?highShotY:lowShotY;
  guard.shotInCycle=((guard.shotInCycle||0)+1)%3;
@@ -387,7 +388,7 @@ function hurtBuddy(){
  burst(player.x,400-player.y,'#f7c37a',12);
  if(player.hp<=0){player.dying=.001;clearInput();}
 }
-function raiseAlarm(sector,x){if(relays[sector].done)return;guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:sector%2?1.2:1.2*rifleWindupScale});alarmNotice=3}
+function raiseAlarm(sector,x){if(relays[sector].done)return;guards.push({x,home:x,hp:2,kind:sector%2?'charger':'rifleman',dir:1,stun:0,attack:0,cooldown:sector%2?1.2:1.2*rifleFirstAimScale});alarmNotice=3}
 function updateDefeatedGuards(dt){
  const offscreen=x=>x<camera-90||x>camera+W+90;
  wraps=wraps.filter(wrap=>{
@@ -395,7 +396,7 @@ function updateDefeatedGuards(dt){
   const guard=wrap.guard;
   if((!dispatch&&wrap.age<wrapDuration)||!offscreen(wrap.x)||!offscreen(guard.home))return true;
   Object.assign(guard,{x:guard.home,hp:guard.kind==='charger'?1:2,stun:0,attack:0,
-   windup:0,moving:false,chasing:false,cooldown:calmFire/rifleIntervalScale*(guard.kind==='charger'?1:rifleWindupScale)});
+   windup:0,moving:false,chasing:false,hasFired:false,cooldown:calmFire/rifleIntervalScale*(guard.kind==='charger'?1:rifleFirstAimScale)});
   return false;
  });
 }
