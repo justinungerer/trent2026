@@ -94,7 +94,7 @@
     document.getElementById('roof-stage-title').textContent = eaves ? 'The Eaves' : 'Above the Lanterns';
     document.getElementById('roof-win-title').textContent = eaves ? 'Sleigh boarded' : 'Junction roof reached';
     document.getElementById('roof-objective').textContent = eaves
-      ? 'Drop onto the lower coach-house roof to recover the sleigh lantern, then board the sleigh.'
+      ? 'Follow the yellow LANTERN arrow to the lower coach-house roof, collect the lantern, then board the sleigh.'
       : 'Collect both markers, one on the high roofs and one below, and reach the junction roof.';
     PLATFORMS = [
       { x: 0, y: 300, w: 386, name: 'First roof', role: 'main' },
@@ -129,11 +129,14 @@
       objectives = [{ x: 805, y: 528, roof: 2 }];
     }
     else {
+      // The wide roofs form the route without the added terraces or narrow stairs.
+      PLATFORMS[3].y = 430;
+      PLATFORMS[4].y = 353;
       PLATFORMS.splice(7, 0,
-        { x: 690, y: 244, w: 297, name: 'Bell tower step', role: 'end' },
+        { x: 360, y: 244, w: 627, name: 'Bell tower step', role: 'end' },
         { x: 1035, y: 166, w: 375, name: 'Bell tower ridge', role: 'end' },
         { x: 1485, y: 208, w: 332, name: 'Dormer walk', role: 'end' },
-        { x: 1570, y: 488, w: 466, name: 'Lower lantern walk', role: 'end' });
+        { x: 1360, y: 488, w: 676, name: 'Lower lantern walk', role: 'end' });
       objectives = [{ x: 1185, y: 166 }, { x: 1850, y: 488 }];
     }
   }
@@ -160,7 +163,7 @@
     if (escapeMode) { roof.x *= 1.5; roof.w *= 1.5; }
     if (!eaves) roof.y = 300 + (roof.y - 300) * expansion.scale;
   });
-  window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W, escapeMode, eaves);
+  if (!flags) window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W, escapeMode, eaves);
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
     roof.drawDepth = 55;
@@ -274,7 +277,6 @@
   var played = 0;
   var victorySent = false;
   var boardingWarned = false;
-  var lanternGuide = false;
   var tutorialReachedTop = false;
   var tutorialAttempt = false;
   var tutorialDoubleJumpHint = false;
@@ -487,7 +489,6 @@
     airBuffer = 0;
     victorySent = false;
     boardingWarned = false;
-    lanternGuide = false;
     tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
     boardingSheet.hidden = true;
     boardingHint.hidden = true;
@@ -572,7 +573,6 @@
         return;
       }
       objectives.forEach(function (item) { item.taken = false; });
-      lanternGuide = false;
       tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
       falls = 0;
       placeOn(0);
@@ -613,7 +613,6 @@
     if (objectives.every(function (item) { return item.taken; })) {
       win();
     } else if (eaves) {
-      lanternGuide = true;
       if (!boardingWarned) {
         boardingWarned = true;
         state = 'boarding';
@@ -1102,7 +1101,6 @@
       var pickupWidth = eaves ? 64 : 28;
       if (item.taken || Math.abs(item.x - body.x) > pickupWidth || Math.abs(item.y - body.y) > 40) return;
       item.taken = true;
-      if (eaves) lanternGuide = false;
       say(eaves ? 'Lantern recovered.' : 'Route marker collected.');
 
     });
@@ -1427,16 +1425,16 @@
   }
 
   function drawLanternGuide() {
-    if (state !== 'play' || !lanternGuide || objectives[0].taken) return;
+    if (state !== 'play' || !eaves || objectives[0].taken) return;
     var lantern = objectives[0];
     var targetX = lantern.x - camX;
     var targetY = lantern.y - camY - 32;
-    var onScreen = targetX > 0 && targetX < VIEW_W && targetY > 0 && targetY < VIEW_H;
-    var x = clamp(targetX, 112, VIEW_W - 112);
-    var y = clamp(targetY - (onScreen ? 66 : 0), 100, VIEW_H - 105);
+    var x = VIEW_W / 2;
+    var y = VIEW_H / 2;
     var angle = Math.atan2(targetY - y, targetX - x);
 
     ctx.save();
+    ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.ox, dpr * view.oy);
     ctx.fillStyle = '#102b3cf2';
     ctx.fillRect(x - 57, y - 23, 114, 64);
     ctx.fillStyle = '#ffdb54';

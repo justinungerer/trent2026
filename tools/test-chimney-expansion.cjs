@@ -27,7 +27,8 @@ window.testExpansion=()=>{
   a.destroyed=false;
   if(remaining.length!==1||remaining[0].x!==smoke[1].x)throw Error('Bombing one stack removed both');
  }
- const sequences=[expansion.route,...expansion.branches];
+ if(flags&&(PLATFORMS.length!==expansion.authored.length||PLATFORMS.some(roof=>roof.w<295)))throw Error('Level 2 still contains narrow generated roofs');
+ const sequences=[expansion.route];
  let reversals=0,up=0,down=0;
  for(const sequence of sequences)for(let i=1;i<sequence.length;i++){
   const a=sequence[i-1],b=sequence[i],dy=b.y-a.y,dx=b.x-a.x;
@@ -36,7 +37,7 @@ window.testExpansion=()=>{
   const gap=Math.max(0,Math.abs(dx)-(a.roof.w+b.roof.w)/2+28);
   if(gap>195)throw Error('Unjumpable horizontal route edge '+gap);
  }
- if(!up||!down)throw Error('Route does not use vertical space');
+ if(escapeMode&&(!up||!down))throw Error('Route does not use vertical space');
  if(escapeMode){
   if(!reversals)throw Error('Escape route lacks backtracking');
   for(const roof of PLATFORMS.filter(r=>!r.permanent)){
@@ -49,12 +50,12 @@ window.testExpansion=()=>{
   if(PLATFORMS.some(r=>r.permanent&&r.destroyed))throw Error('Bomb destroyed permanent route');
   for(const point of expansion.route)if(point.roof.destroyed)throw Error('Route broken after every weak roof destroyed');
  }
- return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length,branches:expansion.branches.length,reversals};
+ return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length,reversals};
 };
 window.testTierAndTracer=()=>{
  beginRun();
  const terraces=PLATFORMS.filter(r=>r.name==='Upper terrace'||r.name==='Lower terrace');
- if(terraces.length<5||!terraces.some(r=>r.cap))throw Error('Missing traversable terraces and chimneys');
+ if(flags?terraces.length!==0:terraces.length<5||!terraces.some(r=>r.cap))throw Error('Unexpected terrace and chimney layout');
  for(const a of PLATFORMS)for(const b of PLATFORMS)
    if(a!==b&&Math.abs(a.y-b.y)<.001&&Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>.001)
      throw Error('Overlapping roof surfaces '+a.name+' / '+b.name);
@@ -273,6 +274,14 @@ window.previewExpansion=()=>{
  else if(flags){body.x=objectives[0].x-200;body.y=objectives[0].y+200;}
  camSnap=true;render(.02);renderHud();
 };
+window.testWideRoofStart=()=>{
+ if(!flags)return;
+ beginRun();held.right=true;
+ for(let i=0;i<90;i++){played+=.01;update(.01);}
+ held.right=false;
+ if(body.x<290||stood!==0||falls)throw Error('Trent cannot walk across the starting roof '+body.x);
+ return {x:Math.round(body.x),clear:true};
+};
 window.testMarkerRoutePhysics=()=>{
  if(!flags)return;
  beginRun();PLATFORMS.forEach(r=>{if(!r.permanent)r.destroyed=true});bombNext=Infinity;
@@ -310,15 +319,15 @@ window.testMarkerRoutePhysics=()=>{
  throw Error('No physical permanent-only route to goal '+JSON.stringify({reached:reached.size,trials,maxX:Math.max(...[...reached].map(i=>PLATFORMS[i].x)),goal:PLATFORMS[GOAL].x}));
 };
 window.testLanternGuide=()=>{
- if(!eaves)return;
  beginRun();
  const label=ctx.fillText.bind(ctx),rotate=ctx.rotate.bind(ctx);
- let shown,angle;
- ctx.fillText=(text,...args)=>{if(text==='LANTERN')shown=true;return label(text,...args);};
+ let shown,angle,labelX;
+ ctx.fillText=(text,...args)=>{if(text==='LANTERN'){shown=true;labelX=args[0];}return label(text,...args);};
  ctx.rotate=value=>{angle=value;return rotate(value);};
  const sample=()=>{shown=false;angle=0;drawLanternGuide();return {shown,angle};};
  try{
-  if(sample().shown)throw Error('Lantern guide appeared before boarding');
+  if(!eaves){if(sample().shown)throw Error('Lantern guide appeared on another level');return;}
+  if(!sample().shown||labelX!==VIEW_W/2)throw Error('Lantern guide missing from the middle at start');
   body.x=SLEIGH_X;body.y=PLATFORMS[GOAL].y;
   checkBoarding();if(state!=='boarding')throw Error('Missing lantern did not block takeoff');
   document.getElementById('close-boarding').click();
@@ -327,7 +336,7 @@ window.testLanternGuide=()=>{
   const distant=sample();
   if(!distant.shown||Math.cos(distant.angle)>=0)throw Error('Lantern guide did not point back across the roofs');
   const lantern=objectives[0];
-  camX=lantern.x-300;camY=lantern.y-245;
+  camX=lantern.x-VIEW_W/2;camY=lantern.y-VIEW_H/2-100;
   const nearby=sample();
   if(!nearby.shown||Math.sin(nearby.angle)<.99)throw Error('Lantern guide did not point down to the visible lantern');
   body.x=lantern.x;body.y=lantern.y;body.ground=true;stood=lantern.roof;
@@ -336,7 +345,7 @@ window.testLanternGuide=()=>{
   body.x=SLEIGH_X;body.y=PLATFORMS[GOAL].y;checkBoarding();
   if(state!=='win')throw Error('Lantern did not unlock takeoff');
   beginRun();
-  if(lantern.taken||sample().shown)throw Error('Retry retained an old lantern guide');
+  if(lantern.taken||!sample().shown||labelX!==VIEW_W/2)throw Error('Retry did not restore the centered lantern guide');
   return true;
  }finally{ctx.fillText=label;ctx.rotate=rotate;}
 };
@@ -362,6 +371,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));
   console.log('FIRE',await page.evaluate(()=>testPersistentGunfire()));
+  console.log('STARTING ROOF',await page.evaluate(()=>testWideRoofStart()));
   console.log('MARKER ROUTE',await page.evaluate(()=>testMarkerRoutePhysics()));
   console.log('ROUTE',await page.evaluate(()=>testPermanentRoutePhysics()));
   console.log('INCOMING',await page.evaluate(()=>testIncomingBoxingDamage()));
