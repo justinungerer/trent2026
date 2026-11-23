@@ -18,6 +18,19 @@
     });
   };
 
+  window.TrentAddBombHole = function (roofs, roof) {
+    var holeWidth = 112;
+    var half = (roof.w - holeWidth) / 2;
+    var holeX = roof.x + half;
+    roofs.push(Object.assign({}, roof, { originalIndex: undefined, x: holeX, w: holeWidth,
+      cap: null, role: 'bomb-section', section: true, permanent: false }));
+    roofs.push(Object.assign({}, roof, { originalIndex: undefined, x: holeX + holeWidth,
+      w: half, cap: roof.cap === 'right' ? 'right' : null, section: true, permanent: true, permanentRoute: true }));
+    roof.w = half;
+    roof.cap = roof.cap === 'left' ? 'left' : null;
+    roof.section = roof.permanent = roof.permanentRoute = true;
+  };
+
   window.TrentRoofExpansion = function (roofs, objectives, options) {
     var scale = options.flags ? 2 : 4;
     var horizontal = options.flags ? 1 : 1.5;
@@ -42,18 +55,7 @@
     var mainRoofs = authored.filter(function (roof) { return roof.role === 'main'; });
     authored.forEach(function (roof, index) {
       if (index === 0 || roof.goal || roof.w < 580) return;
-      // A single jumpable hole separates two wide sections of the same roof.
-      var holeWidth = 112;
-      var half = (roof.w - holeWidth) / 2;
-      var holeX = roof.x + half;
-      roofs.push(Object.assign({}, roof, { originalIndex: undefined, x: holeX, w: holeWidth,
-        cap: null, section: true, permanent: false }));
-      var right = Object.assign({}, roof, { originalIndex: undefined, x: holeX + holeWidth,
-        w: half, cap: roof.cap === 'right' ? 'right' : null, section: true, permanentRoute: true });
-      roof.w = half;
-      roof.cap = roof.cap === 'left' ? 'left' : null;
-      roof.section = roof.permanentRoute = true;
-      roofs.push(right);
+      window.TrentAddBombHole(roofs, roof);
     });
 
     function bridge(left, right) {

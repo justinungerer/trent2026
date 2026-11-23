@@ -3,10 +3,12 @@ const {webkit}=require('playwright');
 const root=path.resolve(__dirname,'..'),hook=String.raw`
 window.testExpansion=()=>{
  beginRun();hurt=999;
- if(eaves){
-  if(smokeList().length)throw Error('Level 1 gained smoke stacks');
-  return {stage,unchangedWidth:WORLD_W};
- }
+ if(!crateBox().w||!snowball().r||!lanternBob().r||!ICE_PATCHES.length||!WIND_ZONES.length||!smokeList().length||
+   !ROOF_BLOCKS.length||!SEARCHLIGHTS.length||!PLATFORMS.some(roof=>roof.cap)||!PLATFORMS.some(roof=>!roof.permanent))
+  throw Error('Missing rooftop obstacle family');
+ for(const zone of [...ICE_PATCHES,...WIND_ZONES])
+   if(zone.x<zone.roof.x||zone.x+zone.w>zone.roof.x+zone.roof.w)throw Error('Terrain obstacle overhang');
+ if(eaves)return {stage,unchangedWidth:WORLD_W};
  const scale=flags?2:4;
  if(WORLD_BOTTOM-WORLD_TOP!==1740*scale)throw Error('Wrong vertical size');
  for(const roof of expansion.authored)if(Math.abs(roof.y-(300+(roof.authoredY-300)*scale))>.01)throw Error('Roof not vertically repositioned');
@@ -27,7 +29,7 @@ window.testExpansion=()=>{
   a.destroyed=false;
   if(remaining.length!==1||remaining[0].x!==smoke[1].x)throw Error('Bombing one stack removed both');
  }
- if(flags&&(PLATFORMS.length!==expansion.authored.length||PLATFORMS.some(roof=>roof.w<295)))throw Error('Level 2 still contains narrow generated roofs');
+ if(flags&&(PLATFORMS.length!==expansion.authored.length+2||PLATFORMS.some(roof=>roof.permanent&&roof.w<250)))throw Error('Level 2 still contains narrow generated roofs');
  if(escapeMode){
   if(PLATFORMS.some(roof=>roof.permanent&&roof.w<230))throw Error('Level 3 still contains narrow permanent platforms');
   if(PLATFORMS.filter(roof=>!roof.permanent).length<8)throw Error('Level 3 needs bombable roof sections');
@@ -57,7 +59,7 @@ window.testTierAndTracer=()=>{
  if(hostileShots.length!==1||hostileShots[0].y>=roof.y)throw Error('Tracer did not penetrate roof');
  fireHostileShot({fired:0,light:{x:body.x,y:body.y+120,left:body.x-50,right:body.x+50}});
  if(Math.abs(Math.hypot(hostileShots[1].vx,hostileShots[1].vy)-265)>.01)throw Error('Tracer speed');
- if(escapeMode){
+ {
    const gap=PLATFORMS.find(r=>r.section&&!r.permanent&&r.w>72&&PLATFORMS.some(other=>other.permanentRoute&&other.y===r.y&&Math.abs(other.x-r.x-r.w)<.001));
    if(!gap)throw Error('No hole between surviving roof sections');
    body.x=gap.x+gap.w/2;body.y=gap.y;body.vx=body.vy=0;body.ground=true;
@@ -86,10 +88,10 @@ window.testPersistentGunfire=()=>{
  const light=SEARCHLIGHTS[0];light.spottedCycle=-1;body.x=light.x;body.y=light.labelY+78;camX=body.x-200;camY=body.y-250;
  startGunfire(light);const start=played;
  for(let second=0;second<=9;second++){played=start+second;updateGunfire(0);}
- if(shotSerial!==10||!gunfire)throw Error('Soldiers stopped after four shots');
+ if(shotSerial!==5||!gunfire)throw Error('Expected one immediate shot and a shot every two seconds');
  body.x=gunfire.screen.right+200;updateGunfire(0);
- if(gunfire||shotSerial!==10)throw Error('Soldiers kept firing after leaving screen');
- return {stage:stage||'escape',shotsWhileVisible:10,stopsOutside:true};
+ if(gunfire||shotSerial!==5)throw Error('Soldiers kept firing after leaving screen');
+ return {stage:stage||'escape',shotsWhileVisible:5,stopsOutside:true};
 };
 window.testPermanentRoutePhysics=()=>{
  if(!escapeMode)return;
@@ -270,6 +272,19 @@ window.testTouchStep=(reset)=>{
  else for(let i=0;i<40;i++)update(.01);
  return body.x;
 };
+window.testTerrainHazards=()=>{
+ const sample=(zone,time)=>{
+  beginRun();hurt=999;gunfire=null;hostileShots=[];bombNext=Infinity;
+  body.x=zone.x+zone.w/2;body.y=zone.y;body.vx=body.vy=0;body.ground=true;
+  stood=PLATFORMS.indexOf(zone.roof);visualTime=time;held.right=true;update(.04);
+  return body.vx;
+ };
+ const ice=sample(ICE_PATCHES[0],0);
+ const clear=sample(WIND_ZONES[0],0);
+ const gust=sample(WIND_ZONES[0],3);
+ if(!(ice>0&&ice<clear&&gust<0))throw Error('Terrain did not affect movement '+[ice,clear,gust]);
+ return {ice,clear,gust};
+};
 window.testWideRoofStart=()=>{
  if(eaves)return;
  beginRun();held.right=true;
@@ -320,7 +335,7 @@ window.testLanternGuide=()=>{
  let shown,angle,labelX;
  ctx.fillText=(text,...args)=>{if(text==='LANTERN'){shown=true;labelX=args[0];}return label(text,...args);};
  ctx.rotate=value=>{angle=value;return rotate(value);};
- const sample=()=>{shown=false;angle=0;drawLanternGuide();return {shown,angle};};
+ const sample=()=>{shown=false;angle=0;drawObjectiveGuides();return {shown,angle};};
  try{
   if(!eaves){if(sample().shown)throw Error('Lantern guide appeared on another level');return;}
   if(!sample().shown||labelX!==VIEW_W/2)throw Error('Lantern guide missing from the middle at start');
@@ -344,6 +359,22 @@ window.testLanternGuide=()=>{
   if(lantern.taken||!sample().shown||labelX!==VIEW_W/2)throw Error('Retry did not restore the centered lantern guide');
   return true;
  }finally{ctx.fillText=label;ctx.rotate=rotate;}
+};
+window.testFlagGuides=()=>{
+ if(!flags)return;
+ beginRun();
+ const draw=ctx.fillText.bind(ctx);
+ let labels=[];
+ ctx.fillText=(label,x,y)=>{if(label.startsWith('FLAG'))labels.push([label,x]);return draw(label,x,y);};
+ try{
+  drawObjectiveGuides();
+  if(labels.length!==2||labels[0][0]!=='FLAG 1'||labels[1][0]!=='FLAG 2'||labels[0][1]+labels[1][1]!==VIEW_W)
+   throw Error('Flag guides did not appear in the center at start');
+  const flag=objectives[0];body.x=flag.x;body.y=flag.y;body.ground=true;update(0);
+  labels=[];drawObjectiveGuides();
+  if(labels.length!==1||labels[0][0]!=='FLAG 2'||labels[0][1]!==VIEW_W/2)throw Error('Flag guides did not update after pickup');
+  return true;
+ }finally{ctx.fillText=draw;}
 };
 window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun();state="boxing";fight.start();fight.begin();render(.02)};window.refreshPreview=()=>render(.02);
 `;
@@ -371,10 +402,12 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
    assert.ok(left<start-10&&right>left+5,'quick on-screen taps must move Trent in either direction');
   }
   console.log('LANTERN GUIDE',await page.evaluate(()=>testLanternGuide()));
+  console.log('FLAG GUIDES',await page.evaluate(()=>testFlagGuides()));
   console.log('MAP',await page.evaluate(()=>testExpansion()));
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));
   console.log('FIRE',await page.evaluate(()=>testPersistentGunfire()));
+  console.log('TERRAIN',await page.evaluate(()=>testTerrainHazards()));
   console.log('STARTING ROOF',await page.evaluate(()=>testWideRoofStart()));
   console.log('MARKER ROUTE',await page.evaluate(()=>testMarkerRoutePhysics()));
   console.log('ROUTE',await page.evaluate(()=>testPermanentRoutePhysics()));

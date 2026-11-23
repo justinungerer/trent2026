@@ -95,7 +95,7 @@
     document.getElementById('roof-win-title').textContent = eaves ? 'Sleigh boarded' : 'Junction roof reached';
     document.getElementById('roof-objective').textContent = eaves
       ? 'Follow the yellow LANTERN arrow to the lower coach-house roof, collect the lantern, then board the sleigh.'
-      : 'Collect both markers, one on the high roofs and one below, and reach the junction roof.';
+      : 'Follow the yellow FLAG arrows to both flags, one on the high roofs and one below, then reach the junction roof.';
     PLATFORMS = [
       { x: 0, y: 300, w: 386, name: 'First roof', role: 'main' },
       { x: 428, y: 372, w: 315, name: 'Lower gutter', role: 'main' },
@@ -163,7 +163,11 @@
     if (escapeMode) { roof.x *= 1.5; roof.w *= 1.5; }
     if (!eaves) roof.y = 300 + (roof.y - 300) * expansion.scale;
   });
-  if (eaves) window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W);
+  if (eaves) {
+    PLATFORMS.forEach(function (roof) { roof.permanent = true; });
+    window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W);
+  }
+  if (!escapeMode) window.TrentAddBombHole(PLATFORMS, authoredRoof(eaves ? 5 : 19));
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
     roof.drawDepth = 55;
@@ -176,6 +180,7 @@
   if (eaves) PLATFORMS[0].chimneyHeight = 324;
   var SEARCH_SWEEP = 3;
   var SEARCH_BREAK = 5;
+  var GUNFIRE_INTERVAL = 2;
   var SEARCHLIGHTS = [];
   var mainRoofs = tierAnchors.slice().sort(function (a, b) { return a.x - b.x; });
   var openingIndex = 0;
@@ -198,7 +203,7 @@
   }
   document.getElementById('roof-controls').textContent +=
     ' Tap Left or Right to step, or hold to run. Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once per second until you leave the screen where they spotted you. These slower tracers can pass through roofs, so dodge the bright shots.';
+    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once every two seconds until you leave the screen where they spotted you. These slower tracers can pass through roofs, so dodge the bright shots.';
   var GOAL = PLATFORMS.findIndex(function (roof) { return roof.goal; });
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if (roof.permanentRoute || (index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
@@ -214,17 +219,25 @@
   var fallingBomb = null, bombNext = 3, roofBlasts = [];
   if (escapeMode) {
     document.getElementById('roof-objective').textContent = 'You have been spotted. Escape the bombed roofs, follow the reinforced stone route to the sleigh, and confront Hitler guarding it.';
-    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Bombs punch holes through individual roof sections. Gold-braced stone remains. Jump over bomb holes and use the wide stone landings to cross the skyline.';
+    document.getElementById('roof-controls').textContent += ' Use the wide stone landings to cross the skyline.';
   }
-  var ICE_PATCHES = eaves ? [{ x: 3070, y: 283, w: 194 }, { x: 4870, y: 294, w: 190 }] : [];
-  var WIND_ZONES = eaves ? [{ x: 3980, y: 292, w: 212, phase: 0 }, { x: 4490, y: 352, w: 150, phase: 1.3 }] : [];
+  document.getElementById('roof-controls').textContent += ' Ice makes stopping harder. Wait for wind gusts to ease. Red targets warn of bombs that leave holes in the roofs.';
+  var ICE_PATCHES = eaves ? [roofStrip(8, .15, 194), roofStrip(12, .15, 190)]
+    : flags ? [roofStrip(11, .12, 150), roofStrip(16, .38, 160)]
+    : [roofStrip(5, .32, 135), roofStrip(17, .24, 170)];
+  var WIND_ZONES = eaves ? [roofStrip(10, .2, 212, 0), roofStrip(11, .26, 150, 1.3)]
+    : flags ? [roofStrip(9, .25, 170, 0), roofStrip(15, .29, 155, 1.3)]
+    : [roofStrip(15, .28, 184, 0), roofStrip(21, .25, 146, 1.3)];
   var GRAV = 1480;
   var JUMP = -630;
   var HOP = -420;
   var RUN = 260;
   var LONG = 7;
   var BALLS = 20;
-  var smokeStacks = eaves ? [] : flags ? [
+  var smokeStacks = eaves ? [
+    { roof: authoredRoof(3), offset: 0.5, phase: 0 },
+    { roof: authoredRoof(6), offset: 0.82, phase: 1.9 }
+  ] : flags ? [
     { roof: authoredRoof(3), offset: 0.4, phase: 0 },
     { roof: authoredRoof(6), offset: 0.8, phase: 1.9 }
   ] : [
@@ -236,7 +249,7 @@
   var climbVisibleBounds = [];
   var climbImg = new Image();
   var bombImg = new Image();
-  if (escapeMode) bombImg.src = 'art/painted-bomb.webp';
+  bombImg.src = 'art/painted-bomb.webp';
   var projectorImg = new Image();
   climbImg.onload = function () { climbVisibleBounds = spriteBounds(climbImg, 2, 2); };
   climbImg.src = 'art/trent-climbing-painted.webp';
@@ -255,7 +268,7 @@
   var rooftopArt = {};
   var presentImg = new Image();
   if (eaves) presentImg.src = '../wrapping-line/art/present-ribbon.webp';
-  ['chimney', 'roof-crate', 'snowball', 'icicle', 'lantern', 'smoke', 'flag', 'dormer'].forEach(function (name) {
+  ['chimney', 'roof-crate', 'snowball', 'icicle', 'lantern', 'smoke', 'flag'].forEach(function (name) {
     var image = new Image();
     image.src = 'art/painted-' + name + '.webp';
     rooftopArt[name] = image;
@@ -347,8 +360,9 @@
   }
 
   function hazardRoof(kind) {
-    return authoredRoof({ crate: flags ? 4 : LONG, snowball: flags ? 5 : BALLS,
-      lantern: flags ? 10 : 14, ice1: flags ? 4 : 10, ice2: flags ? 6 : 22 }[kind]);
+    return widestRoofSection({ crate: eaves ? 7 : flags ? 4 : LONG,
+      snowball: eaves ? 9 : flags ? 5 : BALLS,
+      lantern: eaves ? 13 : flags ? 10 : 14, ice1: flags ? 4 : 10, ice2: flags ? 6 : 22 }[kind]);
   }
 
   function authoredRoof(index) {
@@ -362,8 +376,13 @@
     }, original);
   }
 
+  function roofStrip(index, offset, width, phase) {
+    var roof = widestRoofSection(index);
+    var left = roof.w * offset;
+    return { roof: roof, x: roof.x + left, y: roof.y, w: Math.min(width, roof.w - left - 14), phase: phase };
+  }
+
   function crateBox() {
-    if (eaves) return { x: -1000, y: -1000, w: 0, h: 0 };
     var roof = hazardRoof('crate');
     if (roof.destroyed) return { x: -1000, y: -1000, w: 0, h: 0 };
     var w = 112;
@@ -373,10 +392,9 @@
   }
 
   function snowball() {
-    if (eaves) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
     var roof = hazardRoof('snowball');
     if (roof.destroyed) return { x: -1000, y: -1000, r: 0, roofY: -1000 };
-    var span = 120;
+    var span = Math.min(120, roof.w * .6 - 22);
     var travel = visualTime * 68;
     var ping = travel % (span * 2);
     if (ping < 0) ping += span * 2;
@@ -407,8 +425,8 @@
     var len = 130;
     var roof = hazardRoof('lantern');
     if (roof.destroyed) return { px: -1000, py: -1000, x: -1000, y: -1000, r: 0 };
-    var pivotX = eaves ? 3800 : roof.x + roof.w * .35;
-    var pivotY = eaves ? -20 : roof.y - 150;
+    var pivotX = roof.x + roof.w * .35;
+    var pivotY = roof.y - 150;
     return {
       px: pivotX,
       py: pivotY,
@@ -577,6 +595,8 @@
         return;
       }
       objectives.forEach(function (item) { item.taken = false; });
+      PLATFORMS.forEach(function (roof) { roof.destroyed = false; });
+      fallingBomb = null; roofBlasts = []; bombNext = played + 3;
       tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
       falls = 0;
       placeOn(0);
@@ -640,7 +660,7 @@
   }
 
   function inWind(zone) {
-    return windTime(zone) >= 2.55 && Math.abs(body.y - zone.y) < 112 &&
+    return !zone.roof.destroyed && windTime(zone) >= 2.55 && Math.abs(body.y - zone.y) < 112 &&
       body.x >= zone.x && body.x <= zone.x + zone.w;
   }
 
@@ -802,7 +822,7 @@
     if (gunfire || light.spottedCycle === cycle) return;
     light.spottedCycle = cycle;
     gunfire = { light: light, next: played, fired: 0, screen: { left: camX, right: camX + VIEW_W, top: camY, bottom: camY + VIEW_H } };
-    say('Spotted! Soldiers keep firing once per second until you leave this screen. Keep moving. Bullets pass through roofs.');
+    say('Spotted! Soldiers keep firing once every two seconds until you leave this screen. Keep moving. Bullets pass through roofs.');
   }
 
   function fireHostileShot(burst) {
@@ -834,7 +854,7 @@
     if (gunfire) {
       var visible = trentSearchlightBounds(), screen = gunfire.screen;
       if (visible.right < screen.left || visible.left > screen.right || visible.bottom < screen.top || visible.top > screen.bottom) gunfire = null;
-      else while (played >= gunfire.next) { fireHostileShot(gunfire); gunfire.fired++; gunfire.next++; }
+      else while (played >= gunfire.next) { fireHostileShot(gunfire); gunfire.fired++; gunfire.next += GUNFIRE_INTERVAL; }
     }
     for (var i = hostileShots.length - 1; i >= 0; i--) {
       var shot = hostileShots[i];
@@ -886,7 +906,6 @@
   }
 
   function drawBombing() {
-    if (!escapeMode) return;
     if (fallingBomb) {
       var target = fallingBomb, x = target.x - camX, y = target.y - camY;
       var left = Math.max(0, target.due - played), progress = 1 - left / 2.2;
@@ -955,7 +974,7 @@
     var puffs;
     var si;
     var onIce = body.ground && ICE_PATCHES.some(function (ice) {
-      return Math.abs(body.y - ice.y) < 2 && body.x >= ice.x && body.x <= ice.x + ice.w;
+      return !ice.roof.destroyed && Math.abs(body.y - ice.y) < 2 && body.x >= ice.x && body.x <= ice.x + ice.w;
     });
     var inGust = WIND_ZONES.some(inWind);
     if (held.left) dir -= 1;
@@ -1077,7 +1096,7 @@
             drop('The icicle knocked you off.');
           } else {
             bob = lanternBob();
-            if (!eaves && hitsBob(bob)) drop('The lantern knocked you off.');
+            if (hitsBob(bob)) drop('The lantern knocked you off.');
             else {
               puffs = smokeList();
               for (si = 0; si < puffs.length; si++) {
@@ -1097,10 +1116,10 @@
       var spottingLight = SEARCHLIGHTS.find(inSearchlight);
       if (spottingLight) startGunfire(spottingLight);
       updateGunfire(dt);
+      if (state === 'play') updateBombing(dt);
     }
-    if (escapeMode && state === 'play') {
-      if (body.ground) PLATFORMS.forEach(function (roof, index) { if (roof.permanent && Math.abs(body.y - roof.y) < 1 && body.x >= roof.x + 10 && body.x <= roof.x + roof.w - 10) cp = index; });
-      updateBombing(dt);
+    if (escapeMode && state === 'play' && body.ground) {
+      PLATFORMS.forEach(function (roof, index) { if (roof.permanent && Math.abs(body.y - roof.y) < 1 && body.x >= roof.x + 10 && body.x <= roof.x + roof.w - 10) cp = index; });
     }
     if (state === 'play' && (body.y > WORLD_BOTTOM - 120 || body.x < -40 || body.x > WORLD_W + 40)) drop();
     if (state !== 'play') return;
@@ -1238,7 +1257,7 @@
         ctx.drawImage(presentImg, x + (obstacle.w - width) / 2, y, width, obstacle.h);
         return;
       }
-      if (paintedProp(flags ? 'dormer' : 'roof-crate', x - 2, y - 3, obstacle.w + 4, obstacle.h + 3)) return;
+      if (paintedProp('roof-crate', x - 2, y - 3, obstacle.w + 4, obstacle.h + 3)) return;
       ctx.fillStyle = '#614838';
       ctx.fillRect(x, y, obstacle.w, obstacle.h);
       ctx.fillStyle = '#a37c58';
@@ -1250,6 +1269,7 @@
 
   function drawIce() {
     ICE_PATCHES.forEach(function (ice) {
+      if (ice.roof.destroyed) return;
       var x = ice.x - camX;
       var y = ice.y - camY;
       ctx.fillStyle = 'rgba(130, 211, 235, .8)';
@@ -1269,6 +1289,7 @@
 
   function drawWind() {
     WIND_ZONES.forEach(function (zone) {
+      if (zone.roof.destroyed) return;
       var t = windTime(zone);
       if (t < 1.75) return;
       var blowing = t >= 2.55;
@@ -1431,14 +1452,19 @@
     }
   }
 
-  function drawLanternGuide() {
-    if (state !== 'play' || !eaves || objectives[0].taken) return;
-    var lantern = objectives[0];
-    var targetX = lantern.x - camX;
-    var targetY = lantern.y - camY - 32;
-    var x = VIEW_W / 2;
+  function drawObjectiveGuides() {
+    if (state !== 'play' || (!eaves && !flags)) return;
+    var remaining = objectives.filter(function (item) { return !item.taken; });
+    remaining.forEach(function (item, index) {
+      var x = VIEW_W / 2 + (index - (remaining.length - 1) / 2) * 124;
+      var label = eaves ? 'LANTERN' : 'FLAG ' + (objectives.indexOf(item) + 1);
+      drawObjectiveArrow(item, label, x);
+    });
+  }
+
+  function drawObjectiveArrow(item, label, x) {
     var y = VIEW_H / 2;
-    var angle = Math.atan2(targetY - y, targetX - x);
+    var angle = Math.atan2(item.y - camY - 32 - y, item.x - camX - x);
 
     ctx.save();
     ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.ox, dpr * view.oy);
@@ -1448,7 +1474,7 @@
     ctx.font = 'bold 16px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('LANTERN', x, y + 27);
+    ctx.fillText(label, x, y + 27);
     ctx.translate(x, y);
     ctx.rotate(angle);
     ctx.beginPath();
@@ -1536,7 +1562,7 @@
     drawSnowball();
     drawIcicle(firstIcicle());
     drawIcicle(secondIcicle());
-    if (!eaves) drawLantern();
+    drawLantern();
     drawPuffs();
     drawWind();
     drawSleigh();
@@ -1560,7 +1586,7 @@
     drawLedgeCues();
     drawSnow();
     drawOpeningLesson();
-    drawLanternGuide();
+    drawObjectiveGuides();
     if (state === 'play' && objectiveNoticeUntil > played) {
       ctx.fillStyle = '#102b3cf2';
       ctx.fillRect(VIEW_W / 2 - 240, 64, 480, 46);
