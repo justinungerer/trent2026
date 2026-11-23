@@ -265,6 +265,11 @@ window.previewExpansion=()=>{
  else if(flags){body.x=objectives[0].x-200;body.y=objectives[0].y+200;}
  camSnap=true;render(.02);renderHud();
 };
+window.testTouchStep=(reset)=>{
+ if(reset)beginRun();
+ else for(let i=0;i<40;i++)update(.01);
+ return body.x;
+};
 window.testWideRoofStart=()=>{
  if(eaves)return;
  beginRun();held.right=true;
@@ -357,6 +362,14 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   await page.locator('#start').click();
   await page.setViewportSize({width:844,height:390});
   await page.locator('#start-sheet').waitFor({state:'hidden'});
+  if(stage==='above-the-lanterns'){
+   const start=await page.evaluate(()=>testTouchStep(true));
+   await page.locator('#left').tap();
+   const left=await page.evaluate(()=>testTouchStep());
+   await page.locator('#right').tap();
+   const right=await page.evaluate(()=>testTouchStep());
+   assert.ok(left<start-10&&right>left+5,'quick on-screen taps must move Trent in either direction');
+  }
   console.log('LANTERN GUIDE',await page.evaluate(()=>testLanternGuide()));
   console.log('MAP',await page.evaluate(()=>testExpansion()));
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));

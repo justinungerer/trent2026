@@ -197,7 +197,7 @@
       labelY: Math.min(before.y, after.y) - 78, phase: SEARCHLIGHTS.length * 1.7 });
   }
   document.getElementById('roof-controls').textContent +=
-    ' Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
+    ' Tap Left or Right to step, or hold to run. Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
     'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once per second until you leave the screen where they spotted you. These slower tracers can pass through roofs, so dodge the bright shots.';
   var GOAL = PLATFORMS.findIndex(function (roof) { return roof.goal; });
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
@@ -296,6 +296,8 @@
   var climbRoof = null;
   var climbSide = -1;
   var held = { left: false, right: false, climb: false };
+  var stepDirection = 0;
+  var stepTime = 0;
   var jumpQueued = 0;
   var coyote = 0;
   var jumpBonus = (window.TrentMissionBonus || 0) * 0.04;
@@ -459,6 +461,7 @@
     }
     body.vx = 0;
     body.vy = 0;
+    stepTime = 0;
     body.ground = true;
     body.face = 1;
     airJumps = 1;
@@ -511,6 +514,7 @@
   function openPause() {
     if (state !== 'play') return;
     state = 'pause';
+    stepTime = 0;
     held.left = false;
     held.right = false;
     held.climb = false;
@@ -616,6 +620,7 @@
       if (!boardingWarned) {
         boardingWarned = true;
         state = 'boarding';
+        stepTime = 0;
         held.left = held.right = held.climb = false;
         boardingSheet.hidden = false;
         document.getElementById('close-boarding').focus();
@@ -955,6 +960,8 @@
     var inGust = WIND_ZONES.some(inWind);
     if (held.left) dir -= 1;
     if (held.right) dir += 1;
+    if (!held.left && !held.right && stepTime > 0) dir = stepDirection;
+    stepTime = Math.max(0, stepTime - dt);
     if (!stepClimb(dt)) {
       if (dir < 0) body.face = -1;
       if (dir > 0) body.face = 1;
@@ -1625,23 +1632,31 @@
   }
 
   function bindHold(button, key) {
-    var pointer = 0;
+    var pointer = null;
+    var direction = key === 'left' ? -1 : key === 'right' ? 1 : 0;
     button.addEventListener('pointerdown', function (event) {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || state !== 'play' || pointer !== null) return;
       event.preventDefault();
       held[key] = true;
       pointer = event.pointerId;
+      if (direction) {
+        stepDirection = direction;
+        stepTime = 0.12;
+      }
       button.classList.add('held');
       hintEl.hidden = true;
       if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
     });
     function release(event) {
       if (event.pointerId !== pointer) return;
+      pointer = null;
       held[key] = false;
+      if (event.type !== 'pointerup' && direction === stepDirection) stepTime = 0;
       button.classList.remove('held');
     }
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   }
 
@@ -1687,6 +1702,7 @@
   });
 
   window.addEventListener('blur', function () {
+    stepTime = 0;
     held.left = false;
     held.right = false;
     held.climb = false;
