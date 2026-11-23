@@ -391,3 +391,28 @@ Photos were resized as needed and converted to WebP.
 - `quiz-images/vehicle-01.webp` — M3 half-track. U.S. War Department, 1944; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:M3_Halftrack.jpg)
 - `quiz-images/vehicle-02.webp` — DUKW amphibious truck. U.S. Navy photograph 80-G-K-14065; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:DUKWs_on_Anzio_beach_in_April_1944.jpg)
 - `quiz-images/vehicle-03.webp` — Willys MB Jeep. Lars-Göran Lindgren Sweden; CC BY-SA 4.0; resized and converted to WebP. [Source image](https://commons.wikimedia.org/wiki/File:Willys_MB_Jeep_1944.jpg) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+## Archival WWII picture questions
+
+The [U.S. National Archives WWII photo collection](https://www.archives.gov/research/military/ww2/photos) identifies these images as public domain. The copies were resized and converted to WebP.
+
+- `quiz-images/history-01.webp` · [National Archives record 531424](https://catalog.archives.gov/id/531424) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-407101.jpeg)
+- `quiz-images/history-02.webp` · [National Archives record 520053](https://catalog.archives.gov/id/520053) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-79-ar-82.jpeg)
+- `quiz-images/history-03.webp` · [National Archives record 531340](https://catalog.archives.gov/id/531340) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-260486.jpeg)
+- `quiz-images/history-04.webp` · [National Archives record 513637](https://catalog.archives.gov/id/513637) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-44-pa-191.jpeg)
+- `quiz-images/history-05.webp` · [National Archives record 515359](https://catalog.archives.gov/id/515359) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-44-pa-1688.jpeg)
+- `quiz-images/history-06.webp` · [National Archives record 535579](https://catalog.archives.gov/id/535579) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-208-aa-352v-04.jpeg)
+- `quiz-images/history-07.webp` · [National Archives record 522890](https://catalog.archives.gov/id/522890) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-86-wwt-85-35.jpeg)
+- `quiz-images/history-08.webp` · [National Archives record 513543](https://catalog.archives.gov/id/513543) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-44-pa-82.jpeg)
+- `quiz-images/history-09.webp` · [National Archives record 520974](https://catalog.archives.gov/id/520974) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-80-g-475186.jpeg)
+- `quiz-images/history-10.webp` · [National Archives record 531210](https://catalog.archives.gov/id/531210) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-193249.jpeg)
+- `quiz-images/history-11.webp` · [National Archives record 531330](https://catalog.archives.gov/id/531330) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-232989.jpeg)
+- `quiz-images/history-12.webp` · [National Archives record 531498](https://catalog.archives.gov/id/531498) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-112-sga-44-10842.jpeg)
+- `quiz-images/history-13.webp` · [National Archives record 541899](https://catalog.archives.gov/id/541899) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-306-nt-901b-3.jpeg)
+- `quiz-images/history-14.webp` · [National Archives record 531217](https://catalog.archives.gov/id/531217) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-194399.jpeg)
+- `quiz-images/history-15.webp` · [National Archives record 531252](https://catalog.archives.gov/id/531252) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-201973.jpeg)
+- `quiz-images/history-16.webp` · [National Archives record 520599](https://catalog.archives.gov/id/520599) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-80-g-30549.jpeg)
+- `quiz-images/history-17.webp` · [National Archives record 513194](https://catalog.archives.gov/id/513194) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-26-g-3183.jpeg)
+- `quiz-images/history-18.webp` · [National Archives record 532543](https://catalog.archives.gov/id/532543) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-127-n-110249.jpeg)
+- `quiz-images/history-19.webp` · [National Archives record 535916](https://catalog.archives.gov/id/535916) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-208-pr-10l-3.jpeg)
+- `quiz-images/history-20.webp` · [National Archives record 531290](https://catalog.archives.gov/id/531290) · [Original image](https://www.archives.gov/files/research/still-pictures/ww2-111-sc-206292.jpeg)

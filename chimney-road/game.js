@@ -33,6 +33,7 @@
 
   var VIEW_W = 844;
   var VIEW_H = 390;
+  var FALL_INVINCIBILITY = 3;
   var WORLD_W = 8580;
   var WORLD_TOP = -620;
   var WORLD_BOTTOM = 1120;
@@ -456,7 +457,7 @@
     fallsEl.className = falls ? 'warn' : '';
   }
 
-  function placeOn(index) {
+  function placeOn(index, protection = 0.45) {
     var roof = PLATFORMS[index];
     gunfire = null;
     hostileShots = [];
@@ -478,13 +479,14 @@
     airBuffer = 0;
     jumpQueued = 0;
     onCrate = false;
-    hurt = 0.45;
+    hurt = protection;
     stood = index;
     camSnap = true;
     cratePrev = crateBox().x;
   }
 
   function beginRun() {
+    var retryingAfterFall = state === 'lost';
     objectiveNoticeUntil = 0;
     objectiveNotice = '';
     objectives.forEach(function (item) { item.taken = false; });
@@ -506,7 +508,7 @@
     boardingSheet.hidden = true;
     boardingHint.hidden = true;
     held.left = held.right = held.climb = false;
-    placeOn(0);
+    placeOn(0, retryingAfterFall ? FALL_INVINCIBILITY : undefined);
     cp = 0;
     state = 'play';
     startSheet.hidden = true;
@@ -591,11 +593,11 @@
       fallingBomb = null; roofBlasts = []; bombNext = played + 3;
       tutorialReachedTop = tutorialAttempt = tutorialDoubleJumpHint = tutorialPassed = false;
       falls = 0;
-      placeOn(0);
+      placeOn(0, FALL_INVINCIBILITY);
       cp = 0;
       say('Three falls. The road starts again.');
     } else {
-      placeOn(cp);
+      placeOn(cp, FALL_INVINCIBILITY);
       say(reason || 'Back on the roof.');
     }
     renderHud();
@@ -1073,8 +1075,8 @@
       }
     }
     if (Math.abs(body.vx) > 30 && body.ground) body.runT += dt;
-    if (hurt > 0) hurt -= dt;
-    else {
+    hurt = Math.max(0, hurt - dt);
+    if (hurt === 0) {
       ball = snowball();
       if (body.y > ball.roofY - 40 && body.y < ball.roofY + 24 && Math.abs(body.x - ball.x) < ball.r + 12) {
         drop('The snowball knocked you off.');
@@ -1455,7 +1457,7 @@
   }
 
   function drawObjectiveArrow(item, label, x) {
-    var y = VIEW_H / 2;
+    var y = flags ? VIEW_H - 53 : VIEW_H / 2;
     var angle = Math.atan2(item.y - camY - 32 - y, item.x - camX - x);
 
     ctx.save();

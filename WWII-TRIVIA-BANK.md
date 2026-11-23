@@ -1,6 +1,6 @@
 # WWII Trivia Bank
 
-259 questions · 53 picture questions. Equipment: 137. History: 122.
+279 questions · 73 picture questions. Equipment: 137. History: 142.
 
 Each question has four options, one correct answer, an explanation for every choice, and clickable sources shown after a player answers. Stable IDs can be used to sample questions without repeats. Shuffle choices independently if needed. Picture questions use an `Image` field with a local asset and non-spoiling alt text, plus an `Image credit` and, where applicable, an `Image license` link shown after answering. See [image provenance](./assets/ART-SOURCES.md).
 
@@ -4927,3 +4927,443 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 - **D · Incorrect:** A fully tracked medium tank.
 
 **Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:Willys_MB_Jeep_1944.jpg)
+
+### WWII-N185 — Who is the general wading ashore in this photograph?
+
+**Topic:** History — Leaders
+
+**Image:** ![Several officers wade from the sea toward shore](./assets/quiz-images/history-01.webp)
+
+**Image credit:** [U.S. National Archives, record 531424 (public domain)](https://catalog.archives.gov/id/531424)
+
+- A. Douglas MacArthur
+- B. Dwight D. Eisenhower
+- C. Bernard Montgomery
+- D. George Patton
+
+**Correct answer:** A
+
+- **A · Correct:** MacArthur waded ashore at Leyte during the 1944 return to the Philippines.
+- **B · Incorrect:** He led the Allied campaign in Western Europe.
+- **C · Incorrect:** He commanded British-led ground forces in Europe and North Africa.
+- **D · Incorrect:** He commanded U.S. ground forces in Europe.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531424)
+
+### WWII-N186 — What is Roosevelt signing in this photograph?
+
+**Topic:** History — Diplomacy
+
+**Image:** ![A president signs a document at a desk with officials behind him](./assets/quiz-images/history-02.webp)
+
+**Image credit:** [U.S. National Archives, record 520053 (public domain)](https://catalog.archives.gov/id/520053)
+
+- A. The United Nations Charter
+- B. The declaration of war against Japan
+- C. The Treaty of Versailles
+- D. Japan’s surrender document
+
+**Correct answer:** B
+
+- **A · Incorrect:** It was signed in San Francisco in 1945.
+- **B · Correct:** Roosevelt signed the declaration on December 8, 1941, the day after Pearl Harbor.
+- **C · Incorrect:** This treaty came after World War I.
+- **D · Incorrect:** That document was signed aboard USS Missouri in 1945.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520053)
+
+### WWII-N187 — Which conference brought these three Allied leaders together in February 1945?
+
+**Topic:** History — Diplomacy
+
+**Image:** ![Three Allied leaders sit side by side in front of military officers](./assets/quiz-images/history-03.webp)
+
+**Image credit:** [U.S. National Archives, record 531340 (public domain)](https://catalog.archives.gov/id/531340)
+
+- A. Potsdam
+- B. Tehran
+- C. Yalta
+- D. San Francisco
+
+**Correct answer:** C
+
+- **A · Incorrect:** That conference took place later in 1945.
+- **B · Incorrect:** The Tehran Conference took place in 1943.
+- **C · Correct:** The National Archives identifies this photograph as the February 1945 Yalta Conference.
+- **D · Incorrect:** The 1945 conference there produced the UN Charter.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531340)
+
+### WWII-N188 — What event is this poster asking Americans to remember?
+
+**Topic:** History — Home front
+
+**Image:** ![A wartime poster shows a tattered American flag and a date](./assets/quiz-images/history-04.webp)
+
+**Image credit:** [U.S. National Archives, record 513637 (public domain)](https://catalog.archives.gov/id/513637)
+
+- A. The Normandy landings
+- B. The Battle of Midway
+- C. Japan’s formal surrender
+- D. The attack on Pearl Harbor
+
+**Correct answer:** D
+
+- **A · Incorrect:** D-Day took place on June 6, 1944.
+- **B · Incorrect:** Midway was fought in June 1942.
+- **C · Incorrect:** The formal signing took place on September 2, 1945.
+- **D · Correct:** December 7 refers to the 1941 Japanese attack on Pearl Harbor.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513637)
+
+### WWII-N189 — Why did wartime campaigns ask households to collect scrap?
+
+**Topic:** History — Home front
+
+**Image:** ![A wartime poster makes a large appeal for discarded material](./assets/quiz-images/history-05.webp)
+
+**Image credit:** [U.S. National Archives, record 515359 (public domain)](https://catalog.archives.gov/id/515359)
+
+- A. To recover material for war production
+- B. To replace ration coupons
+- C. To sign up pilots
+- D. To teach aircraft spotting
+
+**Correct answer:** A
+
+- **A · Correct:** Scrap drives brought reusable material into the wartime supply chain.
+- **B · Incorrect:** Ration coupons controlled purchases rather than supplying factories.
+- **C · Incorrect:** Recruiters used separate campaigns for military service.
+- **D · Incorrect:** Spotters watched for incoming aircraft.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/515359)
+
+### WWII-N190 — What are the people in this Florida classroom preparing for?
+
+**Topic:** History — Home front
+
+**Image:** ![Women use tools in a vocational classroom](./assets/quiz-images/history-06.webp)
+
+**Image credit:** [U.S. National Archives, record 535579 (public domain)](https://catalog.archives.gov/id/535579)
+
+- A. Parachute jumps
+- B. Wartime industrial work
+- C. Field nursing
+- D. Codebreaking
+
+**Correct answer:** B
+
+- **A · Incorrect:** Airborne training prepared soldiers to land from aircraft.
+- **B · Correct:** The official caption describes women learning skills for war work at a vocational school.
+- **C · Incorrect:** Nurses provided medical care. This photograph is of a vocational shop.
+- **D · Incorrect:** Codebreaking training focused on interpreting messages.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535579)
+
+### WWII-N191 — What work did this group do at an American shipyard?
+
+**Topic:** History — Home front
+
+**Image:** ![Women in work clothes pose with protective shop equipment](./assets/quiz-images/history-07.webp)
+
+**Image credit:** [U.S. National Archives, record 522890 (public domain)](https://catalog.archives.gov/id/522890)
+
+- A. Packing parachutes
+- B. Air traffic control
+- C. Welding
+- D. Radio repair
+
+**Correct answer:** C
+
+- **A · Incorrect:** Parachute packers prepared equipment for airborne personnel.
+- **B · Incorrect:** Controllers directed aircraft movements.
+- **C · Correct:** The archive identifies the group as welders at Ingalls Shipbuilding in Mississippi.
+- **D · Incorrect:** Radio repairers serviced communications equipment.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/522890)
+
+### WWII-N192 — What behavior is this poster warning against?
+
+**Topic:** History — Home front
+
+**Image:** ![A wartime poster shows a sinking ship beneath large lettering](./assets/quiz-images/history-08.webp)
+
+**Image credit:** [U.S. National Archives, record 513543 (public domain)](https://catalog.archives.gov/id/513543)
+
+- A. Saving kitchen scrap
+- B. Buying war bonds
+- C. Volunteering as a nurse
+- D. Sharing sensitive wartime information
+
+**Correct answer:** D
+
+- **A · Incorrect:** Scrap campaigns encouraged the public to collect reusable material.
+- **B · Incorrect:** Bonds helped finance the war.
+- **C · Incorrect:** Recruitment for nursing had a different purpose.
+- **D · Correct:** The poster warns that careless talk could reveal information that endangers ships.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513543)
+
+### WWII-N193 — What job are the people in this picture doing?
+
+**Topic:** History — Wartime support
+
+**Image:** ![Workers gather around the exposed front of an aircraft](./assets/quiz-images/history-09.webp)
+
+**Image credit:** [U.S. National Archives, record 520974 (public domain)](https://catalog.archives.gov/id/520974)
+
+- A. Inspecting an aircraft engine
+- B. Tracking a radar signal
+- C. Welding a ship’s hull
+- D. Loading a landing craft
+
+**Correct answer:** A
+
+- **A · Correct:** The Navy caption identifies them as mechanics checking a trainer’s engine in Texas.
+- **B · Incorrect:** A radar crew works with a display and related instruments.
+- **C · Incorrect:** Shipyard welders work on vessels rather than aircraft engines.
+- **D · Incorrect:** Landing-craft crews handle troops and supplies near the shore.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520974)
+
+### WWII-N194 — Which entertainer is performing at this London canteen for Allied troops?
+
+**Topic:** History — Wartime support
+
+**Image:** ![A performer addresses a packed audience from a stage](./assets/quiz-images/history-10.webp)
+
+**Image credit:** [U.S. National Archives, record 531210 (public domain)](https://catalog.archives.gov/id/531210)
+
+- A. Bob Hope
+- B. Bing Crosby
+- C. Frank Sinatra
+- D. Glenn Miller
+
+**Correct answer:** B
+
+- **A · Incorrect:** Hope also entertained troops, but the archive identifies Crosby here.
+- **B · Correct:** The Army photograph identifies Crosby at the opening of the Stage Door Canteen in London.
+- **C · Incorrect:** He was a singer and entertainer, but he is not the performer in this photograph.
+- **D · Incorrect:** Miller led a military band rather than singing in this archival photo.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531210)
+
+### WWII-N195 — Which film star is visiting this wounded soldier?
+
+**Topic:** History — Wartime support
+
+**Image:** ![A visitor writes on the cast of a soldier resting in a hospital bed](./assets/quiz-images/history-11.webp)
+
+**Image credit:** [U.S. National Archives, record 531330 (public domain)](https://catalog.archives.gov/id/531330)
+
+- A. Ingrid Bergman
+- B. Greta Garbo
+- C. Marlene Dietrich
+- D. Hedy Lamarr
+
+**Correct answer:** C
+
+- **A · Incorrect:** Bergman was a film star of the period, but the visitor here is Dietrich.
+- **B · Incorrect:** Garbo was another film star, but she is not pictured.
+- **C · Correct:** The Army caption identifies Dietrich signing the cast of Tec 4 Earl McFarland.
+- **D · Incorrect:** Lamarr was an actress and inventor. The archive names Dietrich in this image.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531330)
+
+### WWII-N196 — What duty did this group perform in France?
+
+**Topic:** History — Wartime support
+
+**Image:** ![A group of uniformed women walk together outdoors](./assets/quiz-images/history-12.webp)
+
+**Image credit:** [U.S. National Archives, record 531498 (public domain)](https://catalog.archives.gov/id/531498)
+
+- A. Ferrying aircraft
+- B. Breaking codes
+- C. Operating searchlights
+- D. Field-hospital nursing
+
+**Correct answer:** D
+
+- **A · Incorrect:** Ferry pilots moved aircraft between bases.
+- **B · Incorrect:** Codebreakers analyzed encrypted communications.
+- **C · Incorrect:** Searchlight crews helped detect aircraft at night.
+- **D · Correct:** The archive describes these women as field-hospital nurses arriving in France.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531498)
+
+### WWII-N197 — Which city is the aircraft spotter watching over?
+
+**Topic:** History — Places
+
+**Image:** ![A rooftop observer looks over a city with a large domed cathedral](./assets/quiz-images/history-13.webp)
+
+**Image credit:** [U.S. National Archives, record 541899 (public domain)](https://catalog.archives.gov/id/541899)
+
+- A. London
+- B. Paris
+- C. Rome
+- D. Berlin
+
+**Correct answer:** A
+
+- **A · Correct:** St. Paul’s Cathedral identifies the London skyline in the archive caption.
+- **B · Incorrect:** The archive names St. Paul’s Cathedral in London, rather than a Paris landmark.
+- **C · Incorrect:** This view is not of Rome or St. Peter’s Basilica.
+- **D · Incorrect:** The archive identifies this as a British air-defense photograph in London.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/541899)
+
+### WWII-N198 — Who is talking to the paratroopers before the Normandy invasion?
+
+**Topic:** History — Leaders
+
+**Image:** ![A senior officer speaks to a group of paratroopers before departure](./assets/quiz-images/history-14.webp)
+
+**Image credit:** [U.S. National Archives, record 531217 (public domain)](https://catalog.archives.gov/id/531217)
+
+- A. Douglas MacArthur
+- B. Dwight D. Eisenhower
+- C. Chester W. Nimitz
+- D. Omar Bradley
+
+**Correct answer:** B
+
+- **A · Incorrect:** MacArthur commanded in the Southwest Pacific.
+- **B · Correct:** The Army caption identifies Eisenhower addressing paratroopers before their departure for Normandy.
+- **C · Incorrect:** Nimitz commanded U.S. naval forces in the Pacific.
+- **D · Incorrect:** Bradley helped lead U.S. ground forces in Normandy, but Eisenhower is the officer pictured.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531217)
+
+### WWII-N199 — Which river did U.S. troops cross at the bridge shown here at Remagen?
+
+**Topic:** History — Places
+
+**Image:** ![People and military vehicles gather at a tunnel mouth with a bridge beyond](./assets/quiz-images/history-15.webp)
+
+**Image credit:** [U.S. National Archives, record 531252 (public domain)](https://catalog.archives.gov/id/531252)
+
+- A. The Seine
+- B. The Thames
+- C. The Rhine
+- D. The Elbe
+
+**Correct answer:** C
+
+- **A · Incorrect:** The Seine flows through Paris, not Remagen.
+- **B · Incorrect:** The Thames flows through London.
+- **C · Correct:** The photograph shows U.S. troops crossing the Ludendorff Bridge at Remagen over the Rhine.
+- **D · Incorrect:** The Elbe is another major German river, but it does not flow through Remagen.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531252)
+
+### WWII-N200 — Which attack were these Japanese carrier crews preparing for?
+
+**Topic:** History — Battles
+
+**Image:** ![A formation of people gathers beneath a flagpole on an aircraft carrier](./assets/quiz-images/history-16.webp)
+
+**Image credit:** [U.S. National Archives, record 520599 (public domain)](https://catalog.archives.gov/id/520599)
+
+- A. The Battle of Midway
+- B. The Battle of the Coral Sea
+- C. The Battle of Leyte Gulf
+- D. Pearl Harbor
+
+**Correct answer:** D
+
+- **A · Incorrect:** Midway was fought in June 1942.
+- **B · Incorrect:** That battle was fought in May 1942.
+- **C · Incorrect:** Leyte Gulf was fought in October 1944.
+- **D · Correct:** The archive dates this captured photograph to the morning of the attack on December 7, 1941.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520599)
+
+### WWII-N201 — On which island did this November 1943 landing take place at Empress Augusta Bay?
+
+**Topic:** History — Battles
+
+**Image:** ![Troops climb down nets from a transport ship into landing craft](./assets/quiz-images/history-17.webp)
+
+**Image credit:** [U.S. National Archives, record 513194 (public domain)](https://catalog.archives.gov/id/513194)
+
+- A. Bougainville
+- B. Guadalcanal
+- C. Iwo Jima
+- D. Saipan
+
+**Correct answer:** A
+
+- **A · Correct:** The Coast Guard caption places the landing at Empress Augusta Bay on Bougainville.
+- **B · Incorrect:** The Allied landing there began in August 1942.
+- **C · Incorrect:** U.S. forces landed there in February 1945.
+- **D · Incorrect:** U.S. forces landed there in June 1944.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513194)
+
+### WWII-N202 — Which island are these Marines fighting on near Mount Suribachi?
+
+**Topic:** History — Battles
+
+**Image:** ![Marines advance up a dark, smoke-covered beach slope](./assets/quiz-images/history-18.webp)
+
+**Image credit:** [U.S. National Archives, record 532543 (public domain)](https://catalog.archives.gov/id/532543)
+
+- A. Okinawa
+- B. Iwo Jima
+- C. Saipan
+- D. Peleliu
+
+**Correct answer:** B
+
+- **A · Incorrect:** Okinawa was a later battle and does not contain Mount Suribachi.
+- **B · Correct:** Mount Suribachi is on Iwo Jima, where this photograph was taken.
+- **C · Incorrect:** Saipan is in the Mariana Islands.
+- **D · Incorrect:** Peleliu is part of Palau.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/532543)
+
+### WWII-N203 — Which Dutch city is shown here after wartime bombing?
+
+**Topic:** History — Aftermath
+
+**Image:** ![A view from above shows ruined city blocks surrounding a church tower](./assets/quiz-images/history-19.webp)
+
+**Image credit:** [U.S. National Archives, record 535916 (public domain)](https://catalog.archives.gov/id/535916)
+
+- A. Amsterdam
+- B. Antwerp
+- C. Rotterdam
+- D. Hamburg
+
+**Correct answer:** C
+
+- **A · Incorrect:** Amsterdam is a different Dutch city and is not identified in this photo.
+- **B · Incorrect:** Antwerp is in Belgium.
+- **C · Correct:** The National Archives identifies the aerial photograph as the ruins of Rotterdam.
+- **D · Incorrect:** Hamburg is in Germany.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535916)
+
+### WWII-N204 — What is Wilhelm Keitel signing in this photograph?
+
+**Topic:** History — Aftermath
+
+**Image:** ![A uniformed official signs a document in a room of military officers](./assets/quiz-images/history-20.webp)
+
+**Image credit:** [U.S. National Archives, record 531290 (public domain)](https://catalog.archives.gov/id/531290)
+
+- A. The Munich Agreement
+- B. Japan’s surrender terms
+- C. The United Nations Charter
+- D. Germany’s surrender terms
+
+**Correct answer:** D
+
+- **A · Incorrect:** That agreement was signed in 1938.
+- **B · Incorrect:** Japan’s surrender was signed aboard USS Missouri.
+- **C · Incorrect:** The charter was signed in San Francisco.
+- **D · Correct:** The archive identifies Keitel signing the ratified German surrender terms at Soviet headquarters in Berlin.
+
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531290)

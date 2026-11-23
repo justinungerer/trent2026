@@ -77,17 +77,26 @@ test('the shipped bank has the requested mix and usable picture assets', () => {
   const oldEquipment = retained.filter(item =>
     /^(Aircraft and vehicles|Warships)$/i.test(item.topic) || navalEquipmentIds.has(item.id));
   const pictures = bank.filter(item => item.imagePath);
-  assert.equal(bank.length, 259);
-  assert.equal(added.length, 184);
+  assert.equal(bank.length, 279);
+  assert.equal(added.length, 204);
   assert.equal(retained.length, 75);
   assert.equal(newEquipment.length, 97);
   assert.ok(oldEquipment.length >= 38);
-  for (const [kind, count] of Object.entries({ aircraft: 14, tank: 14, gun: 11, mine: 11, vehicle: 3 })) {
+  for (const [kind, count] of Object.entries({ aircraft: 14, tank: 14, gun: 11, mine: 11, vehicle: 3, history: 20 })) {
     const category = pictures.filter(item => new RegExp(`/` + kind + `-\\d+\\.webp$`).test(item.imagePath));
     assert.equal(category.length, count, kind);
     assert.equal(new Set(category.map(item => item.imagePath)).size, count, kind);
   }
-  assert.equal(pictures.length, 53);
+  assert.equal(pictures.length, 73);
+  const seen = new Set();
+  const chapterPictures = [];
+  for (let chapter = 0; chapter < 10; chapter++) {
+    const roundPictures = drawRound(bank, seen).filter(item => item.imagePath);
+    assert.equal(roundPictures.filter(item => item.topic.startsWith('History')).length, 2);
+    assert.equal(roundPictures.filter(item => item.topic.startsWith('Equipment')).length, 2);
+    chapterPictures.push(...roundPictures);
+  }
+  assert.equal(new Set(chapterPictures.map(item => item.id)).size, 40);
   for (const item of bank) {
     assert.equal(new Set(item.choices.map(choice => choice.text.toLowerCase())).size, 4, item.id);
     if (item.imagePath) {

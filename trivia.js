@@ -8,7 +8,7 @@
   var PER_CHAPTER = 10;
   var PICTURES_PER_CHAPTER = 4;
   var ELF_USES = 2;
-  var BANK_URL = './WWII-TRIVIA-BANK.md?v=four-vehicle-pictures';
+  var BANK_URL = './WWII-TRIVIA-BANK.md?v=varied-picture-rounds';
 
   var FAIL_CARDS = [
     { kicker: 'Caught', title: 'Gift-wrapped', copy: 'A patrol finds Trent under the table and uses the good ribbon. The tag reads DO NOT OPEN UNTIL FURTHER NOTICE.' },
@@ -50,6 +50,7 @@
   ];
 
   var bankPromise = null;
+  var seenPictures = new Set();
   var session = 0;
   var armed = false;
   var elfAllow = false;
@@ -408,7 +409,34 @@
     };
   }
 
-  function drawRound(questions) {
+  function pickPictures(pool, count, seen) {
+    var fresh = pool.filter(function (question) { return !seen.has(question.id); });
+    var older = pool.filter(function (question) { return seen.has(question.id); });
+    var topics = new Set();
+
+    function preferDifferentTopics(questions) {
+      var distinct = [];
+      var repeated = [];
+      questions.forEach(function (question) {
+        if (topics.has(question.topic)) repeated.push(question);
+        else {
+          topics.add(question.topic);
+          distinct.push(question);
+        }
+      });
+      return distinct.concat(repeated);
+    }
+
+    var selected = preferDifferentTopics(fresh).slice(0, count);
+    if (selected.length < count) {
+      pool.forEach(function (question) { seen.delete(question.id); });
+      selected = selected.concat(preferDifferentTopics(older).slice(0, count - selected.length));
+    }
+    selected.forEach(function (question) { seen.add(question.id); });
+    return selected;
+  }
+
+  function drawRound(questions, seen = new Set()) {
     var pictures = shuffle(questions.filter(function (question) { return question.imagePath; }));
     var selected;
     var text = shuffle(questions.filter(function (question) { return !question.imagePath; }));
@@ -416,13 +444,20 @@
     if (text.length < textCount || pictures.length < PICTURES_PER_CHAPTER) {
       throw new Error('Not enough questions for a complete briefing.');
     }
-    selected = pictures.slice(0, PICTURES_PER_CHAPTER);
+    var history = pictures.filter(function (question) { return /^History\b/i.test(question.topic); });
+    var equipment = pictures.filter(function (question) { return /^Equipment\b/i.test(question.topic); });
+    var half = PICTURES_PER_CHAPTER / 2;
+    if (history.length >= half && equipment.length >= half) {
+      selected = pickPictures(history, half, seen).concat(pickPictures(equipment, half, seen));
+    } else {
+      selected = pickPictures(pictures, PICTURES_PER_CHAPTER, seen);
+    }
     return shuffle(selected.concat(text.slice(0, textCount))).map(presentQuestion);
   }
 
   function startRound(chapter, questions, hooks) {
     var token = session;
-    var round = drawRound(questions);
+    var round = drawRound(questions, seenPictures);
     var index = 0;
     var score = round.length;
     var elves = ELF_USES;

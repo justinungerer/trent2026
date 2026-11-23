@@ -363,18 +363,52 @@ window.testLanternGuide=()=>{
 window.testFlagGuides=()=>{
  if(!flags)return;
  beginRun();
+ resize();
  const draw=ctx.fillText.bind(ctx);
  let labels=[];
- ctx.fillText=(label,x,y)=>{if(label.startsWith('FLAG'))labels.push([label,x]);return draw(label,x,y);};
+ ctx.fillText=(label,x,y)=>{if(label.startsWith('FLAG'))labels.push([label,x,y]);return draw(label,x,y);};
  try{
   drawObjectiveGuides();
-  if(labels.length!==2||labels[0][0]!=='FLAG 1'||labels[1][0]!=='FLAG 2'||labels[0][1]+labels[1][1]!==VIEW_W)
-   throw Error('Flag guides did not appear in the center at start');
+  if(labels.length!==2||labels[0][0]!=='FLAG 1'||labels[1][0]!=='FLAG 2'||labels[0][1]+labels[1][1]!==VIEW_W||labels.some(label=>label[2]!==VIEW_H-26))
+   throw Error('Flag guides did not appear at the bottom center at start');
+  const bounds=canvas.getBoundingClientRect();
+  const controlBounds=['left','right','climb','jump'].map(id=>document.getElementById(id).getBoundingClientRect());
+  for(const [,x,y] of labels){
+   const left=bounds.left+view.ox+(x-57)*view.s;
+   const right=bounds.left+view.ox+(x+57)*view.s;
+   const top=bounds.top+view.oy+(y-50)*view.s;
+   const bottom=bounds.top+view.oy+(y+14)*view.s;
+   if(bottom>bounds.bottom||controlBounds.some(rect=>left<rect.right&&right>rect.left&&top<rect.bottom&&bottom>rect.top))
+    throw Error('Flag guide overlap or clipping: '+JSON.stringify({left,right,top,bottom,bounds,controlBounds}));
+  }
   const flag=objectives[0];body.x=flag.x;body.y=flag.y;body.ground=true;update(0);
   labels=[];drawObjectiveGuides();
-  if(labels.length!==1||labels[0][0]!=='FLAG 2'||labels[0][1]!==VIEW_W/2)throw Error('Flag guides did not update after pickup');
+  if(labels.length!==1||labels[0][0]!=='FLAG 2'||(labels[0][1]!==VIEW_W/2||labels[0][2]!==VIEW_H-26))throw Error('Flag guides did not update after pickup');
   return true;
  }finally{ctx.fillText=draw;}
+};
+window.testFallProtection=()=>{
+ beginRun();
+ body.y=WORLD_BOTTOM;body.ground=false;update(0);
+ if(falls!==1||hurt!==3)throw Error('A missed roof did not activate three seconds of protection');
+ for(let i=0;i<59;i++)update(0.05);
+ const fireAtTrent=()=>{
+  hostileShots=[{x:body.x,y:body.y-30,vx:0,vy:0,age:0}];
+  updateGunfire(0);
+ };
+ fireAtTrent();
+ if(!(hurt>0&&hurt<0.06)||falls!==1)throw Error('A bullet landed before three seconds elapsed');
+ hostileShots=[];
+ update(0.06);
+ fireAtTrent();
+ if(falls!==2||hurt!==3)throw Error('A hit after three seconds did not fall and renew protection');
+ body.y=WORLD_BOTTOM;body.ground=false;update(0);
+ if(levelParams.has('sequence')){
+  if(state!=='lost')throw Error('The campaign did not show the retry screen');
+  document.getElementById('retry-lose').click();
+ }
+ if(state!=='play'||falls!==0||hurt!==3)throw Error('Three falls did not grant protection on restart');
+ return true;
 };
 window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun();state="boxing";fight.start();fight.begin();render(.02)};window.refreshPreview=()=>render(.02);
 `;
@@ -403,6 +437,7 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   }
   console.log('LANTERN GUIDE',await page.evaluate(()=>testLanternGuide()));
   console.log('FLAG GUIDES',await page.evaluate(()=>testFlagGuides()));
+  console.log('FALL PROTECTION',await page.evaluate(()=>testFallProtection()));
   console.log('MAP',await page.evaluate(()=>testExpansion()));
   console.log('TIERS',await page.evaluate(()=>testTierAndTracer()));
   console.log('CONTACT',await page.evaluate(()=>testSearchlightContact()));
@@ -414,5 +449,12 @@ window.boxAssetsReady=()=>!fight||fight.ready();window.previewBoss=()=>{beginRun
   console.log('INCOMING',await page.evaluate(()=>testIncomingBoxingDamage()));
   console.log('BOSS',await page.evaluate(()=>testBoxing()));
  }
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('http://localhost/chimney-road/?stage=above-the-lanterns&sequence=1');
+ await page.locator('#start').click();
+ await page.setViewportSize({width:568,height:320});
+ await page.locator('#start-sheet').waitFor({state:'hidden'});
+ assert.equal(await page.evaluate(()=>testFlagGuides()),true);
+ assert.equal(await page.evaluate(()=>testFallProtection()),true);
  assert.deepEqual(errors,[]);
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
