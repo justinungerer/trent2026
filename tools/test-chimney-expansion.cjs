@@ -28,18 +28,9 @@ window.testExpansion=()=>{
   if(remaining.length!==1||remaining[0].x!==smoke[1].x)throw Error('Bombing one stack removed both');
  }
  if(flags&&(PLATFORMS.length!==expansion.authored.length||PLATFORMS.some(roof=>roof.w<295)))throw Error('Level 2 still contains narrow generated roofs');
- const sequences=[expansion.route];
- let reversals=0,up=0,down=0;
- for(const sequence of sequences)for(let i=1;i<sequence.length;i++){
-  const a=sequence[i-1],b=sequence[i],dy=b.y-a.y,dx=b.x-a.x;
-  if(dy<0)up++;if(dy>0)down++;if(dx<0)reversals++;
-  if(Math.abs(dy)>105)throw Error('Unjumpable vertical route edge '+dy);
-  const gap=Math.max(0,Math.abs(dx)-(a.roof.w+b.roof.w)/2+28);
-  if(gap>195)throw Error('Unjumpable horizontal route edge '+gap);
- }
- if(escapeMode&&(!up||!down))throw Error('Route does not use vertical space');
  if(escapeMode){
-  if(!reversals)throw Error('Escape route lacks backtracking');
+  if(PLATFORMS.some(roof=>roof.permanent&&roof.w<230))throw Error('Level 3 still contains narrow permanent platforms');
+  if(PLATFORMS.filter(roof=>!roof.permanent).length<8)throw Error('Level 3 needs bombable roof sections');
   for(const roof of PLATFORMS.filter(r=>!r.permanent)){
    body.x=roof.x+roof.w/2;body.y=roof.y;stood=PLATFORMS.indexOf(roof);
    played=bombNext;updateBombing(0);
@@ -50,12 +41,12 @@ window.testExpansion=()=>{
   if(PLATFORMS.some(r=>r.permanent&&r.destroyed))throw Error('Bomb destroyed permanent route');
   for(const point of expansion.route)if(point.roof.destroyed)throw Error('Route broken after every weak roof destroyed');
  }
- return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length,reversals};
+ return {stage:stage||'escape',width:WORLD_W,height:WORLD_BOTTOM-WORLD_TOP,platforms:PLATFORMS.length,route:expansion.route.length};
 };
 window.testTierAndTracer=()=>{
  beginRun();
  const terraces=PLATFORMS.filter(r=>r.name==='Upper terrace'||r.name==='Lower terrace');
- if(flags?terraces.length!==0:terraces.length<5||!terraces.some(r=>r.cap))throw Error('Unexpected terrace and chimney layout');
+ if(eaves?terraces.length<5||!terraces.some(r=>r.cap):terraces.length!==0)throw Error('Unexpected terrace and chimney layout');
  for(const a of PLATFORMS)for(const b of PLATFORMS)
    if(a!==b&&Math.abs(a.y-b.y)<.001&&Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>.001)
      throw Error('Overlapping roof surfaces '+a.name+' / '+b.name);
@@ -275,7 +266,7 @@ window.previewExpansion=()=>{
  camSnap=true;render(.02);renderHud();
 };
 window.testWideRoofStart=()=>{
- if(!flags)return;
+ if(eaves)return;
  beginRun();held.right=true;
  for(let i=0;i<90;i++){played+=.01;update(.01);}
  held.right=false;

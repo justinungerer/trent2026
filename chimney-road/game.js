@@ -163,7 +163,7 @@
     if (escapeMode) { roof.x *= 1.5; roof.w *= 1.5; }
     if (!eaves) roof.y = 300 + (roof.y - 300) * expansion.scale;
   });
-  if (!flags) window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W, escapeMode, eaves);
+  if (eaves) window.TrentAddRoofTiers(PLATFORMS, tierAnchors, WORLD_W);
   PLATFORMS.forEach(function (roof, index) {
     if (roof.cap) roof.chimneyHeight = 108 * (index % 2 ? 3 : 2);
     roof.drawDepth = 55;
@@ -214,7 +214,7 @@
   var fallingBomb = null, bombNext = 3, roofBlasts = [];
   if (escapeMode) {
     document.getElementById('roof-objective').textContent = 'You have been spotted. Escape the bombed roofs, follow the reinforced stone route to the sleigh, and confront Hitler guarding it.';
-    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Bombs punch holes through individual roof sections. Gold-braced stone remains. Follow the permanent switchbacks up, down, and back across the skyline.';
+    document.getElementById('roof-controls').textContent += ' Red target marks warn of incoming bombs. Bombs punch holes through individual roof sections. Gold-braced stone remains. Jump over bomb holes and use the wide stone landings to cross the skyline.';
   }
   var ICE_PATCHES = eaves ? [{ x: 3070, y: 283, w: 194 }, { x: 4870, y: 294, w: 190 }] : [];
   var WIND_ZONES = eaves ? [{ x: 3980, y: 292, w: 212, phase: 0 }, { x: 4490, y: 352, w: 150, phase: 1.3 }] : [];
