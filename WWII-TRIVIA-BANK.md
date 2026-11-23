@@ -1,6 +1,6 @@
 # WWII Trivia Bank
 
-279 questions · 73 picture questions. Equipment: 137. History: 142.
+279 questions · 73 picture questions. Equipment: 146. History: 133.
 
 Each question has four options, one correct answer, an explanation for every choice, and clickable sources shown after a player answers. Stable IDs can be used to sample questions without repeats. Shuffle choices independently if needed. Picture questions use an `Image` field with a local asset and non-spoiling alt text, plus an `Image credit` and, where applicable, an `Image license` link shown after answering. See [image provenance](./assets/ART-SOURCES.md).
 
@@ -4930,9 +4930,9 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 
 ### WWII-N185 — Who is the general wading ashore in this photograph?
 
-**Topic:** History — Leaders
+**Topic:** History — People
 
-**Image:** ![Several officers wade from the sea toward shore](./assets/quiz-images/history-01.webp)
+**Image:** ![Several officers wade from the sea toward shore](./assets/quiz-images/wwii-people-01.webp)
 
 **Image credit:** [U.S. National Archives, record 531424 (public domain)](https://catalog.archives.gov/id/531424)
 
@@ -4950,187 +4950,187 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/531424)
 
-### WWII-N186 — What is Roosevelt signing in this photograph?
+### WWII-N186 — Which U.S. president is shown signing the declaration of war against Japan?
 
-**Topic:** History — Diplomacy
+**Topic:** History — People
 
-**Image:** ![A president signs a document at a desk with officials behind him](./assets/quiz-images/history-02.webp)
+**Image:** ![A president writes at a desk with officials behind him](./assets/quiz-images/wwii-people-02.webp)
 
 **Image credit:** [U.S. National Archives, record 520053 (public domain)](https://catalog.archives.gov/id/520053)
 
-- A. The United Nations Charter
-- B. The declaration of war against Japan
-- C. The Treaty of Versailles
-- D. Japan’s surrender document
+- A. Harry S. Truman
+- B. Franklin D. Roosevelt
+- C. Herbert Hoover
+- D. Dwight D. Eisenhower
 
 **Correct answer:** B
 
-- **A · Incorrect:** It was signed in San Francisco in 1945.
+- **A · Incorrect:** Truman became president in April 1945.
 - **B · Correct:** Roosevelt signed the declaration on December 8, 1941, the day after Pearl Harbor.
-- **C · Incorrect:** This treaty came after World War I.
-- **D · Incorrect:** That document was signed aboard USS Missouri in 1945.
+- **C · Incorrect:** Hoover’s presidency ended in 1933.
+- **D · Incorrect:** Eisenhower was an Army officer during WWII and became president in 1953.
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/520053)
 
-### WWII-N187 — Which conference brought these three Allied leaders together in February 1945?
+### WWII-N187 — Which British prime minister is seated at the left of this photograph from Yalta?
 
-**Topic:** History — Diplomacy
+**Topic:** History — People
 
-**Image:** ![Three Allied leaders sit side by side in front of military officers](./assets/quiz-images/history-03.webp)
+**Image:** ![Three Allied leaders sit in a row in front of military officers](./assets/quiz-images/wwii-people-03.webp)
 
 **Image credit:** [U.S. National Archives, record 531340 (public domain)](https://catalog.archives.gov/id/531340)
 
-- A. Potsdam
-- B. Tehran
-- C. Yalta
-- D. San Francisco
+- A. Clement Attlee
+- B. Neville Chamberlain
+- C. Winston Churchill
+- D. Anthony Eden
 
 **Correct answer:** C
 
-- **A · Incorrect:** That conference took place later in 1945.
-- **B · Incorrect:** The Tehran Conference took place in 1943.
-- **C · Correct:** The National Archives identifies this photograph as the February 1945 Yalta Conference.
-- **D · Incorrect:** The 1945 conference there produced the UN Charter.
+- **A · Incorrect:** Attlee became prime minister in July 1945.
+- **B · Incorrect:** Chamberlain resigned as prime minister in May 1940.
+- **C · Correct:** Churchill sat to Roosevelt’s right, on the viewer’s left, during the Yalta Conference in February 1945.
+- **D · Incorrect:** Eden was foreign secretary at the time.
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/531340)
 
-### WWII-N188 — What event is this poster asking Americans to remember?
+### WWII-N188 — Which Soviet leader is standing behind the seated foreign minister in this photograph?
 
-**Topic:** History — Home front
+**Topic:** History — People
 
-**Image:** ![A wartime poster shows a tattered American flag and a date](./assets/quiz-images/history-04.webp)
+**Image:** ![Officials stand behind a man signing a document at a desk](./assets/quiz-images/wwii-people-04.webp)
 
-**Image credit:** [U.S. National Archives, record 513637 (public domain)](https://catalog.archives.gov/id/513637)
+**Image credit:** [U.S. National Archives, record 540196 (public domain)](https://catalog.archives.gov/id/540196)
 
-- A. The Normandy landings
-- B. The Battle of Midway
-- C. Japan’s formal surrender
-- D. The attack on Pearl Harbor
+- A. Nikita Khrushchev
+- B. Leon Trotsky
+- C. Mikhail Kalinin
+- D. Joseph Stalin
 
 **Correct answer:** D
 
-- **A · Incorrect:** D-Day took place on June 6, 1944.
-- **B · Incorrect:** Midway was fought in June 1942.
-- **C · Incorrect:** The formal signing took place on September 2, 1945.
-- **D · Correct:** December 7 refers to the 1941 Japanese attack on Pearl Harbor.
+- **A · Incorrect:** Khrushchev rose to national leadership after Stalin’s death.
+- **B · Incorrect:** Trotsky was in exile by the time of this photograph.
+- **C · Incorrect:** Kalinin served as the Soviet Union’s formal head of state, but the pictured standing leader is Stalin.
+- **D · Correct:** Stalin is pictured standing behind Soviet foreign minister Vyacheslav Molotov.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513637)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/540196)
 
-### WWII-N189 — Why did wartime campaigns ask households to collect scrap?
+### WWII-N189 — Which U.S. president announced Japan’s surrender at this White House press conference?
 
-**Topic:** History — Home front
+**Topic:** History — People
 
-**Image:** ![A wartime poster makes a large appeal for discarded material](./assets/quiz-images/history-05.webp)
+**Image:** ![A crowded press event at the White House](./assets/quiz-images/wwii-people-05.webp)
 
-**Image credit:** [U.S. National Archives, record 515359 (public domain)](https://catalog.archives.gov/id/515359)
+**Image credit:** [U.S. National Archives, record 520054 (public domain)](https://catalog.archives.gov/id/520054)
 
-- A. To recover material for war production
-- B. To replace ration coupons
-- C. To sign up pilots
-- D. To teach aircraft spotting
+- A. Harry S. Truman
+- B. Franklin D. Roosevelt
+- C. Dwight D. Eisenhower
+- D. Herbert Hoover
 
 **Correct answer:** A
 
-- **A · Correct:** Scrap drives brought reusable material into the wartime supply chain.
-- **B · Incorrect:** Ration coupons controlled purchases rather than supplying factories.
-- **C · Incorrect:** Recruiters used separate campaigns for military service.
-- **D · Incorrect:** Spotters watched for incoming aircraft.
+- **A · Correct:** Truman announced Japan’s acceptance of the surrender terms on August 14, 1945.
+- **B · Incorrect:** Roosevelt died in April 1945, before Japan surrendered.
+- **C · Incorrect:** Eisenhower led Allied forces in Europe during WWII.
+- **D · Incorrect:** Hoover left office in 1933.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/515359)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520054)
 
-### WWII-N190 — What are the people in this Florida classroom preparing for?
+### WWII-N190 — Which U.S. general is meeting Lieutenant Colonel Lyle Bernard in this photograph from Sicily?
 
-**Topic:** History — Home front
+**Topic:** History — People
 
-**Image:** ![Women use tools in a vocational classroom](./assets/quiz-images/history-06.webp)
+**Image:** ![Two helmeted U.S. Army officers talk beside a vehicle](./assets/quiz-images/wwii-people-06.webp)
 
-**Image credit:** [U.S. National Archives, record 535579 (public domain)](https://catalog.archives.gov/id/535579)
+**Image credit:** [U.S. National Archives, record 531335 (public domain)](https://catalog.archives.gov/id/531335)
 
-- A. Parachute jumps
-- B. Wartime industrial work
-- C. Field nursing
-- D. Codebreaking
+- A. Douglas MacArthur
+- B. George S. Patton
+- C. Chester W. Nimitz
+- D. Mark W. Clark
 
 **Correct answer:** B
 
-- **A · Incorrect:** Airborne training prepared soldiers to land from aircraft.
-- **B · Correct:** The official caption describes women learning skills for war work at a vocational school.
-- **C · Incorrect:** Nurses provided medical care. This photograph is of a vocational shop.
-- **D · Incorrect:** Codebreaking training focused on interpreting messages.
+- **A · Incorrect:** MacArthur commanded Allied forces in the Southwest Pacific.
+- **B · Correct:** The photograph shows Patton discussing operations with Bernard near Brolo in 1943.
+- **C · Incorrect:** Nimitz was a U.S. Navy admiral in the Pacific.
+- **D · Incorrect:** Clark commanded the U.S. Fifth Army during the Italian campaign.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535579)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531335)
 
-### WWII-N191 — What work did this group do at an American shipyard?
+### WWII-N191 — Which Italian dictator is sitting next to Adolf Hitler in this photograph?
 
-**Topic:** History — Home front
+**Topic:** History — People
 
-**Image:** ![Women in work clothes pose with protective shop equipment](./assets/quiz-images/history-07.webp)
+**Image:** ![Two leaders sit together in front of a crowd](./assets/quiz-images/wwii-people-07.webp)
 
-**Image credit:** [U.S. National Archives, record 522890 (public domain)](https://catalog.archives.gov/id/522890)
+**Image credit:** [U.S. National Archives, record 540151 (public domain)](https://catalog.archives.gov/id/540151)
 
-- A. Packing parachutes
-- B. Air traffic control
-- C. Welding
-- D. Radio repair
+- A. Francisco Franco
+- B. Hideki Tojo
+- C. Benito Mussolini
+- D. Pietro Badoglio
 
 **Correct answer:** C
 
-- **A · Incorrect:** Parachute packers prepared equipment for airborne personnel.
-- **B · Incorrect:** Controllers directed aircraft movements.
-- **C · Correct:** The archive identifies the group as welders at Ingalls Shipbuilding in Mississippi.
-- **D · Incorrect:** Radio repairers serviced communications equipment.
+- **A · Incorrect:** Franco ruled Spain during the war.
+- **B · Incorrect:** Tojo was a Japanese Army general and prime minister.
+- **C · Correct:** Mussolini and Hitler were photographed together in Munich in 1940.
+- **D · Incorrect:** Badoglio became Italian prime minister after Mussolini was removed in 1943.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/522890)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/540151)
 
-### WWII-N192 — What behavior is this poster warning against?
+### WWII-N192 — What kind of artillery is shown in this photograph from Italy?
 
-**Topic:** History — Home front
+**Topic:** Equipment — Artillery
 
-**Image:** ![A wartime poster shows a sinking ship beneath large lettering](./assets/quiz-images/history-08.webp)
+**Image:** ![An artillery crew stands beside a large gun with its barrel pointing up](./assets/quiz-images/wwii-equipment-08.webp)
 
-**Image credit:** [U.S. National Archives, record 513543 (public domain)](https://catalog.archives.gov/id/513543)
+**Image credit:** [U.S. National Archives, record 531176 (public domain)](https://catalog.archives.gov/id/531176)
 
-- A. Saving kitchen scrap
-- B. Buying war bonds
-- C. Volunteering as a nurse
-- D. Sharing sensitive wartime information
+- A. 88 mm anti-aircraft gun
+- B. 60 mm infantry mortar
+- C. Tank turret
+- D. 240 mm howitzer
 
 **Correct answer:** D
 
-- **A · Incorrect:** Scrap campaigns encouraged the public to collect reusable material.
-- **B · Incorrect:** Bonds helped finance the war.
-- **C · Incorrect:** Recruitment for nursing had a different purpose.
-- **D · Correct:** The poster warns that careless talk could reveal information that endangers ships.
+- **A · Incorrect:** The German 88 was a smaller-caliber gun on a different mounting.
+- **B · Incorrect:** A 60 mm mortar is a much smaller, portable infantry weapon.
+- **C · Incorrect:** The weapon is a field artillery piece on the ground.
+- **D · Correct:** The archive identifies a 240 mm howitzer of the 697th Field Artillery Battalion near Mignano in January 1944.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513543)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531176)
 
-### WWII-N193 — What job are the people in this picture doing?
+### WWII-N193 — What were the Victory ships being fitted out in this photograph designed to carry?
 
-**Topic:** History — Wartime support
+**Topic:** Equipment — Warships
 
-**Image:** ![Workers gather around the exposed front of an aircraft](./assets/quiz-images/history-09.webp)
+**Image:** ![Large ships are fitted out beneath a shipyard’s steel framework](./assets/quiz-images/wwii-equipment-09.webp)
 
-**Image credit:** [U.S. National Archives, record 520974 (public domain)](https://catalog.archives.gov/id/520974)
+**Image credit:** [U.S. National Archives, record 535970 (public domain)](https://catalog.archives.gov/id/535970)
 
-- A. Inspecting an aircraft engine
-- B. Tracking a radar signal
-- C. Welding a ship’s hull
-- D. Loading a landing craft
+- A. Cargo and supplies
+- B. Squadrons of combat aircraft
+- C. Heavy guns for fleet battles
+- D. Torpedoes for submerged attacks
 
 **Correct answer:** A
 
-- **A · Correct:** The Navy caption identifies them as mechanics checking a trainer’s engine in Texas.
-- **B · Incorrect:** A radar crew works with a display and related instruments.
-- **C · Incorrect:** Shipyard welders work on vessels rather than aircraft engines.
-- **D · Incorrect:** Landing-craft crews handle troops and supplies near the shore.
+- **A · Correct:** The ships were built to move supplies to overseas ports and bases.
+- **B · Incorrect:** Aircraft carriers operated aircraft from a flight deck.
+- **C · Incorrect:** Battleships carried large guns in armored turrets.
+- **D · Incorrect:** Submarines launched underwater attacks.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520974)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535970)
 
 ### WWII-N194 — Which entertainer is performing at this London canteen for Allied troops?
 
-**Topic:** History — Wartime support
+**Topic:** History — People
 
-**Image:** ![A performer addresses a packed audience from a stage](./assets/quiz-images/history-10.webp)
+**Image:** ![A performer addresses a packed audience from a stage](./assets/quiz-images/wwii-people-10.webp)
 
 **Image credit:** [U.S. National Archives, record 531210 (public domain)](https://catalog.archives.gov/id/531210)
 
@@ -5150,9 +5150,9 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 
 ### WWII-N195 — Which film star is visiting this wounded soldier?
 
-**Topic:** History — Wartime support
+**Topic:** History — People
 
-**Image:** ![A visitor writes on the cast of a soldier resting in a hospital bed](./assets/quiz-images/history-11.webp)
+**Image:** ![A visitor writes on the cast of a soldier resting in a hospital bed](./assets/quiz-images/wwii-people-11.webp)
 
 **Image credit:** [U.S. National Archives, record 531330 (public domain)](https://catalog.archives.gov/id/531330)
 
@@ -5170,55 +5170,55 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/531330)
 
-### WWII-N196 — What duty did this group perform in France?
+### WWII-N196 — Which amphibious vehicle carried these Marines toward Tinian?
 
-**Topic:** History — Wartime support
+**Topic:** Equipment — Vehicles
 
-**Image:** ![A group of uniformed women walk together outdoors](./assets/quiz-images/history-12.webp)
+**Image:** ![A tracked vehicle crowded with troops moves through the surf](./assets/quiz-images/wwii-equipment-12.webp)
 
-**Image credit:** [U.S. National Archives, record 531498 (public domain)](https://catalog.archives.gov/id/531498)
+**Image credit:** [U.S. National Archives, record 513181 (public domain)](https://catalog.archives.gov/id/513181)
 
-- A. Ferrying aircraft
-- B. Breaking codes
-- C. Operating searchlights
-- D. Field-hospital nursing
+- A. M3 half-track
+- B. DUKW amphibious truck
+- C. M4 Sherman
+- D. LVT Water Buffalo
 
 **Correct answer:** D
 
-- **A · Incorrect:** Ferry pilots moved aircraft between bases.
-- **B · Incorrect:** Codebreakers analyzed encrypted communications.
-- **C · Incorrect:** Searchlight crews helped detect aircraft at night.
-- **D · Correct:** The archive describes these women as field-hospital nurses arriving in France.
+- **A · Incorrect:** The M3 had front wheels and rear tracks and could not swim.
+- **B · Incorrect:** The DUKW used six wheels instead of tracks.
+- **C · Incorrect:** The Sherman was a medium tank. Its DD amphibious version used a flotation screen.
+- **D · Correct:** The archive identifies the tracked amphibious landing vehicle as a Water Buffalo.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531498)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513181)
 
-### WWII-N197 — Which city is the aircraft spotter watching over?
+### WWII-N197 — Which torpedo bomber is flying in formation in this photograph?
 
-**Topic:** History — Places
+**Topic:** Equipment — Aircraft
 
-**Image:** ![A rooftop observer looks over a city with a large domed cathedral](./assets/quiz-images/history-13.webp)
+**Image:** ![Five single-engine aircraft fly in staggered formation above clouds](./assets/quiz-images/wwii-equipment-13.webp)
 
-**Image credit:** [U.S. National Archives, record 541899 (public domain)](https://catalog.archives.gov/id/541899)
+**Image credit:** [U.S. National Archives, record 520789 (public domain)](https://catalog.archives.gov/id/520789)
 
-- A. London
-- B. Paris
-- C. Rome
-- D. Berlin
+- A. Grumman TBF Avenger
+- B. Douglas SBD Dauntless
+- C. Vought F4U Corsair
+- D. Douglas TBD Devastator
 
 **Correct answer:** A
 
-- **A · Correct:** St. Paul’s Cathedral identifies the London skyline in the archive caption.
-- **B · Incorrect:** The archive names St. Paul’s Cathedral in London, rather than a Paris landmark.
-- **C · Incorrect:** This view is not of Rome or St. Peter’s Basilica.
-- **D · Incorrect:** The archive identifies this as a British air-defense photograph in London.
+- **A · Correct:** The archive identifies this formation over Norfolk, Virginia, as TBF Avengers.
+- **B · Incorrect:** The Dauntless was primarily a dive bomber.
+- **C · Incorrect:** The Corsair was a fighter recognizable by its inverted gull wings.
+- **D · Incorrect:** The Devastator was an earlier U.S. Navy torpedo bomber.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/541899)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520789)
 
 ### WWII-N198 — Who is talking to the paratroopers before the Normandy invasion?
 
-**Topic:** History — Leaders
+**Topic:** History — People
 
-**Image:** ![A senior officer speaks to a group of paratroopers before departure](./assets/quiz-images/history-14.webp)
+**Image:** ![A senior officer speaks to a group of paratroopers before departure](./assets/quiz-images/wwii-people-14.webp)
 
 **Image credit:** [U.S. National Archives, record 531217 (public domain)](https://catalog.archives.gov/id/531217)
 
@@ -5236,134 +5236,134 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/531217)
 
-### WWII-N199 — Which river did U.S. troops cross at the bridge shown here at Remagen?
+### WWII-N199 — What type of ship is firing its main guns in this photograph?
 
-**Topic:** History — Places
+**Topic:** Equipment — Warships
 
-**Image:** ![People and military vehicles gather at a tunnel mouth with a bridge beyond](./assets/quiz-images/history-15.webp)
+**Image:** ![A warship fires a broadside from turrets on its foredeck](./assets/quiz-images/wwii-equipment-15.webp)
 
-**Image credit:** [U.S. National Archives, record 531252 (public domain)](https://catalog.archives.gov/id/531252)
+**Image credit:** [U.S. National Archives, record 520626 (public domain)](https://catalog.archives.gov/id/520626)
 
-- A. The Seine
-- B. The Thames
-- C. The Rhine
-- D. The Elbe
+- A. Aircraft carrier
+- B. Destroyer escort
+- C. Battleship
+- D. Troop transport
 
 **Correct answer:** C
 
-- **A · Incorrect:** The Seine flows through Paris, not Remagen.
-- **B · Incorrect:** The Thames flows through London.
-- **C · Correct:** The photograph shows U.S. troops crossing the Ludendorff Bridge at Remagen over the Rhine.
-- **D · Incorrect:** The Elbe is another major German river, but it does not flow through Remagen.
+- **A · Incorrect:** Carriers are built around flight decks for aircraft.
+- **B · Incorrect:** Destroyer escorts were smaller warships with much lighter guns.
+- **C · Correct:** The archive identifies USS Iowa firing its 16-inch guns during a Pacific battle drill.
+- **D · Incorrect:** Transports chiefly carried personnel.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/531252)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520626)
 
-### WWII-N200 — Which attack were these Japanese carrier crews preparing for?
+### WWII-N200 — Which battleship hosted Japan’s surrender ceremony on the day of this flyover?
 
-**Topic:** History — Battles
+**Topic:** Equipment — Warships
 
-**Image:** ![A formation of people gathers beneath a flagpole on an aircraft carrier](./assets/quiz-images/history-16.webp)
+**Image:** ![Aircraft fly over warships anchored in a bay](./assets/quiz-images/wwii-equipment-16.webp)
 
-**Image credit:** [U.S. National Archives, record 520599 (public domain)](https://catalog.archives.gov/id/520599)
+**Image credit:** [U.S. National Archives, record 520775 (public domain)](https://catalog.archives.gov/id/520775)
 
-- A. The Battle of Midway
-- B. The Battle of the Coral Sea
-- C. The Battle of Leyte Gulf
-- D. Pearl Harbor
+- A. USS Arizona
+- B. USS Texas
+- C. HMS King George V
+- D. USS Missouri
 
 **Correct answer:** D
 
-- **A · Incorrect:** Midway was fought in June 1942.
-- **B · Incorrect:** That battle was fought in May 1942.
-- **C · Incorrect:** Leyte Gulf was fought in October 1944.
-- **D · Correct:** The archive dates this captured photograph to the morning of the attack on December 7, 1941.
+- **A · Incorrect:** Arizona sank at Pearl Harbor in 1941.
+- **B · Incorrect:** Texas participated in the Normandy landings and later supported operations in the Pacific.
+- **C · Incorrect:** The British battleship was present in Tokyo Bay, but Missouri hosted the signing.
+- **D · Correct:** The archive identifies Missouri in the foreground during the surrender ceremonies on September 2, 1945.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520599)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520775)
 
-### WWII-N201 — On which island did this November 1943 landing take place at Empress Augusta Bay?
+### WWII-N201 — Which military cargo truck is pictured on the Red Ball Express route?
 
-**Topic:** History — Battles
+**Topic:** Equipment — Vehicles
 
-**Image:** ![Troops climb down nets from a transport ship into landing craft](./assets/quiz-images/history-17.webp)
+**Image:** ![A six-wheel U.S. Army cargo truck sits in the mud](./assets/quiz-images/wwii-equipment-17.webp)
 
-**Image credit:** [U.S. National Archives, record 513194 (public domain)](https://catalog.archives.gov/id/513194)
+**Image credit:** [U.S. military photograph (public domain)](https://commons.wikimedia.org/wiki/File:Red_Ball_Express_-_Truck_in_the_mud.jpg)
 
-- A. Bougainville
-- B. Guadalcanal
-- C. Iwo Jima
-- D. Saipan
+- A. GMC CCKW
+- B. Willys MB Jeep
+- C. M3 half-track
+- D. Sd.Kfz. 251
 
 **Correct answer:** A
 
-- **A · Correct:** The Coast Guard caption places the landing at Empress Augusta Bay on Bougainville.
-- **B · Incorrect:** The Allied landing there began in August 1942.
-- **C · Incorrect:** U.S. forces landed there in February 1945.
-- **D · Incorrect:** U.S. forces landed there in June 1944.
+- **A · Correct:** The Army’s 2½-ton six-wheel cargo truck was a workhorse of the Red Ball Express.
+- **B · Incorrect:** The Jeep was a small four-wheel utility vehicle.
+- **C · Incorrect:** The M3 used rear tracks and was primarily an armored personnel carrier.
+- **D · Incorrect:** The Sd.Kfz. 251 was a German armored half-track.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/513194)
+**Source:** [U.S. Army Transportation Corps history](https://transportation.army.mil/history/studies/red_ball_express.html)
 
-### WWII-N202 — Which island are these Marines fighting on near Mount Suribachi?
+### WWII-N202 — Which bomber is taking off from USS Hornet during the Doolittle Raid?
 
-**Topic:** History — Battles
+**Topic:** Equipment — Aircraft
 
-**Image:** ![Marines advance up a dark, smoke-covered beach slope](./assets/quiz-images/history-18.webp)
+**Image:** ![A twin-engine bomber has just taken off from a carrier deck](./assets/quiz-images/wwii-equipment-18.webp)
 
-**Image credit:** [U.S. National Archives, record 532543 (public domain)](https://catalog.archives.gov/id/532543)
+**Image credit:** [U.S. National Archives, record 520603 (public domain)](https://catalog.archives.gov/id/520603)
 
-- A. Okinawa
-- B. Iwo Jima
-- C. Saipan
-- D. Peleliu
+- A. Boeing B-17 Flying Fortress
+- B. North American B-25 Mitchell
+- C. Douglas SBD Dauntless
+- D. Martin B-26 Marauder
 
 **Correct answer:** B
 
-- **A · Incorrect:** Okinawa was a later battle and does not contain Mount Suribachi.
-- **B · Correct:** Mount Suribachi is on Iwo Jima, where this photograph was taken.
-- **C · Incorrect:** Saipan is in the Mariana Islands.
-- **D · Incorrect:** Peleliu is part of Palau.
+- **A · Incorrect:** The B-17 was a four-engine heavy bomber and did not fly in the raid.
+- **B · Correct:** Army B-25 bombers took off from Hornet during the April 1942 raid on Japan.
+- **C · Incorrect:** The Dauntless was a single-engine Navy dive bomber.
+- **D · Incorrect:** The B-26 was a twin-engine bomber, but the Doolittle Raid used B-25s.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/532543)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/520603)
 
-### WWII-N203 — Which Dutch city is shown here after wartime bombing?
+### WWII-N203 — Which fighter is shown with the Flying Tigers’ shark-mouth paint scheme?
 
-**Topic:** History — Aftermath
+**Topic:** Equipment — Aircraft
 
-**Image:** ![A view from above shows ruined city blocks surrounding a church tower](./assets/quiz-images/history-19.webp)
+**Image:** ![A row of single-engine aircraft has shark mouths painted on the noses](./assets/quiz-images/wwii-equipment-19.webp)
 
-**Image credit:** [U.S. National Archives, record 535916 (public domain)](https://catalog.archives.gov/id/535916)
+**Image credit:** [U.S. National Archives, record 535531 (public domain)](https://catalog.archives.gov/id/535531)
 
-- A. Amsterdam
-- B. Antwerp
-- C. Rotterdam
-- D. Hamburg
+- A. North American P-51 Mustang
+- B. Grumman F6F Hellcat
+- C. Curtiss P-40 Warhawk
+- D. Republic P-47 Thunderbolt
 
 **Correct answer:** C
 
-- **A · Incorrect:** Amsterdam is a different Dutch city and is not identified in this photo.
-- **B · Incorrect:** Antwerp is in Belgium.
-- **C · Correct:** The National Archives identifies the aerial photograph as the ruins of Rotterdam.
-- **D · Incorrect:** Hamburg is in Germany.
+- **A · Incorrect:** The P-51 was a different American fighter used later in the war.
+- **B · Incorrect:** The Hellcat was a U.S. Navy carrier fighter.
+- **C · Correct:** The archive identifies the pictured aircraft in China as P-40s.
+- **D · Incorrect:** The P-47 was a different fighter with a large radial engine.
 
-**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535916)
+**Source:** [National Archives archival caption](https://catalog.archives.gov/id/535531)
 
-### WWII-N204 — What is Wilhelm Keitel signing in this photograph?
+### WWII-N204 — Which German field marshal is signing the surrender document in Berlin?
 
-**Topic:** History — Aftermath
+**Topic:** History — People
 
-**Image:** ![A uniformed official signs a document in a room of military officers](./assets/quiz-images/history-20.webp)
+**Image:** ![A uniformed officer signs a document in a room of military officers](./assets/quiz-images/wwii-people-20.webp)
 
 **Image credit:** [U.S. National Archives, record 531290 (public domain)](https://catalog.archives.gov/id/531290)
 
-- A. The Munich Agreement
-- B. Japan’s surrender terms
-- C. The United Nations Charter
-- D. Germany’s surrender terms
+- A. Erwin Rommel
+- B. Bernard Montgomery
+- C. Hermann Göring
+- D. Wilhelm Keitel
 
 **Correct answer:** D
 
-- **A · Incorrect:** That agreement was signed in 1938.
-- **B · Incorrect:** Japan’s surrender was signed aboard USS Missouri.
-- **C · Incorrect:** The charter was signed in San Francisco.
-- **D · Correct:** The archive identifies Keitel signing the ratified German surrender terms at Soviet headquarters in Berlin.
+- **A · Incorrect:** Rommel died in October 1944.
+- **B · Incorrect:** Montgomery was a British commander who accepted a separate surrender in northern Germany.
+- **C · Incorrect:** Göring led the Luftwaffe and was not the signer shown.
+- **D · Correct:** Keitel signed the ratified German surrender terms in Berlin in May 1945.
 
 **Source:** [National Archives archival caption](https://catalog.archives.gov/id/531290)

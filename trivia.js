@@ -8,7 +8,7 @@
   var PER_CHAPTER = 10;
   var PICTURES_PER_CHAPTER = 4;
   var ELF_USES = 2;
-  var BANK_URL = './WWII-TRIVIA-BANK.md?v=varied-picture-rounds';
+  var BANK_URL = './WWII-TRIVIA-BANK.md?v=equipment-and-people';
 
   var FAIL_CARDS = [
     { kicker: 'Caught', title: 'Gift-wrapped', copy: 'A patrol finds Trent under the table and uses the good ribbon. The tag reads DO NOT OPEN UNTIL FURTHER NOTICE.' },
@@ -444,11 +444,11 @@
     if (text.length < textCount || pictures.length < PICTURES_PER_CHAPTER) {
       throw new Error('Not enough questions for a complete briefing.');
     }
-    var history = pictures.filter(function (question) { return /^History\b/i.test(question.topic); });
+    var people = pictures.filter(function (question) { return question.topic === 'History — People'; });
     var equipment = pictures.filter(function (question) { return /^Equipment\b/i.test(question.topic); });
-    var half = PICTURES_PER_CHAPTER / 2;
-    if (history.length >= half && equipment.length >= half) {
-      selected = pickPictures(history, half, seen).concat(pickPictures(equipment, half, seen));
+    var equipmentCount = PICTURES_PER_CHAPTER - 1;
+    if (people.length && equipment.length >= equipmentCount) {
+      selected = pickPictures(people, 1, seen).concat(pickPictures(equipment, equipmentCount, seen));
     } else {
       selected = pickPictures(pictures, PICTURES_PER_CHAPTER, seen);
     }
