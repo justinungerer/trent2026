@@ -40,10 +40,12 @@
       <div class="card">
         <p class="kicker">6 June 1944</p>
         <h1 id="landing-title">Landing at Normandy</h1>
-        <p id="landing-goal">Trent steps off the landing craft at Normandy. The wall is to the right.</p>
-        <p>Use the stick to walk. Curved waves run from right to left at different heights on the beach. A wave pushes Trent back toward the landing craft until he braces. Bracing cancels that push. Go around the wire, the hedgehogs, the craters, and the mines.</p>
-        <p>Soldiers along the beach sometimes shoot. Step clear of the gunfire and the grenades. Tap Fire to stop a soldier. Aim with the stick, including while you brace. He starts with ten bullets. Crates on the sand and packages dropped by soldiers each give two bullets.</p>
-        <p>Mines explode and cost one life. Painted hearts restore a life. Three stumbles send Trent back to the ramp.</p>
+        <ul class="game-steps">
+          <li id="landing-goal">Collect three dispatches and reach the seawall.</li>
+          <li>Use the stick to move and aim. Tap Fire to shoot.</li>
+          <li>Hold Brace against waves. Dodge mines and gunfire.</li>
+          <li>Hearts restore a life. Ammo pickups give two shots.</li>
+        </ul>
         <button type="button" id="start">Step off the ramp</button>
       </div>
     </div>
@@ -82,8 +84,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=painted-surf"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

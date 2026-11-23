@@ -55,16 +55,17 @@ test('rejects duplicate IDs, malformed image metadata and incorrect explanations
   assert.throws(() => parseTriviaBank(question('WWII-001', true).replace('[CC BY 4.0]', 'CC BY 4.0')), /Invalid image license/);
 });
 
-test('each shuffled round contains ten unique questions and at least two pictures', () => {
+test('each shuffled round contains ten unique questions and exactly four pictures', () => {
   const bank = parseTriviaBank('## Easy\n' + Array.from({ length: 20 }, (_, i) =>
     question(`WWII-N${String(i + 1).padStart(3, '0')}`, i < 5)).join('\n'));
   for (let i = 0; i < 100; i++) {
     const round = drawRound(bank);
     assert.equal(round.length, 10);
     assert.equal(new Set(round.map(item => item.id)).size, 10);
-    assert.ok(round.filter(item => item.imagePath).length >= 2);
+    assert.equal(round.filter(item => item.imagePath).length, 4);
   }
   assert.throws(() => drawRound(bank.filter(item => !item.imagePath)), /Not enough questions/);
+  assert.throws(() => drawRound(bank.map((item, i) => i < 15 ? { ...item, imagePath: 'example.webp' } : item)), /Not enough questions/);
 });
 
 test('the shipped bank has the requested mix and usable picture assets', () => {
@@ -76,17 +77,17 @@ test('the shipped bank has the requested mix and usable picture assets', () => {
   const oldEquipment = retained.filter(item =>
     /^(Aircraft and vehicles|Warships)$/i.test(item.topic) || navalEquipmentIds.has(item.id));
   const pictures = bank.filter(item => item.imagePath);
-  assert.equal(bank.length, 250);
-  assert.equal(added.length, 175);
+  assert.equal(bank.length, 259);
+  assert.equal(added.length, 184);
   assert.equal(retained.length, 75);
-  assert.equal(newEquipment.length, 88);
+  assert.equal(newEquipment.length, 97);
   assert.ok(oldEquipment.length >= 38);
-  for (const kind of ['aircraft', 'tank', 'gun', 'mine']) {
+  for (const [kind, count] of Object.entries({ aircraft: 14, tank: 14, gun: 11, mine: 11, vehicle: 3 })) {
     const category = pictures.filter(item => new RegExp(`/` + kind + `-\\d+\\.webp$`).test(item.imagePath));
-    assert.equal(category.length, 11, kind);
-    assert.equal(new Set(category.map(item => item.imagePath)).size, 11, kind);
+    assert.equal(category.length, count, kind);
+    assert.equal(new Set(category.map(item => item.imagePath)).size, count, kind);
   }
-  assert.equal(pictures.length, 44);
+  assert.equal(pictures.length, 53);
   for (const item of bank) {
     assert.equal(new Set(item.choices.map(choice => choice.text.toLowerCase())).size, 4, item.id);
     if (item.imagePath) {

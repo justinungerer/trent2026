@@ -61,7 +61,7 @@
   var root = document.documentElement;
   var stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = new URL('game-instructions.css?v=portrait', document.currentScript.src).href;
+  stylesheet.href = new URL('game-instructions.css?v=brief-bullets', document.currentScript.src).href;
   document.head.appendChild(stylesheet);
   root.classList.add('reading-game-instructions');
 

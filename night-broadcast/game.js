@@ -35,7 +35,7 @@
   /* Seconds inside the red band while Lock is held. Slips unwind at DECAY. */
   var LOCK_TIME = calibration ? 1.4 : confirmDispatch ? 3 : 2.1;
   var BATTERY_SECONDS = calibration ? 22.5 : confirmDispatch ? 41.25 : 30;
-  document.getElementById('battery-instructions').textContent = 'The radio has ' + BATTERY_SECONDS + ' seconds of battery. If it runs out, restart the stage. An incorrect station disappears after you finish locking onto it.';
+  document.getElementById('battery-instructions').textContent = 'Lock all targets before the ' + BATTERY_SECONDS + '-second battery runs out.';
   var battery = document.getElementById('battery');
   var batterySeconds = document.getElementById('battery-seconds');
   var batterySheet = document.getElementById('battery-sheet');
@@ -92,14 +92,13 @@
   }
   stations.forEach(function (station, index) { station.home = .13 + index * .74 / (stations.length - 1); });
   document.getElementById('radio-lock-instructions').textContent =
-    'Hold Lock in the red band for ' + LOCK_TIME + ' seconds. Drag the dial or tuning knob, or use the arrows to track the station while locking.';
+    'Hold Lock and keep the needle in the red band for ' + LOCK_TIME + ' seconds.';
   if (calibration || confirmDispatch) {
     document.getElementById('radio-stage-title').textContent = calibration ? 'Find the Carrier' : 'Confirm the Dispatch';
     var instructions = document.getElementById('radio-stage-instructions');
     instructions.textContent = calibration
-      ? 'Find both assigned stations in order. Follow each red band and hold Lock.'
-      : 'Tune the call sign shown on the dispatch readout and lock it. A second call sign appears after the first lock.';
-    document.getElementById('field-report-instructions').hidden = true;
+      ? 'Lock both requested stations in order.'
+      : 'Lock the first call sign to reveal the second.';
     document.getElementById('radio-win-title').textContent = calibration ? 'Carrier calibrated' : 'Dispatch confirmed';
     document.getElementById('radio-win-copy').textContent = calibration
       ? 'Both calibration signals came through.' : 'Both Allied calls acknowledged the dispatch.';
@@ -332,9 +331,7 @@
       station.turnIn = nextTurn();
     }
     document.getElementById('radio-stage-instructions').textContent = 'Find and lock ' + stationById(targets[0]).name + '.' +
-      (targets.length > 1 ? ' The next call sign appears after the first lock.' : '') +
-      ' Finish locking onto a station to find out if it is the right signal.';
-    document.getElementById('field-report-instructions').hidden = true;
+      (targets.length > 1 ? ' The next call sign appears after the first lock.' : '');
   }
 
   function announce(text, duration) {

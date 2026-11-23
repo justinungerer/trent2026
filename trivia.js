@@ -6,9 +6,9 @@
 (function (root) {
   var HIDE_GRACE_MS = 700;
   var PER_CHAPTER = 10;
-  var PICTURES_PER_CHAPTER = 2;
+  var PICTURES_PER_CHAPTER = 4;
   var ELF_USES = 2;
-  var BANK_URL = './WWII-TRIVIA-BANK.md?v=equipment-pictures-1';
+  var BANK_URL = './WWII-TRIVIA-BANK.md?v=four-vehicle-pictures';
 
   var FAIL_CARDS = [
     { kicker: 'Caught', title: 'Gift-wrapped', copy: 'A patrol finds Trent under the table and uses the good ribbon. The tag reads DO NOT OPEN UNTIL FURTHER NOTICE.' },
@@ -411,15 +411,13 @@
   function drawRound(questions) {
     var pictures = shuffle(questions.filter(function (question) { return question.imagePath; }));
     var selected;
-    var selectedIds;
-    var remaining;
-    if (questions.length < PER_CHAPTER || pictures.length < PICTURES_PER_CHAPTER) {
+    var text = shuffle(questions.filter(function (question) { return !question.imagePath; }));
+    var textCount = PER_CHAPTER - PICTURES_PER_CHAPTER;
+    if (text.length < textCount || pictures.length < PICTURES_PER_CHAPTER) {
       throw new Error('Not enough questions for a complete briefing.');
     }
     selected = pictures.slice(0, PICTURES_PER_CHAPTER);
-    selectedIds = selected.map(function (question) { return question.id; });
-    remaining = shuffle(questions.filter(function (question) { return selectedIds.indexOf(question.id) === -1; }));
-    return shuffle(selected.concat(remaining.slice(0, PER_CHAPTER - PICTURES_PER_CHAPTER))).map(presentQuestion);
+    return shuffle(selected.concat(text.slice(0, textCount))).map(presentQuestion);
   }
 
   function startRound(chapter, questions, hooks) {

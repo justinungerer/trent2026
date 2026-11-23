@@ -12,7 +12,7 @@ const targetKind = scouts ? 'drone' : 'hauler';
 const targetName = scouts ? 'Recon drone' : 'Cargo hauler';
 const targetSeconds = 19;
 const bossDelay = 14;
-const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','controls','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['score','hull','phase','pause','sheet','title','brief','action','stack','weapon'].map(id => [id, document.getElementById(id)]));
 const clamp = (n, a, b) => Math.max(a, Math.min(n, b));
 const colors = { red: '#e34751', gold: '#ffce71', ice: '#81f4ff', blue: '#4b899d', dark: '#203349', mint: '#b9ffe4' };
 const CRAFT = {
@@ -111,10 +111,9 @@ let nextWave, nextTarget, bossAt, bossesCleared, aimReleased;
 let finalSpawned, clearAt;
 let regularSpawnCount, eliteWarningUntil;
 const stageTitle = scouts ? 'The Scout Screen' : 'Workshop Approach';
-const stageBrief = (scouts ? 'Intercept marked recon drones.' : 'Dodge sideways patrols and intercept marked cargo haulers.') +
-  ' Marked aircraft have ' + (scouts ? 'fifteen' : 'ten') + ' times normal hull and escape if you take too long.' +
-  ' Destroy one to draw out the commander 14 seconds later. Keep flying through the next patrols, then defeat the final ' +
-  (scouts ? 'recon command aircraft.' : 'siege bomber.');
+const stageBrief = scouts
+  ? 'Destroy a marked recon plane before it escapes. Then defeat the commander and final boss.'
+  : 'Destroy a marked cargo plane before it escapes. Then defeat the commander and final boss.';
 const stars = Array.from({ length: 95 }, (_, i) => ({ x: (i * 179.31) % W, y: (i * 117.69) % H, s: 1 + i % 3 }));
 function reset() {
   nextWave = 1.35;
@@ -137,10 +136,7 @@ function reset() {
 if (intercept) {
   ui.title.textContent = stageTitle;
   ui.brief.textContent = stageBrief;
-} else {
-  ui.controls.textContent += ' Defeat the commander and then the final flagship to clear the level.';
 }
-ui.controls.textContent += ' Sideways patrols return lower after each pass. Elite aircraft drop a weapon for every quarter of hull lost. Collect a heart to restore one hull point.';
 function paintStack() {
   ui.weapon.textContent = player.stack.map(name => WEAPONS[name].label).join(' + ');
   ui.stack.replaceChildren(...player.stack.slice(1).map(name => {

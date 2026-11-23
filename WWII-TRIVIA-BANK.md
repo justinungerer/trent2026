@@ -1,6 +1,6 @@
 # WWII Trivia Bank
 
-250 questions · 75 retained · 175 new. Equipment: 128 (40 retained and 88 new); history: 122. The 175 new questions comprise 88 equipment and 87 other history questions.
+259 questions · 53 picture questions. Equipment: 137. History: 122.
 
 Each question has four options, one correct answer, an explanation for every choice, and clickable sources shown after a player answers. Stable IDs can be used to sample questions without repeats. Shuffle choices independently if needed. Picture questions use an `Image` field with a local asset and non-spoiling alt text, plus an `Image credit` and, where applicable, an `Image license` link shown after answering. See [image provenance](./assets/ART-SOURCES.md).
 
@@ -4727,3 +4727,203 @@ Retained equipment IDs: WWII-E12, WWII-E15, WWII-E59, WWII-033, WWII-034, WWII-0
 - **D · Incorrect:** Tokyo was the capital of Japan.
 
 **Source:** [World History Encyclopedia — Battle of Moscow](https://www.worldhistory.org/article/2686/battle-of-moscow-in-1941-2/)
+
+### WWII-N176 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A twin-engine military aircraft in flight](./assets/quiz-images/aircraft-12.webp)
+
+**Image credit:** [U.S. Navy, Naval Aviation News; public domain in the United States](https://commons.wikimedia.org/wiki/File:Bristol_Beaufighter_NAN15Dec43.jpg)
+
+- A. Supermarine Spitfire
+- B. North American P-51 Mustang
+- C. Bristol Beaufighter
+- D. Boeing B-17 Flying Fortress
+
+**Correct answer:** C
+
+- **A · Incorrect:** A British single-engine fighter.
+- **B · Incorrect:** An American single-engine fighter.
+- **C · Correct:** The U.S. Navy caption identifies this twin-engine RAF aircraft as a Beaufighter Mk IF.
+- **D · Incorrect:** An American four-engine heavy bomber.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:Bristol_Beaufighter_NAN15Dec43.jpg)
+
+### WWII-N177 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![Two twin-engine transport aircraft in flight](./assets/quiz-images/aircraft-13.webp)
+
+**Image credit:** [U.S. Air Force archive; public domain in the United States](https://commons.wikimedia.org/wiki/File:Two_USAAF_C-47A_Skytrains.jpg)
+
+- A. Douglas C-47 Skytrain
+- B. Douglas SBD Dauntless
+- C. Lockheed P-38 Lightning
+- D. Boeing B-17 Flying Fortress
+
+**Correct answer:** A
+
+- **A · Correct:** The U.S. Air Force identifies these transport aircraft as C-47s carrying paratroopers toward southern France in August 1944.
+- **B · Incorrect:** A single-engine dive bomber.
+- **C · Incorrect:** A twin-boom fighter.
+- **D · Incorrect:** A four-engine bomber.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:Two_USAAF_C-47A_Skytrains.jpg)
+
+### WWII-N178 — Which WWII aircraft model is pictured?
+
+**Topic:** Equipment — Aircraft
+
+**Image:** ![A four-engine aircraft seen from above with twin tail fins](./assets/quiz-images/aircraft-14.webp)
+
+**Image credit:** [U.S. Air Force Historical Research Agency; public domain in the United States](https://commons.wikimedia.org/wiki/File:B-24_from_above.jpg)
+
+- A. Boeing B-17 Flying Fortress
+- B. Boeing B-29 Superfortress
+- C. North American B-25 Mitchell
+- D. Consolidated B-24 Liberator
+
+**Correct answer:** D
+
+- **A · Incorrect:** A heavy bomber with a single vertical tail.
+- **B · Incorrect:** A heavy bomber with a single vertical tail and a rounded glazed nose.
+- **C · Incorrect:** A medium bomber with two engines.
+- **D · Correct:** The U.S. Air Force archive identifies this aircraft as a B-24E. Its four engines and twin tail fins are visible.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:B-24_from_above.jpg)
+
+### WWII-N179 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A tracked vehicle with a compact turret and a side-mounted headlamp](./assets/quiz-images/tank-12.webp)
+
+**Image credit:** [Imperial War Museums KID 863, British official photograph; UK Crown public domain](https://commons.wikimedia.org/wiki/File:IWM-KID-863-valentine-mkIII.jpg)
+
+- A. M24 Chaffee
+- B. Valentine
+- C. M4 Sherman
+- D. Panzer IV
+
+**Correct answer:** B
+
+- **A · Incorrect:** An American light tank.
+- **B · Correct:** The official British photograph identifies this as a Valentine III infantry tank.
+- **C · Incorrect:** An American medium tank.
+- **D · Incorrect:** A German medium tank.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:IWM-KID-863-valentine-mkIII.jpg)
+
+### WWII-N180 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![A light armored vehicle with a low hull and a turret-mounted gun](./assets/quiz-images/tank-13.webp)
+
+**Image credit:** [Greg Goebel; released into the public domain](https://commons.wikimedia.org/wiki/File:M24_chaffee_light_tank.jpg)
+
+- A. M3 Lee
+- B. Churchill
+- C. M24 Chaffee
+- D. IS-2
+
+**Correct answer:** C
+
+- **A · Incorrect:** A medium tank with its main gun mounted in the hull.
+- **B · Incorrect:** A British infantry tank with tracks that rise around the hull.
+- **C · Correct:** Greg Goebel’s photo shows a Chaffee, an American light tank.
+- **D · Incorrect:** A Soviet heavy tank.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:M24_chaffee_light_tank.jpg)
+
+### WWII-N181 — Which WWII tank model is pictured?
+
+**Topic:** Equipment — Tanks
+
+**Image:** ![Infantry riding on a column of armored vehicles in a 1945 photograph](./assets/quiz-images/tank-14.webp)
+
+**Image credit:** [No. 5 Army Film and Photographic Unit, Imperial War Museums BU 4949; UK Crown public domain](https://commons.wikimedia.org/wiki/File:The_British_Army_in_North-west_Europe_1944-45_BU4949.jpg)
+
+- A. A34 Comet
+- B. Tiger I
+- C. T-34
+- D. Type 95 Ha-Go
+
+**Correct answer:** A
+
+- **A · Correct:** The British Army caption identifies the vehicles as Comets of the 2nd Fife and Forfar Yeomanry on May 1, 1945.
+- **B · Incorrect:** A German heavy tank.
+- **C · Incorrect:** A Soviet medium tank.
+- **D · Incorrect:** A Japanese light tank.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:The_British_Army_in_North-west_Europe_1944-45_BU4949.jpg)
+
+### WWII-N182 — Which WWII military vehicle is pictured?
+
+**Topic:** Equipment — Vehicles
+
+**Image:** ![An armored vehicle with front wheels and rear tracks](./assets/quiz-images/vehicle-01.webp)
+
+**Image credit:** [U.S. War Department, 1944; public domain in the United States](https://commons.wikimedia.org/wiki/File:M3_Halftrack.jpg)
+
+- A. Willys MB Jeep
+- B. DUKW amphibious truck
+- C. M4 Sherman
+- D. M3 half-track
+
+**Correct answer:** D
+
+- **A · Incorrect:** A light utility vehicle with four wheels.
+- **B · Incorrect:** A six-wheeled transport with a boat-shaped hull.
+- **C · Incorrect:** A fully tracked tank with a turret.
+- **D · Correct:** The U.S. War Department’s photograph shows the M3, which has front wheels and rear tracks.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:M3_Halftrack.jpg)
+
+### WWII-N183 — Which WWII military vehicle is pictured?
+
+**Topic:** Equipment — Vehicles
+
+**Image:** ![Several wheeled transports with boat-shaped hulls on a beach](./assets/quiz-images/vehicle-02.webp)
+
+**Image credit:** [U.S. Navy photograph 80-G-K-14065; public domain in the United States](https://commons.wikimedia.org/wiki/File:DUKWs_on_Anzio_beach_in_April_1944.jpg)
+
+- A. M3 half-track
+- B. DUKW amphibious truck
+- C. Willys MB Jeep
+- D. M24 Chaffee
+
+**Correct answer:** B
+
+- **A · Incorrect:** An armored vehicle with wheels in front and tracks at the rear.
+- **B · Correct:** The U.S. Navy caption identifies these amphibious transports carrying supplies at Anzio in April 1944.
+- **C · Incorrect:** A small four-wheel utility vehicle.
+- **D · Incorrect:** A tracked light tank.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:DUKWs_on_Anzio_beach_in_April_1944.jpg)
+
+### WWII-N184 — Which WWII military vehicle is pictured?
+
+**Topic:** Equipment — Vehicles
+
+**Image:** ![A small open four-wheel military utility vehicle](./assets/quiz-images/vehicle-03.webp)
+
+**Image credit:** [Lars-Göran Lindgren Sweden; CC BY-SA 4.0; resized and converted to WebP](https://commons.wikimedia.org/wiki/File:Willys_MB_Jeep_1944.jpg)
+
+**Image license:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+- A. DUKW amphibious truck
+- B. M3 half-track
+- C. Willys MB Jeep
+- D. M4 Sherman
+
+**Correct answer:** C
+
+- **A · Incorrect:** A larger six-wheel vehicle with a boat-shaped hull.
+- **B · Incorrect:** An armored transport with rear tracks.
+- **C · Correct:** The photo shows a restored 1944 Willys MB, a small Allied utility vehicle.
+- **D · Incorrect:** A fully tracked medium tank.
+
+**Source:** [Photograph and original identification](https://commons.wikimedia.org/wiki/File:Willys_MB_Jeep_1944.jpg)

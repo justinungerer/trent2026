@@ -46,9 +46,12 @@
       <div class="card">
         <p class="kicker">Chapter 7</p>
         <h1 id="corridor-stage-title">The listening wire</h1>
-        <p id="corridor-stage-goal">Trent is in the enemy wire room. The listening post is the green door at the end of the maze.</p>
-        <p>An exclamation mark shows when a soldier has spotted you. Watch for bright incoming shots. Health and spare bullets are on the floor. At full health, kits become armor and add one point, up to three. Armor takes damage before health. A fallen soldier leaves one bullet.</p>
-        <p>Tap Map above Shoot any time to pause and view the maze. Objective markers are visible from the start. Fog covers the routes. Enter a new tile to reveal the passage and nearby walls. Green tiles mark unexplored openings.</p>
+        <ul class="game-steps">
+          <li id="corridor-stage-goal">Collect the dispatches and reach the green exit.</li>
+          <li>Use the movement and turn buttons. Tap Shoot to fire.</li>
+          <li>Open Map for objectives. Explore to reveal the paths.</li>
+          <li>Kits heal you or give armor at full health. Armor absorbs up to three hits.</li>
+        </ul>
         <p id="loadout">Three life points, and 10 bullets.</p>
         <button type="button" id="start">Into the wire room</button>
       </div>
@@ -95,8 +98,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=visible-exits"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

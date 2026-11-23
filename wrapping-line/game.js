@@ -52,7 +52,7 @@
     { id: 'crushed', name: 'Crushed', points: -5, weight: 1, src: 'art/present-crushed.webp' }
   ];
   document.getElementById('wrap-goal').textContent =
-    'Reach ' + NEED + ' points to win. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs 5 points and one life.';
+    'Reach ' + NEED + ' points before time runs out.';
   if (sorting || loading) {
     document.getElementById('wrap-stage-title').textContent = sorting ? 'Sort the First Crates' : 'Load the Sleigh';
     document.getElementById('wrap-win-title').textContent = sorting ? 'First crates wrapped' : 'The sleigh is loaded';

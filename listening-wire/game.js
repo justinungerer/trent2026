@@ -62,15 +62,15 @@
     loadTex('art/rudolph-cell-open.webp', function (tex) { openCellTex = tex; });
     document.getElementById('corridor-stage-title').textContent = 'Rudolph’s Cell';
     document.getElementById('corridor-stage-goal').textContent =
-      'Find the cell key, then walk up to the barred cell to free Rudolph. Once he is free, reach the green exit.';
+      'Find the key, walk up to Rudolph’s cell to free him, then reach the green exit.';
     document.getElementById('map-objectives').textContent = 'K = cell key · R = Rudolph’s cell · E = exit · Green = complete or unlocked';
     document.getElementById('wire-win-title').textContent = 'Rudolph is free';
   } else {
     dispatchImg.src = '../chapter-2/art/mail.webp';
     document.getElementById('corridor-stage-title').textContent = listening ? 'The Listening Post' : 'The Corridor';
     document.getElementById('corridor-stage-goal').textContent = listening
-      ? 'Recover the coded dispatch in the listening wing, then reach the green exit.'
-      : 'Recover all three coded dispatches, then reach the green exit.';
+      ? 'Collect the dispatch, then reach the green exit.'
+      : 'Collect all three dispatches, then reach the green exit.';
     document.getElementById('map-objectives').textContent = 'D = dispatch · E = exit · Green = collected or unlocked';
     document.getElementById('wire-win-title').textContent = 'Dispatches secured';
   }

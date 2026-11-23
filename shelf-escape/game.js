@@ -133,7 +133,9 @@ function reset(){
  updateHud();
 }
 function overlay(mode,title,brief,label){
- state=mode;clearInput();$('title').textContent=title;$('brief').textContent=brief;
+ state=mode;clearInput();$('title').textContent=title;
+ if(Array.isArray(brief))$('brief').innerHTML='<ul class="game-steps">'+brief.map(line=>'<li>'+line+'</li>').join('')+'</ul>';
+ else $('brief').textContent=brief;
  $('equipment').textContent=`${startingAmmo} shots · ${reload===.27?'fast':'slow'} reload · ${damage===2?'enchanted':'plain'} ribbon`;
  $('action').textContent=label;$('sheet').hidden=false;
  const restart=$('restart-sequence');if(restart)restart.hidden=mode!=='paused'&&mode!=='lost';
@@ -700,12 +702,24 @@ function resize(){
 }
 window.addEventListener('resize',resize);
 resize();
-reset();overlay('intro','OPERATION RIBBONFALL','Recover the orders, key and cipher; jump so Buddy just touches each alarm bell to open the next yard. Connect the aerial, transmit, shoot the two mail-train locks, then find the exit key and reach the hatch. Use the left stick to move. Tap Jump for crates and alarm bells. Tap Fire for a single shot. Pull down behind a crate to hide. Ammo boxes add two shots, restore one heart if needed, and disappear when collected.','Begin escape');
-if(alternate)overlay('intro',cell?'Out of the Cell':'The Last Dispatch',cell
- ?'The secret package is hidden in the workshop. Jump to collect it. Find the key at the far end, then bring it back to the door marked EXIT near the start. Use the stick to move. Tap Jump or Fire.'
- :'Clear three sorting bays. In each bay, collect two route papers, set the mail diverter, then return to the first alarm bell and jump to silence it. Stamp the papers in the ledger and shoot the shutter latch. Connect both aerials and radio the route. Find the key at the far end and bring it back to the Allied drop box in the center. Use the stick to move. Tap Jump or Fire.','Begin escape');
+const missionSteps=cell?[
+ 'Find the secret package hidden in the workshop. Jump to collect it.',
+ 'Find the key at the far end, then return to the door marked EXIT.'
+]:dispatch?[
+ 'In each bay, collect two papers and set the diverter. Return to the first bell and jump to silence it.',
+ 'Stamp the papers at the ledger and shoot the shutter latch.',
+ 'Connect both aerials and use the radio. Bring the far-end key back to the center drop box.'
+]:[
+ 'Collect the orders, key, and cipher. Jump into the alarm bells to open the yards.',
+ 'Connect the aerial, use the radio, and shoot both train locks.',
+ 'Find the exit key and reach the hatch.'
+];
+reset();
+overlay('intro',cell?'Out of the Cell':dispatch?'The Last Dispatch':'Operation Ribbonfall',[
+ ...missionSteps,
+ 'Move with the stick. Tap Jump to clear crates. Tap Fire to shoot straight ahead.',
+ 'Pull down when you see DUCK. Ammo boxes and defeated guards give two shots.'
+],'Begin escape');
 let last=0;
-if(alternate)$('brief').textContent+=' Ammo boxes add two shots and disappear when collected.';
-$('brief').textContent+=' Rifle guards hold position. Assault guards move through obstacles. Crates stop low rifle shots, and closed gates and shutters stop both. Shots travel straight in the direction Buddy faces. When you see DUCK, hold Down on the stick to avoid the high shot. Once assault guards spot Buddy, they keep coming. Taking a hit costs one life. Buddy flashes and is invincible for three seconds. Defeated guards drop two shots.';
 function frame(now){let remaining=last?clamp((now-last)/1000,0,.25):0;last=now;while(state==='playing'&&remaining>0&&!window.TrentGameOrientation?.blocked()){const dt=Math.min(remaining,1/60);update(dt);remaining-=dt}render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);

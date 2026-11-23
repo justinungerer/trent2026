@@ -48,9 +48,11 @@
       <div class="card">
         <p class="kicker">Chapter 9</p>
         <h1 id="wrap-stage-title">The wrapping line</h1>
-        <p>You start with one bow per box on the belt. Every tap of Wrap uses one, even if you miss.</p>
-        <p>Hold the up or down arrow to move the bow. Tap Wrap as a good box approaches the bow at the same height. Let damaged boxes pass.</p>
-        <p id="wrap-goal">Reach 75 points before the clock runs out. Intact gifts earn 1, 3, or 5 points. Wrapping a damaged box costs 5 points and one life.</p>
+        <ul class="game-steps">
+          <li id="wrap-goal">Reach 75 points before time runs out.</li>
+          <li>Use the arrows to line up the bow. Tap Wrap when a good box lines up.</li>
+          <li>Every tap uses a bow. Let damaged boxes pass or lose 5 points and a life.</li>
+        </ul>
         <button type="button" id="start">Start the belt</button>
       </div>
     </div>
@@ -91,8 +93,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=limited-bows-and-higher-goals"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

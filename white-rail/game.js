@@ -50,11 +50,11 @@
   var TANK_SHOT_INTERVAL = 1.5;
   var SHELL_TIME = 1.25;
   var HIT_PROTECTION_SECONDS = 3;
-  document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line across ' + TRACK_COUNT + ' tracks to win. Any track will do.';
+  document.getElementById('rail-goal').textContent = 'Reach the end of the 1,560 m line on any of the ' + TRACK_COUNT + ' tracks.';
   document.getElementById('rail-gap-hits').textContent = GAP_HITS === 1 ? 'one' : 'two';
   var tankHelp = document.getElementById('tank-help');
   tankHelp.hidden = TANK_COUNT === 0;
-  if (TANK_SHOTS === 2) tankHelp.textContent += ' Each tank fires twice, 1.5 seconds apart.';
+  if (TANK_SHOTS === 2) tankHelp.textContent += ' Tanks fire twice.';
   /* Half the old 0.30, so the climb to the new top takes about twice the pumps. */
   var DECAY = 0.15;
   /* Letting go of the pump can stop the car before a break in the rail. */

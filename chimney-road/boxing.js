@@ -37,7 +37,7 @@
       '<div class="boxing-cue"><strong id="box-guard"></strong><span id="box-cue"></span><progress id="box-windup" max="1" aria-hidden="true" hidden></progress></div><div class="boxing-left"><button id="box-block">Block</button><button id="box-left">Dodge left</button><button id="box-right">Dodge right</button></div>' +
       '<button class="boxing-pause" id="box-pause">Pause</button>' +
       '<div class="boxing-right"><button id="box-uppercut">Uppercut <span id="box-stars"></span></button><button id="box-punch-left">Left punch</button><button id="box-punch-right">Right punch</button></div>' +
-      '<div class="sheet" id="box-sheet"><div class="card"><h1 id="box-title">The final fight</h1><p id="box-copy"></p><button id="box-start">Fight</button><p class="boxing-art-credit"><a href="art/ART-SOURCES.md" target="_blank" rel="noopener">Portrait: Bundesarchiv / CC BY-SA 3.0</a></p></div></div>';
+      '<div class="sheet" id="box-sheet"><div class="card"><h1 id="box-title">The final fight</h1><div id="box-copy"></div><button id="box-start">Fight</button><p class="boxing-art-credit"><a href="art/ART-SOURCES.md" target="_blank" rel="noopener">Portrait: Bundesarchiv / CC BY-SA 3.0</a></p></div></div>';
     document.querySelector('.stage').appendChild(host);
     var get = function (id) { return host.querySelector('#' + id); };
     var bout = null;
@@ -56,12 +56,28 @@
         victory: 0, cue: 'Punch the highlighted side.' };
     }
     function modal(title, copy, label) {
-      get('box-title').textContent = title; get('box-copy').textContent = copy;
+      get('box-title').textContent = title;
+      var briefing = get('box-copy');
+      if (Array.isArray(copy)) {
+        var list = document.createElement('ul');
+        list.className = 'game-steps';
+        copy.forEach(function (line) {
+          var item = document.createElement('li');
+          item.textContent = line;
+          list.appendChild(item);
+        });
+        briefing.replaceChildren(list);
+      } else briefing.textContent = copy;
       get('box-start').textContent = label; get('box-sheet').hidden = false;
     }
     function start() {
       reset();host.hidden = false;document.querySelector('.move').hidden = true;document.getElementById('jump').hidden = true;document.querySelector('.hud').hidden = true;
-      modal('Hitler guards the sleigh', 'The highlighted punch always lands. He guards one side at a time, so watch for switches. Switch sides after three hits. Land three punches in a row to earn an Uppercut. It stuns him when he has been awake for at least three seconds after the last stun. Missing or taking a hit resets the streak. Every punch has a two-second warning with two flashes. Hold Block or the indicated dodge until the swing to avoid damage and open both sides.', 'Fight');
+      modal('Hitler guards the sleigh', [
+        'Use the highlighted punch. Switch sides after three hits.',
+        'Land three punches in a row to earn an Uppercut. It can stun the boss.',
+        'When he flashes, hold Block or the indicated dodge until he swings.',
+        'Win by knocking out the boss.'
+      ], 'Fight');
       window.dispatchEvent(new CustomEvent('trent:boss-music', { detail: true }));
       sync();
     }

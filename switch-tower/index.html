@@ -32,8 +32,11 @@
       <div class="card">
         <p class="kicker">Chapter 5</p>
         <h1 id="tower-stage-title">The Switch Tower</h1>
-        <p id="tower-goal">Five trains roll in, one after another. The board over the tracks shows the route for the train that is coming.</p>
-        <p id="tower-standard-instructions">Throw the levers so each one matches its picture before that train passes. A wrong pattern explodes that train. After two trains get away, the guard starts throwing a random lever about every two seconds. Five trains away wins. Three explosions start the puzzle over.</p>
+        <ul class="game-steps">
+          <li id="tower-goal">Guide five trains through the junction.</li>
+          <li>Tap the switches to match the picture before each train reaches the junction.</li>
+          <li id="tower-standard-instructions">Recheck the switches after the guard flips them.</li>
+        </ul>
         <button type="button" id="start">Open the tower</button>
       </div>
     </div>
@@ -72,8 +75,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=rescue-matching-start"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

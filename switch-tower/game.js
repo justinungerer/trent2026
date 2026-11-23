@@ -52,8 +52,8 @@
     document.getElementById('tower-standard-instructions').hidden = true;
     document.getElementById('tower-stage-title').textContent = inspection ? 'Clear the Points' : 'Send the Rescue Train';
     document.getElementById('tower-goal').textContent = inspection
-      ? 'Use three switches to match the board before each inspection train reaches the junction. Clear both incoming trains.'
-      : 'Guide seven rescue trains through the junction. Match all five switches to each train’s board. Two saboteurs start moving during the first train’s approach. Either one may flip a switch after moving.';
+      ? 'Guide both inspection trains through the junction.'
+      : 'Guide seven rescue trains through. Watch for two guards flipping switches from the first train.';
     document.getElementById('tower-win-title').textContent = inspection ? 'Both lines cleared' : 'All seven rescue trains are away';
     PATTERNS = inspection ? [[0, 1, 1, 0, 0], [1, 0, 0, 1, 0]]
       : [[0, 1, 0, 0, 1], [1, 0, 1, 0, 0], [0, 0, 1, 1, 0],

@@ -94,8 +94,8 @@
     document.getElementById('roof-stage-title').textContent = eaves ? 'The Eaves' : 'Above the Lanterns';
     document.getElementById('roof-win-title').textContent = eaves ? 'Sleigh boarded' : 'Junction roof reached';
     document.getElementById('roof-objective').textContent = eaves
-      ? 'Follow the yellow LANTERN arrow to the lower coach-house roof, collect the lantern, then board the sleigh.'
-      : 'Follow the yellow FLAG arrows to both flags, one on the high roofs and one below, then reach the junction roof.';
+      ? 'Follow the yellow arrow to the lantern, then board the sleigh.'
+      : 'Follow the yellow arrows to both flags, then reach the junction roof.';
     PLATFORMS = [
       { x: 0, y: 300, w: 386, name: 'First roof', role: 'main' },
       { x: 428, y: 372, w: 315, name: 'Lower gutter', role: 'main' },
@@ -109,9 +109,6 @@
     if (eaves) {
       PLATFORMS[0].cap = 'right';
       PLATFORMS[1] = { x: 520, y: -184, w: 260, name: 'The practice landing', role: 'main' };
-      document.getElementById('roof-controls').textContent =
-        'Jump over the painted presents. Tap Jump again near the top of a jump to go higher. ' +
-        'Ice makes stopping harder. Wait for the blowing snow to clear before crossing a windy roof.';
       WORLD_W *= 2;
       var sleighRoof = PLATFORMS.pop();
       sleighRoof.x = WORLD_W - sleighRoof.w;
@@ -201,9 +198,6 @@
       y: sourceY, top: Math.min(before.y, after.y) - 360,
       labelY: Math.min(before.y, after.y) - 78, phase: SEARCHLIGHTS.length * 1.7 });
   }
-  document.getElementById('roof-controls').textContent +=
-    ' Tap Left or Right to step, or hold to run. Hold the up-arrow button above the left-side movement buttons beside a tall chimney to climb all the way to its top before crossing. Trent faces the chimney while climbing. ' +
-    'Watch for searchlights sweeping up through roof openings. Each three-second sweep is followed by five clear seconds to jump across. Touching a searchlight starts gunfire immediately. Soldiers fire upward once every two seconds until you leave the screen where they spotted you. These slower tracers can pass through roofs, so dodge the bright shots.';
   var GOAL = PLATFORMS.findIndex(function (roof) { return roof.goal; });
   var ROOF_BLOCKS = PLATFORMS.map(function (roof, index) {
     if (roof.permanentRoute || (index % 4 === 0 && index !== 4) || index === GOAL || (eaves && (index === 1 || index === objectives[0].roof))) return null;
@@ -218,10 +212,8 @@
   var fight = escapeMode ? window.TrentBoxing.create({ onWin: function () { bossBeaten = true; win(); } }) : null;
   var fallingBomb = null, bombNext = 3, roofBlasts = [];
   if (escapeMode) {
-    document.getElementById('roof-objective').textContent = 'You have been spotted. Escape the bombed roofs, follow the reinforced stone route to the sleigh, and confront Hitler guarding it.';
-    document.getElementById('roof-controls').textContent += ' Use the wide stone landings to cross the skyline.';
+    document.getElementById('roof-objective').textContent = 'Cross the bombed roofs and beat the guard at the sleigh.';
   }
-  document.getElementById('roof-controls').textContent += ' Ice makes stopping harder. Wait for wind gusts to ease. Red targets warn of bombs that leave holes in the roofs.';
   var ICE_PATCHES = eaves ? [roofStrip(8, .15, 194), roofStrip(12, .15, 190)]
     : flags ? [roofStrip(11, .12, 150), roofStrip(16, .38, 160)]
     : [roofStrip(5, .32, 135), roofStrip(17, .24, 170)];

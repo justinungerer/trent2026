@@ -205,9 +205,9 @@
     });
   }
   document.getElementById('camp-goal').textContent = cellPassage
-    ? 'Defeat the Key Warden and take his key at the far right. Guards return as you head back to the exit halfway through the passage.'
-    : gateFight ? 'Clear two guard waves and their reinforcements in each section. Up to two enemies fight at once. Defeat the Yard Enforcer to reach the gate.'
-    : 'Clear the guards across the yard. The Key Warden and Yard Enforcer arrive together for the final fight.';
+    ? 'Beat the Key Warden at the far right. Take his key back to the exit halfway along the passage.'
+    : gateFight ? 'Clear each section of guards. Beat the Yard Enforcer at the gate.'
+    : 'Clear the yard, then beat the Key Warden and Yard Enforcer together.';
 
   var yardImg = new Image();
   var gateImg = new Image();

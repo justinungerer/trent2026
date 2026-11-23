@@ -41,13 +41,12 @@
       <div class="card">
         <p class="kicker">A few months after D-Day</p>
         <h1 id="radio-stage-title">The night broadcast</h1>
-        <p id="radio-stage-instructions">Lock the field report among the five moving stations.</p>
-        <p id="battery-instructions"></p>
-        <div id="standard-lock-instructions">
-        <p>Keep the needle in a strong signal for 1 second. A red band then appears on that station. It stays hidden until that hold is done.</p>
-        <p id="radio-lock-instructions"></p>
-        <p id="field-report-instructions">Finish a lock to check the signal.</p>
-        </div>
+        <ul class="game-steps">
+          <li id="radio-stage-instructions">Lock the requested signals before the battery dies.</li>
+          <li>Drag the dial or knob, or use ◀ and ▶. Track a strong signal for 1 second to reveal its red band.</li>
+          <li id="radio-lock-instructions"></li>
+          <li id="battery-instructions"></li>
+        </ul>
         <button type="button" id="start">Switch on the lamp</button>
       </div>
     </div>
@@ -87,8 +86,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=complete-radio-lock"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

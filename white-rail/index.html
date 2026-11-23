@@ -42,11 +42,13 @@
       <div class="card">
         <p class="kicker">Chapter 3</p>
         <h1 id="rail-stage-title">White Rail</h1>
-        <p id="rail-goal">Reach the end of the 1,560 m line to win. Any track will do.</p>
-        <p>Use Left and Right or swipe sideways to pick a track. Tap Pump with your right thumb for each stroke. Stop tapping to coast, or hold Brake above Pump to slow down twice as fast. Brake takes priority while held.</p>
-        <p>Every plane bombs the rail you are on when it drops its bomb. Switch tracks when you see the orange impact marker. Slow down when you need time to pick a safe track.</p>
-        <p>You start with a three-hit limit. Each quiz bonus adds one extra hit to your limit. Crates and lowered signal arms count as one hit each. Rail gaps count as <span id="rail-gap-hits">two</span>. After a hit, you are protected for 3 seconds.</p>
-        <p id="tank-help">Distant tanks fire at your current track. Change tracks after a tank fires to dodge its shell. A shell counts as one hit.</p>
+        <ul class="game-steps">
+          <li id="rail-goal">Reach the end of the line.</li>
+          <li>Tap Pump repeatedly to speed up. Hold Brake to slow down.</li>
+          <li>Tap Left or Right, or swipe, to switch tracks. Planes bomb the track you’re on.</li>
+          <li id="tank-help">Change tracks after a tank fires.</li>
+          <li>Three hits end the run. Each quiz bonus adds one hit. Gaps count as <span id="rail-gap-hits">two</span>.</li>
+        </ul>
         <button type="button" id="start">Roll out</button>
       </div>
     </div>
@@ -86,8 +88,8 @@
 
     <p id="status" class="sr" role="status"></p>
   </main>
-  <script src="../orientation.js?v=portrait-start"></script>
-<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=level-three-gap-damage"></script>
+  <script src="../orientation.js?v=brief-bullets"></script>
+<script src="../mission-bonus.js?v=film2"></script><script src="game.js?v=brief-bullets"></script>
 <script src="../level-retry.js"></script>
 <script src="../playlist.js?v=chapter-level-music"></script><script src="../game-audio.js?v=rotation-music"></script></body>
 </html>

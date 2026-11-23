@@ -377,3 +377,17 @@ The 11 WebP assets are derivatives prepared for this quiz. I verified the depict
 - **Original file URL:** https://upload.wikimedia.org/wikipedia/commons/a/a3/Old_WWII_Naval_Mine_at_Port_Crannaich_-_geograph.org.uk_-_1568683.jpg
 - **Downloaded rendition:** https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Old_WWII_Naval_Mine_at_Port_Crannaich_-_geograph.org.uk_-_1568683.jpg/500px-Old_WWII_Naval_Mine_at_Port_Crannaich_-_geograph.org.uk_-_1568683.jpg
 - **Modifications:** Converted the 500 × 667 Commons rendition to WebP (quality 84, method 6). No crop or content edits.
+
+## Additional WWII vehicle quiz photos
+
+Photos were resized as needed and converted to WebP.
+
+- `quiz-images/aircraft-12.webp` — Bristol Beaufighter. U.S. Navy, Naval Aviation News; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:Bristol_Beaufighter_NAN15Dec43.jpg)
+- `quiz-images/aircraft-13.webp` — Douglas C-47 Skytrain. U.S. Air Force archive; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:Two_USAAF_C-47A_Skytrains.jpg)
+- `quiz-images/aircraft-14.webp` — Consolidated B-24 Liberator. U.S. Air Force Historical Research Agency; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:B-24_from_above.jpg)
+- `quiz-images/tank-12.webp` — Valentine. Imperial War Museums KID 863, British official photograph; UK Crown public domain. [Source image](https://commons.wikimedia.org/wiki/File:IWM-KID-863-valentine-mkIII.jpg)
+- `quiz-images/tank-13.webp` — M24 Chaffee. Greg Goebel; released into the public domain. [Source image](https://commons.wikimedia.org/wiki/File:M24_chaffee_light_tank.jpg)
+- `quiz-images/tank-14.webp` — A34 Comet. No. 5 Army Film and Photographic Unit, Imperial War Museums BU 4949; UK Crown public domain. [Source image](https://commons.wikimedia.org/wiki/File:The_British_Army_in_North-west_Europe_1944-45_BU4949.jpg)
+- `quiz-images/vehicle-01.webp` — M3 half-track. U.S. War Department, 1944; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:M3_Halftrack.jpg)
+- `quiz-images/vehicle-02.webp` — DUKW amphibious truck. U.S. Navy photograph 80-G-K-14065; public domain in the United States. [Source image](https://commons.wikimedia.org/wiki/File:DUKWs_on_Anzio_beach_in_April_1944.jpg)
+- `quiz-images/vehicle-03.webp` — Willys MB Jeep. Lars-Göran Lindgren Sweden; CC BY-SA 4.0; resized and converted to WebP. [Source image](https://commons.wikimedia.org/wiki/File:Willys_MB_Jeep_1944.jpg) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
