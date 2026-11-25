@@ -2,9 +2,11 @@
 
 Open [index.html](index.html) directly in a browser, or serve this repository locally and visit /blackout-run/. Each level is available from the playtest menu. Drag to steer and hold the Brake button to slow down. Pause opens the checkpoint retry and level selection.
 
-The main trail is paced for about three minutes per level. A return trail brings Trent back to a missed pouch or signal post. The checkpoint retry keeps completed objectives.
+The main trail is paced for about three minutes per level. Steer away from the marked areas when rifle fire starts or a bomber flies over. A return trail brings Trent back to a missed pouch or signal post. The checkpoint retry keeps completed objectives.
 
 ## Painted artwork
+
+The rifleman, bomber, bomb, and explosion reuse painted artwork from the other minigames.
 
 The built-in ImageGen tool generated the following source paintings for this prototype. The game uses WebP copies and transparent crops from the two sprite sheets.
 

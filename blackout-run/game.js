@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const canvas = el('slope');
   const ctx = canvas.getContext('2d');
@@ -13,7 +13,7 @@
   const bounds = {
     pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35], bridge: [5.5, 2.35],
     satchel: [1.33, 1.1], post: [1.85, 2.55], cabin: [6.1, 4.7], hangar: [9, 4.9],
-    lantern: [0.8, 1.3]
+    lantern: [0.8, 1.3], rifleman: [1.8, 2.5]
   };
   let selected = 0;
   let run = createRun(selected);
@@ -239,6 +239,81 @@
     }
   }
 
+  function drawAirRaid(attack, view) {
+    const distance = attack.z - run.z;
+    const impact = project(attack.x, distance, view);
+    const progress = clamp(1 - distance / WARNING_DISTANCE, 0, 1);
+    const planeX = width * (-0.36 + progress * 1.76);
+    const x = attack.side < 0 ? planeX : width - planeX;
+    const y = horizon * (0.59 + progress * 0.31);
+    const planeWidth = width * (0.20 + progress * 0.18);
+    const plane = art.bomber;
+    if (plane) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(attack.side * 0.34);
+      ctx.drawImage(plane, -planeWidth / 2, -planeWidth / 3, planeWidth, planeWidth * plane.height / plane.width);
+      ctx.restore();
+    }
+    if (progress > 0.42 && art.bomb) {
+      const drop = (progress - 0.42) / 0.58;
+      const releaseX = width * (-0.36 + 0.42 * 1.76);
+      const origin = attack.side < 0 ? releaseX : width - releaseX;
+      const size = 10 + drop * 19;
+      const dropX = origin + (impact.x - origin) * drop;
+      const dropY = horizon * 0.75 + (impact.y - horizon * 0.75) * drop ** 1.6;
+      ctx.drawImage(art.bomb, dropX - size / 2, dropY - size * 1.5, size, size * 1.5);
+    }
+  }
+
+  function drawAttack(view) {
+    const attack = run.attack;
+    if (attack) {
+      const distance = attack.z - run.z;
+      const target = project(attack.x, Math.max(0, distance), view);
+      const bomb = attack.kind === 'bomb';
+      const radius = target.scale * (bomb ? 2.55 : 1.25);
+      ctx.save();
+      ctx.fillStyle = bomb ? '#f6504655' : '#f4ae493e';
+      ctx.strokeStyle = bomb ? '#ff9e83' : '#ffe19a';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.ellipse(target.x, target.y, radius, Math.max(4, radius * 0.28), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      if (bomb) drawAirRaid(attack, view);
+      else {
+        drawObject({ type: 'rifleman', x: attack.shooterX, z: attack.z }, view);
+        const muzzle = project(attack.shooterX, Math.max(-28, distance), view);
+        muzzle.y -= muzzle.scale * 1.4;
+        for (let shot = 0; shot < 3; shot++) {
+          const approach = distance + shot * GUN_SHOT_SPACING;
+          if (approach < 0 || approach > 44) continue;
+          const progress = 1 - approach / 44;
+          const hit = project(attack.x, approach, view);
+          const point = t => [muzzle.x + (hit.x - muzzle.x) * t, muzzle.y + (hit.y - muzzle.y) * t];
+          ctx.beginPath();
+          ctx.moveTo(...point(Math.max(0, progress - 0.27)));
+          ctx.lineTo(...point(progress));
+          ctx.strokeStyle = '#fff1aa';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      }
+    }
+    const blast = run.lastBlast;
+    if (!blast || blast.expires <= run.elapsed || !art.blast) return;
+    const point = project(blast.x, Math.max(-25, blast.z - run.z), view);
+    const fraction = clamp((blast.expires - run.elapsed) / 0.65, 0, 1);
+    const size = point.scale * (4.4 + (1 - fraction) * 2);
+    ctx.save();
+    ctx.globalAlpha = fraction;
+    ctx.drawImage(art.blast, point.x - size / 2, point.y - size * 0.84, size, size);
+    ctx.restore();
+  }
+
   function drawSkier(view) {
     const image = art[run.braking ? 'ski-brake' : Math.abs(lean) > 0.8 ? 'ski-turn' : 'ski-straight'];
     if (!image) return;
@@ -259,6 +334,7 @@
     drawSnow(view);
     const objects = run.course.objects;
     for (const object of objects) if (object.z >= run.z) drawObject(object, view);
+    drawAttack(view);
     drawSkier(view);
     for (const object of objects) if (object.z < run.z) drawObject(object, view);
   }
@@ -279,7 +355,12 @@
     } else if (run.index === 2 && progress > 25 && progress < 95) {
       hint = 'Follow the trail lanterns';
     }
-    el('route-hint').textContent = hint;
+    if (run.attack) {
+      hint = run.attack.kind === 'bomb' ? 'Bomber overhead. Leave the marked area.' : 'Gunfire ahead. Steer out of the marked lane.';
+    }
+    const hintElement = el('route-hint');
+    hintElement.classList.toggle('danger', Boolean(run.attack));
+    if (hintElement.textContent !== hint) hintElement.textContent = hint;
     const notice = run.elapsed < run.noticeUntil ? run.notice : '';
     if (el('notice').textContent !== notice) el('notice').textContent = notice;
   }
@@ -302,11 +383,18 @@
   }
 
   choose(0);
-  const sources = [...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...Object.keys(bounds)];
+  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...Object.keys(bounds)]
+    .map(name => [name, `art/${name}.webp`]));
+  Object.assign(sources, {
+    rifleman: '../listening-wire/art/guard-rifleman.webp',
+    bomber: '../frosted-skies/art/workshop-siege-bomber.webp',
+    bomb: '../chimney-road/art/painted-bomb.webp',
+    blast: '../frosted-skies/art/painted-missile-explosion.webp'
+  });
   el('start').disabled = true;
-  Promise.all(sources.map(name => {
+  Promise.all(Object.entries(sources).map(([name, source]) => {
     const image = new Image();
-    image.src = `art/${name}.webp`;
+    image.src = source;
     return image.decode().then(() => { art[name] = image; });
   })).then(() => {
     const snow = art.snow;
