@@ -16,6 +16,8 @@
   const ctx = canvas.getContext('2d');
   const ground = document.createElement('canvas');
   const groundCtx = ground.getContext('2d');
+  const skierLayer = document.createElement('canvas');
+  const skierPaint = skierLayer.getContext('2d');
   let snowTile;
   const art = {};
   const scenery = ['valley', 'forest', 'airstrip'];
@@ -37,8 +39,10 @@
   let width, height, horizon, skiLine, focal;
   let paintTime = 0;
   let lastFrame = 0;
-  let previousX = 0;
+  let cameraX = 0;
   let lean = 0;
+  let motionPhase = 0;
+  let brakeBlend = 0;
   let drag = null;
   const key = { left: false, right: false, forward: false };
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -70,7 +74,10 @@
   function choose(index) {
     selected = index;
     run = createRun(index, bonus);
+    cameraX = run.x;
     lean = 0;
+    motionPhase = 0;
+    brakeBlend = 0;
     el('briefing').textContent = levels[index].briefing;
     if (embedded) el('mode-label').textContent = `Chapter 1 · Level ${index + 1} · ${levels[index].title}`;
     el('briefing-bonus').hidden = bonus === 0;
@@ -83,7 +90,10 @@
     selected = index;
     run = createRun(index, bonus);
     run.speed = 0;
+    cameraX = run.x;
     lean = 0;
+    motionPhase = 0;
+    brakeBlend = 0;
     show('run');
     updateHud();
   }
@@ -158,9 +168,11 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ground.width = Math.round(width);
     ground.height = Math.round(height);
+    const spriteBounds = Math.ceil(Math.min(height * 0.21, width * 0.36) * 2.7);
+    skierLayer.width = skierLayer.height = spriteBounds;
     horizon = height * 0.345;
-    skiLine = height * 0.79;
-    focal = Math.min(width * 0.049, height * 0.062);
+    skiLine = height * 0.895;
+    focal = Math.min(width * 0.043, height * 0.062);
   }
   new ResizeObserver(resize).observe(canvas);
   resize();
@@ -383,28 +395,47 @@
   function drawSkier(view) {
     const fallProgress = (run.elapsed - run.lastCrash) / FALL_SECONDS;
     const fall = fallProgress < 1 ? fallPoses.find(pose => fallProgress < pose.until) : null;
-    const turning = Math.abs(lean) > 2;
-    const phase = (run.elapsed * (2.4 + run.speed / 45)) % 1;
-    const turningPose = phase < 0.27 ? 'ski-plant' : phase < 0.8 ? 'ski-carve' : 'ski-turn';
-    const glidingPose = phase < 0.25 ? 'ski-straight' : phase < 0.72 ? 'ski-glide' : 'ski-tuck';
-    const riding = run.braking ? 'ski-brake' : turning ? turningPose : glidingPose;
-    const image = art[fall ? fall.name : riding];
-    if (!image) return;
     const point = project(run.x, 0, view);
-    const heightScale = fall?.height ?? (riding === 'ski-tuck' ? 0.84 : turning && !run.braking ? 0.94 : 1);
-    const h = Math.min(height * 0.21, width * 0.36) * heightScale;
-    const w = h * image.width / image.height;
-    ctx.save();
-    const bob = fall || reducedMotion.matches ? 0 : Math.sin(phase * Math.PI * 2) * (run.braking ? 0.8 : 2.4);
-    ctx.translate(point.x, point.y + bob);
-    if (!fall && !reducedMotion.matches) ctx.rotate(clamp(lean / 180, -0.1, 0.1));
-    if (!fall && !run.braking && turning && lean < 0) ctx.scale(-1, 1);
-    ctx.drawImage(image, -w / 2, -h, w, h);
-    ctx.restore();
+    const size = Math.min(height * 0.21, width * 0.36);
+    const lowMotion = reducedMotion.matches;
+
+    skierPaint.setTransform(1, 0, 0, 1, 0, 0);
+    skierPaint.clearRect(0, 0, skierLayer.width, skierLayer.height);
+    skierPaint.translate(skierLayer.width / 2, skierLayer.height / 2);
+    skierPaint.globalCompositeOperation = 'lighter';
+    function pose(name, opacity, heightScale = 1, anchor = 0.5, mirror = false) {
+      const image = art[name];
+      if (!image || opacity < 0.005) return;
+      const h = size * heightScale;
+      const w = h * image.width / image.height;
+      skierPaint.save();
+      skierPaint.globalAlpha = opacity;
+      if (mirror) skierPaint.scale(-1, 1);
+      skierPaint.drawImage(image, -w * anchor, -h, w, h);
+      skierPaint.restore();
+    }
+
+    const stroke = (1 - Math.cos(motionPhase * Math.PI * 2)) / 2;
+    const bob = fall || lowMotion ? 0 : (stroke - 0.5) * 3;
+    if (fall) {
+      pose(fall.name, 1, fall.height);
+    } else {
+      const turn = clamp((Math.abs(lean) - 1.5) / 17, 0, 1);
+      const riding = 1 - brakeBlend;
+      const tuck = lowMotion ? 0 : stroke * 0.32;
+      const plant = lowMotion ? 0 : stroke * 0.48;
+      if (!lowMotion) skierPaint.rotate(lean * 0.0038);
+      pose('ski-glide', riding * (1 - turn) * (1 - tuck));
+      pose('ski-tuck', riding * (1 - turn) * tuck, 0.84);
+      pose('ski-carve', riding * turn * (1 - plant), 0.94, 0.36, lean < 0);
+      pose('ski-plant', riding * turn * plant, 0.94, 0.34, lean < 0);
+      pose('ski-brake', brakeBlend);
+    }
+    ctx.drawImage(skierLayer, point.x - skierLayer.width / 2, point.y + bob - skierLayer.height / 2);
   }
 
   function draw() {
-    const view = run.x * 0.72 + center(run.index, run.z) * 0.28;
+    const view = clamp(cameraX, run.x - width * 0.34 / focal, run.x + width * 0.34 / focal);
     drawBackdrop(view);
     drawSnow(view);
     const objects = run.course.objects;
@@ -459,11 +490,15 @@
     lastFrame = now;
     paintTime += dt;
     if (state === 'run' && !waitingForPortrait && dt > 0) {
-      previousX = run.x;
+      const previousZ = run.z;
       const steering = Number(key.right) - Number(key.left);
       const brake = !drag && !steering && !key.forward;
       step(run, dt, { brake, steer: steering });
-      lean += (clamp((run.x - previousX) / dt, -18, 18) - lean) * Math.min(1, dt * 8);
+      lean += (run.lateralVelocity - lean) * (1 - Math.exp(-dt * 7));
+      brakeBlend += (Number(brake) - brakeBlend) * (1 - Math.exp(-dt * 8));
+      motionPhase = (motionPhase + dt * (0.85 + run.speed / 85)) % 1;
+      const desiredView = run.x * 0.70 + center(run.index, run.z) * 0.30;
+      cameraX = run.z < previousZ ? desiredView : cameraX + (desiredView - cameraX) * (1 - Math.exp(-dt * 5));
       updateHud();
       if (run.finished) finish();
     }
@@ -480,7 +515,7 @@
     el('menu-back').hidden = true;
   }
   choose(stage < 0 ? 0 : stage);
-  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...skiPoses, 'stump-alt', 'log-alt', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
+  const sources = Object.fromEntries([...scenery, 'snow', 'ski-brake', ...skiPoses, 'stump-alt', 'log-alt', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
     .map(name => [name, `art/${name}.webp`]));
   Object.assign(sources, {
     rifleman: '../listening-wire/art/guard-rifleman.webp',

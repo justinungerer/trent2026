@@ -16,8 +16,9 @@
   const RIFLE_SWEEP = 7.5;
   const STOP_DECELERATION = 120;
   const TRAIL_SCALE = 1.5;
-  const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE;
-  const WORLD_EDGE = 30;
+  const WIDTH_INCREASE = 1.5;
+  const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE * WIDTH_INCREASE;
+  const WORLD_EDGE = 45;
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
@@ -66,7 +67,7 @@
 
   function forkOffset(fork, z) {
     const position = clamp((z - fork.start) / (fork.end - fork.start), 0, 1);
-    return fork.side * 12.5 * TRAIL_SCALE * Math.sin(Math.PI * position) ** 1.5;
+    return fork.side * 12.5 * TRAIL_SCALE * WIDTH_INCREASE * Math.sin(Math.PI * position) ** 1.5;
   }
 
   function trails(levelIndex, z) {
@@ -116,7 +117,7 @@
       for (let z = fork.start + 18; z < fork.end; z += 18) {
         const [main, branch] = trails(index, z);
         const gap = Math.abs(branch.x - main.x) - MAIN_WIDTH - BRANCH_WIDTH;
-        if (gap < 3.75 || rifleClearance(z)) continue;
+        if (gap < 3.75 * WIDTH_INCREASE || rifleClearance(z)) continue;
         const mainEdge = main.x + fork.side * MAIN_WIDTH;
         trees.push({ type: 'pine', z, x: mainEdge + fork.side * gap / 2, scale: 0.84 + (z % 31) / 100, divider: true });
       }
@@ -163,6 +164,7 @@
     run.z = z;
     run.x = x;
     run.target = run.x;
+    run.lateralVelocity = 0;
     run.speed = CRUISE;
     run.grace = 3;
     run.lastCrash = -Infinity;
@@ -226,9 +228,15 @@
     const { left, right } = treeLine(run.index, run.z);
     if (!falling && !input.brake && input.steer) run.target += input.steer * dt * 15;
     run.target = clamp(run.target, left, right);
-    const lateralStep = dt * 18;
-    const moveX = falling || input.brake ? run.x : run.x + clamp(run.target - run.x, -lateralStep, lateralStep);
-    run.x = clamp(moveX, left, right);
+    const steering = !falling && !input.brake;
+    const offset = run.target - run.x;
+    const desiredVelocity = steering ? clamp(offset * 10, -23, 23) : 0;
+    const response = 1 - Math.exp(-dt * 13);
+    run.lateralVelocity = steering ? run.lateralVelocity + (desiredVelocity - run.lateralVelocity) * response : 0;
+    const moveX = run.x + run.lateralVelocity * dt;
+    const reachedTarget = offset * (run.target - moveX) < 0;
+    if (reachedTarget || moveX < left || moveX > right) run.lateralVelocity = 0;
+    run.x = clamp(reachedTarget ? run.target : moveX, left, right);
     function crosses(object, radius) {
       if (run.z === beforeZ || object.z < beforeZ || object.z > run.z) return false;
       const fraction = (object.z - beforeZ) / (run.z - beforeZ);
