@@ -357,16 +357,20 @@
         const muzzle = project(attack.shooterX, shooterDistance, view);
         muzzle.x = clamp(muzzle.x, padding, width - padding) - attack.side * muzzle.scale * 0.53;
         muzzle.y -= muzzle.scale * 1.9;
-        for (let shot = 0; shot < 3; shot++) {
-          const approach = distance + shot * GUN_SHOT_SPACING;
-          if (approach < 0 || approach > 66) continue;
-          const progress = 1 - approach / 66;
-          const hit = project(attack.x, approach, view);
+        const age = run.elapsed - attack.startedAt;
+        const cadence = 0.26;
+        const roundsFired = Math.floor(age / cadence);
+        for (let round = Math.max(0, roundsFired - 1); round <= roundsFired; round++) {
+          const sinceShot = age - round * cadence;
+          const progress = sinceShot / 0.34;
+          if (progress >= 1) continue;
+          const landing = Math.max(0, distance + (round % 3) * GUN_SHOT_SPACING);
+          const hit = project(attack.x, landing, view);
           const point = t => [muzzle.x + (hit.x - muzzle.x) * t, muzzle.y + (hit.y - muzzle.y) * t];
-          if (progress < 0.23) {
+          if (sinceShot < 0.07) {
             ctx.fillStyle = '#ffe4a2';
             ctx.beginPath();
-            ctx.arc(muzzle.x, muzzle.y, 7 * (1 - progress), 0, Math.PI * 2);
+            ctx.arc(muzzle.x, muzzle.y, Math.max(2, 7 * (1 - sinceShot / 0.07)), 0, Math.PI * 2);
             ctx.fill();
           }
           ctx.beginPath();
@@ -466,7 +470,9 @@
       hint = 'Follow the trail lanterns';
     }
     if (run.attack) {
-      hint = run.attack.kind === 'bomb' ? 'Bomber overhead. Leave the marked area.' : 'Gunfire ahead. Steer clear or lift to wait.';
+      hint = run.attack.kind === 'bomb' ? 'Bomber overhead. Leave the marked area.'
+        : run.attack.locked ? 'The aim is fixed. Ski past the marked lane.'
+          : 'Gunfire ahead. Steer clear or lift to wait.';
     }
     const hintElement = el('route-hint');
     hintElement.classList.toggle('danger', Boolean(run.attack));

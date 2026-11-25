@@ -14,6 +14,7 @@
   const GUN_SHOT_SPACING = 36;
   const RIFLE_TRACK_SPEED = 1.1;
   const RIFLE_SWEEP = 7.5;
+  const RIFLE_CLEARANCE = 3;
   const STOP_DECELERATION = 120;
   const TRAIL_SCALE = 1.5;
   const WIDTH_INCREASE = 1.5;
@@ -270,7 +271,7 @@
     if (!run.attack) {
       const incoming = run.course.attacks.find(attack => attack.z >= beforeZ && attack.z - run.z <= WARNING_DISTANCE);
       if (incoming) {
-        run.attack = { ...incoming, aim: run.x, x: run.x, aimedFor: 0 };
+        run.attack = { ...incoming, aim: run.x, x: run.x, startedAt: run.elapsed, locked: false };
       }
     }
     const attack = run.attack;
@@ -282,12 +283,17 @@
           run.attack = null;
         }
       } else {
-        const adjustment = RIFLE_TRACK_SPEED * dt;
-        attack.aim += clamp(run.x - attack.aim, -adjustment, adjustment);
-        attack.aimedFor += dt;
-        const sweep = attack.side * RIFLE_SWEEP * Math.sin(attack.aimedFor * 1.18);
-        const edge = treeLine(run.index, attack.z);
-        attack.x = clamp(attack.aim + sweep, edge.left + 0.5, edge.right - 0.5);
+        if (!attack.locked) {
+          const adjustment = RIFLE_TRACK_SPEED * dt;
+          attack.aim += clamp(run.x - attack.aim, -adjustment, adjustment);
+          const age = run.elapsed - attack.startedAt;
+          const sweep = attack.side * RIFLE_SWEEP * Math.sin(age * 1.18);
+          const edge = treeLine(run.index, attack.z);
+          attack.x = clamp(attack.aim + sweep, edge.left + 0.5, edge.right - 0.5);
+          if (input.brake && !falling && run.speed === 0 && Math.abs(attack.x - run.x) >= RIFLE_CLEARANCE) {
+            attack.locked = true;
+          }
+        }
         for (let shot = 0; shot < 3; shot++) {
           const impact = { x: attack.x, z: attack.z + shot * GUN_SHOT_SPACING };
           if (run.grace === 0 && crosses(impact, 1.25)) {
