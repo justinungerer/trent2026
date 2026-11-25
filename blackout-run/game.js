@@ -188,17 +188,26 @@
     }
 
     for (let index = 0; index < 2; index++) {
-      const left = [], right = [];
+      let left = [], right = [];
+      ctx.beginPath();
+      function closeStrip() {
+        if (left.length > 1) {
+          [...left, ...right.reverse()].forEach(({ x, y }, i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+          ctx.closePath();
+        }
+        left = [];
+        right = [];
+      }
       for (let distance = far; distance >= -24; distance -= 4) {
         const lane = trails(run.index, run.z + distance)[index];
-        if (!lane) continue;
+        if (!lane) {
+          if (left.length) closeStrip();
+          continue;
+        }
         left.push(project(lane.x - lane.width, distance, view));
         right.push(project(lane.x + lane.width, distance, view));
       }
-      if (left.length < 2) continue;
-      ctx.beginPath();
-      [...left, ...right.reverse()].forEach(({ x, y }, i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-      ctx.closePath();
+      closeStrip();
       ctx.fillStyle = index ? '#d2e8fa2e' : '#e9f5ff38';
       ctx.fill();
       ctx.strokeStyle = '#e2f1ff35';
@@ -371,7 +380,10 @@
     el('progress').max = 100;
     const marker = run.course.markers.find(item => !run.collected.has(item.id));
     let hint = '';
-    if (marker && marker.z - run.z < 265) {
+    const fork = marker && run.level.forks.find(item => marker.z > item.start && marker.z < item.end);
+    if (fork && run.z >= fork.start - 190 && run.z <= fork.start + 170) {
+      hint = fork.side < 0 ? '← Take the left fork before the trees' : 'Take the right fork before the trees →';
+    } else if (marker && marker.z - run.z < 265) {
       const direction = marker.x - run.x;
       const arrow = Math.abs(direction) < 1.8 ? '↑' : direction < 0 ? '←' : '→';
       hint = marker.z < run.z ? 'Return trail ahead'
