@@ -5,20 +5,22 @@
   if (typeof module === 'object' && module.exports) module.exports = game;
   else root.BlackoutRun = game;
 })(globalThis, function () {
-  const SPEED_MULTIPLIER = 1.5;
+  const SPEED_MULTIPLIER = 2.25;
   const distance = value => value * SPEED_MULTIPLIER;
   const DISTANCE = distance(4680);
   const CRUISE = distance(26);
   const BLACKOUT_POINTS = [1260, 2230, 3200].map(distance);
-  const WARNING_DISTANCE = 210;
-  const GUN_SHOT_SPACING = 24;
+  const WARNING_DISTANCE = 315;
+  const GUN_SHOT_SPACING = 36;
   const RIFLE_TRACK_SPEED = 0.9;
-  const COURSE_WIDTH_SCALE = 1.25;
-  const WORLD_EDGE = 17.5;
+  const TRAIL_SCALE = 1.5;
+  const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE;
+  const WORLD_EDGE = 30;
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
   const ATTACK_MULTIPLIER = 3;
+  const OBSTACLE_HITS = { rock: 'You hit a boulder.', stump: 'You hit a tree stump.', log: 'You hit a fallen tree.' };
   const levels = [
     {
       id: 'the-broken-dispatch',
@@ -62,7 +64,7 @@
 
   function forkOffset(fork, z) {
     const position = clamp((z - fork.start) / (fork.end - fork.start), 0, 1);
-    return fork.side * 12.5 * Math.sin(Math.PI * position) ** 1.5;
+    return fork.side * 12.5 * TRAIL_SCALE * Math.sin(Math.PI * position) ** 1.5;
   }
 
   function trails(levelIndex, z) {
@@ -73,32 +75,20 @@
     return path;
   }
 
+  function treeLine(index, z) {
+    const path = trails(index, z);
+    return {
+      left: Math.min(...path.map(lane => lane.x - lane.width)),
+      right: Math.max(...path.map(lane => lane.x + lane.width))
+    };
+  }
+
   function createCourse(index) {
     const level = levels[index];
     const markers = level.markers.map((z, id) => {
       const path = trails(index, z);
       return { type: level.marker, z, id, x: path[path.length - 1].x };
     });
-    const trees = [];
-    for (let start = 35; start < DISTANCE + 270; start += 27) {
-      for (const side of [-1, 1]) {
-        const z = start + (side > 0 ? 8 : 0);
-        const path = trails(index, z);
-        const edge = side < 0
-          ? Math.min(...path.map(lane => lane.x - lane.width))
-          : Math.max(...path.map(lane => lane.x + lane.width));
-        trees.push({ type: 'pine', z, x: edge + side * (1.5 + ((z * 11 + side) % 31) / 10), scale: 0.8 + (z % 37) / 63 });
-      }
-    }
-    for (const fork of level.forks) {
-      for (let z = fork.start + 12; z < fork.end; z += 12) {
-        const [main, branch] = trails(index, z);
-        const gap = Math.abs(branch.x - main.x) - MAIN_WIDTH - BRANCH_WIDTH;
-        if (gap < 2.5) continue;
-        const mainEdge = main.x + fork.side * MAIN_WIDTH;
-        trees.push({ type: 'pine', z, x: mainEdge + fork.side * gap / 2, scale: 0.84 + (z % 31) / 100, divider: true });
-      }
-    }
     const attackCount = level.attacks.length * ATTACK_MULTIPLIER;
     const attacks = Array.from({ length: attackCount }, (_, id) => {
       const original = level.attacks[id % level.attacks.length];
@@ -107,29 +97,57 @@
       const first = level.attacks[0].z;
       const z = first + (last - first) * position;
       const side = (Math.floor(id / 2) + index) % 2 ? 1 : -1;
-      return { kind: original.kind, z, side, shooterX: center(index, z) + side * 5.8 };
+      return { kind: original.kind, z, side, shooterX: center(index, z) + side * 4.5 * TRAIL_SCALE };
     });
-    const obstacles = [];
-    for (let z = 615, id = 0; z < DISTANCE - 180; z += 91 - index * 9, id++) {
-      if (markers.some(marker => Math.abs(marker.z - z) < 58) ||
-        level.checkpoints.some(point => Math.abs(z - point) < 34) ||
-        level.attacks.some(attack => Math.abs(attack.z - z) < 62)) continue;
-      const path = trails(index, z);
-      const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
-      obstacles.push({
-        type: 'rock', z, x: lane.x + (id % 2 ? 1 : -1) * (1.35 + (z % 7) / 5),
-        scale: 0.8 + (z % 11) / 22
-      });
+    // Leave the whole trail clear while a skier passes a rifle burst.
+    const rifles = attacks.filter(attack => attack.kind === 'gun');
+    const rifleClearance = z => rifles.some(attack => z >= attack.z - 68 && z <= attack.z + 2 * GUN_SHOT_SPACING + 66);
+    const trees = [];
+    for (let start = 35; start < DISTANCE + 400; start += 32) {
+      for (const side of [-1, 1]) {
+        const z = start + (side > 0 ? 8 : 0);
+        const edge = treeLine(index, z);
+        trees.push({ type: 'pine', z, x: side < 0 ? edge.left : edge.right, scale: 0.8 + (z % 37) / 63 });
+      }
     }
+    for (const fork of level.forks) {
+      for (let z = fork.start + 18; z < fork.end; z += 18) {
+        const [main, branch] = trails(index, z);
+        const gap = Math.abs(branch.x - main.x) - MAIN_WIDTH - BRANCH_WIDTH;
+        if (gap < 3.75 || rifleClearance(z)) continue;
+        const mainEdge = main.x + fork.side * MAIN_WIDTH;
+        trees.push({ type: 'pine', z, x: mainEdge + fork.side * gap / 2, scale: 0.84 + (z % 31) / 100, divider: true });
+      }
+    }
+    const obstacles = [];
+    function placeObstacles(type, start, spacing) {
+      for (let z = start, id = 0; z < DISTANCE - 270; z += spacing, id++) {
+        if (rifleClearance(z) || markers.some(marker => Math.abs(marker.z - z) < 90) ||
+          level.checkpoints.some(point => Math.abs(z - point) < 52) ||
+          obstacles.some(object => Math.abs(object.z - z) < 49)) continue;
+        const path = trails(index, z);
+        const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
+        const side = id % 2 ? 1 : -1;
+        const scale = 0.8 + (z % 11) / 22;
+        const halfPath = lane.width / 2;
+        const offset = type === 'log' ? halfPath : (1.35 + (z % 7) / 5) * TRAIL_SCALE;
+        const radius = type === 'log' ? halfPath : (type === 'stump' ? 1.03 : 0.82) * scale;
+        const art = type === 'rock' || id % 4 < 2 ? type : type + '-alt';
+        obstacles.push({ type, art, z, x: lane.x + side * offset, scale, radius });
+      }
+    }
+    placeObstacles('log', 1180, 645 - index * 38);
+    placeObstacles('rock', 930, (91 - index * 9) * TRAIL_SCALE);
+    placeObstacles('stump', 680, 216 - index * 15);
     const signs = level.forks.map(fork => ({
-      type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4,
+      type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4 * TRAIL_SCALE,
       label: index === 2 ? 'Shortcut' : 'Dispatch route', direction: fork.side
     }));
     if (index === 2) {
       for (let z = 95; z < DISTANCE; z += 65) {
         const path = trails(index, z);
-        signs.push({ type: 'lantern', z, x: path[0].x + 3.8, darkAt: BLACKOUT_POINTS[Math.min(2, Math.floor(z / distance(1560)))] });
-        signs.push({ type: 'lantern', z: z + 8, x: path[0].x - 3.8 });
+        signs.push({ type: 'lantern', z, x: path[0].x + 3.8 * TRAIL_SCALE, darkAt: BLACKOUT_POINTS[Math.min(2, Math.floor(z / distance(1560)))] });
+        signs.push({ type: 'lantern', z: z + 8, x: path[0].x - 3.8 * TRAIL_SCALE });
         if (path.length > 1 && Math.abs(path[1].x - path[0].x) > 4) {
           signs.push({ type: 'lantern', z: z + 3, x: path[1].x });
         }
@@ -201,9 +219,12 @@
     run.z += dt * run.speed;
     run.elapsed += dt;
     run.grace = Math.max(0, run.grace - dt);
-    if (!falling && input.steer) run.target = clamp(run.target + input.steer * dt * 10, -WORLD_EDGE, WORLD_EDGE);
-    const delta = run.target - run.x;
-    if (!falling) run.x += clamp(delta, -dt * (input.brake ? 15 : 12), dt * (input.brake ? 15 : 12));
+    const { left, right } = treeLine(run.index, run.z);
+    if (!falling && input.steer) run.target += input.steer * dt * 15;
+    run.target = clamp(run.target, left, right);
+    const lateralStep = dt * (input.brake ? 22.5 : 18);
+    const moveX = falling ? run.x : run.x + clamp(run.target - run.x, -lateralStep, lateralStep);
+    run.x = clamp(moveX, left, right);
     function crosses(object, radius) {
       if (object.z < beforeZ || object.z > run.z) return false;
       const fraction = (object.z - beforeZ) / (run.z - beforeZ);
@@ -270,8 +291,9 @@
         return (x + fraction * dx) ** 2 + (z + fraction * dz) ** 2 <= 1;
       });
       if (tree) takeHit(run, 'You hit a tree.');
-      else if (run.course.obstacles.some(rock => crosses(rock, 0.82 * rock.scale))) {
-        takeHit(run, 'You hit a boulder.');
+      else {
+        const obstacle = run.course.obstacles.find(item => crosses(item, item.radius));
+        if (obstacle) takeHit(run, OBSTACLE_HITS[obstacle.type]);
       }
     }
     if (run.index === 2 && BLACKOUT_POINTS.some(point => beforeZ < point && run.z >= point)) {
@@ -285,5 +307,5 @@
     if (!falling && !run.recoverAtCheckpoint && run.z >= DISTANCE && run.collected.size === run.level.markers.length) run.finished = true;
   }
 
-  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, createRun, retryCheckpoint, step };
+  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, treeLine, createRun, retryCheckpoint, step };
 });

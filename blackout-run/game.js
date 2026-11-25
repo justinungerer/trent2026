@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, treeLine, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const embedded = window.parent !== window && params.has('runId');
@@ -19,6 +19,7 @@
   let snowTile;
   const art = {};
   const scenery = ['valley', 'forest', 'airstrip'];
+  const skiPoses = ['ski-glide', 'ski-tuck', 'ski-carve', 'ski-plant'];
   const fallPoses = [
     { name: 'ski-stumble', until: 0.19, height: 0.96 },
     { name: 'ski-tumble', until: 0.42, height: 0.79 },
@@ -28,7 +29,7 @@
   const bounds = {
     pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35],
     satchel: [1.33, 1.1], post: [1.85, 2.55], cabin: [6.1, 4.7], hangar: [9, 4.9],
-    lantern: [0.8, 1.3], rifleman: [2.6, 4.1]
+    lantern: [0.8, 1.3], rifleman: [2.6, 4.1], stump: [2.35, 1.65], log: [2, 1.85]
   };
   let selected = 0;
   let run = createRun(selected);
@@ -159,13 +160,13 @@
     ground.height = Math.round(height);
     horizon = height * 0.345;
     skiLine = height * 0.79;
-    focal = Math.min(width * 0.069, height * 0.073);
+    focal = Math.min(width * 0.049, height * 0.062);
   }
   new ResizeObserver(resize).observe(canvas);
   resize();
 
   function project(x, distance, view) {
-    const depth = 1 / (1 + distance / 48);
+    const depth = 1 / (1 + distance / 61);
     return {
       x: width / 2 + (x - view) * focal * depth,
       y: horizon + (skiLine - horizon) * depth,
@@ -203,6 +204,22 @@
       ctx.drawImage(ground, 0, 0);
     }
 
+    // Darken the snow beyond the actual forest boundary so the playable area reads at speed.
+    ctx.fillStyle = '#0c223851';
+    for (const side of ['left', 'right']) {
+      const edgeX = side === 'left' ? 0 : width;
+      ctx.beginPath();
+      ctx.moveTo(edgeX, project(0, far, view).y);
+      for (let distance = far; distance >= -36; distance -= 4) {
+        const edge = treeLine(run.index, run.z + distance);
+        const point = project(edge[side], distance, view);
+        ctx.lineTo(point.x, point.y);
+      }
+      ctx.lineTo(edgeX, project(0, -36, view).y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
     for (let index = 0; index < 2; index++) {
       let left = [], right = [];
       ctx.beginPath();
@@ -238,11 +255,13 @@
     const point = project(object.x, distance, view);
     if (edgePadding) point.x = clamp(point.x, edgePadding, width - edgePadding);
     const dim = bounds[object.type];
-    const image = art[object.type];
+    const image = art[object.art || object.type];
     if (!image || !dim) return;
     const scale = point.scale * (object.scale ?? 1);
     const boxW = dim[0] * scale, boxH = dim[1] * scale;
-    const ratio = Math.min(boxW / image.width, boxH / image.height);
+    const ratio = object.type === 'log'
+      ? 2 * object.radius * point.scale / image.width
+      : Math.min(boxW / image.width, boxH / image.height);
     const w = image.width * ratio, h = image.height * ratio;
     const marker = object.type === 'satchel' || object.type === 'post';
     const heading = marker || object.type === 'sign' || object.type === 'cabin' || object.type === 'hangar';
@@ -328,8 +347,8 @@
         muzzle.y -= muzzle.scale * 1.9;
         for (let shot = 0; shot < 3; shot++) {
           const approach = distance + shot * GUN_SHOT_SPACING;
-          if (approach < 0 || approach > 44) continue;
-          const progress = 1 - approach / 44;
+          if (approach < 0 || approach > 66) continue;
+          const progress = 1 - approach / 66;
           const hit = project(attack.x, approach, view);
           const point = t => [muzzle.x + (hit.x - muzzle.x) * t, muzzle.y + (hit.y - muzzle.y) * t];
           if (progress < 0.23) {
@@ -364,15 +383,22 @@
   function drawSkier(view) {
     const fallProgress = (run.elapsed - run.lastCrash) / FALL_SECONDS;
     const fall = fallProgress < 1 ? fallPoses.find(pose => fallProgress < pose.until) : null;
-    const riding = run.braking ? 'ski-brake' : Math.abs(lean) > 0.8 ? 'ski-turn' : 'ski-straight';
+    const turning = Math.abs(lean) > 2;
+    const phase = (run.elapsed * (2.4 + run.speed / 45)) % 1;
+    const turningPose = phase < 0.27 ? 'ski-plant' : phase < 0.8 ? 'ski-carve' : 'ski-turn';
+    const glidingPose = phase < 0.25 ? 'ski-straight' : phase < 0.72 ? 'ski-glide' : 'ski-tuck';
+    const riding = run.braking ? 'ski-brake' : turning ? turningPose : glidingPose;
     const image = art[fall ? fall.name : riding];
     if (!image) return;
     const point = project(run.x, 0, view);
-    const h = Math.min(height * 0.21, width * 0.36) * (fall?.height ?? 1);
+    const heightScale = fall?.height ?? (riding === 'ski-tuck' ? 0.84 : turning && !run.braking ? 0.94 : 1);
+    const h = Math.min(height * 0.21, width * 0.36) * heightScale;
     const w = h * image.width / image.height;
     ctx.save();
-    ctx.translate(point.x, point.y);
-    if (!fall && !run.braking && lean < -0.8) ctx.scale(-1, 1);
+    const bob = fall || reducedMotion.matches ? 0 : Math.sin(phase * Math.PI * 2) * (run.braking ? 0.8 : 2.4);
+    ctx.translate(point.x, point.y + bob);
+    if (!fall && !reducedMotion.matches) ctx.rotate(clamp(lean / 180, -0.1, 0.1));
+    if (!fall && !run.braking && turning && lean < 0) ctx.scale(-1, 1);
     ctx.drawImage(image, -w / 2, -h, w, h);
     ctx.restore();
   }
@@ -436,7 +462,7 @@
       const brake = brakePointer !== null || key.brake;
       el('brake').classList.toggle('held', brake);
       step(run, dt, { brake, steer: Number(key.right) - Number(key.left) });
-      lean += (clamp((run.x - previousX) / dt, -12, 12) - lean) * Math.min(1, dt * 8);
+      lean += (clamp((run.x - previousX) / dt, -18, 18) - lean) * Math.min(1, dt * 8);
       updateHud();
       if (run.finished) finish();
     }
@@ -453,7 +479,7 @@
     el('menu-back').hidden = true;
   }
   choose(stage < 0 ? 0 : stage);
-  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
+  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...skiPoses, 'stump-alt', 'log-alt', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
     .map(name => [name, `art/${name}.webp`]));
   Object.assign(sources, {
     rifleman: '../listening-wire/art/guard-rifleman.webp',

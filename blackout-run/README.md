@@ -18,3 +18,5 @@ The built-in ImageGen tool generated the following source paintings for this pro
 - **Outpost sprite sheet.** Allied radio operator, snow-covered aircraft hangar, oil lantern, and ski-brake icon.
 - **Bomber.** Painted orthographic side view of a 1940s twin-engine bomber in level flight.
 - **Fall sprite sheet.** Four painted rear-view poses showing Trent stumbling, tumbling, sliding, and getting up.
+- **Forest obstacles.** Painted snow-covered stumps and horizontal fallen trees in two variants.
+- **Skiing sprite sheet.** Rear views of Trent gliding, tucking, carving, and planting a pole.
