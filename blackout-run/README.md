@@ -1,6 +1,6 @@
 # Blackout Run
 
-Open [index.html](index.html) directly in a browser, or serve this repository locally and visit /blackout-run/. Each level is available from the standalone playtest menu. In Chapter 1, the campaign opens each level in order after its story film. Quiz scores of eight, nine, and ten add one, two, or three falls between checkpoint retries. Touch Trent to ski, drag left or right, and lift your finger to brake. Trent can stop and wait for rifle aim to sweep aside. Pause opens the checkpoint retry and level selection.
+Open [index.html](index.html) directly in a browser, or serve this repository locally and visit /blackout-run/. Each level is available from the standalone playtest menu. In Chapter 1, the campaign opens each level in order after its story film. Quiz scores of eight, nine, and ten add one, two, or three falls between checkpoint retries. Hold the thumb slider below Trent to ski, drag it left or right, and lift your thumb to brake. Trent can stop and wait for rifle aim to sweep aside. Pause opens the checkpoint retry and level selection.
 
 The main trail is paced for about three minutes per level. Steer away from the marked areas when rifle fire starts or a bomber flies over. A return trail brings Trent back to a missed pouch or signal post. The checkpoint retry keeps completed objectives.
 

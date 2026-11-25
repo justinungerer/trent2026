@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, treeLine, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const embedded = window.parent !== window && params.has('runId');
@@ -13,6 +13,7 @@
     window.parent.postMessage({ type, runId: params.get('runId') }, target);
   }
   const canvas = el('slope');
+  const thumb = el('start');
   const ctx = canvas.getContext('2d');
   const ground = document.createElement('canvas');
   const groundCtx = ground.getContext('2d');
@@ -48,6 +49,12 @@
   let drag = null;
   const key = { left: false, right: false, forward: false };
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const flakes = Array.from({ length: 62 }, (_, i) => ({
+    x: (i * 0.61803398875) % 1,
+    y: (i * 0.41421356237) % 1,
+    size: 0.8 + (i % 7) * 0.21,
+    speed: 0.027 + (i % 11) * 0.004
+  }));
   const selection = levels.map((level, index) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -59,6 +66,7 @@
 
   function clearInput() {
     drag = null;
+    thumb.classList.remove('held');
     key.left = key.right = key.forward = false;
   }
 
@@ -66,6 +74,9 @@
     state = next;
     clearInput();
     el('start-sheet').hidden = state !== 'menu';
+    el('thumb-rail').hidden = state !== 'menu' && state !== 'run';
+    thumb.setAttribute('aria-label', state === 'menu' ? 'Place thumb here to start skiing' : 'Steer Trent');
+    el('thumb-caption').textContent = state === 'menu' ? 'Place thumb here' : 'Drag to steer';
     el('paused').hidden = state !== 'paused';
     el('results').hidden = state !== 'results';
     el('hud').hidden = state !== 'run' && state !== 'paused';
@@ -112,7 +123,7 @@
   }
 
   const actions = {
-    start: () => start(selected),
+    start: () => { if (state === 'menu') start(selected); },
     pause: () => show('paused'),
     resume: () => show('run'),
     checkpoint: () => { retryCheckpoint(run); show('run'); },
@@ -139,42 +150,42 @@
     return clamp(cameraX, run.x - width * 0.34 / focal, run.x + width * 0.34 / focal);
   }
 
-  function grabSlope(event) {
+  function thumbInset() {
+    return thumb.offsetWidth / 2 + 5;
+  }
+
+  function grabThumb(event) {
     if ((state !== 'menu' && state !== 'run') || drag || !event.isPrimary || event.button !== 0) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const skier = project(run.x, 0, viewPosition());
-    const size = skierSize();
-    if (Math.abs(x - skier.x) > size * 0.28 + 6 || y < skier.y - size - 7 || y > skier.y + 10) return;
+    if (thumb.disabled) return;
+    event.preventDefault();
+    const inset = thumbInset();
+    const x = event.clientX - canvas.getBoundingClientRect().left;
+    const skisX = clamp(project(run.x, 0, viewPosition()).x, inset, width - inset);
     if (state === 'menu') {
-      if (el('start').disabled) return;
-      event.preventDefault();
-      el('start').click();
+      thumb.click();
       if (state !== 'run') return;
     }
     drag = {
-      id: event.pointerId, pointerX: x, startX: x, skisX: skier.x, worldX: run.x,
-      pixelsPerUnit: width / (WORLD_EDGE * 1.84)
+      id: event.pointerId, pointerX: x, startX: x, skisX, worldX: run.x,
+      pixelsPerUnit: Math.max(1, width - inset * 2) / (WORLD_EDGE * 2)
     };
+    thumb.classList.add('held');
     run.target = run.x;
-    canvas.setPointerCapture(event.pointerId);
+    thumb.setPointerCapture(event.pointerId);
   }
 
-  el('start-sheet').addEventListener('pointerdown', event => {
-    if (!event.target.closest('.card')) grabSlope(event);
-  });
-  canvas.addEventListener('pointerdown', grabSlope);
-  canvas.addEventListener('pointermove', event => {
+  thumb.addEventListener('pointerdown', grabThumb);
+  thumb.addEventListener('pointermove', event => {
     if (event.pointerId !== drag?.id) return;
-    drag.pointerX = clamp(event.clientX - canvas.getBoundingClientRect().left, 12, width - 12);
+    const inset = thumbInset();
+    drag.pointerX = clamp(event.clientX - canvas.getBoundingClientRect().left, inset, width - inset);
     run.target = clamp(drag.worldX + (drag.pointerX - drag.startX) / drag.pixelsPerUnit, -WORLD_EDGE, WORLD_EDGE);
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    canvas.addEventListener(name, event => {
+    thumb.addEventListener(name, event => {
       if (event.pointerId !== drag?.id) return;
       cameraX = viewPosition();
-      drag = null;
+      clearInput();
       run.target = run.x;
     });
   }
@@ -200,7 +211,8 @@
     const spriteBounds = Math.ceil(skierSize() * 2.7);
     skierLayer.width = skierLayer.height = spriteBounds;
     horizon = height * 0.345;
-    skiLine = height * 0.895;
+    const railBottom = parseFloat(getComputedStyle(el('thumb-rail')).bottom) || 3;
+    skiLine = Math.min(height * 0.895, height - railBottom - 51);
     focal = Math.min(width * 0.043, height * 0.062);
   }
   new ResizeObserver(resize).observe(canvas);
@@ -224,8 +236,7 @@
     ctx.drawImage(image, (width - aspectWidth) / 2 - view * 1.1, 0, aspectWidth, height);
   }
 
-  function drawSnow(view) {
-    const far = 440;
+  function drawGround(view) {
     const tile = groundTiles[run.index];
     if (tile) {
       groundCtx.clearRect(0, 0, width, height);
@@ -247,49 +258,6 @@
       ctx.drawImage(ground, 0, 0);
     }
 
-    // Darken the snow beyond the actual forest boundary so the playable area reads at speed.
-    ctx.fillStyle = '#0c223851';
-    for (const side of ['left', 'right']) {
-      const edgeX = side === 'left' ? 0 : width;
-      ctx.beginPath();
-      ctx.moveTo(edgeX, project(0, far, view).y);
-      for (let distance = far; distance >= -36; distance -= 4) {
-        const edge = treeLine(run.index, run.z + distance);
-        const point = project(edge[side], distance, view);
-        ctx.lineTo(point.x, point.y);
-      }
-      ctx.lineTo(edgeX, project(0, -36, view).y);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    for (let index = 0; index < 2; index++) {
-      let left = [], right = [];
-      ctx.beginPath();
-      function closeStrip() {
-        if (left.length > 1) {
-          [...left, ...right.reverse()].forEach(({ x, y }, i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-          ctx.closePath();
-        }
-        left = [];
-        right = [];
-      }
-      for (let distance = far; distance >= -24; distance -= 4) {
-        const lane = trails(run.index, run.z + distance)[index];
-        if (!lane) {
-          if (left.length) closeStrip();
-          continue;
-        }
-        left.push(project(lane.x - lane.width, distance, view));
-        right.push(project(lane.x + lane.width, distance, view));
-      }
-      closeStrip();
-      ctx.fillStyle = index ? '#dcecff12' : '#edf5ff19';
-      ctx.fill();
-      ctx.strokeStyle = run.index === 2 ? '#d7eafa65' : '#f0f8ff37';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
   }
 
   function drawRunway(view) {
@@ -490,16 +458,36 @@
     ctx.drawImage(skierLayer, point.x - skierLayer.width / 2, point.y + bob - skierLayer.height / 2);
   }
 
+  function drawSnowfall() {
+    const still = reducedMotion.matches;
+    const time = still ? 0 : paintTime;
+    ctx.save();
+    ctx.fillStyle = '#f4fbff';
+    for (const flake of flakes) {
+      const y = ((flake.y + time * flake.speed) % 1) * height;
+      const x = ((flake.x + time * flake.speed * 0.57) % 1) * width;
+      ctx.globalAlpha = 0.29 + flake.size * 0.17;
+      ctx.beginPath();
+      ctx.ellipse(x, y, flake.size * 0.67, flake.size * (still ? 0.8 : 1.23), -0.42, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function draw() {
     const view = viewPosition();
     drawBackdrop(view);
-    drawSnow(view);
+    drawGround(view);
     if (run.index === 2) drawRunway(view);
     const objects = run.course.objects;
     for (const object of objects) if (object.z >= run.z) drawObject(object, view);
     drawAttack(view);
     drawSkier(view);
     for (const object of objects) if (object.z < run.z) drawObject(object, view);
+    drawSnowfall();
+    const inset = thumbInset();
+    const x = clamp(project(run.x, 0, view).x, inset, width - inset);
+    thumb.style.left = `${x}px`;
   }
 
   function updateMissedWarning() {
@@ -529,7 +517,7 @@
       const arrow = Math.abs(direction) < 1.8 ? '↑' : direction < 0 ? '←' : '→';
       hint = marker.z < run.z ? 'Return trail ahead'
         : `${arrow} ${marker.type === 'post' ? 'Lift your finger at the signal post' : 'Dispatch pouch ahead'}`;
-    } else if (run.braking && run.speed === 0 && !drag) hint = 'Touch Trent to ski';
+    } else if (run.braking && run.speed === 0 && !drag) hint = 'Place your thumb on the slider to ski';
     else if (run.index === 2 && progress > 25 && progress < 95) {
       hint = 'Follow the trail lanterns';
     }

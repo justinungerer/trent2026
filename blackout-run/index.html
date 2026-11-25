@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071525">
   <title>Blackout Run</title>
-  <link rel="stylesheet" href="style.css?v=missed-dispatch">
+  <link rel="stylesheet" href="style.css?v=thumb-slider">
   <script src="../orientation.js?v=blackout-run" defer></script>
-  <script src="course.js?v=painted-terrain" defer></script>
-  <script src="game.js?v=painted-terrain" defer></script>
+  <script src="course.js?v=thumb-slider" defer></script>
+  <script src="game.js?v=thumb-slider" defer></script>
 </head>
 <body>
   <main id="ski-game">
@@ -33,14 +33,19 @@
         <div id="levels" role="group" aria-label="Choose a level"></div>
         <p id="briefing"></p>
         <ul class="controls game-steps">
-          <li>Touch Trent and drag left or right.</li>
+          <li>Place your thumb on the slider below Trent. Drag left or right.</li>
           <li>Lift your finger to brake or stop at a signal post.</li>
           <li>Steer around bombs. Stop to wait for rifle aim to sweep past.</li>
         </ul>
         <p id="briefing-bonus" hidden></p>
       </div>
-      <button id="start" type="button"><span>Touch Trent to begin</span></button>
     </section>
+    <div id="thumb-rail">
+      <button id="start" type="button" aria-label="Place thumb here to start skiing">
+        <span aria-hidden="true">↔</span>
+        <small id="thumb-caption" aria-hidden="true">Place thumb here</small>
+      </button>
+    </div>
     <section id="rotate" class="overlay" hidden>
       <div class="panel"><h2>Turn your phone upright</h2><p>Blackout Run plays in portrait.</p></div>
     </section>

@@ -33,8 +33,8 @@
       objective: 'Pouches', destination: 'Relay hut', marker: 'satchel', markers: [1050, 3190],
       checkpoints: [0, 650, 2220, 2740, 4170],
       attacks: { start: 520, end: 3880, guns: 8, bombers: 8 },
-      obstacles: { rock: 66, stump: 16 },
-      forks: [{ start: 690, end: 1450, side: -1 }, { start: 2750, end: 3620, side: 1 }]
+      obstacles: { rock: 132, stump: 32 },
+      forks: [[155, 590, 1], [690, 1450, -1], [1600, 2220, 1], [2290, 2670, -1], [2750, 3620, 1], [3830, 4500, -1]]
     },
     {
       id: 'lights-across-the-valley',
@@ -43,8 +43,8 @@
       objective: 'Confirmations', destination: 'Valley relay', marker: 'post', markers: [1410, 3480],
       checkpoints: [0, 810, 2240, 2930, 4140],
       attacks: { start: 480, end: 4450, guns: 11, bombers: 8 },
-      obstacles: { rock: 65, stump: 11 },
-      forks: [{ start: 900, end: 1820, side: 1 }, { start: 2940, end: 3950, side: -1 }]
+      obstacles: { rock: 130, stump: 22 },
+      forks: [[140, 610, -1], [900, 1820, 1], [1940, 2350, -1], [2460, 2820, 1], [2940, 3950, -1], [4050, 4520, 1]]
     },
     {
       id: 'beat-the-blackout',
@@ -53,14 +53,15 @@
       objective: '', destination: 'Workshop airstrip', marker: '', markers: [],
       checkpoints: [0, 1060, 2190, 3290, 4150],
       attacks: { start: 470, end: 4430, guns: 11, bombers: 11 },
-      obstacles: { rock: 76, stump: 11 },
-      forks: [{ start: 740, end: 1620, side: -1 }, { start: 1990, end: 2830, side: 1 }, { start: 3220, end: 4060, side: -1 }]
+      obstacles: { rock: 152, stump: 22 },
+      forks: [[155, 615, 1], [740, 1620, -1], [1650, 1930, 1], [1990, 2830, 1],
+        [2880, 3150, -1], [3220, 4060, -1], [4110, 4560, 1]]
     }
   ].map(level => ({
     ...level,
     markers: level.markers.map(distance),
     checkpoints: level.checkpoints.map(distance),
-    forks: level.forks.map(fork => ({ ...fork, start: distance(fork.start), end: distance(fork.end) })),
+    forks: level.forks.map(([start, end, side]) => ({ start: distance(start), end: distance(end), side })),
     attacks: { ...level.attacks, start: distance(level.attacks.start), end: distance(level.attacks.end) }
   }));
 
@@ -118,11 +119,19 @@
     const rifles = attacks.filter(attack => attack.kind === 'gun');
     const rifleClearance = z => rifles.some(attack => z >= attack.z - 68 && z <= attack.z + 2 * GUN_SHOT_SPACING + 66);
     const trees = [];
-    for (let start = 35; start < DISTANCE + 400; start += 32) {
+    const edgeMarkers = [];
+    const runway = index === 2;
+    for (let start = 35; start < DISTANCE + 400; start += runway ? 42 : 32) {
       for (const side of [-1, 1]) {
         const z = start + (side > 0 ? 8 : 0);
         const edge = treeLine(index, z);
-        trees.push({ type: 'pine', z, x: side < 0 ? edge.left : edge.right, scale: 0.8 + (z % 37) / 63 });
+        const x = side < 0 ? edge.left : edge.right;
+        if (runway) {
+          const darkAt = side > 0 ? BLACKOUT_POINTS[Math.min(2, Math.floor(z / distance(1560)))] : undefined;
+          edgeMarkers.push({ type: 'lantern', z, x: x + side * 0.7, scale: 1.15, darkAt });
+        } else {
+          trees.push({ type: 'pine', z, x, scale: 0.8 + (z % 37) / 63 });
+        }
       }
     }
     for (const fork of level.forks) {
@@ -131,7 +140,9 @@
         const gap = Math.abs(branch.x - main.x) - MAIN_WIDTH - BRANCH_WIDTH;
         if (gap < 3.75 * WIDTH_INCREASE || rifleClearance(z)) continue;
         const mainEdge = main.x + fork.side * MAIN_WIDTH;
-        trees.push({ type: 'pine', z, x: mainEdge + fork.side * gap / 2, scale: 0.84 + (z % 31) / 100, divider: true });
+        const x = mainEdge + fork.side * gap / 2;
+        if (runway) edgeMarkers.push({ type: 'lantern', z, x, divider: true, scale: 1.08 });
+        else trees.push({ type: 'pine', z, x, scale: 0.84 + (z % 31) / 100, divider: true });
       }
     }
     const obstacles = [];
@@ -139,7 +150,7 @@
     function canPlaceObstacle(z) {
       return !rifleClearance(z) && !markers.some(marker => Math.abs(marker.z - z) < 90) &&
         !level.checkpoints.some(point => Math.abs(z - point) < 52) &&
-        !obstacles.some(object => Math.abs(object.z - z) < 49);
+        !obstacles.some(object => Math.abs(object.z - z) < 29);
     }
     function placeObstacle(type, z, id, lateral) {
       const path = trails(index, z);
@@ -183,25 +194,18 @@
         if (canPlaceObstacle(z)) add(z);
       }
     }
-    placeObstacles('log', 300 + index * 13, 14);
+    placeObstacles('log', 300 + index * 13, 28);
     placeObstacles('stump', 188 + index * 8, level.obstacles.stump);
     placeObstacles('rock', 90 + index * 12, level.obstacles.rock);
-    const signs = level.forks.map(fork => ({
-      type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4 * TRAIL_SCALE,
-      label: index === 2 ? 'Shortcut' : 'Dispatch route', direction: fork.side
-    }));
-    if (index === 2) {
-      for (let z = 95; z < DISTANCE; z += 65) {
-        const path = trails(index, z);
-        signs.push({ type: 'lantern', z, x: path[0].x + 3.8 * TRAIL_SCALE, darkAt: BLACKOUT_POINTS[Math.min(2, Math.floor(z / distance(1560)))] });
-        signs.push({ type: 'lantern', z: z + 8, x: path[0].x - 3.8 * TRAIL_SCALE });
-        if (path.length > 1 && Math.abs(path[1].x - path[0].x) > 4) {
-          signs.push({ type: 'lantern', z: z + 3, x: path[1].x });
-        }
-      }
-    }
+    const signs = level.forks.map(fork => {
+      const objective = markers.some(marker => marker.z > fork.start && marker.z < fork.end);
+      const branchLabel = objective ? (index === 0 ? 'Dispatch pouch' : 'Allied signal post')
+        : runway ? 'Runway shortcut' : 'Alternate trail';
+      const z = fork.start - 24;
+      return { type: 'sign', z, x: center(index, z) + fork.side * 6.2, label: branchLabel, direction: fork.side };
+    });
     const finish = { type: index === 2 ? 'hangar' : 'cabin', z: DISTANCE + 27, x: center(index, DISTANCE) };
-    return { markers, obstacles, attacks, trees, objects: trees.concat(obstacles, signs, markers, finish).sort((a, b) => b.z - a.z) };
+    return { markers, obstacles, attacks, trees, objects: trees.concat(edgeMarkers, obstacles, signs, markers, finish).sort((a, b) => b.z - a.z) };
   }
 
   function restore(run, z, x = center(run.index, z)) {
