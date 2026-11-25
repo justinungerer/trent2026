@@ -1,0 +1,16 @@
+# Blackout Run playtest
+
+Open [index.html](index.html) directly in a browser, or serve this repository locally and visit /blackout-run/. Each level is available from the playtest menu. Drag to steer and hold the Brake button to slow down. Pause opens the checkpoint retry and level selection.
+
+The main trail is paced for about three minutes per level. A return trail brings Trent back to a missed pouch or signal post. The checkpoint retry keeps completed objectives.
+
+## Painted artwork
+
+The built-in ImageGen tool generated the following source paintings for this prototype. The game uses WebP copies and transparent crops from the two sprite sheets.
+
+- **Valley.** Gouache panorama of a blue-hour Alpine valley with a moon, snow-covered firs, and an open downhill slope.
+- **Forest.** Painted view down a snowy Alpine valley with a teal twilight sky, ridge lights, and tiny cabins.
+- **Airstrip.** Nighttime Alpine valley with a distant 1940s airstrip, golden runway lights, and shadowed pines.
+- **Snow.** Overhead texture of blue-silver powder and shallow snowdrifts.
+- **Trail sprite sheet.** Three rear-view skiing poses, evergreen, boulder, courier satchel, relay cabin, bridge, and lantern sign.
+- **Outpost sprite sheet.** Allied radio operator, snow-covered aircraft hangar, oil lantern, and ski-brake icon.

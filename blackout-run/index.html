@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071525">
+  <title>Blackout Run · Standalone playtest</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="course.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main id="ski-game">
+    <canvas id="slope" aria-label="Downhill ski course"></canvas>
+    <section id="hud" aria-label="Run status" hidden>
+      <div class="status-line">
+        <div><span id="level-name"></span><strong id="run-status"></strong></div>
+        <button id="pause" type="button">Pause</button>
+      </div>
+      <progress id="progress" aria-label="Distance to the finish"></progress>
+      <p id="route-hint"></p>
+      <p id="notice" role="status"></p>
+    </section>
+    <button id="brake" type="button" aria-label="Hold to brake" hidden>Brake</button>
+
+    <section id="menu" class="overlay">
+      <div class="panel">
+        <p class="label">Chapter 1 playtest</p>
+        <h1>Blackout Run</h1>
+        <p class="premise">The broadcast broke up. Get the warning through the valley before the workshop goes dark.</p>
+        <div id="levels" role="group" aria-label="Choose a level"></div>
+        <p id="briefing"></p>
+        <p class="controls">Drag to steer. Hold Brake to slow down for turns and signal posts.</p>
+        <button class="primary" id="start" type="button">Start run</button>
+      </div>
+    </section>
+    <section id="paused" class="overlay" hidden>
+      <div class="panel">
+        <h2>Run paused</h2>
+        <button class="primary" id="resume" type="button">Resume</button>
+        <button id="checkpoint" type="button">Retry from checkpoint</button>
+        <button id="choose" type="button">Choose a level</button>
+      </div>
+    </section>
+    <section id="results" class="overlay" hidden>
+      <div class="panel">
+        <h2 id="result-title"></h2>
+        <p id="result-details"></p>
+        <button class="primary" id="next" type="button"></button>
+        <button id="replay" type="button">Replay level</button>
+        <button id="menu-back" type="button">Choose a level</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
