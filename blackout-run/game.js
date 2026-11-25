@@ -67,6 +67,7 @@
     el('paused').hidden = state !== 'paused';
     el('results').hidden = state !== 'results';
     el('hud').hidden = state !== 'run' && state !== 'paused';
+    updateMissedWarning();
     if (next === 'paused') el('resume').focus({ preventScroll: true });
     if (next === 'results') el('next').focus({ preventScroll: true });
   }
@@ -475,7 +476,18 @@
     for (const object of objects) if (object.z < run.z) drawObject(object, view);
   }
 
+  function updateMissedWarning() {
+    const warning = el('missed-warning');
+    const missed = state === 'run' && run.pendingReturn?.marker;
+    if (missed) {
+      const message = missed.type === 'post' ? 'SIGNAL POST MISSED' : 'DISPATCH MISSED';
+      if (warning.textContent !== message) warning.textContent = message;
+    }
+    warning.hidden = !missed;
+  }
+
   function updateHud() {
+    updateMissedWarning();
     el('level-name').textContent = `Level ${run.index + 1} · ${run.level.title}`;
     const progress = Math.floor(Math.min(run.z / DISTANCE, 1) * 100);
     el('run-status').textContent = run.level.objective ? `${run.level.objective} ${run.collected.size}/2` : 'Deliver the warning';
@@ -533,7 +545,7 @@
         drag.skisX = heldSkisX;
       }
       lean += (run.lateralVelocity - lean) * (1 - Math.exp(-dt * 7));
-      brakeBlend += (Number(brake) - brakeBlend) * (1 - Math.exp(-dt * 8));
+      brakeBlend += (Number(run.braking) - brakeBlend) * (1 - Math.exp(-dt * 8));
       motionPhase = (motionPhase + dt * (0.85 + run.speed / 85)) % 1;
       const desiredView = run.x * 0.70 + center(run.index, run.z) * 0.30;
       cameraX = run.z < previousZ ? desiredView : cameraX + (desiredView - cameraX) * (1 - Math.exp(-dt * 5));

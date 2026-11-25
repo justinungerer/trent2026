@@ -23,6 +23,7 @@
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
+  const MISSED_WARNING_SECONDS = 2;
   const ATTACK_MULTIPLIER = 3;
   const OBSTACLE_HITS = { rock: 'You hit a boulder.', stump: 'You hit a tree stump.', log: 'You hit a fallen tree.' };
   const levels = [
@@ -172,6 +173,7 @@
     run.recoverAtCheckpoint = false;
     run.attack = null;
     run.lastBlast = null;
+    run.pendingReturn = null;
   }
 
   function createRun(index, bonus = 0) {
@@ -209,6 +211,19 @@
 
   function step(run, dt, input) {
     if (run.finished) return;
+    if (run.pendingReturn) {
+      run.pendingReturn.remaining -= dt;
+      if (run.pendingReturn.remaining > 0) return;
+      const missed = run.pendingReturn.marker;
+      run.loops++;
+      const returnPoint = missed.z - distance(145);
+      restore(run, returnPoint, trails(run.index, returnPoint).at(-1).x);
+      run.target = missed.x;
+      announce(run, missed.type === 'post'
+        ? 'Return trail. Lift your finger near the lit signal post.'
+        : 'Return trail. Follow the gold sign to the pouch.', 6);
+      return;
+    }
     const falling = run.elapsed - run.lastCrash < FALL_SECONDS;
     if (!falling && run.recoverAtCheckpoint) {
       retryCheckpoint(run);
@@ -258,13 +273,10 @@
 
     const missed = run.course.markers.find(marker => !run.collected.has(marker.id) && run.z > marker.z + distance(72));
     if (missed && !falling) {
-      run.loops++;
-      const returnPoint = missed.z - distance(145);
-      restore(run, returnPoint, trails(run.index, returnPoint).at(-1).x);
-      run.target = missed.x;
-      announce(run, missed.type === 'post'
-        ? 'Return trail. Lift your finger near the lit signal post.'
-        : 'Return trail. Follow the gold sign to the pouch.', 6);
+      run.pendingReturn = { marker: missed, remaining: MISSED_WARNING_SECONDS };
+      run.speed = 0;
+      run.lateralVelocity = 0;
+      run.braking = true;
       return;
     }
 
