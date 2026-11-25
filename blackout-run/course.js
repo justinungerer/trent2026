@@ -24,7 +24,6 @@
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
   const MISSED_WARNING_SECONDS = 2;
-  const ATTACK_MULTIPLIER = 3;
   const OBSTACLE_HITS = { rock: 'You hit a boulder.', stump: 'You hit a tree stump.', log: 'You hit a fallen tree.' };
   const levels = [
     {
@@ -33,7 +32,8 @@
       briefing: 'Recover both dispatch pouches and bring them to the relay hut.',
       objective: 'Pouches', destination: 'Relay hut', marker: 'satchel', markers: [1050, 3190],
       checkpoints: [0, 650, 2220, 2740, 4170],
-      attacks: [[520, 'gun'], [1740, 'bomb'], [2480, 'gun'], [3880, 'bomb']],
+      attacks: { start: 520, end: 3880, guns: 8, bombers: 8 },
+      obstacles: { rock: 66, stump: 16 },
       forks: [{ start: 690, end: 1450, side: -1 }, { start: 2750, end: 3620, side: 1 }]
     },
     {
@@ -42,7 +42,8 @@
       briefing: 'Ski past both Allied signal posts. Lift your finger near each operator to slow down.',
       objective: 'Confirmations', destination: 'Valley relay', marker: 'post', markers: [1410, 3480],
       checkpoints: [0, 810, 2240, 2930, 4140],
-      attacks: [[480, 'gun'], [2020, 'bomb'], [2650, 'gun'], [3830, 'bomb'], [4450, 'gun']],
+      attacks: { start: 480, end: 4450, guns: 11, bombers: 8 },
+      obstacles: { rock: 65, stump: 11 },
       forks: [{ start: 900, end: 1820, side: 1 }, { start: 2940, end: 3950, side: -1 }]
     },
     {
@@ -51,7 +52,8 @@
       briefing: 'Carry the confirmed dispatch to the workshop airstrip. Follow the lanterns when the lights go out.',
       objective: '', destination: 'Workshop airstrip', marker: '', markers: [],
       checkpoints: [0, 1060, 2190, 3290, 4150],
-      attacks: [[470, 'gun'], [1240, 'bomb'], [1940, 'gun'], [2730, 'bomb'], [3690, 'gun'], [4430, 'bomb']],
+      attacks: { start: 470, end: 4430, guns: 11, bombers: 11 },
+      obstacles: { rock: 76, stump: 11 },
       forks: [{ start: 740, end: 1620, side: -1 }, { start: 1990, end: 2830, side: 1 }, { start: 3220, end: 4060, side: -1 }]
     }
   ].map(level => ({
@@ -59,7 +61,7 @@
     markers: level.markers.map(distance),
     checkpoints: level.checkpoints.map(distance),
     forks: level.forks.map(fork => ({ ...fork, start: distance(fork.start), end: distance(fork.end) })),
-    attacks: level.attacks.map(([z, kind]) => ({ z: distance(z), kind }))
+    attacks: { ...level.attacks, start: distance(level.attacks.start), end: distance(level.attacks.end) }
   }));
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -94,15 +96,14 @@
       const path = trails(index, z);
       return { type: level.marker, z, id, x: path[path.length - 1].x };
     });
-    const attackCount = level.attacks.length * ATTACK_MULTIPLIER;
+    const { start, end, guns, bombers } = level.attacks;
+    const attackCount = guns + bombers;
+    const last = Math.min(end, DISTANCE - 275);
     const attacks = Array.from({ length: attackCount }, (_, id) => {
-      const original = level.attacks[id % level.attacks.length];
-      const position = id / (attackCount - 1);
-      const last = Math.min(level.attacks.at(-1).z, DISTANCE - 275);
-      const first = level.attacks[0].z;
-      const z = first + (last - first) * position;
+      const z = start + (last - start) * id / (attackCount - 1);
+      const gun = Math.round((id + 1) * guns / attackCount) > Math.round(id * guns / attackCount);
       const side = (Math.floor(id / 2) + index) % 2 ? 1 : -1;
-      return { kind: original.kind, z, side, shooterX: center(index, z) + side * 4.5 * TRAIL_SCALE };
+      return { kind: gun ? 'gun' : 'bomb', z, side, shooterX: center(index, z) + side * 4.5 * TRAIL_SCALE };
     });
     // Leave the whole trail clear while a skier passes a rifle burst.
     const rifles = attacks.filter(attack => attack.kind === 'gun');
@@ -125,25 +126,46 @@
       }
     }
     const obstacles = [];
-    function placeObstacles(type, start, spacing) {
-      for (let z = start, id = 0; z < DISTANCE - 270; z += spacing, id++) {
-        if (rifleClearance(z) || markers.some(marker => Math.abs(marker.z - z) < 90) ||
-          level.checkpoints.some(point => Math.abs(z - point) < 52) ||
-          obstacles.some(object => Math.abs(object.z - z) < 49)) continue;
-        const path = trails(index, z);
-        const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
-        const side = id % 2 ? 1 : -1;
-        const scale = 0.8 + (z % 11) / 22;
-        const halfPath = lane.width / 2;
-        const offset = type === 'log' ? halfPath : (1.35 + (z % 7) / 5) * TRAIL_SCALE;
-        const radius = type === 'log' ? halfPath : (type === 'stump' ? 1.03 : 0.82) * scale;
-        const art = type === 'rock' || id % 4 < 2 ? type : type + '-alt';
-        obstacles.push({ type, art, z, x: lane.x + side * offset, scale, radius });
+    const finishClearance = DISTANCE - 270;
+    function canPlaceObstacle(z) {
+      return !rifleClearance(z) && !markers.some(marker => Math.abs(marker.z - z) < 90) &&
+        !level.checkpoints.some(point => Math.abs(z - point) < 52) &&
+        !obstacles.some(object => Math.abs(object.z - z) < 49);
+    }
+    function placeObstacle(type, z, id) {
+      const path = trails(index, z);
+      const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
+      const side = id % 2 ? 1 : -1;
+      const scale = 0.8 + (z % 11) / 22;
+      const halfPath = lane.width / 2;
+      const offset = type === 'log' ? halfPath : (1.35 + (z % 7) / 5) * TRAIL_SCALE;
+      const radius = type === 'log' ? halfPath : (type === 'stump' ? 1.03 : 0.82) * scale;
+      const art = type === 'rock' || id % 4 < 2 ? type : type + '-alt';
+      obstacles.push({ type, art, z, x: lane.x + side * offset, scale, radius });
+    }
+    function placeObstacles(type, first, count) {
+      const spacing = (finishClearance - first) / count;
+      let placed = 0;
+      for (let slot = 0; slot < count; slot++) {
+        const ideal = Math.round(first + slot * spacing);
+        const left = Math.max(first, ideal - spacing * 0.48);
+        const right = Math.min(finishClearance, ideal + spacing * 0.48);
+        for (let offset = 0; offset <= spacing * 0.48; offset += 4) {
+          const candidates = offset === 0 ? [ideal] : [ideal + offset, ideal - offset];
+          const z = candidates.find(point => point >= left && point <= right && canPlaceObstacle(point));
+          if (z === undefined) continue;
+          placeObstacle(type, z, placed++);
+          break;
+        }
+      }
+      // Refill slots lost to checkpoints and rifle lanes using space between the other obstacles.
+      for (let z = first; z <= finishClearance && placed < count; z += 4) {
+        if (canPlaceObstacle(z)) placeObstacle(type, z, placed++);
       }
     }
-    placeObstacles('log', 300 + index * 13, 645 - index * 38);
-    placeObstacles('rock', 90 + index * 12, (91 - index * 9) * TRAIL_SCALE);
-    placeObstacles('stump', 188 + index * 8, 216 - index * 15);
+    placeObstacles('log', 300 + index * 13, 14);
+    placeObstacles('stump', 188 + index * 8, level.obstacles.stump);
+    placeObstacles('rock', 90 + index * 12, level.obstacles.rock);
     const signs = level.forks.map(fork => ({
       type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4 * TRAIL_SCALE,
       label: index === 2 ? 'Shortcut' : 'Dispatch route', direction: fork.side
