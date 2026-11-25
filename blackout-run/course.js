@@ -11,8 +11,11 @@
   const CRUISE = distance(26);
   const BLACKOUT_POINTS = [1260, 2230, 3200].map(distance);
   const WARNING_DISTANCE = 210;
-  const GUN_SHOT_SPACING = 17;
-  const WORLD_EDGE = 12;
+  const GUN_SHOT_SPACING = 24;
+  const COURSE_WIDTH_SCALE = 1.25;
+  const WORLD_EDGE = 12 * COURSE_WIDTH_SCALE;
+  const FALL_SECONDS = 1.32;
+  const ATTACK_MULTIPLIER = 3;
   const levels = [
     {
       title: 'The Broken Dispatch',
@@ -48,18 +51,18 @@
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   function center(levelIndex, z) {
-    return 1.45 * Math.sin(z / distance(261) + levelIndex) + 0.9 * Math.sin(z / distance(109) + levelIndex * 2);
+    return COURSE_WIDTH_SCALE * (1.45 * Math.sin(z / distance(261) + levelIndex) + 0.9 * Math.sin(z / distance(109) + levelIndex * 2));
   }
 
   function forkOffset(fork, z) {
     const position = clamp((z - fork.start) / (fork.end - fork.start), 0, 1);
-    return fork.side * 6.5 * Math.sin(Math.PI * position) ** 1.5;
+    return fork.side * 6.5 * COURSE_WIDTH_SCALE * Math.sin(Math.PI * position) ** 1.5;
   }
 
   function trails(levelIndex, z) {
     const main = center(levelIndex, z);
     const fork = levels[levelIndex].forks.find(item => z > item.start && z < item.end);
-    return fork ? [{ x: main, width: 4.7 }, { x: main + forkOffset(fork, z), width: 2.8 }] : [{ x: main, width: 4.7 }];
+    return fork ? [{ x: main, width: 4.7 * COURSE_WIDTH_SCALE }, { x: main + forkOffset(fork, z), width: 2.8 * COURSE_WIDTH_SCALE }] : [{ x: main, width: 4.7 * COURSE_WIDTH_SCALE }];
   }
 
   function createCourse(index) {
@@ -78,16 +81,21 @@
         scenery.push({ type: 'pine', z: z + (side > 0 ? 8 : 0), x: edge + side * (1.5 + ((z * 11 + side) % 31) / 10), scale: 0.8 + (z % 37) / 63 });
       }
     }
-    const attacks = level.attacks.map((attack, id) => ({
-      ...attack,
-      side: (id + index) % 2 ? 1 : -1,
-      shooterX: center(index, attack.z) + ((id + index) % 2 ? 1 : -1) * 7.5
-    }));
+    const attackCount = level.attacks.length * ATTACK_MULTIPLIER;
+    const attacks = Array.from({ length: attackCount }, (_, id) => {
+      const original = level.attacks[id % level.attacks.length];
+      const position = id / (attackCount - 1);
+      const last = Math.min(level.attacks.at(-1).z, DISTANCE - 275);
+      const first = level.attacks[0].z;
+      const z = first + (last - first) * position;
+      const side = (Math.floor(id / 2) + index) % 2 ? 1 : -1;
+      return { kind: original.kind, z, side, shooterX: center(index, z) + side * 5.8 };
+    });
     const obstacles = [];
     for (let z = 615, id = 0; z < DISTANCE - 180; z += 91 - index * 9, id++) {
       if (markers.some(marker => Math.abs(marker.z - z) < 58) ||
         level.checkpoints.some(point => Math.abs(z - point) < 34) ||
-        attacks.some(attack => Math.abs(attack.z - z) < 62)) continue;
+        level.attacks.some(attack => Math.abs(attack.z - z) < 62)) continue;
       const path = trails(index, z);
       const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
       obstacles.push({
@@ -124,6 +132,7 @@
     run.speed = CRUISE;
     run.grace = 3;
     run.lastCrash = -Infinity;
+    run.recoverAtCheckpoint = false;
     run.attack = null;
     run.lastBlast = null;
   }
@@ -152,10 +161,8 @@
   function takeHit(run, message) {
     run.crashes++;
     run.damage++;
-    if (run.damage >= 3) {
-      retryCheckpoint(run);
-      return;
-    }
+    run.recoverAtCheckpoint = run.damage >= 3;
+    run.target = run.x;
     run.speed = distance(10);
     run.grace = 2.5;
     run.lastCrash = run.elapsed;
@@ -164,20 +171,25 @@
 
   function step(run, dt, input) {
     if (run.finished) return;
+    const falling = run.elapsed - run.lastCrash < FALL_SECONDS;
+    if (!falling && run.recoverAtCheckpoint) {
+      retryCheckpoint(run);
+      return;
+    }
     const beforeZ = run.z;
     const beforeX = run.x;
     const offTrail = !trails(run.index, run.z).some(lane => Math.abs(run.x - lane.x) <= lane.width);
     const fork = run.level.forks.find(item => beforeZ > item.start && beforeZ < item.end);
     const shortcut = run.index === 2 && fork && Math.abs(run.x - center(run.index, beforeZ) - forkOffset(fork, beforeZ)) < 2 && Math.abs(forkOffset(fork, beforeZ)) > 4;
-    const preferredSpeed = input.brake ? distance(15) : offTrail ? distance(20) : shortcut ? distance(38) : CRUISE;
+    const preferredSpeed = falling ? 9 : input.brake ? distance(15) : offTrail ? distance(20) : shortcut ? distance(38) : CRUISE;
     run.braking = input.brake;
     run.speed += (preferredSpeed - run.speed) * Math.min(1, dt * 3);
     run.z += dt * run.speed;
     run.elapsed += dt;
     run.grace = Math.max(0, run.grace - dt);
-    if (input.steer) run.target = clamp(run.target + input.steer * dt * 10, -WORLD_EDGE, WORLD_EDGE);
+    if (!falling && input.steer) run.target = clamp(run.target + input.steer * dt * 10, -WORLD_EDGE, WORLD_EDGE);
     const delta = run.target - run.x;
-    run.x += clamp(delta, -dt * (input.brake ? 15 : 12), dt * (input.brake ? 15 : 12));
+    if (!falling) run.x += clamp(delta, -dt * (input.brake ? 15 : 12), dt * (input.brake ? 15 : 12));
     function crosses(object, radius) {
       if (object.z < beforeZ || object.z > run.z) return false;
       const fraction = (object.z - beforeZ) / (run.z - beforeZ);
@@ -194,7 +206,7 @@
     }
 
     const missed = run.course.markers.find(marker => !run.collected.has(marker.id) && run.z > marker.z + distance(72));
-    if (missed) {
+    if (missed && !falling) {
       run.loops++;
       const returnPoint = missed.z - distance(145);
       restore(run, returnPoint);
@@ -216,14 +228,14 @@
       if (attack.kind === 'bomb') {
         if (beforeZ < attack.z && run.z >= attack.z) {
           run.lastBlast = { x: attack.x, z: attack.z, expires: run.elapsed + 0.65 };
-          if (run.grace === 0 && crosses(attack, 2.55)) takeHit(run, 'Bomb blast. Back on your skis.');
+          if (run.grace === 0 && crosses(attack, 2.55)) takeHit(run, 'The bomb blast knocked you down.');
           run.attack = null;
         }
       } else {
         for (let shot = 0; shot < 3; shot++) {
           const impact = { x: attack.x, z: attack.z + shot * GUN_SHOT_SPACING };
           if (run.grace === 0 && crosses(impact, 1.25)) {
-            takeHit(run, 'Hit by gunfire. Back on your skis.');
+            takeHit(run, 'Rifle fire knocked you down.');
             break;
           }
         }
@@ -231,7 +243,7 @@
       }
     }
     if (run.grace === 0 && run.course.obstacles.some(rock => crosses(rock, 0.82 * rock.scale))) {
-      takeHit(run, 'Back on your skis.');
+      takeHit(run, 'You hit a boulder.');
     }
     if (run.index === 2 && BLACKOUT_POINTS.some(point => beforeZ < point && run.z >= point)) {
       announce(run, 'The valley lights are going out. Follow the trail lanterns.');
@@ -241,8 +253,8 @@
       run.checkpoint = nextCheckpoint;
       run.damage = 0;
     }
-    if (run.z >= DISTANCE && run.collected.size === run.level.markers.length) run.finished = true;
+    if (!falling && !run.recoverAtCheckpoint && run.z >= DISTANCE && run.collected.size === run.level.markers.length) run.finished = true;
   }
 
-  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, clamp, center, trails, createRun, retryCheckpoint, step };
+  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, createRun, retryCheckpoint, step };
 });

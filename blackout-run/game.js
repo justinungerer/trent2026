@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const canvas = el('slope');
   const ctx = canvas.getContext('2d');
@@ -10,10 +10,16 @@
   let snowTile;
   const art = {};
   const scenery = ['valley', 'forest', 'airstrip'];
+  const fallPoses = [
+    { name: 'ski-stumble', until: 0.19, height: 0.96 },
+    { name: 'ski-tumble', until: 0.42, height: 0.79 },
+    { name: 'ski-slide', until: 0.70, height: 0.53 },
+    { name: 'ski-rise', until: 1, height: 0.82 }
+  ];
   const bounds = {
     pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35], bridge: [5.5, 2.35],
     satchel: [1.33, 1.1], post: [1.85, 2.55], cabin: [6.1, 4.7], hangar: [9, 4.9],
-    lantern: [0.8, 1.3], rifleman: [1.8, 2.5]
+    lantern: [0.8, 1.3], rifleman: [2.6, 4.1]
   };
   let selected = 0;
   let run = createRun(selected);
@@ -101,7 +107,7 @@
   });
   canvas.addEventListener('pointermove', event => {
     if (event.pointerId !== drag?.id) return;
-    run.target = clamp(drag.target + (event.clientX - drag.x) / width * 22, -WORLD_EDGE, WORLD_EDGE);
+    run.target = clamp(drag.target + (event.clientX - drag.x) / width * WORLD_EDGE * 1.84, -WORLD_EDGE, WORLD_EDGE);
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     canvas.addEventListener(name, event => {
@@ -201,10 +207,11 @@
     }
   }
 
-  function drawObject(object, view) {
+  function drawObject(object, view, edgePadding = 0) {
     const distance = object.z - run.z;
     if (distance < -18 || distance > 395 || (object.id !== undefined && run.collected.has(object.id))) return;
     const point = project(object.x, distance, view);
+    if (edgePadding) point.x = clamp(point.x, edgePadding, width - edgePadding);
     const dim = bounds[object.type];
     const image = art[object.type];
     if (!image || !dim) return;
@@ -221,7 +228,9 @@
       ctx.shadowColor = '#ffb849';
       ctx.shadowBlur = scale * 0.4;
     }
-    ctx.drawImage(image, point.x - w / 2, point.y - h - bob, w, h);
+    ctx.translate(point.x, point.y);
+    if (object.flip) ctx.scale(-1, 1);
+    ctx.drawImage(image, -w / 2, -h - bob, w, h);
     ctx.restore();
     if (heading && distance >= 18 && distance < (marker ? 275 : 175)) {
       const caption = object.label ? `${object.direction < 0 ? '← ' : ''}${object.label}${object.direction > 0 ? ' →' : ''}`
@@ -243,25 +252,26 @@
     const distance = attack.z - run.z;
     const impact = project(attack.x, distance, view);
     const progress = clamp(1 - distance / WARNING_DISTANCE, 0, 1);
-    const planeX = width * (-0.36 + progress * 1.76);
+    const planeX = width * (-0.24 + progress * 1.48);
     const x = attack.side < 0 ? planeX : width - planeX;
-    const y = horizon * (0.59 + progress * 0.31);
-    const planeWidth = width * (0.20 + progress * 0.18);
+    const y = horizon * 0.69;
+    const planeWidth = width * 0.32;
     const plane = art.bomber;
     if (plane) {
+      const planeHeight = planeWidth * plane.height / plane.width;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(attack.side * 0.34);
-      ctx.drawImage(plane, -planeWidth / 2, -planeWidth / 3, planeWidth, planeWidth * plane.height / plane.width);
+      if (attack.side > 0) ctx.scale(-1, 1);
+      ctx.drawImage(plane, -planeWidth / 2, -planeHeight / 2, planeWidth, planeHeight);
       ctx.restore();
     }
     if (progress > 0.42 && art.bomb) {
       const drop = (progress - 0.42) / 0.58;
-      const releaseX = width * (-0.36 + 0.42 * 1.76);
+      const releaseX = width * (-0.24 + 0.42 * 1.48);
       const origin = attack.side < 0 ? releaseX : width - releaseX;
       const size = 10 + drop * 19;
       const dropX = origin + (impact.x - origin) * drop;
-      const dropY = horizon * 0.75 + (impact.y - horizon * 0.75) * drop ** 1.6;
+      const dropY = y + (impact.y - y) * drop ** 1.6;
       ctx.drawImage(art.bomb, dropX - size / 2, dropY - size * 1.5, size, size * 1.5);
     }
   }
@@ -285,20 +295,32 @@
       ctx.restore();
       if (bomb) drawAirRaid(attack, view);
       else {
-        drawObject({ type: 'rifleman', x: attack.shooterX, z: attack.z }, view);
-        const muzzle = project(attack.shooterX, Math.max(-28, distance), view);
-        muzzle.y -= muzzle.scale * 1.4;
+        const shooterDistance = Math.max(14, distance - 18);
+        const padding = width * 0.105;
+        drawObject({ type: 'rifleman', x: attack.shooterX, z: run.z + shooterDistance, flip: attack.side > 0 }, view, padding);
+        const muzzle = project(attack.shooterX, shooterDistance, view);
+        muzzle.x = clamp(muzzle.x, padding, width - padding) - attack.side * muzzle.scale * 0.53;
+        muzzle.y -= muzzle.scale * 1.9;
         for (let shot = 0; shot < 3; shot++) {
           const approach = distance + shot * GUN_SHOT_SPACING;
           if (approach < 0 || approach > 44) continue;
           const progress = 1 - approach / 44;
           const hit = project(attack.x, approach, view);
           const point = t => [muzzle.x + (hit.x - muzzle.x) * t, muzzle.y + (hit.y - muzzle.y) * t];
+          if (progress < 0.23) {
+            ctx.fillStyle = '#ffe4a2';
+            ctx.beginPath();
+            ctx.arc(muzzle.x, muzzle.y, 7 * (1 - progress), 0, Math.PI * 2);
+            ctx.fill();
+          }
           ctx.beginPath();
-          ctx.moveTo(...point(Math.max(0, progress - 0.27)));
+          ctx.moveTo(...point(Math.max(0, progress - 0.30)));
           ctx.lineTo(...point(progress));
+          ctx.strokeStyle = '#f69939';
+          ctx.lineWidth = 5;
+          ctx.stroke();
           ctx.strokeStyle = '#fff1aa';
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2;
           ctx.stroke();
         }
       }
@@ -315,15 +337,17 @@
   }
 
   function drawSkier(view) {
-    const image = art[run.braking ? 'ski-brake' : Math.abs(lean) > 0.8 ? 'ski-turn' : 'ski-straight'];
+    const fallProgress = (run.elapsed - run.lastCrash) / FALL_SECONDS;
+    const fall = fallProgress < 1 ? fallPoses.find(pose => fallProgress < pose.until) : null;
+    const riding = run.braking ? 'ski-brake' : Math.abs(lean) > 0.8 ? 'ski-turn' : 'ski-straight';
+    const image = art[fall ? fall.name : riding];
     if (!image) return;
     const point = project(run.x, 0, view);
-    const h = Math.min(height * 0.21, width * 0.36);
+    const h = Math.min(height * 0.21, width * 0.36) * (fall?.height ?? 1);
     const w = h * image.width / image.height;
     ctx.save();
-    if (run.elapsed - run.lastCrash < 0.35) ctx.globalAlpha = 0.64;
     ctx.translate(point.x, point.y);
-    if (!run.braking && lean < -0.8) ctx.scale(-1, 1);
+    if (!fall && !run.braking && lean < -0.8) ctx.scale(-1, 1);
     ctx.drawImage(image, -w / 2, -h, w, h);
     ctx.restore();
   }
@@ -383,11 +407,11 @@
   }
 
   choose(0);
-  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...Object.keys(bounds)]
+  const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
     .map(name => [name, `art/${name}.webp`]));
   Object.assign(sources, {
     rifleman: '../listening-wire/art/guard-rifleman.webp',
-    bomber: '../frosted-skies/art/workshop-siege-bomber.webp',
+    bomber: 'art/bomber-side.webp',
     bomb: '../chimney-road/art/painted-bomb.webp',
     blast: '../frosted-skies/art/painted-missile-explosion.webp'
   });

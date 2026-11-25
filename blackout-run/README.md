@@ -6,7 +6,7 @@ The main trail is paced for about three minutes per level. Steer away from the m
 
 ## Painted artwork
 
-The rifleman, bomber, bomb, and explosion reuse painted artwork from the other minigames.
+The rifleman, bomb, and explosion reuse painted artwork from the other minigames.
 
 The built-in ImageGen tool generated the following source paintings for this prototype. The game uses WebP copies and transparent crops from the two sprite sheets.
 
@@ -16,3 +16,5 @@ The built-in ImageGen tool generated the following source paintings for this pro
 - **Snow.** Overhead texture of blue-silver powder and shallow snowdrifts.
 - **Trail sprite sheet.** Three rear-view skiing poses, evergreen, boulder, courier satchel, relay cabin, bridge, and lantern sign.
 - **Outpost sprite sheet.** Allied radio operator, snow-covered aircraft hangar, oil lantern, and ski-brake icon.
+- **Bomber.** Painted orthographic side view of a 1940s twin-engine bomber in level flight.
+- **Fall sprite sheet.** Four painted rear-view poses showing Trent stumbling, tumbling, sliding, and getting up.
