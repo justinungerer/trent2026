@@ -33,4 +33,32 @@ h2 { font-size: 2.15rem; }
 
 #rotate { z-index: 10; background: #0c171e; }
 
-#start-sheet { touch-action: none; }
+#ski-game #start-sheet {
+  align-items: flex-start;
+  touch-action: pan-y;
+  background: linear-gradient(#07152573 0%, #07152535 48%, transparent 66%);
+}
+#ski-game #start-sheet .card { margin: 0; max-height: 66%; touch-action: pan-y; }
+
+#start-sheet #start {
+  position: absolute;
+  left: 50%;
+  bottom: 10.5%;
+  width: min(22vw, 119px);
+  height: min(21dvh, 36vw, 194px);
+  transform: translateX(-50%);
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+  touch-action: none;
+}
+#start-sheet #start span {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #122439ee;
+  border-radius: 6px;
+  padding: 5px 10px;
+}

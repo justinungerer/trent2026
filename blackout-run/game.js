@@ -124,27 +124,53 @@
     if (document.hidden && state === 'run') show('paused');
   });
 
+  function skierSize() {
+    return Math.min(height * 0.21, width * 0.36);
+  }
+
+  function viewPosition() {
+    if (drag) {
+      const skisX = drag.skisX + (run.x - drag.worldX) * drag.pixelsPerUnit;
+      return run.x - (skisX - width / 2) / focal;
+    }
+    return clamp(cameraX, run.x - width * 0.34 / focal, run.x + width * 0.34 / focal);
+  }
+
   function grabSlope(event) {
-    if (state !== 'run' || drag || !event.isPrimary || event.button !== 0) return;
-    drag = { id: event.pointerId, x: event.clientX, target: run.x };
+    if ((state !== 'menu' && state !== 'run') || drag || !event.isPrimary || event.button !== 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const skier = project(run.x, 0, viewPosition());
+    const size = skierSize();
+    if (Math.abs(x - skier.x) > size * 0.28 + 6 || y < skier.y - size - 7 || y > skier.y + 10) return;
+    if (state === 'menu') {
+      if (el('start').disabled) return;
+      event.preventDefault();
+      el('start').click();
+      if (state !== 'run') return;
+    }
+    drag = {
+      id: event.pointerId, pointerX: x, startX: x, skisX: skier.x, worldX: run.x,
+      pixelsPerUnit: width / (WORLD_EDGE * 1.84)
+    };
     run.target = run.x;
     canvas.setPointerCapture(event.pointerId);
   }
 
   el('start-sheet').addEventListener('pointerdown', event => {
-    if (event.target.closest('#levels') || !event.isPrimary || event.button !== 0 || el('start').disabled) return;
-    event.preventDefault();
-    el('start').click();
-    grabSlope(event);
+    if (!event.target.closest('.card')) grabSlope(event);
   });
   canvas.addEventListener('pointerdown', grabSlope);
   canvas.addEventListener('pointermove', event => {
     if (event.pointerId !== drag?.id) return;
-    run.target = clamp(drag.target + (event.clientX - drag.x) / width * WORLD_EDGE * 1.84, -WORLD_EDGE, WORLD_EDGE);
+    drag.pointerX = clamp(event.clientX - canvas.getBoundingClientRect().left, 12, width - 12);
+    run.target = clamp(drag.worldX + (drag.pointerX - drag.startX) / drag.pixelsPerUnit, -WORLD_EDGE, WORLD_EDGE);
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     canvas.addEventListener(name, event => {
       if (event.pointerId !== drag?.id) return;
+      cameraX = viewPosition();
       drag = null;
       run.target = run.x;
     });
@@ -168,7 +194,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ground.width = Math.round(width);
     ground.height = Math.round(height);
-    const spriteBounds = Math.ceil(Math.min(height * 0.21, width * 0.36) * 2.7);
+    const spriteBounds = Math.ceil(skierSize() * 2.7);
     skierLayer.width = skierLayer.height = spriteBounds;
     horizon = height * 0.345;
     skiLine = height * 0.895;
@@ -400,7 +426,7 @@
     const fallProgress = (run.elapsed - run.lastCrash) / FALL_SECONDS;
     const fall = fallProgress < 1 ? fallPoses.find(pose => fallProgress < pose.until) : null;
     const point = project(run.x, 0, view);
-    const size = Math.min(height * 0.21, width * 0.36);
+    const size = skierSize();
     const lowMotion = reducedMotion.matches;
 
     skierPaint.setTransform(1, 0, 0, 1, 0, 0);
@@ -439,7 +465,7 @@
   }
 
   function draw() {
-    const view = clamp(cameraX, run.x - width * 0.34 / focal, run.x + width * 0.34 / focal);
+    const view = viewPosition();
     drawBackdrop(view);
     drawSnow(view);
     const objects = run.course.objects;
@@ -465,7 +491,7 @@
       const arrow = Math.abs(direction) < 1.8 ? '↑' : direction < 0 ? '←' : '→';
       hint = marker.z < run.z ? 'Return trail ahead'
         : `${arrow} ${marker.type === 'post' ? 'Lift your finger at the signal post' : 'Dispatch pouch ahead'}`;
-    } else if (run.braking && run.speed === 0 && !drag) hint = 'Touch the snow to ski';
+    } else if (run.braking && run.speed === 0 && !drag) hint = 'Touch Trent to ski';
     else if (run.index === 2 && progress > 25 && progress < 95) {
       hint = 'Follow the trail lanterns';
     }
@@ -497,9 +523,15 @@
     paintTime += dt;
     if (state === 'run' && !waitingForPortrait && dt > 0) {
       const previousZ = run.z;
+      const heldSkisX = drag ? project(run.x, 0, viewPosition()).x : null;
       const steering = Number(key.right) - Number(key.left);
       const brake = !drag && !steering && !key.forward;
       step(run, dt, { brake, steer: steering });
+      if (drag && run.z < previousZ) {
+        drag.worldX = run.x;
+        drag.startX = drag.pointerX;
+        drag.skisX = heldSkisX;
+      }
       lean += (run.lateralVelocity - lean) * (1 - Math.exp(-dt * 7));
       brakeBlend += (Number(brake) - brakeBlend) * (1 - Math.exp(-dt * 8));
       motionPhase = (motionPhase + dt * (0.85 + run.speed / 85)) % 1;
