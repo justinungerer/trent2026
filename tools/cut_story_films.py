@@ -55,26 +55,12 @@ PLATES = {
         ]
     ],
     "night": [
-        [
-            "1"
-        ],
-        [
-            "2",
-            "b"
-        ],
-        [
-            "3"
-        ],
-        [
-            "yard:3",
-            "yard:2"
-        ],
-        [
-            "4"
-        ],
-        [
-            "a"
-        ]
+        ["chapter-one:broadcast-a"],
+        ["2", "night:b"],
+        ["chapter-one:broadcast-c"],
+        ["chapter-one:blackout-b"],
+        ["chapter-one:broadcast-d"],
+        ["chapter-one:broken-a"],
     ],
     "frost": [
         [
@@ -269,6 +255,13 @@ PLATES = {
         ]
     ]
 }
+CHAPTER_ONE_LEVEL_PLATES = {
+    "the-broken-dispatch": [["broken-a"], ["broken-b", "broken-c"], ["broken-d"]],
+    "lights-across-the-valley": [["valley-a"], ["valley-b", "valley-c"], ["valley-d"]],
+    "beat-the-blackout": [["blackout-a", "blackout-b"], ["blackout-c"], ["blackout-d"]],
+}
+CHAPTER_ONE_CINEMATICS = {"night", *CHAPTER_ONE_LEVEL_PLATES}
+
 OPENING_PLATES = dict(zip("abcd", ("orders", "capture", "gate", "radio")))
 
 
@@ -287,6 +280,8 @@ def read_films():
 def plate(film, key):
     if ":" in key:
         film, key = key.split(":", 1)
+    if film == "chapter-one":
+        return ROOT / "assets" / "chapter-one-film-art" / f"{key}.webp"
     if key.isdigit():
         return ROOT / "assets" / "story-film-art" / f"{film}-{key}.webp"
     if film == "opening":
@@ -296,6 +291,12 @@ def plate(film, key):
 
 def build_shots(film, data):
     boundaries = [*data["captionFrames"], data["filmSeconds"] * FPS]
+    if film in CHAPTER_ONE_LEVEL_PLATES:
+        for i, (text, images) in enumerate(zip(data["lines"], CHAPTER_ONE_LEVEL_PLATES[film])):
+            frames = boundaries[i + 1] - boundaries[i]
+            for n, image in enumerate(images):
+                yield text, plate("chapter-one", image), frames * (n + 1) // len(images) - frames * n // len(images)
+        return
     if "levelPlate" in data:
         for index, (text, image) in enumerate(zip(data["lines"], data["levelPlate"])):
             yield text, image, boundaries[index + 1] - boundaries[index]
@@ -335,7 +336,7 @@ def render_film(film, data, output, font, blender=None):
     with TemporaryDirectory(dir=output) as folder:
         scratch = Path(folder)
         if blender:
-            render_blender(shots, scratch, output / f"{film}.mp4", font, blender)
+            render_blender(shots, scratch, output / f"{film}.mp4", font, blender, motion=film in CHAPTER_ONE_CINEMATICS)
             print(f"{film}: {data['filmSeconds']} seconds, {len(shots)} Blender shots", flush=True)
             return
         names = []
@@ -356,9 +357,9 @@ def render_film(film, data, output, font, blender=None):
     print(f"{film}: {data['filmSeconds']} seconds, {len(shots)} shots", flush=True)
 
 
-def render_blender(shots, scratch, output, font, blender):
+def render_blender(shots, scratch, output, font, blender, motion=False):
     raw = scratch / "story.mp4"
-    manifest = {"fps": FPS, "output": str(raw), "shots": []}
+    manifest = {"fps": FPS, "output": str(raw), "shots": [], "chapterOneMotion": motion}
     for index, (text, image, frames) in enumerate(shots):
         caption = scratch / f"caption-{index}.png" if text else None
         if caption:
@@ -374,9 +375,12 @@ def render_blender(shots, scratch, output, font, blender):
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     if result.returncode:
         raise RuntimeError(result.stdout)
+    # Keep the higher-motion plates compact enough for phone playback.
+    encoding = ["-c:v", "libx264", "-threads", "3", "-preset", "fast",
+                "-crf", "22", "-pix_fmt", "yuv420p"] if motion else ["-c", "copy"]
     subprocess.run([
         "ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(raw),
-        "-c", "copy", "-movflags", "+faststart", str(output),
+        *encoding, "-movflags", "+faststart", str(output),
     ], check=True)
 
 

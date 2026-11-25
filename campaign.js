@@ -101,13 +101,14 @@ var CHAPTERS = [
     line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Trent straps on his skis to carry the warning through the valley.',
     filmSeconds: 34,
     captionFrames: [0, 137, 339, 485, 650, 733],
+    videoVersion: 'night-blender-1',
     lines: [
-      "Months later, on a snowy December night, a radio lamp glows in Trent’s tent.",
-      "A garbled signal breaks through the static. Hitler has taken Santa, and Buddy has vanished while deep undercover in Hitler’s mansion.",
-      "The same report names the workshop and a freight yard where Rudolph is being held.",
-      "Recent intelligence suggests the Nazi commanders plan to turn Rudolph into hamburgers to feed their starving troops.",
-      "Trent folds the message into his coat.",
-      "He has one mission. Save Christmas."
+      "A field radio crackled through the December blizzard.",
+      "The voice reported that Hitler had taken Santa. Buddy had vanished while undercover inside the mansion.",
+      "The dispatch named a freight yard. Rudolph was being held there.",
+      "The Luftwaffe would reach Santa’s workshop before dawn.",
+      "Trent folded the warning and grabbed his skis.",
+      "He had one chance to get there first."
     ],
     story: 'A radio transmission names the workshop, a freight yard, and the scouts Trent needs to find.',
     event: 'blackout-run:complete',

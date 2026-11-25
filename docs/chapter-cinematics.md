@@ -16,6 +16,15 @@ python -B tools/cut_story_films.py --blender "C:/path/to/blender.exe" --output .
 
 Add film IDs to the command to export specific cuts. Add `--levels` to render the 24-second minigame films from the scripts in `levels.js`. Copy the cast and opening films to `assets/`, chapter files to `assets/intro-video/`, and minigame files to `assets/level-video/`. Update the media cache version when publishing.
 
+### Chapter 1 · Blackout Run
+
+The Chapter 1 opening and its three skiing intros use realistic winter story plates and Blender camera pans and push-ins. The opening uses the established Trent close-ups for continuity. The new plates are in `assets/chapter-one-film-art/`. They were generated with the built-in ImageGen tool from prompts for the radio tent and freight yard, the mountain and lost dispatch, the signal operators and lanterns, and the bomber approach and workshop hangar. The tent departure uses the established Trent portrait as a reference.
+
+```powershell
+python -B tools/cut_story_films.py --blender "C:/path/to/blender.exe" --output .\story-films --font C:/Windows/Fonts/segoeui.ttf night
+python -B tools/cut_story_films.py --levels --blender "C:/path/to/blender.exe" --output .\story-films --font C:/Windows/Fonts/segoeui.ttf the-broken-dispatch lights-across-the-valley beat-the-blackout
+```
+
 ## Campaign progression
 
 Start begins a new game when the password field is empty and opens the chapter menu with a valid password. How to play opens the rules. The prologue leads to ten scored chapters with ten WWII questions apiece. Each chapter has its own minigame with three progressively more difficult levels. Five correct answers are required to play the minigame. Scores of eight through ten grant a fresh bonus loadout on each level.

@@ -36,10 +36,15 @@ def assemble(manifest):
         scale = max(WIDTH / media.orig_width, HEIGHT / media.orig_height)
         direction = 1 if index % 2 == 0 else -1
         transform = plate.transform
-        for at, zoom, drift in [(frame, 1.045, -6), (last, 1.122, 12)]:
+        motion = [(frame, 1.045, -6, 0), (last, 1.122, 12, 0)]
+        if manifest.get("chapterOneMotion"):
+            start, end, lift = [(1.045, 1.125, 11), (1.14, 1.055, -9), (1.065, 1.165, 14)][index % 3]
+            motion = [(frame, start, -5, 0), (last, end, 12, lift)]
+        for at, zoom, drift, vertical in motion:
             transform.scale_x = transform.scale_y = scale * zoom
             transform.offset_x = drift * direction
-            for property_name in ("scale_x", "scale_y", "offset_x"):
+            transform.offset_y = vertical
+            for property_name in ("scale_x", "scale_y", "offset_x", "offset_y"):
                 transform.keyframe_insert(property_name, frame=at)
 
         if shot["caption"]:

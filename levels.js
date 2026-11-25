@@ -36,28 +36,31 @@ window.TrentLevels = {
     {
       "id": "the-broken-dispatch",
       "title": "The Broken Dispatch",
+      "videoVersion": "night-blender-1",
       "lines": [
-        "The radio went silent before the last page came through.",
-        "Two dispatch pouches lay along the trail to the relay hut.",
-        "Trent buckled his skis and headed for the valley."
+        "The signal died before the warning was complete.",
+        "Two dispatch pouches were still out on the mountain, with a storm closing in.",
+        "Far below, one window still burned at the relay hut."
       ]
     },
     {
       "id": "lights-across-the-valley",
       "title": "Lights Across the Valley",
+      "videoVersion": "night-blender-1",
       "lines": [
-        "The pages held a warning for Santa’s workshop.",
-        "Two Allied operators kept their lanterns lit across the valley.",
-        "Trent carried the dispatch between the signal posts."
+        "The recovered pages confirmed the target. Santa’s workshop was next.",
+        "Through the storm, two Allied operators held their lanterns high.",
+        "The warning had to reach both of them before the valley went dark."
       ]
     },
     {
       "id": "beat-the-blackout",
       "title": "Beat the Blackout",
+      "videoVersion": "night-blender-1",
       "lines": [
-        "The confirmed warning had to reach the workshop airstrip.",
-        "The valley lights went dark as bombers crossed the ridge.",
-        "Trent followed the lanterns down to the hangar."
+        "On the far ridge, the first bombers broke through the clouds.",
+        "One by one, the valley lights went out. Only the trail lanterns remained.",
+        "At the airstrip, the hangar doors opened. Trent’s sleigh was waiting."
       ]
     }
   ],
