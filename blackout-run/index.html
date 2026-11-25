@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071525">
   <title>Blackout Run</title>
-  <link rel="stylesheet" href="style.css?v=campaign">
+  <link rel="stylesheet" href="style.css?v=lift-to-brake">
   <script src="../orientation.js?v=blackout-run" defer></script>
-  <script src="course.js?v=wide-trails" defer></script>
-  <script src="game.js?v=wide-trails" defer></script>
+  <script src="course.js?v=lift-to-brake" defer></script>
+  <script src="game.js?v=lift-to-brake" defer></script>
 </head>
 <body>
   <main id="ski-game">
@@ -22,7 +22,6 @@
       <p id="route-hint"></p>
       <p id="notice" role="status"></p>
     </section>
-    <button id="brake" type="button" aria-label="Hold to brake" hidden>Brake</button>
 
     <section id="start-sheet" class="overlay">
       <div class="panel card">
@@ -33,11 +32,11 @@
         <p id="briefing"></p>
         <ul class="controls game-steps">
           <li>Drag to steer.</li>
-          <li>Hold Brake for tight turns and signal posts.</li>
-          <li>Steer clear of marked attack zones.</li>
+          <li>Lift your finger to brake or stop at a signal post.</li>
+          <li>Steer clear of the attack zone or stop and let it pass.</li>
         </ul>
         <p id="briefing-bonus" hidden></p>
-        <button class="primary" id="start" type="button">Start run</button>
+        <button class="primary" id="start" type="button">Place finger on screen to begin</button>
       </div>
     </section>
     <section id="rotate" class="overlay" hidden>

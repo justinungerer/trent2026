@@ -27,7 +27,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         contentType: 'application/javascript',
         body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/,
           "window.clearSkiLevel=()=>{if(state!=='run')throw Error('Ski run has not started');" +
-          "run.course.markers.forEach(marker=>run.collected.add(marker.id));run.z=DISTANCE-.1;" +
+          "run.course.markers.forEach(marker=>run.collected.add(marker.id));run.z=DISTANCE-.01;" +
           "step(run,1/60,{brake:false,steer:0});if(!run.finished)throw Error('Ski run did not clear');finish();};" +
           "window.skiStatus=()=>({level:run.index,falls:run.fallLimit});\n})();")
       });

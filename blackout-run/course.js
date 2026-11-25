@@ -12,7 +12,9 @@
   const BLACKOUT_POINTS = [1260, 2230, 3200].map(distance);
   const WARNING_DISTANCE = 315;
   const GUN_SHOT_SPACING = 36;
-  const RIFLE_TRACK_SPEED = 0.9;
+  const RIFLE_TRACK_SPEED = 1.1;
+  const RIFLE_SWEEP = 7.5;
+  const STOP_DECELERATION = 120;
   const TRAIL_SCALE = 1.5;
   const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE;
   const WORLD_EDGE = 30;
@@ -34,7 +36,7 @@
     {
       id: 'lights-across-the-valley',
       title: 'Lights Across the Valley',
-      briefing: 'Ski through both Allied signal posts. Hold Brake as you pass each operator.',
+      briefing: 'Ski past both Allied signal posts. Lift your finger near each operator to slow down.',
       objective: 'Confirmations', destination: 'Valley relay', marker: 'post', markers: [1410, 3480],
       checkpoints: [0, 810, 2240, 2930, 4140],
       attacks: [[480, 'gun'], [2020, 'bomb'], [2650, 'gun'], [3830, 'bomb'], [4450, 'gun']],
@@ -136,9 +138,9 @@
         obstacles.push({ type, art, z, x: lane.x + side * offset, scale, radius });
       }
     }
-    placeObstacles('log', 1180, 645 - index * 38);
-    placeObstacles('rock', 930, (91 - index * 9) * TRAIL_SCALE);
-    placeObstacles('stump', 680, 216 - index * 15);
+    placeObstacles('log', 300 + index * 13, 645 - index * 38);
+    placeObstacles('rock', 90 + index * 12, (91 - index * 9) * TRAIL_SCALE);
+    placeObstacles('stump', 188 + index * 8, 216 - index * 15);
     const signs = level.forks.map(fork => ({
       type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4 * TRAIL_SCALE,
       label: index === 2 ? 'Shortcut' : 'Dispatch route', direction: fork.side
@@ -176,6 +178,7 @@
       notice: '', noticeUntil: 0, braking: false
     };
     restore(run, 0);
+    run.grace = 0;
     return run;
   }
 
@@ -213,27 +216,31 @@
     const offTrail = !trails(run.index, run.z).some(lane => Math.abs(run.x - lane.x) <= lane.width);
     const fork = run.level.forks.find(item => beforeZ > item.start && beforeZ < item.end);
     const shortcut = run.index === 2 && fork && Math.abs(run.x - center(run.index, beforeZ) - forkOffset(fork, beforeZ)) < 2 && Math.abs(forkOffset(fork, beforeZ)) > 4;
-    const preferredSpeed = falling ? 9 : input.brake ? distance(15) : offTrail ? distance(20) : shortcut ? distance(38) : CRUISE;
+    const preferredSpeed = falling ? 9 : offTrail ? distance(20) : shortcut ? distance(38) : CRUISE;
     run.braking = input.brake;
-    run.speed += (preferredSpeed - run.speed) * Math.min(1, dt * 3);
+    if (input.brake && !falling) run.speed = Math.max(0, run.speed - STOP_DECELERATION * dt);
+    else run.speed += (preferredSpeed - run.speed) * Math.min(1, dt * 3);
     run.z += dt * run.speed;
     run.elapsed += dt;
     run.grace = Math.max(0, run.grace - dt);
     const { left, right } = treeLine(run.index, run.z);
-    if (!falling && input.steer) run.target += input.steer * dt * 15;
+    if (!falling && !input.brake && input.steer) run.target += input.steer * dt * 15;
     run.target = clamp(run.target, left, right);
-    const lateralStep = dt * (input.brake ? 22.5 : 18);
-    const moveX = falling ? run.x : run.x + clamp(run.target - run.x, -lateralStep, lateralStep);
+    const lateralStep = dt * 18;
+    const moveX = falling || input.brake ? run.x : run.x + clamp(run.target - run.x, -lateralStep, lateralStep);
     run.x = clamp(moveX, left, right);
     function crosses(object, radius) {
-      if (object.z < beforeZ || object.z > run.z) return false;
+      if (run.z === beforeZ || object.z < beforeZ || object.z > run.z) return false;
       const fraction = (object.z - beforeZ) / (run.z - beforeZ);
       return Math.abs(beforeX + (run.x - beforeX) * fraction - object.x) < radius;
     }
     for (const marker of run.course.markers) {
-      if (run.collected.has(marker.id) || !crosses(marker, marker.type === 'post' ? 2.8 : 2.15)) continue;
+      if (run.collected.has(marker.id)) continue;
+      const stoppingAtPost = marker.type === 'post' && input.brake && run.speed <= distance(21) &&
+        Math.abs(marker.z - run.z) <= 12 && Math.abs(marker.x - run.x) < 2.8;
+      if (!stoppingAtPost && !crosses(marker, marker.type === 'post' ? 2.8 : 2.15)) continue;
       if (marker.type === 'post' && !input.brake && run.speed > distance(21)) {
-        announce(run, 'Hold Brake as you pass the operator.');
+        announce(run, 'Lift your finger to brake as you pass the operator.');
         continue;
       }
       run.collected.add(marker.id);
@@ -247,7 +254,7 @@
       restore(run, returnPoint, trails(run.index, returnPoint).at(-1).x);
       run.target = missed.x;
       announce(run, missed.type === 'post'
-        ? 'Return trail. Hold Brake at the lit signal post.'
+        ? 'Return trail. Lift your finger near the lit signal post.'
         : 'Return trail. Follow the gold sign to the pouch.', 6);
       return;
     }
@@ -255,7 +262,7 @@
     if (!run.attack) {
       const incoming = run.course.attacks.find(attack => attack.z >= beforeZ && attack.z - run.z <= WARNING_DISTANCE);
       if (incoming) {
-        run.attack = { ...incoming, x: clamp(run.x, -WORLD_EDGE + 1, WORLD_EDGE - 1) };
+        run.attack = { ...incoming, aim: run.x, x: run.x, aimedFor: 0 };
       }
     }
     const attack = run.attack;
@@ -267,9 +274,12 @@
           run.attack = null;
         }
       } else {
-        const aim = clamp(run.x, -WORLD_EDGE + 1, WORLD_EDGE - 1);
         const adjustment = RIFLE_TRACK_SPEED * dt;
-        attack.x += clamp(aim - attack.x, -adjustment, adjustment);
+        attack.aim += clamp(run.x - attack.aim, -adjustment, adjustment);
+        attack.aimedFor += dt;
+        const sweep = attack.side * RIFLE_SWEEP * Math.sin(attack.aimedFor * 1.18);
+        const edge = treeLine(run.index, attack.z);
+        attack.x = clamp(attack.aim + sweep, edge.left + 0.5, edge.right - 0.5);
         for (let shot = 0; shot < 3; shot++) {
           const impact = { x: attack.x, z: attack.z + shot * GUN_SHOT_SPACING };
           if (run.grace === 0 && crosses(impact, 1.25)) {
@@ -280,7 +290,7 @@
         if (run.z >= attack.z + 2 * GUN_SHOT_SPACING) run.attack = null;
       }
     }
-    if (run.grace === 0) {
+    if (run.grace === 0 && run.z !== beforeZ) {
       const tree = run.course.trees.some(pine => {
         const depth = 3.2 * pine.scale;
         if (pine.z < beforeZ - depth || pine.z > run.z + depth) return false;

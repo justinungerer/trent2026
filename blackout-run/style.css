@@ -17,8 +17,6 @@ button { min-height: 44px; border: 1px solid #7a91a9; padding: .55rem .8rem; bor
 button:focus-visible { outline: 3px solid #ffe1ac; outline-offset: 3px; }
 button[aria-pressed="true"] { border-color: #ffc982; background: #59432e; }
 #pause { pointer-events: auto; }
-#brake { position: absolute; right: max(17px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); min-width: 91px; min-height: 67px; touch-action: none; user-select: none; background: #122842f2 url('art/brake.webp') center 45% / 68px auto no-repeat; text-shadow: 0 2px 4px #000, 0 0 4px #000; }
-#brake.held { border-color: #ffc982; box-shadow: inset 0 0 0 2px #ffc982; }
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: max(12px, env(safe-area-inset-top)) 18px max(12px, env(safe-area-inset-bottom)); background: linear-gradient(160deg, #07152540, #071525b3); }
 .panel { width: min(100%, 408px); max-height: 100%; overflow-y: auto; padding: clamp(15px, 5vw, 29px); background: #0a192cf2; border: 1px solid #647b943d; border-radius: 15px; }
 .label { letter-spacing: .13em; text-transform: uppercase; color: #ffc982; font-size: .71rem; font-weight: 700; margin: 0 0 6px; }
@@ -34,3 +32,5 @@ h2 { font-size: 2.15rem; }
 .primary { background: #ffc982; border-color: #ffc982; color: #182336; }
 
 #rotate { z-index: 10; background: #0c171e; }
+
+#start-sheet { touch-action: none; }

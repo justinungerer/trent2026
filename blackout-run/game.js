@@ -40,8 +40,7 @@
   let previousX = 0;
   let lean = 0;
   let drag = null;
-  let brakePointer = null;
-  const key = { left: false, right: false, brake: false };
+  const key = { left: false, right: false, forward: false };
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const selection = levels.map((level, index) => {
     const button = document.createElement('button');
@@ -54,8 +53,7 @@
 
   function clearInput() {
     drag = null;
-    brakePointer = null;
-    key.left = key.right = key.brake = false;
+    key.left = key.right = key.forward = false;
   }
 
   function show(next) {
@@ -65,8 +63,6 @@
     el('paused').hidden = state !== 'paused';
     el('results').hidden = state !== 'results';
     el('hud').hidden = state !== 'run' && state !== 'paused';
-    el('brake').hidden = state !== 'run';
-    el('brake').classList.remove('held');
     if (next === 'paused') el('resume').focus({ preventScroll: true });
     if (next === 'results') el('next').focus({ preventScroll: true });
   }
@@ -86,6 +82,7 @@
   function start(index) {
     selected = index;
     run = createRun(index, bonus);
+    run.speed = 0;
     lean = 0;
     show('run');
     updateHud();
@@ -117,29 +114,32 @@
     if (document.hidden && state === 'run') show('paused');
   });
 
-  canvas.addEventListener('pointerdown', event => {
-    if (state !== 'run' || drag) return;
-    drag = { id: event.pointerId, x: event.clientX, target: run.target };
+  function grabSlope(event) {
+    if (state !== 'run' || drag || !event.isPrimary || event.button !== 0) return;
+    drag = { id: event.pointerId, x: event.clientX, target: run.x };
+    run.target = run.x;
     canvas.setPointerCapture(event.pointerId);
+  }
+
+  el('start-sheet').addEventListener('pointerdown', event => {
+    if (event.target.closest('#levels') || !event.isPrimary || event.button !== 0 || el('start').disabled) return;
+    event.preventDefault();
+    el('start').click();
+    grabSlope(event);
   });
+  canvas.addEventListener('pointerdown', grabSlope);
   canvas.addEventListener('pointermove', event => {
     if (event.pointerId !== drag?.id) return;
     run.target = clamp(drag.target + (event.clientX - drag.x) / width * WORLD_EDGE * 1.84, -WORLD_EDGE, WORLD_EDGE);
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     canvas.addEventListener(name, event => {
-      if (event.pointerId === drag?.id) drag = null;
-    });
-    el('brake').addEventListener(name, event => {
-      if (event.pointerId === brakePointer) brakePointer = null;
+      if (event.pointerId !== drag?.id) return;
+      drag = null;
+      run.target = run.x;
     });
   }
-  el('brake').addEventListener('pointerdown', event => {
-    if (state !== 'run' || brakePointer !== null) return;
-    brakePointer = event.pointerId;
-    el('brake').setPointerCapture(event.pointerId);
-  });
-  const bindings = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'brake' };
+  const bindings = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'forward' };
   document.addEventListener('keydown', event => {
     if (state !== 'run' || !bindings[event.key]) return;
     event.preventDefault();
@@ -429,12 +429,13 @@
       const direction = marker.x - run.x;
       const arrow = Math.abs(direction) < 1.8 ? '↑' : direction < 0 ? '←' : '→';
       hint = marker.z < run.z ? 'Return trail ahead'
-        : `${arrow} ${marker.type === 'post' ? 'Hold Brake at the signal post' : 'Dispatch pouch ahead'}`;
-    } else if (run.index === 2 && progress > 25 && progress < 95) {
+        : `${arrow} ${marker.type === 'post' ? 'Lift your finger at the signal post' : 'Dispatch pouch ahead'}`;
+    } else if (run.braking && run.speed === 0 && !drag) hint = 'Touch the snow to ski';
+    else if (run.index === 2 && progress > 25 && progress < 95) {
       hint = 'Follow the trail lanterns';
     }
     if (run.attack) {
-      hint = run.attack.kind === 'bomb' ? 'Bomber overhead. Leave the marked area.' : 'Gunfire ahead. Steer out of the marked lane.';
+      hint = run.attack.kind === 'bomb' ? 'Bomber overhead. Leave the marked area.' : 'Gunfire ahead. Steer clear or lift to wait.';
     }
     const hintElement = el('route-hint');
     hintElement.classList.toggle('danger', Boolean(run.attack));
@@ -459,9 +460,9 @@
     paintTime += dt;
     if (state === 'run' && !waitingForPortrait && dt > 0) {
       previousX = run.x;
-      const brake = brakePointer !== null || key.brake;
-      el('brake').classList.toggle('held', brake);
-      step(run, dt, { brake, steer: Number(key.right) - Number(key.left) });
+      const steering = Number(key.right) - Number(key.left);
+      const brake = !drag && !steering && !key.forward;
+      step(run, dt, { brake, steer: steering });
       lean += (clamp((run.x - previousX) / dt, -18, 18) - lean) * Math.min(1, dt * 8);
       updateHud();
       if (run.finished) finish();
