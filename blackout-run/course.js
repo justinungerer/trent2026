@@ -19,18 +19,27 @@
   const TRAIL_SCALE = 1.5;
   const WIDTH_INCREASE = 1.5;
   const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE * WIDTH_INCREASE;
-  const WORLD_EDGE = 52;
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
   const POST_RADIUS = 6.8;
   const POST_APPROACH = 52;
-  const RELAY_BENDS = [
-    [590, 0], [730, -7], [855, 5], [980, 0],
-    [1820, 0], [1960, 8], [2095, -6], [2265, 0],
-    [2660, 0], [2790, 7], [2910, -6], [3020, 0],
-    [3970, 0], [4100, -7], [4245, 6], [4390, 0]
-  ].map(([z, x]) => [distance(z), x]);
+  // Alternating offsets steer both branches through the same terrain without closing the fork.
+  const ZIGZAGS = [
+    [
+      [0, 0], [180, -11], [390, 14], [595, -13], [825, 15], [1030, -12],
+      [1260, 13], [1490, -15], [1700, 13], [1900, -14], [2110, 12],
+      [2330, -13], [2540, 15], [2770, -13], [3000, 13], [3210, -15],
+      [3440, 13], [3660, -12], [3880, 15], [4100, -14], [4330, 12], [4600, 0]
+    ],
+    [
+      [0, 0], [160, 13], [350, -15], [550, 16], [735, -16], [925, 14],
+      [1110, -14], [1305, 16], [1510, -16], [1735, 15], [1935, -14],
+      [2130, 16], [2330, -16], [2535, 15], [2735, -15], [2925, 16],
+      [3120, -16], [3315, 15], [3510, -15], [3705, 16], [3925, -14],
+      [4140, 15], [4360, -16], [4600, 0]
+    ]
+  ].map(points => points.map(([z, x]) => [distance(z), x]));
   const MISSED_WARNING_SECONDS = 2;
   const OBSTACLE_HITS = { rock: 'You hit a boulder.', stump: 'You hit a tree stump.', log: 'You hit a fallen tree.' };
   const levels = [
@@ -65,8 +74,9 @@
       forks: [[155, 615, 1], [740, 1620, -1], [1650, 1930, 1], [1990, 2830, 1],
         [2880, 3150, -1], [3220, 4060, -1], [4110, 4560, 1]]
     }
-  ].map(level => ({
+  ].map((level, index) => ({
     ...level,
+    steeringEdge: ZIGZAGS[index] ? 58 : 52,
     markers: level.markers.map(distance),
     checkpoints: level.checkpoints.map(distance),
     forks: level.forks.map(([start, end, side]) => ({ start: distance(start), end: distance(end), side })),
@@ -76,10 +86,11 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   function center(levelIndex, z) {
     const slope = COURSE_WIDTH_SCALE * (1.45 * Math.sin(z / distance(261) + levelIndex) + 0.9 * Math.sin(z / distance(109) + levelIndex * 2));
-    if (levelIndex !== 1 || z <= RELAY_BENDS[0][0] || z >= RELAY_BENDS.at(-1)[0]) return slope;
-    const next = RELAY_BENDS.findIndex(([depth]) => depth > z);
-    const [start, left] = RELAY_BENDS[next - 1];
-    const [end, right] = RELAY_BENDS[next];
+    const bends = ZIGZAGS[levelIndex];
+    if (!bends || z <= bends[0][0] || z >= bends.at(-1)[0]) return slope;
+    const next = bends.findIndex(([depth]) => depth > z);
+    const [start, left] = bends[next - 1];
+    const [end, right] = bends[next];
     const t = (z - start) / (end - start);
     return slope + left + (right - left) * t * t * (3 - 2 * t);
   }
@@ -411,5 +422,5 @@
     if (!falling && !run.recoverAtCheckpoint && run.z >= DISTANCE && run.collected.size === run.level.markers.length) run.finished = true;
   }
 
-  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, trails, treeLine, createRun, retryCheckpoint, step };
+  return { levels, DISTANCE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, trails, treeLine, createRun, retryCheckpoint, step };
 });

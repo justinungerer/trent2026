@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const embedded = window.parent !== window && params.has('runId');
@@ -167,7 +167,7 @@
     }
     drag = {
       id: event.pointerId, pointerX: x, startX: x, skisX, worldX: run.x,
-      pixelsPerUnit: Math.max(1, width - inset * 2) / (WORLD_EDGE * 2)
+      pixelsPerUnit: Math.max(1, width - inset * 2) / (run.level.steeringEdge * 2)
     };
     thumb.classList.add('held');
     run.target = run.x;
@@ -179,7 +179,8 @@
     if (event.pointerId !== drag?.id) return;
     const inset = thumbInset();
     drag.pointerX = clamp(event.clientX - canvas.getBoundingClientRect().left, inset, width - inset);
-    run.target = clamp(drag.worldX + (drag.pointerX - drag.startX) / drag.pixelsPerUnit, -WORLD_EDGE, WORLD_EDGE);
+    const edge = run.level.steeringEdge;
+    run.target = clamp(drag.worldX + (drag.pointerX - drag.startX) / drag.pixelsPerUnit, -edge, edge);
   });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     thumb.addEventListener(name, event => {
