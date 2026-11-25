@@ -18,9 +18,11 @@
   const groundCtx = ground.getContext('2d');
   const skierLayer = document.createElement('canvas');
   const skierPaint = skierLayer.getContext('2d');
-  let snowTile;
+  const groundTiles = [];
   const art = {};
   const scenery = ['valley', 'forest', 'airstrip'];
+  const surfaces = ['powder-trail', 'relay-trail', 'runway-ice'];
+  const surfaceTint = ['#9fa6c30a', '#3c58551f', '#19334b20'];
   const skiPoses = ['ski-glide', 'ski-tuck', 'ski-carve', 'ski-plant'];
   const fallPoses = [
     { name: 'ski-stumble', until: 0.19, height: 0.96 },
@@ -224,16 +226,18 @@
 
   function drawSnow(view) {
     const far = 440;
-    if (snowTile) {
+    const tile = groundTiles[run.index];
+    if (tile) {
       groundCtx.clearRect(0, 0, width, height);
-      const halfTile = snowTile.height / 2;
-      const cycle = (run.z * 2) % snowTile.height;
-      const phase = cycle < halfTile ? cycle : snowTile.height - cycle;
-      const sourceLeft = (snowTile.width - 460) * (0.5 + clamp(view / 40, -0.48, 0.48));
-      groundCtx.drawImage(snowTile, sourceLeft, phase, 460, 450, 0, horizon, width, height - horizon);
-      groundCtx.fillStyle = '#26466675';
+      const sourceHeight = tile.height / 3;
+      const period = sourceHeight * 2;
+      const phase = (period - run.z * 1.7 % period) % period;
+      const span = tile.width * 0.78;
+      const sourceLeft = (tile.width - span) * (0.5 + clamp(view / 70, -0.48, 0.48));
+      groundCtx.drawImage(tile, sourceLeft, phase, span, sourceHeight * 0.72, 0, horizon, width, height - horizon);
+      groundCtx.fillStyle = surfaceTint[run.index];
       groundCtx.fillRect(0, horizon, width, height - horizon);
-      const blend = groundCtx.createLinearGradient(0, horizon + height * 0.045, 0, horizon + height * 0.23);
+      const blend = groundCtx.createLinearGradient(0, horizon + height * 0.045, 0, horizon + height * 0.16);
       blend.addColorStop(0, 'transparent');
       blend.addColorStop(1, 'white');
       groundCtx.globalCompositeOperation = 'destination-in';
@@ -280,24 +284,45 @@
         right.push(project(lane.x + lane.width, distance, view));
       }
       closeStrip();
-      ctx.fillStyle = index ? '#d2e8fa2e' : '#e9f5ff38';
+      ctx.fillStyle = index ? '#dcecff12' : '#edf5ff19';
       ctx.fill();
-      ctx.strokeStyle = '#e2f1ff35';
+      ctx.strokeStyle = run.index === 2 ? '#d7eafa65' : '#f0f8ff37';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
   }
 
+  function drawRunway(view) {
+    // Partly frosted paint gives the ice a runway centerline and a sense of motion.
+    const spacing = 102;
+    const first = Math.ceil((run.z - 28) / spacing) * spacing;
+    ctx.fillStyle = '#e5efffa0';
+    for (let mark = first; mark < run.z + 500; mark += spacing) {
+      const near = mark - run.z;
+      const far = near + 27;
+      const beginX = center(run.index, mark);
+      const endX = center(run.index, mark + 27);
+      const corners = [project(beginX - 0.28, near, view), project(beginX + 0.28, near, view),
+        project(endX + 0.28, far, view), project(endX - 0.28, far, view)];
+      ctx.beginPath();
+      corners.forEach(({ x, y }, i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
   function drawObject(object, view, edgePadding = 0) {
     const distance = object.z - run.z;
-    if (distance < -18 || distance > 395 || (object.id !== undefined && run.collected.has(object.id))) return;
-    const point = project(object.x, distance, view);
+    const hangar = object.type === 'hangar';
+    if (distance < -18 || (!hangar && distance > 395) || (object.id !== undefined && run.collected.has(object.id))) return;
+    const point = project(object.x, hangar ? Math.min(distance, 610) : distance, view);
     if (edgePadding) point.x = clamp(point.x, edgePadding, width - edgePadding);
     const dim = bounds[object.type];
     const image = art[object.art || object.type];
     if (!image || !dim) return;
     const scale = point.scale * (object.scale ?? 1);
-    const boxW = dim[0] * scale, boxH = dim[1] * scale;
+    const structureScale = hangar ? Math.max(scale, width * 0.105 / dim[0]) : scale;
+    const boxW = dim[0] * structureScale, boxH = dim[1] * structureScale;
     const ratio = object.type === 'log'
       ? 2 * object.radius * point.scale / image.width
       : Math.min(boxW / image.width, boxH / image.height);
@@ -469,6 +494,7 @@
     const view = viewPosition();
     drawBackdrop(view);
     drawSnow(view);
+    if (run.index === 2) drawRunway(view);
     const objects = run.course.objects;
     for (const object of objects) if (object.z >= run.z) drawObject(object, view);
     drawAttack(view);
@@ -565,7 +591,7 @@
     el('menu-back').hidden = true;
   }
   choose(stage < 0 ? 0 : stage);
-  const sources = Object.fromEntries([...scenery, 'snow', 'ski-brake', ...skiPoses, 'stump-alt', 'log-alt', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
+  const sources = Object.fromEntries([...scenery, ...surfaces, 'ski-brake', ...skiPoses, 'stump-alt', 'log-alt', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
     .map(name => [name, `art/${name}.webp`]));
   Object.assign(sources, {
     rifleman: '../listening-wire/art/guard-rifleman.webp',
@@ -579,15 +605,19 @@
     image.src = source;
     return image.decode().then(() => { art[name] = image; });
   })).then(() => {
-    const snow = art.snow;
-    snowTile = document.createElement('canvas');
-    snowTile.width = snow.width;
-    snowTile.height = snow.height * 2;
-    const tileContext = snowTile.getContext('2d');
-    tileContext.drawImage(snow, 0, 0);
-    tileContext.translate(0, snowTile.height);
-    tileContext.scale(1, -1);
-    tileContext.drawImage(snow, 0, 0);
+    for (const surface of surfaces) {
+      const image = art[surface];
+      const tile = document.createElement('canvas');
+      tile.width = image.width;
+      tile.height = image.height * 3;
+      const layer = tile.getContext('2d');
+      layer.drawImage(image, 0, 0);
+      layer.drawImage(image, 0, 2 * image.height);
+      layer.translate(0, 2 * image.height);
+      layer.scale(1, -1);
+      layer.drawImage(image, 0, 0);
+      groundTiles.push(tile);
+    }
     el('start').disabled = false;
   }).catch(() => {
     el('briefing').textContent = 'The painted course could not load. Reload to try again.';

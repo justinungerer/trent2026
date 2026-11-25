@@ -90,8 +90,17 @@
     };
   }
 
+  function courseRandom(index) {
+    let state = 18391 + index * 9173;
+    return function () {
+      state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+      return state / 4294967296;
+    };
+  }
+
   function createCourse(index) {
     const level = levels[index];
+    const random = courseRandom(index);
     const markers = level.markers.map((z, id) => {
       const path = trails(index, z);
       return { type: level.marker, z, id, x: path[path.length - 1].x };
@@ -132,18 +141,29 @@
         !level.checkpoints.some(point => Math.abs(z - point) < 52) &&
         !obstacles.some(object => Math.abs(object.z - z) < 49);
     }
-    function placeObstacle(type, z, id) {
+    function placeObstacle(type, z, id, lateral) {
       const path = trails(index, z);
-      const lane = path[path.length === 2 && id % 3 === 0 ? 1 : 0];
-      const side = id % 2 ? 1 : -1;
+      const log = type === 'log';
+      const branch = path[1];
+      const branchShare = branch ? branch.width / (path[0].width + branch.width) : 0;
+      const lane = branch && (log ? id % 3 === 0 : random() < branchShare) ? branch : path[0];
       const scale = 0.8 + (z % 11) / 22;
-      const halfPath = lane.width / 2;
-      const offset = type === 'log' ? halfPath : (1.35 + (z % 7) / 5) * TRAIL_SCALE;
-      const radius = type === 'log' ? halfPath : (type === 'stump' ? 1.03 : 0.82) * scale;
+      const radius = log ? lane.width / 2 : (type === 'stump' ? 1.03 : 0.82) * scale;
+      const reach = Math.max(0, lane.width - radius - 0.32);
+      const offset = log ? (id % 2 ? 1 : -1) * radius : lateral * reach;
       const art = type === 'rock' || id % 4 < 2 ? type : type + '-alt';
-      obstacles.push({ type, art, z, x: lane.x + side * offset, scale, radius });
+      obstacles.push({ type, art, z, x: lane.x + offset, scale, radius });
     }
     function placeObstacles(type, first, count) {
+      const positions = Array.from({ length: count }, (_, i) => 2 * (i + random()) / count - 1);
+      for (let i = count - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [positions[i], positions[j]] = [positions[j], positions[i]];
+      }
+      const add = z => {
+        placeObstacle(type, z, placed, positions[placed]);
+        placed++;
+      };
       const spacing = (finishClearance - first) / count;
       let placed = 0;
       for (let slot = 0; slot < count; slot++) {
@@ -154,13 +174,13 @@
           const candidates = offset === 0 ? [ideal] : [ideal + offset, ideal - offset];
           const z = candidates.find(point => point >= left && point <= right && canPlaceObstacle(point));
           if (z === undefined) continue;
-          placeObstacle(type, z, placed++);
+          add(z);
           break;
         }
       }
       // Refill slots lost to checkpoints and rifle lanes using space between the other obstacles.
       for (let z = first; z <= finishClearance && placed < count; z += 4) {
-        if (canPlaceObstacle(z)) placeObstacle(type, z, placed++);
+        if (canPlaceObstacle(z)) add(z);
       }
     }
     placeObstacles('log', 300 + index * 13, 14);

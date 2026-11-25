@@ -13,7 +13,7 @@ The built-in ImageGen tool generated the following source paintings for this pro
 - **Valley.** Gouache panorama of a blue-hour Alpine valley with a moon, snow-covered firs, and an open downhill slope.
 - **Forest.** Painted view down a snowy Alpine valley with a teal twilight sky, ridge lights, and tiny cabins.
 - **Airstrip.** Nighttime Alpine valley with a distant 1940s airstrip, golden runway lights, and shadowed pines.
-- **Snow.** Overhead texture of blue-silver powder and shallow snowdrifts.
+- **Terrain.** Overhead paintings of wind-carved powder, packed snow and stone at the relay posts, and glazed runway ice.
 - **Trail sprite sheet.** Three rear-view skiing poses, evergreen, boulder, courier satchel, relay cabin, and lantern sign.
 - **Outpost sprite sheet.** Allied radio operator, snow-covered aircraft hangar, oil lantern, and ski-brake icon.
 - **Bomber.** Painted orthographic side view of a 1940s twin-engine bomber in level flight.
