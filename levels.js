@@ -34,31 +34,30 @@ window.TrentLevels = {
   ],
   "night": [
     {
-      "id": "find-the-carrier",
-      "title": "Find the Carrier",
+      "id": "the-broken-dispatch",
+      "title": "The Broken Dispatch",
       "lines": [
-        "Snow had soaked the radio aerial all the way to the spool.",
-        "Trent uncoiled the wire and warmed his hands over the lamp.",
-        "Two familiar signals flickered faintly beneath the static."
+        "The radio went silent before the last page came through.",
+        "Two dispatch pouches lay along the trail to the relay hut.",
+        "Trent buckled his skis and headed for the valley."
       ]
     },
     {
-      "id": "field-report",
-      "title": "The Night Broadcast",
-      "original": true,
+      "id": "lights-across-the-valley",
+      "title": "Lights Across the Valley",
       "lines": [
-        "The aerial was ready, but the field report was still buried in static.",
-        "Trent turned the dial as voices drifted in and out of range.",
-        "Somewhere on the band was the message that could guide the rescue."
+        "The pages held a warning for Santa’s workshop.",
+        "Two Allied operators kept their lanterns lit across the valley.",
+        "Trent carried the dispatch between the signal posts."
       ]
     },
     {
-      "id": "confirm-the-dispatch",
-      "title": "Confirm the Dispatch",
+      "id": "beat-the-blackout",
+      "title": "Beat the Blackout",
       "lines": [
-        "The voice on the radio had broken up before the dispatch was complete.",
-        "Two Allied operators were listening from across the valley.",
-        "Trent unfolded the call card and waited for the first reply."
+        "The confirmed warning had to reach the workshop airstrip.",
+        "The valley lights went dark as bombers crossed the ridge.",
+        "Trent followed the lanterns down to the hangar."
       ]
     }
   ],

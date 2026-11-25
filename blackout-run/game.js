@@ -3,6 +3,15 @@
 (() => {
   const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const embedded = window.parent !== window && params.has('runId');
+  const stage = levels.findIndex(level => level.id === params.get('stage'));
+  const bonus = /^[1-3]$/.test(params.get('bonus') || '') ? Number(params.get('bonus')) : 0;
+
+  function sendToCampaign(type) {
+    const target = location.origin === 'null' ? '*' : location.origin;
+    window.parent.postMessage({ type, runId: params.get('runId') }, target);
+  }
   const canvas = el('slope');
   const ctx = canvas.getContext('2d');
   const ground = document.createElement('canvas');
@@ -51,7 +60,9 @@
   function show(next) {
     state = next;
     clearInput();
-    for (const id of ['menu', 'paused', 'results']) el(id).hidden = id !== state;
+    el('start-sheet').hidden = state !== 'menu';
+    el('paused').hidden = state !== 'paused';
+    el('results').hidden = state !== 'results';
     el('hud').hidden = state !== 'run' && state !== 'paused';
     el('brake').hidden = state !== 'run';
     el('brake').classList.remove('held');
@@ -61,16 +72,19 @@
 
   function choose(index) {
     selected = index;
-    run = createRun(index);
+    run = createRun(index, bonus);
     lean = 0;
     el('briefing').textContent = levels[index].briefing;
+    if (embedded) el('mode-label').textContent = `Chapter 1 · Level ${index + 1} · ${levels[index].title}`;
+    el('briefing-bonus').hidden = bonus === 0;
+    if (bonus) el('briefing-bonus').textContent = `Quiz bonus · ${bonus} extra ${bonus === 1 ? 'fall' : 'falls'} before checkpoint retry.`;
     selection.forEach((button, i) => button.setAttribute('aria-pressed', String(index === i)));
     show('menu');
   }
 
   function start(index) {
     selected = index;
-    run = createRun(index);
+    run = createRun(index, bonus);
     lean = 0;
     show('run');
     updateHud();
@@ -83,6 +97,7 @@
     el('result-details').textContent = `${time} on the trail · ${run.crashes} ${run.crashes === 1 ? 'fall' : 'falls'}`;
     el('next').textContent = run.index === 2 ? 'Playtest menu' : 'Next level';
     show('results');
+    if (embedded) sendToCampaign('blackout-run:complete');
   }
 
   const actions = {
@@ -92,6 +107,7 @@
     checkpoint: () => { retryCheckpoint(run); show('run'); },
     choose: () => choose(selected),
     'menu-back': () => choose(selected),
+    'restart-sequence': () => sendToCampaign('trent:restart-minigame'),
     replay: () => start(selected),
     next: () => selected === 2 ? choose(selected) : start(selected + 1)
   };
@@ -401,11 +417,21 @@
     if (el('notice').textContent !== notice) el('notice').textContent = notice;
   }
 
+  let waitingForPortrait = false;
+  function syncOrientation() {
+    const blocked = window.TrentOrientation.blocked(false);
+    if (blocked !== waitingForPortrait) clearInput();
+    waitingForPortrait = blocked;
+    el('rotate').hidden = !blocked || window.TrentOrientation.embedded;
+  }
+  window.TrentOrientation.subscribe(syncOrientation);
+  syncOrientation();
+
   function tick(now) {
     const dt = lastFrame ? Math.min(0.065, (now - lastFrame) / 1000) : 0;
     lastFrame = now;
     paintTime += dt;
-    if (state === 'run' && dt > 0) {
+    if (state === 'run' && !waitingForPortrait && dt > 0) {
       previousX = run.x;
       const brake = brakePointer !== null || key.brake;
       el('brake').classList.toggle('held', brake);
@@ -418,7 +444,15 @@
     requestAnimationFrame(tick);
   }
 
-  choose(0);
+  if (embedded) {
+    el('levels').hidden = true;
+    el('choose').hidden = true;
+    el('restart-sequence').hidden = false;
+    el('next').hidden = true;
+    el('replay').hidden = true;
+    el('menu-back').hidden = true;
+  }
+  choose(stage < 0 ? 0 : stage);
   const sources = Object.fromEntries([...scenery, 'snow', 'ski-straight', 'ski-turn', 'ski-brake', ...fallPoses.map(pose => pose.name), ...Object.keys(bounds)]
     .map(name => [name, `art/${name}.webp`]));
   Object.assign(sources, {

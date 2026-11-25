@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-game="blackout-run">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071525">
-  <title>Blackout Run · Standalone playtest</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="course.js" defer></script>
-  <script src="game.js" defer></script>
+  <title>Blackout Run</title>
+  <link rel="stylesheet" href="style.css?v=campaign">
+  <script src="../orientation.js?v=blackout-run" defer></script>
+  <script src="course.js?v=campaign" defer></script>
+  <script src="game.js?v=campaign" defer></script>
 </head>
 <body>
   <main id="ski-game">
@@ -23,16 +24,24 @@
     </section>
     <button id="brake" type="button" aria-label="Hold to brake" hidden>Brake</button>
 
-    <section id="menu" class="overlay">
-      <div class="panel">
-        <p class="label">Chapter 1 playtest</p>
+    <section id="start-sheet" class="overlay">
+      <div class="panel card">
+        <p class="label" id="mode-label">Chapter 1 playtest</p>
         <h1>Blackout Run</h1>
         <p class="premise">The broadcast broke up. Get the warning through the valley before the workshop goes dark.</p>
         <div id="levels" role="group" aria-label="Choose a level"></div>
         <p id="briefing"></p>
-        <p class="controls">Drag to steer. Hold Brake for tight turns and signal posts. Steer clear of marked attack zones.</p>
+        <ul class="controls game-steps">
+          <li>Drag to steer.</li>
+          <li>Hold Brake for tight turns and signal posts.</li>
+          <li>Steer clear of marked attack zones.</li>
+        </ul>
+        <p id="briefing-bonus" hidden></p>
         <button class="primary" id="start" type="button">Start run</button>
       </div>
+    </section>
+    <section id="rotate" class="overlay" hidden>
+      <div class="panel"><h2>Turn your phone upright</h2><p>Blackout Run plays in portrait.</p></div>
     </section>
     <section id="paused" class="overlay" hidden>
       <div class="panel">
@@ -40,6 +49,7 @@
         <button class="primary" id="resume" type="button">Resume</button>
         <button id="checkpoint" type="button">Retry from checkpoint</button>
         <button id="choose" type="button">Choose a level</button>
+        <button id="restart-sequence" type="button" hidden>Restart Blackout Run</button>
       </div>
     </section>
     <section id="results" class="overlay" hidden>

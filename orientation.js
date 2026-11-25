@@ -50,7 +50,7 @@
   }
 
   function gameUsesLandscape(game) {
-    return game !== 'frosted-skies';
+    return game !== 'frosted-skies' && game !== 'blackout-run';
   }
 
   window.TrentOrientation = {

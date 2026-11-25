@@ -32,3 +32,5 @@ h2 { font-size: 2.15rem; }
 #levels button { text-align: left; }
 .panel > button { display: block; width: 100%; margin-top: 8px; }
 .primary { background: #ffc982; border-color: #ffc982; color: #182336; }
+
+#rotate { z-index: 10; background: #0c171e; }

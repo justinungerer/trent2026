@@ -21,6 +21,7 @@
   const ATTACK_MULTIPLIER = 3;
   const levels = [
     {
+      id: 'the-broken-dispatch',
       title: 'The Broken Dispatch',
       briefing: 'Recover both dispatch pouches and bring them to the relay hut.',
       objective: 'Pouches', destination: 'Relay hut', marker: 'satchel', markers: [1050, 3190],
@@ -29,6 +30,7 @@
       forks: [{ start: 690, end: 1450, side: -1 }, { start: 2750, end: 3620, side: 1 }]
     },
     {
+      id: 'lights-across-the-valley',
       title: 'Lights Across the Valley',
       briefing: 'Ski through both Allied signal posts. Hold Brake as you pass each operator.',
       objective: 'Confirmations', destination: 'Valley relay', marker: 'post', markers: [1410, 3480],
@@ -37,6 +39,7 @@
       forks: [{ start: 900, end: 1820, side: 1 }, { start: 2940, end: 3950, side: -1 }]
     },
     {
+      id: 'beat-the-blackout',
       title: 'Beat the Blackout',
       briefing: 'Carry the confirmed dispatch to the workshop airstrip. Follow the lanterns when the lights go out.',
       objective: '', destination: 'Workshop airstrip', marker: '', markers: [],
@@ -148,10 +151,10 @@
     run.lastBlast = null;
   }
 
-  function createRun(index) {
+  function createRun(index, bonus = 0) {
     const run = {
       index, level: levels[index], course: createCourse(index), checkpoint: 0, collected: new Set(),
-      elapsed: 0, loops: 0, crashes: 0, damage: 0, finished: false,
+      elapsed: 0, loops: 0, crashes: 0, damage: 0, fallLimit: 3 + bonus, finished: false,
       notice: '', noticeUntil: 0, braking: false
     };
     restore(run, 0);
@@ -172,7 +175,7 @@
   function takeHit(run, message) {
     run.crashes++;
     run.damage++;
-    run.recoverAtCheckpoint = run.damage >= 3;
+    run.recoverAtCheckpoint = run.damage >= run.fallLimit;
     run.target = run.x;
     run.speed = distance(10);
     run.grace = 2.5;

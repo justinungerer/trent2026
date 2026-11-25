@@ -98,7 +98,7 @@ var CHAPTERS = [
     number: 1,
     title: 'The Night Broadcast',
     kicker: 'Chapter 1',
-    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Hold the band until it locks.',
+    line: 'Months later, near Christmas, Trent tunes a field radio in the snow. Allied intel says Hitler has captured Santa and is holding him. Buddy, the elf on the shelf, was sent by the Allies to spy on the Nazis. He has been caught and has to be rescued. The same report says the Luftwaffe plans to bomb Santa’s secret workshop, and that the enemy plans to turn Rudolph into hamburgers. Trent straps on his skis to carry the warning through the valley.',
     filmSeconds: 34,
     captionFrames: [0, 137, 339, 485, 650, 733],
     lines: [
@@ -110,8 +110,8 @@ var CHAPTERS = [
       "He has one mission. Save Christmas."
     ],
     story: 'A radio transmission names the workshop, a freight yard, and the scouts Trent needs to find.',
-    event: 'night-broadcast:complete',
-    path: './night-broadcast/',
+    event: 'blackout-run:complete',
+    path: './blackout-run/',
     pin: 'NIGHT',
     quizPin: 'CARRIER7',
     nextId: 'frost',
@@ -924,7 +924,7 @@ function syncTurn() {
     heading.textContent = landscape ? 'Turn your phone sideways' : 'Turn your phone upright';
     note.textContent = landscape ? 'This minigame plays in landscape.' :
       document.getElementById('mission').hidden ? 'The campaign continues in portrait.' :
-      missionInstructionsAccepted ? 'Frosted Skies plays in portrait.' : 'Read the minigame instructions in portrait.';
+      missionInstructionsAccepted ? 'This minigame plays in portrait.' : 'Read the minigame instructions in portrait.';
     mark.classList.toggle('upright', !landscape);
   }
   document.body.classList.toggle('waiting-for-rotation', needed);

@@ -23,10 +23,13 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
           'window.fighterBrightness=()=>{render(0);return ctx.getImageData(canvas.width/2-4,canvas.height*.31,8,8).data.reduce((sum,v,i)=>sum+(i%4===3?0:v),0);};' +
           'window.facePixels=(ratio)=>{const b=fight.state();b.enemy*=ratio;render(0);b.enemy/=ratio;return Array.from(ctx.getImageData(canvas.width/2-canvas.height*.075,canvas.height*.125,canvas.height*.16,canvas.height*.19).data);};\n})();')
       });
-      if (pathname.endsWith('/night-broadcast/game.js')) return route.fulfill({
+      if (pathname.endsWith('/blackout-run/game.js')) return route.fulfill({
         contentType: 'application/javascript',
         body: fs.readFileSync(file, 'utf8').replace(/\}\)\(\);\s*$/,
-          'window.radioControl=(dial)=>{const p=dial?radioPoint(DIAL_U):knobCenter();return {x:view.ox+p.x*view.s,y:view.oy+p.y*view.s,freq};};\n})();')
+          "window.clearSkiLevel=()=>{if(state!=='run')throw Error('Ski run has not started');" +
+          "run.course.markers.forEach(marker=>run.collected.add(marker.id));run.z=DISTANCE-.1;" +
+          "step(run,1/60,{brake:false,steer:0});if(!run.finished)throw Error('Ski run did not clear');finish();};" +
+          "window.skiStatus=()=>({level:run.index,falls:run.fallLimit});\n})();")
       });
       if (/\.(mp3|mp4|wav)$/.test(pathname)) return route.fulfill({ status: 204 });
       return fs.existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404 });
@@ -49,41 +52,36 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     await page.getByRole('button', { name: /^Replay without quiz/ }).click();
     assert.equal(await page.locator('#cinema').getAttribute('data-chapter'), 'night');
     await page.evaluate(() => introDone());
-    assert.equal(await page.locator('#intro-title').textContent(), 'Find the Carrier');
-    await page.evaluate(() => introDone());
-    const radioFrame = page.frameLocator('#game');
-    await radioFrame.locator('#start').click();
-    await page.setViewportSize({ width: 568, height: 320 });
-    await radioFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
-    await page.evaluate(() => finishMission());
-    assert.equal(await page.evaluate(() => active.levelIndex), 1);
-    assert.equal(await page.locator('#intro-title').textContent(), 'The Night Broadcast');
-    await page.evaluate(() => introDone());
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.waitForFunction(() => document.getElementById('game').contentWindow.location.search.includes('sequence=2'), null, { polling: 50 });
-    await radioFrame.locator('#start').click();
-    assert.equal(await page.locator('#turn-gate').isVisible(), true);
-    await page.setViewportSize({ width: 568, height: 320 });
-    await radioFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
-    const radio = page.frames().find(f => new URL(f.url()).pathname.endsWith('/night-broadcast/'));
-    assert.equal(new URL(radio.url()).searchParams.get('sequence'), '2');
-    const canvas = await radioFrame.locator('#radio').boundingBox();
-    async function quickTuningDrag(dial, delta) {
-      const before = await radio.evaluate(value => radioControl(value), dial);
-      const x = canvas.x + before.x, y = canvas.y + before.y;
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.move(x + delta, y);
-      await page.mouse.up();
-      const after = await radio.evaluate(value => radioControl(value), dial);
-      assert.ok((after.freq - before.freq) * Math.sign(delta) > .03);
+    const skiFrame = page.frameLocator('#game');
+    const skiLevels = [
+      ['the-broken-dispatch', 'The Broken Dispatch'],
+      ['lights-across-the-valley', 'Lights Across the Valley'],
+      ['beat-the-blackout', 'Beat the Blackout']
+    ];
+    for (const [i, [stage, title]] of skiLevels.entries()) {
+      await page.waitForFunction(title => document.querySelector('#intro-title').textContent === title, title, { polling: 50 });
+      await page.evaluate(() => introDone());
+      await page.waitForFunction(stage => document.getElementById('game').contentWindow.location.search.includes('stage=' + stage), stage, { polling: 50 });
+      assert.ok(await skiFrame.locator('#levels').isHidden());
+      await skiFrame.locator('#start').click();
+      await skiFrame.locator('#start-sheet').waitFor({ state: 'hidden' });
+      assert.ok(await page.locator('#turn-gate').isHidden());
+      const skiing = page.frames().find(frame => new URL(frame.url()).pathname.endsWith('/blackout-run/'));
+      assert.equal(new URL(skiing.url()).searchParams.get('sequence'), String(i + 1));
+      assert.deepEqual(await skiing.evaluate(() => skiStatus()), { level: i, falls: 3 });
+      if (i === 0) {
+        await page.setViewportSize({ width: 844, height: 390 });
+        await page.locator('#turn-gate').waitFor();
+        assert.match(await page.locator('#turn-heading').textContent(), /upright/);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.locator('#turn-gate').waitFor({ state: 'hidden' });
+      }
+      await skiing.evaluate(() => clearSkiLevel()).catch(async error => {
+        // The completion message can remove the iframe before evaluation returns.
+        if (await page.evaluate(index => active?.levelIndex === index, i)) throw error;
+      });
     }
-    await quickTuningDrag(true, 65);
-    await quickTuningDrag(false, -45);
-    await page.evaluate(() => finishMission());
-    await page.setViewportSize({ width: 390, height: 844 });
-    assert.equal(await page.locator('#intro-title').textContent(), 'Confirm the Dispatch');
-    await page.evaluate(() => { introDone(); finishMission(); });
+    await page.getByRole('heading', { name: 'Chapter menu' }).waitFor();
     assert.equal(await page.getByRole('heading', { name: 'Chapter menu' }).isVisible(), true);
     assert.equal(await page.evaluate(() => localStorage.getItem(PIN_KEY)), 'SKY');
     await page.evaluate(() => {
@@ -189,6 +187,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     ));
     assert.equal(levelsToStart.length, 33);
     for (const { game, url } of levelsToStart) {
+      const landscape = game !== 'frosted-skies' && game !== 'blackout-run';
       const sheet = { 'frosted-skies': '#sheet', 'shelf-escape': '#sheet', 'chapter-2': '#panel' }[game] || '#start-sheet';
       const accept = sheet === '#sheet' ? '#action' : '#start';
       await page.evaluate(({ game, url }) => {
@@ -211,7 +210,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
         await page.evaluate(() => Object.defineProperty(window, 'orientation', { value: 0, configurable: true }));
       }
       await gameFrame.locator(accept).tap();
-      if (game !== 'frosted-skies') {
+      if (landscape) {
         assert.equal(await page.locator('#turn-gate').isVisible(), true, game);
         assert.equal(await gameFrame.locator(sheet).isVisible(), true, game + ' started before rotation');
         await page.setViewportSize({ width: 844, height: 390 });
@@ -223,7 +222,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
       await gameFrame.locator(sheet).waitFor({ state: 'hidden' });
       assert.equal(await page.locator('#turn-gate').isHidden(), true, game);
       await page.evaluate(() => closeMission());
-      if (game !== 'frosted-skies') {
+      if (landscape) {
         assert.match(await page.locator('#turn-heading').textContent(), /upright/);
         await page.setViewportSize({ width: 390, height: 844 });
         if (game === 'holding-camp') {
@@ -366,7 +365,7 @@ const hooks = fs.readFileSync(path.join(__dirname, 'test-chimney-expansion.cjs')
     console.log('PASS: path-only links for all 11 quiz-free replays, the required quiz, and the direct final boss.');
     assert.deepEqual(errors, []);
     console.log('PASS: touch starts across all 33 minigame levels, normalized URLs, missed rotation events, and standalone links.');
-    console.log('PASS: regular replay and continue routing, level 2 radio dial and knob, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
+    console.log('PASS: regular replay and continue routing, three portrait Blackout Run levels, master menu, direct fight, phone rotation, two-second warnings and two flashes, injury thresholds, held dodge and block, full bout, practice return, no completion reward, test selector.');
   } finally {
     await browser.close();
   }
