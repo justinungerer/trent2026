@@ -12,6 +12,7 @@
   const BLACKOUT_POINTS = [1260, 2230, 3200].map(distance);
   const WARNING_DISTANCE = 210;
   const GUN_SHOT_SPACING = 24;
+  const RIFLE_TRACK_SPEED = 0.9;
   const COURSE_WIDTH_SCALE = 1.25;
   const WORLD_EDGE = 17.5;
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
@@ -246,6 +247,9 @@
           run.attack = null;
         }
       } else {
+        const aim = clamp(run.x, -WORLD_EDGE + 1, WORLD_EDGE - 1);
+        const adjustment = RIFLE_TRACK_SPEED * dt;
+        attack.x += clamp(aim - attack.x, -adjustment, adjustment);
         for (let shot = 0; shot < 3; shot++) {
           const impact = { x: attack.x, z: attack.z + shot * GUN_SHOT_SPACING };
           if (run.grace === 0 && crosses(impact, 1.25)) {
