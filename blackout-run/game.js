@@ -1,7 +1,7 @@
 'use strict';
 
 (() => {
-  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, createRun, retryCheckpoint, step } = BlackoutRun;
+  const { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, createRun, retryCheckpoint, step } = BlackoutRun;
   const el = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const embedded = window.parent !== window && params.has('runId');
@@ -32,9 +32,9 @@
     { name: 'ski-rise', until: 1, height: 0.82 }
   ];
   const bounds = {
-    pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35],
-    satchel: [1.33, 1.1], post: [1.85, 2.55], cabin: [6.1, 4.7], hangar: [9, 4.9],
-    lantern: [0.8, 1.3], rifleman: [2.6, 4.1], stump: [2.35, 1.65], log: [2, 1.85]
+    pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [2.55, 3.5],
+    satchel: [1.33, 1.1], post: [3.4, 4.5], cabin: [6.1, 4.7], hangar: [9, 4.9],
+    lantern: [0.8, 1.3], rifleman: [2.6, 4.1], stump: [2.35, 1.65], log: [2, 1.85], snowbank: [4.6, 1.15]
   };
   let selected = 0;
   let run = createRun(selected);
@@ -279,6 +279,28 @@
     }
   }
 
+  function drawPostApproach(view) {
+    for (const post of run.course.markers) {
+      if (post.type !== 'post' || run.collected.has(post.id)) continue;
+      const distance = post.z - run.z;
+      if (distance < -POST_APPROACH || distance > 260) continue;
+      const near = Math.max(-13, distance - POST_APPROACH);
+      const far = distance + POST_APPROACH;
+      const corners = [project(post.x - POST_RADIUS, near, view), project(post.x + POST_RADIUS, near, view),
+        project(post.x + POST_RADIUS, far, view), project(post.x - POST_RADIUS, far, view)];
+      ctx.save();
+      ctx.fillStyle = '#f8ba4829';
+      ctx.strokeStyle = '#ffd46cdb';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      corners.forEach(({ x, y }, i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   function drawObject(object, view, edgePadding = 0) {
     const distance = object.z - run.z;
     const hangar = object.type === 'hangar';
@@ -289,7 +311,8 @@
     const image = art[object.art || object.type];
     if (!image || !dim) return;
     const scale = point.scale * (object.scale ?? 1);
-    const structureScale = hangar ? Math.max(scale, width * 0.105 / dim[0]) : scale;
+    const landmark = hangar || object.type === 'post' || object.objective;
+    const structureScale = landmark ? Math.max(scale, width * (hangar ? 0.105 : 0.075) / dim[0]) : scale;
     const boxW = dim[0] * structureScale, boxH = dim[1] * structureScale;
     const ratio = object.type === 'log'
       ? 2 * object.radius * point.scale / image.width
@@ -308,18 +331,22 @@
     if (object.flip) ctx.scale(-1, 1);
     ctx.drawImage(image, -w / 2, -h - bob, w, h);
     ctx.restore();
-    if (heading && distance >= 18 && distance < (marker ? 275 : 175)) {
+    if (heading && distance >= (object.type === 'post' ? -12 : 18) && distance < (marker ? 290 : 245)) {
       const caption = object.label ? `${object.direction < 0 ? '← ' : ''}${object.label}${object.direction > 0 ? ' →' : ''}`
-        : marker ? (object.type === 'post' ? 'Signal post' : 'Dispatch pouch') : run.level.destination;
+        : marker ? (object.type === 'post' ? `Signal post ${object.id + 1}` : 'Dispatch pouch') : run.level.destination;
       ctx.save();
-      ctx.font = '700 12px system-ui';
+      const beacon = object.type === 'post' || object.objective;
+      const fontSize = beacon ? 14 : 12;
+      ctx.font = `800 ${fontSize}px system-ui`;
       ctx.textAlign = 'center';
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#10223b';
-      ctx.fillStyle = '#ffe4ab';
-      const labelX = clamp(point.x, 65, width - 65);
-      ctx.strokeText(caption, labelX, point.y - h - 8);
-      ctx.fillText(caption, labelX, point.y - h - 8);
+      const padding = 8;
+      const half = ctx.measureText(caption).width / 2 + padding;
+      const labelX = clamp(point.x, half + 6, width - half - 6);
+      const labelY = point.y - h - 10;
+      ctx.fillStyle = beacon ? '#f8c665' : '#142b40e8';
+      ctx.fillRect(labelX - half, labelY - fontSize - 4, half * 2, fontSize + 9);
+      ctx.fillStyle = beacon ? '#1c2634' : '#ffe4ab';
+      ctx.fillText(caption, labelX, labelY);
       ctx.restore();
     }
   }
@@ -479,6 +506,7 @@
     drawBackdrop(view);
     drawGround(view);
     if (run.index === 2) drawRunway(view);
+    if (run.index === 1) drawPostApproach(view);
     const objects = run.course.objects;
     for (const object of objects) if (object.z >= run.z) drawObject(object, view);
     drawAttack(view);
@@ -516,7 +544,7 @@
       const direction = marker.x - run.x;
       const arrow = Math.abs(direction) < 1.8 ? '↑' : direction < 0 ? '←' : '→';
       hint = marker.z < run.z ? 'Return trail ahead'
-        : `${arrow} ${marker.type === 'post' ? 'Lift your finger at the signal post' : 'Dispatch pouch ahead'}`;
+        : `${arrow} ${marker.type === 'post' ? 'Ski through the gold signal-post zone' : 'Dispatch pouch ahead'}`;
     } else if (run.braking && run.speed === 0 && !drag) hint = 'Place your thumb on the slider to ski';
     else if (run.index === 2 && progress > 25 && progress < 95) {
       hint = 'Follow the trail lanterns';

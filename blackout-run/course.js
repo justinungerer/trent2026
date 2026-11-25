@@ -19,10 +19,18 @@
   const TRAIL_SCALE = 1.5;
   const WIDTH_INCREASE = 1.5;
   const COURSE_WIDTH_SCALE = 1.25 * TRAIL_SCALE * WIDTH_INCREASE;
-  const WORLD_EDGE = 45;
+  const WORLD_EDGE = 52;
   const MAIN_WIDTH = 4.7 * COURSE_WIDTH_SCALE;
   const BRANCH_WIDTH = 2.8 * COURSE_WIDTH_SCALE;
   const FALL_SECONDS = 1.32;
+  const POST_RADIUS = 6.8;
+  const POST_APPROACH = 52;
+  const RELAY_BENDS = [
+    [590, 0], [730, -7], [855, 5], [980, 0],
+    [1820, 0], [1960, 8], [2095, -6], [2265, 0],
+    [2660, 0], [2790, 7], [2910, -6], [3020, 0],
+    [3970, 0], [4100, -7], [4245, 6], [4390, 0]
+  ].map(([z, x]) => [distance(z), x]);
   const MISSED_WARNING_SECONDS = 2;
   const OBSTACLE_HITS = { rock: 'You hit a boulder.', stump: 'You hit a tree stump.', log: 'You hit a fallen tree.' };
   const levels = [
@@ -39,7 +47,7 @@
     {
       id: 'lights-across-the-valley',
       title: 'Lights Across the Valley',
-      briefing: 'Ski past both Allied signal posts. Lift your finger near each operator to slow down.',
+      briefing: 'Follow the signs to both Allied signal posts. Ski close to each lantern to confirm the dispatch.',
       objective: 'Confirmations', destination: 'Valley relay', marker: 'post', markers: [1410, 3480],
       checkpoints: [0, 810, 2240, 2930, 4140],
       attacks: { start: 480, end: 4450, guns: 11, bombers: 8 },
@@ -67,12 +75,19 @@
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   function center(levelIndex, z) {
-    return COURSE_WIDTH_SCALE * (1.45 * Math.sin(z / distance(261) + levelIndex) + 0.9 * Math.sin(z / distance(109) + levelIndex * 2));
+    const slope = COURSE_WIDTH_SCALE * (1.45 * Math.sin(z / distance(261) + levelIndex) + 0.9 * Math.sin(z / distance(109) + levelIndex * 2));
+    if (levelIndex !== 1 || z <= RELAY_BENDS[0][0] || z >= RELAY_BENDS.at(-1)[0]) return slope;
+    const next = RELAY_BENDS.findIndex(([depth]) => depth > z);
+    const [start, left] = RELAY_BENDS[next - 1];
+    const [end, right] = RELAY_BENDS[next];
+    const t = (z - start) / (end - start);
+    return slope + left + (right - left) * t * t * (3 - 2 * t);
   }
 
   function forkOffset(fork, z) {
     const position = clamp((z - fork.start) / (fork.end - fork.start), 0, 1);
-    return fork.side * 12.5 * TRAIL_SCALE * WIDTH_INCREASE * Math.sin(Math.PI * position) ** 1.5;
+    const entrance = clamp(Math.min(position, 1 - position) / 0.34, 0, 1);
+    return fork.side * 31 * entrance * entrance * (3 - 2 * entrance);
   }
 
   function trails(levelIndex, z) {
@@ -120,10 +135,14 @@
     const rifleClearance = z => rifles.some(attack => z >= attack.z - 68 && z <= attack.z + 2 * GUN_SHOT_SPACING + 66);
     const trees = [];
     const edgeMarkers = [];
+    const snowbanks = [];
     const runway = index === 2;
     for (let start = 35; start < DISTANCE + 400; start += runway ? 42 : 32) {
       for (const side of [-1, 1]) {
         const z = start + (side > 0 ? 8 : 0);
+        const inOpening = level.forks.some(fork => fork.side === side &&
+          z >= fork.start - 24 && z < fork.start + (fork.end - fork.start) * 0.105);
+        if (inOpening) continue;
         const edge = treeLine(index, z);
         const x = side < 0 ? edge.left : edge.right;
         if (runway) {
@@ -138,11 +157,16 @@
       for (let z = fork.start + 18; z < fork.end; z += 18) {
         const [main, branch] = trails(index, z);
         const gap = Math.abs(branch.x - main.x) - MAIN_WIDTH - BRANCH_WIDTH;
-        if (gap < 3.75 * WIDTH_INCREASE || rifleClearance(z)) continue;
+        if (gap < 4.1 || rifleClearance(z)) continue;
         const mainEdge = main.x + fork.side * MAIN_WIDTH;
         const x = mainEdge + fork.side * gap / 2;
-        if (runway) edgeMarkers.push({ type: 'lantern', z, x, divider: true, scale: 1.08 });
-        else trees.push({ type: 'pine', z, x, scale: 0.84 + (z % 31) / 100, divider: true });
+        if (runway) {
+          const slot = Math.round((z - fork.start) / 18);
+          if (slot % 2 === 0) edgeMarkers.push({ type: 'lantern', z, x, divider: true, scale: 1.08 });
+          else snowbanks.push({ type: 'snowbank', z, x, divider: true, scale: Math.min(1.35, gap / 4.8) });
+        } else {
+          trees.push({ type: 'pine', z, x, scale: 0.84 + (z % 31) / 100, divider: true });
+        }
       }
     }
     const obstacles = [];
@@ -202,10 +226,11 @@
       const branchLabel = objective ? (index === 0 ? 'Dispatch pouch' : 'Allied signal post')
         : runway ? 'Runway shortcut' : 'Alternate trail';
       const z = fork.start - 24;
-      return { type: 'sign', z, x: center(index, z) + fork.side * 6.2, label: branchLabel, direction: fork.side };
+      return { type: 'sign', z, x: center(index, z) + fork.side * 8.5, label: branchLabel, direction: fork.side,
+        scale: objective ? 1.45 : 1.15, objective };
     });
     const finish = { type: index === 2 ? 'hangar' : 'cabin', z: DISTANCE + 27, x: center(index, DISTANCE) };
-    return { markers, obstacles, attacks, trees, objects: trees.concat(edgeMarkers, obstacles, signs, markers, finish).sort((a, b) => b.z - a.z) };
+    return { markers, obstacles, attacks, trees, objects: trees.concat(edgeMarkers, snowbanks, obstacles, signs, markers, finish).sort((a, b) => b.z - a.z) };
   }
 
   function restore(run, z, x = center(run.index, z)) {
@@ -266,7 +291,7 @@
       restore(run, returnPoint, trails(run.index, returnPoint).at(-1).x);
       run.target = missed.x;
       announce(run, missed.type === 'post'
-        ? 'Return trail. Lift your finger near the lit signal post.'
+        ? 'Return trail. Ski past the lit operator to confirm the dispatch.'
         : 'Return trail. Follow the gold sign to the pouch.', 6);
       return;
     }
@@ -306,13 +331,10 @@
     }
     for (const marker of run.course.markers) {
       if (run.collected.has(marker.id)) continue;
-      const stoppingAtPost = marker.type === 'post' && input.brake && run.speed <= distance(21) &&
-        Math.abs(marker.z - run.z) <= 12 && Math.abs(marker.x - run.x) < 2.8;
-      if (!stoppingAtPost && !crosses(marker, marker.type === 'post' ? 2.8 : 2.15)) continue;
-      if (marker.type === 'post' && !input.brake && run.speed > distance(21)) {
-        announce(run, 'Lift your finger to brake as you pass the operator.');
-        continue;
-      }
+      const post = marker.type === 'post';
+      const alongside = post && Math.abs(marker.z - run.z) <= POST_APPROACH &&
+        Math.abs(marker.x - run.x) <= POST_RADIUS;
+      if (!alongside && !crosses(marker, post ? POST_RADIUS : 2.15)) continue;
       run.collected.add(marker.id);
       announce(run, marker.type === 'post' ? 'Dispatch confirmed.' : 'Dispatch pouch recovered.');
     }
@@ -389,5 +411,5 @@
     if (!falling && !run.recoverAtCheckpoint && run.z >= DISTANCE && run.collected.size === run.level.markers.length) run.finished = true;
   }
 
-  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, clamp, center, trails, treeLine, createRun, retryCheckpoint, step };
+  return { levels, DISTANCE, WORLD_EDGE, WARNING_DISTANCE, GUN_SHOT_SPACING, FALL_SECONDS, POST_RADIUS, POST_APPROACH, clamp, center, trails, treeLine, createRun, retryCheckpoint, step };
 });

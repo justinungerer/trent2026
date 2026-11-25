@@ -2,7 +2,7 @@
 
 Open [index.html](index.html) directly in a browser, or serve this repository locally and visit /blackout-run/. Each level is available from the standalone playtest menu. In Chapter 1, the campaign opens each level in order after its story film. Quiz scores of eight, nine, and ten add one, two, or three falls between checkpoint retries. Hold the thumb slider below Trent to ski, drag it left or right, and lift your thumb to brake. Trent can stop and wait for rifle aim to sweep aside. Pause opens the checkpoint retry and level selection.
 
-The main trail is paced for about three minutes per level. Steer away from the marked areas when rifle fire starts or a bomber flies over. A return trail brings Trent back to a missed pouch or signal post. The checkpoint retry keeps completed objectives.
+The main trail is paced for about three minutes per level. Steer away from the marked areas when rifle fire starts or a bomber flies over. A return trail brings Trent back to a missed pouch or signal post. Ski through the gold area at each Allied signal post to confirm the dispatch. The checkpoint retry keeps completed objectives.
 
 ## Painted artwork
 
@@ -20,3 +20,4 @@ The built-in ImageGen tool generated the following source paintings for this pro
 - **Fall sprite sheet.** Four painted rear-view poses showing Trent stumbling, tumbling, sliding, and getting up.
 - **Forest obstacles.** Painted snow-covered stumps and horizontal fallen trees in two variants.
 - **Skiing sprite sheet.** Rear views of Trent gliding, tucking, carving, and planting a pole.
+- **Airstrip snowbank.** A painted divider between the runway and its branches.
