@@ -17,7 +17,7 @@
     { name: 'ski-rise', until: 1, height: 0.82 }
   ];
   const bounds = {
-    pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35], bridge: [5.5, 2.35],
+    pine: [4.4, 6.4], rock: [1.95, 0.95], sign: [1.55, 2.35],
     satchel: [1.33, 1.1], post: [1.85, 2.55], cabin: [6.1, 4.7], hangar: [9, 4.9],
     lantern: [0.8, 1.3], rifleman: [2.6, 4.1]
   };

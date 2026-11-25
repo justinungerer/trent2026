@@ -122,10 +122,6 @@
       type: 'sign', z: fork.start - 22, x: center(index, fork.start) + fork.side * 4.4,
       label: index === 2 ? 'Shortcut' : 'Dispatch route', direction: fork.side
     }));
-    if (index === 0) {
-      const bridgeZ = distance(1020);
-      signs.push({ type: 'bridge', z: bridgeZ, x: trails(index, bridgeZ)[1].x });
-    }
     if (index === 2) {
       for (let z = 95; z < DISTANCE; z += 65) {
         const path = trails(index, z);

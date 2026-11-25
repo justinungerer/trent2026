@@ -14,7 +14,7 @@ The built-in ImageGen tool generated the following source paintings for this pro
 - **Forest.** Painted view down a snowy Alpine valley with a teal twilight sky, ridge lights, and tiny cabins.
 - **Airstrip.** Nighttime Alpine valley with a distant 1940s airstrip, golden runway lights, and shadowed pines.
 - **Snow.** Overhead texture of blue-silver powder and shallow snowdrifts.
-- **Trail sprite sheet.** Three rear-view skiing poses, evergreen, boulder, courier satchel, relay cabin, bridge, and lantern sign.
+- **Trail sprite sheet.** Three rear-view skiing poses, evergreen, boulder, courier satchel, relay cabin, and lantern sign.
 - **Outpost sprite sheet.** Allied radio operator, snow-covered aircraft hangar, oil lantern, and ski-brake icon.
 - **Bomber.** Painted orthographic side view of a 1940s twin-engine bomber in level flight.
 - **Fall sprite sheet.** Four painted rear-view poses showing Trent stumbling, tumbling, sliding, and getting up.
